@@ -54,17 +54,26 @@ no tensor parallelism in this engine for this architecture, so the ceiling is st
 
 ## Recommendation
 
-Serve Flash-Next when the workload is one agent or a few, deep context, interactive latency — and if it is served,
-serve it with **both measured levers on**: `IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'` is **+35 % at
-short-context c4 and +78 % at deep-context c4** over the baseline, with byte-identical output. That does not close
-the gap to the incumbent (deep-context c4 is 323.6 t/s against the daily's 868 aggregate at c4), but it is a real,
-validated, one-line configuration change rather than a tuning hope.
+The decision has moved during this session, and the honest state is this. **On the workload the box exists for —
+agentic coding — this seat is ahead of the current daily on matched instances: 36 of 38 against 20, with sixteen
+discordant pairs all in this seat's favour (p ≈ 2⁻¹⁶).** On short-answer reasoning and tool-calling the daily is ahead
+by about six points on each of two instruments.
 
-Keep the vLLM 27B daily for multi-agent fan-out. Nothing measured here closes the aggregate gap: the one lever that
-touches the layer-split ceiling — expert parallelism for `qwen4_exp` — was assessed at the tree level today and is
-not reachable from a patch or a configuration change. All four of its blockers (QSA indexer transport, PLE module
-transport, replica/output-selection policy, MTP adapters) are code gaps that need to be built and then validated on
-a GPU; upstream acceptance is optional and the engine work is not.
+So the verdict is no longer "serve it for one agent, keep the daily for fan-out". It is: **serve this seat with both
+measured levers on, and decide by workload.** The configuration to serve is validated and verified
+(`IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'`: +35 % at short-context c4, +78 % at deep-context c4,
+byte-identical output, tool-eval unchanged, the original agent request returning parsed tool calls, needle 5/5), and
+it is now the launcher's default.
+
+What still argues for keeping a vLLM instance available: aggregate throughput at c4/c8 (250/313 t/s against the
+daily's 868/1,574) and the two six-point quality gaps on GSM8K and tool-eval. If the box is used for fan-out of short
+tool-calling turns, the daily is the better engine; if it is used the way it has been used today — one or a few
+coding agents at long context — this seat wins the measurement that matters and there is no reason to keep it idle.
+
+The structural ceiling stands and is not addressable by configuration: measured duty cycle 45 %/38 % because
+`qwen4_exp` forbids tensor parallelism, and expert parallelism — the only lever that would put both cards on every
+layer — is a multi-prerequisite project whose first two prerequisites (QSA indexer transport, PLE module transport)
+now have implemented, unvalidated patches and whose remaining two are at least as large.
 
 The stack itself — launcher, image, sampler policy, instruments, this document — is at daily standard, and the
 three instrument defects found today are recorded in `docs/GOTCHAS.md` because two of them had already produced

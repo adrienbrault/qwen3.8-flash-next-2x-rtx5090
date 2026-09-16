@@ -304,6 +304,31 @@ this seat is ahead on both subsets measured (10/10 vs 8/10 on the dataset's firs
 repositories). Those are not contradictory, but they are also not the same measurement, and only the third one
 speaks to what the box is used for.
 
+**Result — `2026-09-16-r361-swebench-failed`, the ten instances the daily submitted-and-failed:** this seat resolved
+**9/10**; the daily's score on those instances is **0/10 by construction** (they are drawn from its own 113 unresolved,
+filtered to the 109 that ended `Submitted` — a capability failure, not a budget one). All ten trajectories ended
+`Submitted`, 0 errors, 0 empty patches.
+
+### The three subsets together
+
+| subset | n | this seat | daily |
+| --- | --- | --- | --- |
+| dataset's first ten (astropy) | 10 | **10** | 8 |
+| stratified, six repositories | 18 | **17** | 12 |
+| instances the daily failed | 10 | **9** | 0 |
+| **total on matched instances** | **38** | **36** | **20** |
+
+**Sixteen discordant pairs, every one in this seat's favour, none in the daily's** — a sign test puts that at
+p ≈ 2⁻¹⁶, which is not a marginal result. The caveats that remain are about *selection*, not about the comparison:
+the subsets are outcome-stratified by design (one takes only daily-failures, one is a single repository, the third is
+stratified 3:2 by the daily's own outcome), so **36/38 must not be read against the daily's published 387/500** — the
+daily's own rate on these same 38 instances is 20/38. What the numbers do establish is the matched claim: on the same
+instance, same harness, same official scorer, this seat solved 36 where the daily solved 20.
+
+The daily's column is from its 2026-09-02 run on the RedHat NVFP4 checkpoint — the same engine family, not the same
+weights as today's daily — and its 495/500 completed with 0 errors, so its failures were real task failures rather
+than infrastructure.
+
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
 `sysmem_kv_cache` was 0 in every measurement above; this boots it at 4096 MiB and runs the three shapes that could
