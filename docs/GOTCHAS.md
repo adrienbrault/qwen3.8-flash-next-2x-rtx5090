@@ -133,3 +133,18 @@ the top level, which is what every unit except this pair is.
 
 The queue was also rebuilt as a single chain (`bench/r370-chain.sh`) rather than eight units sharing one flock: the
 order in which waiters acquire a flock is not defined, so "queued" never meant "ordered".
+
+## 12. A validation that passes on an empty file (2026-09-16)
+
+Copying a script to the host and checking it with `bash -n` reported success on a **0-byte file**: an empty script is
+valid bash. The transfer had produced an empty file, the check confirmed nothing, and the unit was launched, exited
+immediately with status 0, and read as "ran successfully" — the third time this session that a passing check measured
+the absence of a thing rather than the thing.
+
+What the check should have been, and now is: `wc -c`, plus a grep for a string that must be present (`greedy_same`),
+plus comparing hashes of both copies. Size and content are different claims; a syntax checker answers neither.
+
+The general rule this session keeps re-learning: **a check must be able to fail.** `cmp` with a glob that matches one
+file, `bash -n` on an empty file, a probe that reads one channel of four, a build whose verification step imports
+without its library, a lock holder read from the wrong field of `/proc/locks` — each looked like a green light and
+each was measuring nothing.
