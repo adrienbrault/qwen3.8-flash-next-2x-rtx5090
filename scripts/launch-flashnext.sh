@@ -70,6 +70,10 @@ DRAFT_POLICY=${DRAFT_POLICY-[[2, 3], [8, 1]]}
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
 SYS_KV=${SYS_KV:-0}
+# DECODE SLOTS (R367). TabbyAPI derives 4 for a recurrent model and 128 otherwise; 8 is what has been served. More
+# slots means more concurrent jobs inside the fast decode path, at the cost of recurrent-state VRAM. This is the last
+# untested *config* lever on the box's weakest axis (aggregate throughput at c4/c8).
+MAXBS=${MAXBS:-8}
 # MTP HOT VOCABULARY (upstream PR #303, ported to this checkpoint's qwen4_exp_mtp). Empty means the feature is off,
 # which is also the control arm: the patched engine's disabled path must be byte-identical to the unpatched one.
 # Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.
@@ -136,7 +140,7 @@ model:
   # 8 slots. exllamav3 clamps the generator's max_batch_size to cache.num_slots, and TABBY DERIVES 4 FOR A
   # RECURRENT MODEL (128 otherwise). This checkpoint carries GDN recurrent state, so it takes the 4 path and a
   # c8 test would silently measure c4 without this line. (backends/exllamav3/model.py:400)
-  max_batch_size: 8
+  max_batch_size: ${MAXBS:-8}
   # qwen4_exp FORBIDS tensor parallel in this engine:
   #   NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration
   # Layer split is the only mode, and it SERIALIZES the two cards: measured alternating 100%/0% utilisation,
