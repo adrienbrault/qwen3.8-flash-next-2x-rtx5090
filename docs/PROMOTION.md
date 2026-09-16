@@ -25,14 +25,18 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 
 ## What the numbers say
 
-**Single-stream, this stack is the equal of the daily** — and it reaches that on a 3.05 bpw checkpoint with a
-262k window that fits two cards without a KV tier. For interactive use, one agent, deep context: it is a daily.
+**Single-stream, this stack is close to the daily but no longer the equal of it on the same instrument.** Measured
+head to head on one day (2,048 forced code tokens, greedy, same prompts, each engine alone on the box):
+Flash-Next 207.0 t/s c1 against the daily's 253.9 — an 18 % gap, where the pair of separately-measured numbers
+(217.6 vs 216) had suggested parity. The earlier comparison mixed client-side SSE rates with vLLM's Prometheus
+counters and a `/completions` code prompt against a chat prompt; the head-to-head removes both confounds, and the
+honest statement is "within a fifth, not equal".
 
-**Under concurrency it is not in the same class.** Eight slots against sixteen, a 262k pool against 1.39M, and a
-1.60× aggregate curve against roughly 7×. Layer splitting serialises the cards; there is no tensor parallelism in
-this engine for this architecture, so the ceiling is structural, not a tuning miss. The measured consequence is
-concrete: eight agents that each hold ~38k tokens of context share the box at ~256 t/s aggregate and pay ~60 s for
-their first token when they arrive together.
+**Under concurrency it is not in the same class.** Eight slots against sixteen, a 262k pool against 1.39M, and at
+the same instrument the daily reads 868 t/s aggregate at c4 and 1,574 at c8 against 250 and 313. Layer splitting
+serialises the cards; there is no tensor parallelism in this engine for this architecture, so the ceiling is
+structural, not a tuning miss. The measured consequence is concrete: eight agents holding ~38k tokens of context
+each share this box at ~256 t/s aggregate and pay ~60 s for their first token when they arrive together.
 
 ## What would change the concurrency verdict
 

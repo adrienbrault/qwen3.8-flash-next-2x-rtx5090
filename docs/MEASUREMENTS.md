@@ -131,6 +131,29 @@ changes nothing and enabling the policy does not change what the model says.
 Two requests across the arms stopped before the forced length (`finish_reason: stop` — the engine's loop detector);
 they are flagged and excluded from the rates above.
 
+## Head to head against the vLLM 27B daily — results `2026-09-16-r342-headtohead`
+
+Same instrument, same prompts, same forced length (2,048), greedy, same day, minutes apart; the two engines cannot
+coexist, so each was booted alone and probed. This removes the instrument confound that made the daily's published
+numbers (client-side SSE here against vLLM Prometheus counters there) not directly comparable.
+
+| arm | kind | c1 decode | c4 decode/stream | c4 aggregate | c8 decode/stream | c8 aggregate |
+| --- | --- | --- | --- | --- | --- | --- |
+| **vLLM 27B daily** | code | 253.9 | 257.5 | **868.3** | 245.3 | **1,574.5** |
+| **Flash-Next (this stack)** | code | 207.0 | 63.8 | 250.2 | 40.5 | 313.2 |
+| vLLM 27B daily | prose | 285.3 | 238.5 | 779.7 | — | — |
+| Flash-Next (this stack) | prose | 163.1 | *see `r342`* | | | |
+
+Read it as three facts: single-stream, Flash-Next is within ~20 % of the daily on the same instrument; at c4 the
+daily is **3.5×** ahead in aggregate; at c8 it is **5.0×** ahead. The daily also finishes c1 *faster than it does
+c4 per stream* (253.9 → 257.5), i.e. its batching is nearly free, while Flash-Next's layer split makes every
+concurrent request pay.
+
+The daily's admission arm returned 1 of 8 concurrent 38k-context requests with text; the other seven came back
+with a usage block reporting 512 completion tokens, no text deltas and no error. That is an anomaly I could not
+diagnose because `r342` stopped the container before capturing its log, so it is re-run with the log kept
+(`bench/r349-daily-admit.sh`) and no claim is made about it until that run lands.
+
 ## Decode is content-dependent — same box, same day
 
 | shape | kind | decode (t/s) | draft acceptance |

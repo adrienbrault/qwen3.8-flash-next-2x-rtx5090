@@ -18,7 +18,8 @@ Served configuration since 2026-09-16 (`scripts/launch-flashnext.sh`, image `tab
 
 | | value | measured |
 | --- | --- | --- |
-| decode, code, 1 stream | **217.6 t/s** steady-state, 4,096 forced tokens | 2026-09-16, `bench/results/2026-09-16-r339-longgen` |
+| decode, code, 1 stream | 217.6 t/s steady-state, 4,096 forced tokens | 2026-09-16, `bench/results/2026-09-16-r339-longgen` |
+| decode, code, 1 stream, same instrument as the daily | **207.0 t/s** vs the vLLM 27B daily's 253.9 | 2026-09-16, `results/2026-09-16-r342-headtohead` |
 | decode, prose, 1 stream | 157.5 t/s steady-state, 4,096 forced tokens | same |
 | decode, code, 8 streams | 40.6 t/s per stream, **304.6 t/s aggregate** | same |
 | decode, short requests, 8 streams | 42.9 per stream, 283.5 aggregate, TTFT 0.51 s | 2026-09-16, `results/2026-09-16-r339-honest-conc` |
@@ -28,17 +29,23 @@ Served configuration since 2026-09-16 (`scripts/launch-flashnext.sh`, image `tab
 | window / cache | 262,144 tokens, 8-bit KV, 8 slots | 2026-09-16 |
 | a real agent turn | 20 steps, 23 tool calls, 28,931 output tokens, 813k prompt tokens served from the prefix cache, file written and visually verified | 2026-09-16, DSH session `session-652732d8` |
 
-The c1 code figure is the one worth staring at: **217.6 t/s** from a 3.05 bpw checkpoint, against the vLLM 27B
-daily's 216 t/s code c1 on the same cards (R234 in the 27B repository). Single-stream, this stack is at parity
-with a 328×-more-expensive-to-fit configuration, and it holds a 262k window while doing it.
+The c1 code figure was the reason this track looked promising: 217.6 t/s steady-state from a 3.05 bpw checkpoint.
+Measuring the incumbent on the *same instrument, same prompts, same day* puts it at 207.0 against the daily's
+253.9 — an 18 % gap, not parity, and the difference between the two comparisons is instrument and prompt shape,
+not the engine. What is not in doubt is the shape of the curve: this stack holds a 262k window on two cards with no
+KV tier, and it collapses under concurrency where the daily does not.
 
-What it does not do is scale. Aggregate from c1 to c8 is 1.60× on short requests and about 1.4× on 4k-token
-generations, against vLLM's TP=2 daily at 1,476 t/s aggregate at c8. `qwen4_exp` forbids tensor parallelism in
-this engine (`NotImplementedError: Tensor-parallel is not currently implemented for
-Qwen4ExpForConditionalGeneration`), so the two cards take turns over their own layers: each is busy only while
-its own layers run, measured 44–47 % utilisation at 227/218 W against 600/575 W limits. **The idle half is the
-price of avoiding per-layer all-reduce over PCIe 3.0; it is recovered by concurrency, and the concurrency
-available here is eight slots in a 262k-token pool, not sixteen in 1.39M.**
+Aggregate from c1 to c8 is 1.60× on short requests and about 1.4× on 4k-token generations; the daily reads 868 t/s
+aggregate at c4 and 1,574 at c8 against 250 and 313 here, on one instrument, one day. `qwen4_exp` forbids tensor
+parallelism in this engine (`NotImplementedError: Tensor-parallel is not currently implemented for
+Qwen4ExpForConditionalGeneration`), so the two cards take turns over their own layers: each is busy only while its
+own layers run, measured 44–47 % utilisation at 227/218 W against 600/575 W limits. **The idle half is the price of
+avoiding per-layer all-reduce over PCIe 3.0; it is recovered by concurrency, and the concurrency available here is
+eight slots in a 262k-token pool, not sixteen in 1.39M.**
+
+One measured lever moves that a third of the way at c4: the concurrency-indexed draft depth patch, off by default,
+buys **+35 % aggregate at c4 with byte-identical output** (338–347 t/s against 252–258). See
+`docs/MEASUREMENTS.md` and `docs/PROMOTION.md`.
 
 ## What is in the box
 
