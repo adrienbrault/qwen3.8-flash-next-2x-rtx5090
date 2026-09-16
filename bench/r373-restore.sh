@@ -25,8 +25,9 @@ EXPECT_IMG=${EXPECT_IMG:-tabbyapi:qsa-cid-pr337}
 # The fingerprint below is a DIRECTORY hash (lib/greedy-compare.sh greedy_hash) over the 4-prompt capture. The
 # 750e1459e177c47e recorded in docs/MEASUREMENTS.md comes from the OTHER capture tool, a single-file sha256, and
 # the two are not comparable -- comparing them is the same mistake as comparing numbers from two instruments.
-# Measure this one on the served configuration and record it there; until then an empty value means "not yet pinned".
-EXPECT_PRINT=${EXPECT_PRINT:-}
+# Pinned from the first successful restore: 18e30f17883a38eb. The same value appears in the #290 and #246 arms, which is
+# consistent with those variants being output-identical to the served configuration, and is more evidence that they are.
+EXPECT_PRINT=${EXPECT_PRINT:-18e30f17883a38eb}   # measured on the served configuration at 2026-09-16T10:37
 WAIT_FOR=${WAIT_FOR:-r372-chain2}
 log(){ echo "$(date -Is) [r373] $*" | tee -a "$R/audit.log"; }
 export GPU_QUEUE_NAME=r373-restore

@@ -12,7 +12,21 @@ architecture), MTP draft depth 3 with concurrency-indexed depth `[[2, 3], [8, 1]
 sampler preset `qwen38_thinking` (T=0.6, top_k 20, top_p 0.95 as **fallbacks**). See `docs/CONFIG.md` for why each
 value.
 
-**Identity of the served configuration**, so a future A/B can prove it started from the same thing. The primary
+**Identity of the served configuration, and the two fingerprints that describe it.** They are produced by different
+tools and are NOT interchangeable — comparing one against the other is the same error as comparing throughput from two
+instruments, and I made it once:
+
+| fingerprint | method | value |
+| --- | --- | --- |
+| `r363`/`r340` gate | sha256 of the single-file greedy capture, first 16 | `750e1459e177c47e` (1,989 bytes) |
+| `greedy_hash()` (`lib/greedy-compare.sh`) | directory hash over the 4-prompt capture: sorted (relative name, content) pairs | `18e30f17883a38eb` |
+
+The directory fingerprint is the one restores check (`bench/r373-restore.sh`), and it prints the measured value when no
+reference is pinned rather than judging against a number from another method. `18e30f17883a38eb` is also the value the
+#290 and #246 arms produced, which is consistent with those variants being output-identical to the served
+configuration — more evidence for what their own gates showed.
+
+, so a future A/B can prove it started from the same thing. The primary
 identity is **behavioural**: greedy output on the forced-length probe is `750e1459e177c47e` (1,989 bytes), and the
 probe scripts compare against it. The generated config `/srv/qwen5090/flashnext-config.yml` (mounted read-only at
 the container's `/app/config.yml`, byte-identical inside and out) was `sha256 12252e838eaa…` at that moment, but
