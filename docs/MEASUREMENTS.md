@@ -211,6 +211,19 @@ Thinking is on in this arm and can be seen doing so: a hand-checked item returne
 min 13 / p50 232 / p90 449 / max 1,660 tokens. This checkpoint reasons **briefly** — that is its character, not a
 template flag left off.
 
+## Quality: tool-eval 69×4 — results `2026-09-16-r357-tooleval`
+
+| check | result |
+| --- | --- |
+| **tool-eval 69×4, baseline** | **85 ± 2.9**, CI [82.5, 87.5], per-trial points [113, 115, 120, 121]; losses in categories G 5/6, H 8/10, I 16/20, K 19/26, N 5/6, O 10/12 |
+| tool-eval 69×4, promoted config | *see the run log; the point of the arm is that the levers must not move this* |
+| the daily's published tool-eval | **91** (69×4, R234) — measured on the same CLI with the same sampler |
+
+Invocation copied from the daily's own runs (`cyk-tooleval.sh`): `tool-eval-bench --temperature 0.6 --top-p 0.95
+--top-k 20 --trials 4 --parallel 8`. The harness sends its own sampler parameters, so the server's preset fallbacks
+are not part of this measurement on either arm — deliberately, so the two arms and the daily's published figure are
+comparable.
+
 ## Both levers together — results `2026-09-16-r354-combined`
 
 Image `tabbyapi:qsa-cid` (QSA multi-job + concurrency-indexed draft depth, built from the same devel base, same

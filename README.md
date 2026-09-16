@@ -43,9 +43,10 @@ own layers run, measured 44–47 % utilisation at 227/218 W against 600/575 W li
 avoiding per-layer all-reduce over PCIe 3.0; it is recovered by concurrency, and the concurrency available here is
 eight slots in a 262k-token pool, not sixteen in 1.39M.**
 
-One measured lever moves that a third of the way at c4: the concurrency-indexed draft depth patch, off by default,
-buys **+35 % aggregate at c4 with byte-identical output** (338–347 t/s against 252–258). See
-`docs/MEASUREMENTS.md` and `docs/PROMOTION.md`.
+**Two measured levers move that**, both validated with byte-identical output and both off by default:
+`IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'` measures **+35 % aggregate at short-context c4 and +78 % at
+deep-context c4** (91.4 t/s per stream against 51.4), and the exact agent request that failed before this session's
+fix runs on that configuration returning parsed tool calls. See `docs/MEASUREMENTS.md` and `docs/PROMOTION.md`.
 
 ## What is in the box
 
