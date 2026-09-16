@@ -6,10 +6,17 @@ the column says wall.
 
 ## The served configuration these numbers describe (since 2026-09-16)
 
-`qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + ExLlamaV3 v1.5.0, port 8022, image `tabbyapi:53da7919-rqcount`,
+`qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + ExLlamaV3 v1.5.0, port 8022, image `tabbyapi:qsa-cid-pr337`,
 262,144-token window and cache, 8-bit KV, 8 slots, layer-split across both cards (TP is not implemented for this
-architecture), MTP draft depth 3, vision on, `qwen3_coder` tools, sampler preset `qwen38_thinking` (T=0.6,
-top_k 20, top_p 0.95 as **fallbacks**). See `docs/CONFIG.md` for why each value.
+architecture), MTP draft depth 3 with concurrency-indexed depth `[[2, 3], [8, 1]]`, vision on, `qwen3_coder` tools,
+sampler preset `qwen38_thinking` (T=0.6, top_k 20, top_p 0.95 as **fallbacks**). See `docs/CONFIG.md` for why each
+value.
+
+**Identity of the served configuration**, so a future A/B can prove it started from the same thing: the generated
+config `/srv/qwen5090/flashnext-config.yml` (mounted read-only at the container's `/app/config.yml`, byte-identical
+inside and out) is `sha256 12252e838eaa2c76beb5a637e841992ef094ceb09299271fc7ca547798e18319`, and greedy output on the
+forced-length probe is `750e1459e177c47e` (1,989 bytes). Both recorded in results `2026-09-16-r363-enable`; the
+launcher regenerates the config and the fingerprint is what the A/B scripts compare against.
 
 ## Decode, code, forced length — `bench/probe.py`, results `2026-09-16-r339-longgen`
 
