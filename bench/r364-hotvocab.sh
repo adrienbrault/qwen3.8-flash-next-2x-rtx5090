@@ -88,8 +88,15 @@ probes served
 # tabbyapi:qsa-cid-pr337, and a treatment built on the older base would carry PR #337 as a second difference in a
 # comparison whose whole point is "the feature, nothing else".
 HOTVOCAB_IMG=tabbyapi:qsa-cid-pr337-hotvocab
-log "=== building $HOTVOCAB_IMG (BASE=tabbyapi:qsa-cid-pr337) ==="
-if ! (cd /srv/qwen5090/hotvocab && sudo docker build -f Dockerfile.hotvocab -t "$HOTVOCAB_IMG" \
+log "=== building $HOTVOCAB_IMG (BASE=tabbyapi:qsa-cid-pr337, REBASED recipe) ==="
+# THE REBASE, because the first attempt failed for a reason that had nothing to do with the feature: the patch applied
+# fine (with a 58-line offset, CID's patch having added lines above the hunks) and then `sha256sum --check` failed on
+# generator.py and job.py, because the manifest had been generated against a PRISTINE v1.5.0 tree while the image
+# carries v1.5.0 + CID. `FILE: FAILED` was sha256sum's output, not patch's, and the log read like a code failure.
+# The rebased recipe verifies the served-image pre-patch hashes, applies the rebased patch, and checks a manifest
+# regenerated for this baseline. Verified offline before installing: patch exit 0, zero failed hunks, all seven
+# checksums OK.
+if ! (cd /srv/qwen5090/hotvocab-rebase && sudo docker build -f out/Dockerfile.hotvocab-rebased -t "$HOTVOCAB_IMG" \
         --build-arg BASE=tabbyapi:qsa-cid-pr337 . >> "$R/build.log" 2>&1); then
   log "BUILD FAILED"; tail -6 "$R/build.log" | cut -c1-170 | tee -a "$R/audit.log"; finish ABORTED; exit 1
 fi
