@@ -14,7 +14,11 @@ mirror it into the public 27B repository. See `CLAUDE.md`.
 
 ## The numbers
 
-Served configuration since 2026-09-16 (`scripts/launch-flashnext.sh`, image `tabbyapi:53da7919-rqcount`).
+Served configuration since 2026-09-16 (`scripts/launch-flashnext.sh`, image `tabbyapi:qsa-cid-pr337`, draft policy
+`[[2, 3], [8, 1]]`). Verified as served, not asserted: greedy fingerprint `750e1459e177c47e` byte-identical to the
+configuration every number below was measured on, the original failing agent request returning a **parsed** tool call
+(`finish_reason=tool_calls`, 59,531 chars of reasoning separated into `reasoning_content`), and the 131k-context
+retrieval gate **5/5** — results `2026-09-16-r363-enable`.
 
 | | value | measured |
 | --- | --- | --- |
