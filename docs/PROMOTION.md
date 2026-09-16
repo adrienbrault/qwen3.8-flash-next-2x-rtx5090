@@ -12,10 +12,10 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 | # | gate | status | evidence |
 | --- | --- | --- | --- |
 | 1 | one-command boot, warm caches | **PASS** | `scripts/launch-flashnext.sh`; 11.2–11.5 s load, 0.3 s warmup, refuses to start on a missing checkpoint or image |
-| 2 | single-stream decode at or near the incumbent | **PASS** | code 217.6 t/s steady-state at 4,096 forced tokens vs the incumbent's 216 on the same cards |
-| 3 | concurrent aggregate | **FAIL against the incumbent** | 304.6 t/s at c8 vs 1,476; scaling 1.60× from c1 because `qwen4_exp` forbids TP=2 and the cards take turns (44–47 % utilisation at 227/218 W) |
-| 4 | long-context retrieval | **PASS** | 5/5 at every planted position at 26.5k, 105.7k and 158.5k prompt tokens |
-| 5 | several deep-context agents at once | **PASS with a caveat** | 8/8 admitted at ~38k tokens each (306k total against a 262k pool), 28.5–33.6 t/s per stream, TTFT 59–62 s when all arrive together |
+| 2 | single-stream decode at or near the incumbent | **PASS, but not at parity** | on one instrument, one day: **207.0 t/s** against the daily's **253.9** at code c1 — within a fifth. (An earlier pair, 217.6 against 216, came from two different instruments and is superseded.) |
+| 3 | concurrent aggregate | **FAIL against the incumbent** | same instrument: 250 t/s aggregate at c4 and 313 at c8 against the daily's **868** and **1,574**; scaling 1.60× from c1 because `qwen4_exp` forbids TP=2 and the cards take turns (44–47 % utilisation at 227/218 W) |
+| 4 | long-context retrieval | **PASS** | 5/5 at every planted position at 26.5k, 105.7k and 158.5k prompt tokens; a 152,761-token prompt costs 24 s cold and 0.43 s on a repeat |
+| 5 | several deep-context agents at once | **PASS with a caveat** | 8/8 admitted and completed at ~628k of *unrelated* context against a 262k pool, TTFT 43–82 s as the queue drains — against the daily's 8/8 at **1.76 s** TTFT and 626.7 t/s aggregate |
 | 6 | a real agent turn | **PASS** | DSH session: 20 steps, 23 tool calls, file written, Chrome driven, screenshots read back through vision, 813k prompt tokens served from the prefix cache |
 | 7 | reasoning channel, tool parsing, vision | **PASS** | reasoning in `reasoning_content`, `qwen3_coder` calls parsed as `tool_calls`, vision used in anger |
 | 8 | honest usage accounting | **PASS** | only after the R338 image patch: the engine under-reported long generations by ~5× |
@@ -57,9 +57,11 @@ short-context c4 and +78 % at deep-context c4** over the baseline, with byte-ide
 the gap to the incumbent (deep-context c4 is 323.6 t/s against the daily's 868 aggregate at c4), but it is a real,
 validated, one-line configuration change rather than a tuning hope.
 
-Keep the vLLM 27B daily for multi-agent fan-out. Nothing measured here closes the 5× aggregate gap, and the
-remaining levers are engine work: expert parallel is an unexecuted patch whose own analysis lists upstream
-blockers, and it is the only one that touches the layer-split ceiling directly.
+Keep the vLLM 27B daily for multi-agent fan-out. Nothing measured here closes the aggregate gap: the one lever that
+touches the layer-split ceiling — expert parallelism for `qwen4_exp` — was assessed at the tree level today and is
+not reachable from a patch or a configuration change. All four of its blockers (QSA indexer transport, PLE module
+transport, replica/output-selection policy, MTP adapters) are code gaps that need to be built and then validated on
+a GPU; upstream acceptance is optional and the engine work is not.
 
 The stack itself — launcher, image, sampler policy, instruments, this document — is at daily standard, and the
 three instrument defects found today are recorded in `docs/GOTCHAS.md` because two of them had already produced
