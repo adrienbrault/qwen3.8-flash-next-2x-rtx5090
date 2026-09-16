@@ -220,17 +220,23 @@ images. The overlay is the daily's, byte for byte, except for the endpoint — a
 mechanism on each side (the daily from `--override-generation-config`, this seat from its preset, because mini-swe
 sends only `max_tokens`).
 
-**The subset is matched, not sampled.** Every run uses the same dataset order, so the first N instances are the
-same tasks the daily ran. Read from the daily's own scored run
-(`results/2026-09-02-miniswe-rh-nvidia`, 387/500 = 77.4%, 495 completed, 0 errors, 5 empty patches):
+**The subset is matched by instance id, not by position.** The daily has a full scored run to draw from
+(`results/2026-09-02-miniswe-rh-nvidia`, 387/500 = 77.4%, 495 completed, 0 errors, 5 empty patches), so for every
+instance this slice runs, the daily's outcome on *that instance* is known — no sampling error at all on the
+comparison, only on the subset's ability to represent the 500. **A first attempt at this comparison read the
+"first 10" from `preds.json`, which is ordered by completion, not by dataset order — that would have compared
+against the wrong instances.** The correct list is the one this run actually executed.
 
-| instances (dataset order 0-9) | daily | Flash-Next |
-| --- | --- | --- |
-| resolved | **8 / 10** | *this run* |
+| instance (dataset order, as executed) | daily |
+| --- | --- |
+| `astropy__astropy-13033` | resolved |
+| `astropy__astropy-13236` | resolved |
+| `astropy__astropy-14096` | resolved |
+| *remaining 7, and the Flash-Next column, from the run's own scoring* | |
 
 A ten-instance subset cannot resolve three points — the repository's own note about k=1 coin-flip variance applies
-— but 8/10 against 3/10 and 8/10 against 7/10 are different verdicts about whether this seat can be handed the job
-at all, which is the question a synthetic probe cannot answer.
+— but "the daily resolved all ten and this seat resolved three" and "both resolved eight" are different verdicts
+about whether this seat can be handed the job at all, which is the question no synthetic probe answers.
 
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
