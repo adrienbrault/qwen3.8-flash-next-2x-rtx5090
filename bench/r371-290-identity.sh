@@ -21,7 +21,8 @@ export PATH="$HOME/.local/bin:$PATH"
 R=/srv/qwen5090/results/2026-09-16-r371-290-identity; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
-L=/srv/qwen5090/launch-flashnext-r340.sh
+L=/srv/qwen5090/launch-flashnext-r340.sh   # FROZEN SNAPSHOT for the arms: its defaults are historical by design
+LIVE=/srv/qwen5090/launch-flashnext.sh     # the live launcher, used for RESTORES: see the note below
 log(){ echo "$(date -Is) [r371] $*" | tee -a "$R/audit.log"; }
 export GPU_QUEUE_NAME=r371-290-identity
 . /srv/qwen5090/lib/gpu-queue.sh
@@ -65,6 +66,10 @@ fi
 log "=== capturing greedy output from each built arm, with the fixed probe ==="
 for ARM in unpatched fix reduction; do
   log "--- $ARM"
+# RESTORES GO THROUGH $LIVE, NOT $L. $L is a frozen snapshot taken for the R340 experiment, so its `IMG`
+# default is whatever was promoted on the day it was frozen -- which is how the 2026-09-16 chain ended on
+# tabbyapi:qsa-cid after PR #337 had been promoted, while every script logged "restoring the served
+# configuration". A restore written against a snapshot restores a historical default, not the served one.
   if ! IMG="kernel290:$ARM" bash "$L" >> "$R/audit.log" 2>&1; then log "  boot FAILED"; continue; fi
   curl -sf -m 8 "$API/model" >/dev/null || { log "  no server"; continue; }
   # The binary identity travels in the image; record it so a same-binary mistake is visible.
@@ -87,5 +92,5 @@ for ARM in fix reduction; do
 done
 
 log "=== restoring the served configuration (launcher default, no override) ==="
-bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+bash "$LIVE" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

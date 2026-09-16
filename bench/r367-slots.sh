@@ -21,7 +21,8 @@ export PATH="$HOME/.local/bin:$PATH"
 R=/srv/qwen5090/results/2026-09-16-r367-slots; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
-L=/srv/qwen5090/launch-flashnext-r340.sh
+L=/srv/qwen5090/launch-flashnext-r340.sh   # FROZEN SNAPSHOT for the arms: its defaults are historical by design
+LIVE=/srv/qwen5090/launch-flashnext.sh     # the live launcher, used for RESTORES: see the note below
 log(){ echo "$(date -Is) [r367] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r367-slots
@@ -33,6 +34,10 @@ trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
 
 for MAXBS in 8 12 16; do
   log "===== slots $MAXBS ====="
+# RESTORES GO THROUGH $LIVE, NOT $L. $L is a frozen snapshot taken for the R340 experiment, so its `IMG`
+# default is whatever was promoted on the day it was frozen -- which is how the 2026-09-16 chain ended on
+# tabbyapi:qsa-cid after PR #337 had been promoted, while every script logged "restoring the served
+# configuration". A restore written against a snapshot restores a historical default, not the served one.
   if ! MAXBS=$MAXBS bash "$L" >> "$R/audit.log" 2>&1; then log "slots $MAXBS: BOOT FAILED"; continue; fi
   curl -sf -m 8 "$API/model" >/dev/null || { log "slots $MAXBS: no server"; continue; }
   log "  served config says max_batch_size: $(sudo grep 'max_batch_size' /srv/qwen5090/flashnext-config.yml | tr -d ' ')"
@@ -51,5 +56,5 @@ python3 /srv/qwen5090/probes/summarize.py "$R"/records-*.jsonl 2>&1 | grep -E "^
 
 log "restoring the served configuration (slots 8) with the enabled levers"
 # Slots back to 8 and NO image override: the launcher default is the served configuration.
-MAXBS=8 bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+MAXBS=8 bash "$LIVE" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

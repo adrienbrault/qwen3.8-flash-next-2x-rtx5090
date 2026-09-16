@@ -22,7 +22,8 @@ export PATH="$HOME/.local/bin:$PATH"
 R=/srv/qwen5090/results/2026-09-16-r364-hotvocab; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
-L=/srv/qwen5090/launch-flashnext-r340.sh
+L=/srv/qwen5090/launch-flashnext-r340.sh   # FROZEN SNAPSHOT for the arms: its defaults are historical by design
+LIVE=/srv/qwen5090/launch-flashnext.sh     # the live launcher, used for RESTORES: see the note below
 CKPT=/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
 CORPUS=/srv/qwen5090/hotvocab-corpus
 MAP=/srv/qwen5090/mtp-hot-blocks.txt
@@ -74,7 +75,11 @@ probes(){  # <tag>
 log "=== arm served: the launcher's default image, i.e. the enabled configuration ==="
 # NO IMG OVERRIDE: the launcher default IS the served configuration, and pinning it here is how this arm
 # drifted from what the box actually serves when PR #337 was promoted.
-bash "$L" >> "$R/audit.log" 2>&1 || { log "served boot FAILED"; finish ABORTED; exit 1; }
+# RESTORES GO THROUGH $LIVE, NOT $L. $L is a frozen snapshot taken for the R340 experiment, so its `IMG`
+# default is whatever was promoted on the day it was frozen -- which is how the 2026-09-16 chain ended on
+# tabbyapi:qsa-cid after PR #337 had been promoted, while every script logged "restoring the served
+# configuration". A restore written against a snapshot restores a historical default, not the served one.
+bash "$LIVE" >> "$R/audit.log" 2>&1 || { log "served boot FAILED"; finish ABORTED; exit 1; }
 greedy "$R/greedy-served"
 probes served
 
@@ -130,5 +135,5 @@ else
 fi
 log "restoring the enabled configuration (tabbyapi:qsa-cid, no hot vocab)"
 # No IMG override: restore to whatever the launcher considers served, which is the point of a restore.
-bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+bash "$LIVE" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

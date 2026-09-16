@@ -25,7 +25,8 @@ export PATH="$HOME/.local/bin:$PATH"
 R=/srv/qwen5090/results/2026-09-16-r366-ourkernel; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
-L=/srv/qwen5090/launch-flashnext-r340.sh
+L=/srv/qwen5090/launch-flashnext-r340.sh   # FROZEN SNAPSHOT for the arms: its defaults are historical by design
+LIVE=/srv/qwen5090/launch-flashnext.sh     # the live launcher, used for RESTORES: see the note below
 log(){ echo "$(date -Is) [r366] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r366-ourkernel
@@ -48,6 +49,10 @@ fi
 
 arm(){  # arm <tag> <image>
   log "booting $1: IMG=$2 (DRAFT_POLICY pinned off: full depth-3 windows on purpose)"
+# RESTORES GO THROUGH $LIVE, NOT $L. $L is a frozen snapshot taken for the R340 experiment, so its `IMG`
+# default is whatever was promoted on the day it was frozen -- which is how the 2026-09-16 chain ended on
+# tabbyapi:qsa-cid after PR #337 had been promoted, while every script logged "restoring the served
+# configuration". A restore written against a snapshot restores a historical default, not the served one.
   IMG="$2" DRAFT_POLICY='' bash "$L" >> "$R/audit.log" 2>&1 || { log "$1 BOOT FAILED"; return 1; }
   curl -sf -m 8 "$API/model" >/dev/null || { log "$1: no server"; return 1; }
   python3 /srv/qwen5090/probes/hotvocab-greedy-capture.py --url "$API" --model "$MODEL" --out-dir "$R/greedy-$1" \
@@ -78,5 +83,5 @@ python3 /srv/qwen5090/probes/summarize.py "$R/records-control.jsonl" "$R/records
 
 log "restoring the enabled configuration"
 # No IMG override: restore to the launcher default, which is the served configuration.
-bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+bash "$LIVE" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE
