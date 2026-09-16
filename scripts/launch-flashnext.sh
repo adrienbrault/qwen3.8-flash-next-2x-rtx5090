@@ -75,6 +75,14 @@ SYS_KV=${SYS_KV:-0}
 # Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.
 #   HOTVOCAB_MAP=/srv/qwen5090/mtp-hot-blocks.txt
 HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
+# GENERIC ENV PASSTHROUGH for engine features that are switched by environment rather than by config, e.g. upstream's
+# route-packed MoE schedule (EXL3_MOE_ROUTE_PACKED=1). Space-separated KEY=VALUE pairs. Empty means no extra env.
+#   EXTRA_ENV='EXL3_MOE_ROUTE_PACKED=1' ./launch-flashnext.sh
+EXTRA_ENV=${EXTRA_ENV:-}
+EV=()
+for kv in $EXTRA_ENV; do
+  case "$kv" in *=*) EV+=(-e "$kv");; *) log "WARN: ignoring EXTRA_ENV entry without '=': $kv";; esac
+done
 CKPT=/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
 TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotune); survives container replacement
@@ -221,7 +229,7 @@ if [ -n "$HOTVOCAB_MAP" ]; then
       -e EXL3_MTP_HOT_EMBED_DTYPE=fp16
       -e EXL3_MTP_VALIDATE_SUBHEAD=0)
 fi
-sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${HV[@]}" \
+sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${EV[@]}" "${HV[@]}" \
   -v "$TUNEDIR":/exl3-cache -e TRITON_CACHE_DIR=/exl3-cache -e EXLLAMAV3_TUNE_CACHE=/exl3-cache \
   -p 0.0.0.0:$PORT:$PORT \
   -v /srv/qwen5090/models:/models:ro -v "$CFG":/app/config.yml:ro \

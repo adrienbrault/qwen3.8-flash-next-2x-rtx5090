@@ -279,6 +279,31 @@ Read it with these caveats, which are why `r360` exists:
 - It agrees with the repository's own finding that SWE-bench cannot adjudicate quantisation on this model: four
   checkpoints spanning the whole fidelity range scored 386–388.
 
+**Result — `2026-09-16-r360-swebench-strat`, 18 instances across six repositories, officially scored:** this seat
+resolved **17/18**; the daily resolved **12/18** on the same instances. The seat resolved five the daily failed
+(`matplotlib-20826`, `pydata-3993`, `scikit-learn-12973`, `sphinx-doc-10435`, `sympy-13091`) and the daily resolved
+none that this seat failed.
+
+| repo | seat | daily |
+| --- | --- | --- |
+| django | 2/3 | 2/3 |
+| matplotlib | 3/3 | 2/3 |
+| pydata | 3/3 | 2/3 |
+| scikit-learn | 3/3 | 2/3 |
+| sphinx-doc | 3/3 | 2/3 |
+| sympy | 3/3 | 2/3 |
+| **total** | **17/18** | **12/18** |
+
+Five discordant pairs, all one way: a sign test puts that at p ≈ 0.06 two-sided — suggestive, not decisive, and it is
+the reason a larger subset is queued rather than a claim being made from it. All 18 trajectories ended `Submitted`
+with a non-empty patch, 34–143 steps.
+
+**The tension this creates, stated plainly.** On short-answer reasoning and tool-calling the daily is ahead
+(GSM8K 0.985 against 0.925; tool-eval 91 against 85), and on agentic coding — the workload the box exists for —
+this seat is ahead on both subsets measured (10/10 vs 8/10 on the dataset's first ten, 17/18 vs 12/18 across six
+repositories). Those are not contradictory, but they are also not the same measurement, and only the third one
+speaks to what the box is used for.
+
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
 `sysmem_kv_cache` was 0 in every measurement above; this boots it at 4096 MiB and runs the three shapes that could
