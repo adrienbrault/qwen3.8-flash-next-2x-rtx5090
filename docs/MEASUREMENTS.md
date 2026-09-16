@@ -222,6 +222,32 @@ forward would show. **One run per arm, so +14 % is consistent-with-the-mechanism
 reading is "no regression anywhere, a plausible deep-context gain where the mechanism predicts one, and byte-identical
 output", which is why the patch is carried into the served image rather than being adopted for speed.
 
+## Upstream #290's memory fix is output-neutral — results `2026-09-16-r365-kernels`, gate in `r371-290-identity`
+
+Three arms, one native rebuild each from the same v1.5.0 source with a different patch set applied: `unpatched`,
+`+OOB fix`, `+OOB fix +reduction`. The question its assessment left open was whether a memory-safety fix in an API
+this model does not route through changes anything; the gate is therefore **output identity**, not speed.
+
+| arm | extension sha256 (first 16) | captured | dirhash |
+| --- | --- | --- | --- |
+| unpatched | `ec7270959395df30` | 6 responses | `18e30f17883a38eb` |
+| +fix | `294407485b5b792c` | 6 responses | `18e30f17883a38eb` |
+| +fix+reduction | `fb0f3690b357c436` | 6 responses | `18e30f17883a38eb` |
+
+**All three identical.** The arms are provably distinct binaries, which is the precondition that makes the identity
+mean anything — three arms sharing one binary would have been an identity result about nothing. Aggregate decode,
+fix vs unpatched: c1 220.5 vs 222.3, c4 381.8 vs 381.8, c8 319.3 vs 319.7, i.e. within run-to-run noise. So the fix
+can be adopted on correctness grounds with no behavioural or throughput cost.
+
+**Two caveats, both about what these numbers are not.** First, the arms are comparable *to each other* and not to the
+served figures: `kernel290:*` is a CUDA-devel image built from v1.5.0 plus the port, which is a different image from
+the served `tabbyapi:qsa-cid-pr337`, and the c4 column here (381.8) sits above the served configuration's 250 without
+a policy and 338 with one — a cross-image comparison would be a category error. Second, this run's first attempt at
+the gate reported `FAIL/NOT-RUN` for both arms and was **wrong**: the control arm captured one response and the
+treatments six, because the control ran before a capture bug was fixed, and the comparison then used `cmp` on
+mismatched file sets. The gate was recomputed from paired captures rather than read from the log line — see GOTCHAS 11
+and `bench/r371-290-identity.sh`.
+
 ## Quality: GSM8K as served — `bench/r355-fn-gsm8k.sh`, results `2026-09-16-r355-fn-gsm8k`
 
 The daily's own instrument, same parameters as its R299b as-served arm: `gsm8k`, 5-shot,
