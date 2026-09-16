@@ -43,7 +43,7 @@ each share this box at ~256 t/s aggregate and pay ~60 s for their first token wh
 | lever | state | expected effect |
 | --- | --- | --- |
 | concurrency-indexed draft depth | **measured +35 % at c4** with byte-identical output (`2026-09-16-r340-ci-depth`); off by default, one config line to enable | recovers c1's depth-3 rate while dropping to depth 1 past two decoding jobs. No gain at c1 or c8; ceiling remains the layer split |
-| QSA sparse multi-job | patch applies cleanly to v1.5.0; needs a CUDA devel image to rebuild the extension | above the sparse threshold the captured QSA path is single-job and falls back to eager for bsz>1; multi-job sparse is what deep-context concurrency wants |
+| QSA sparse multi-job | **measured +27 % at c2 and +40 % per stream at c4** on 152,761-token contexts, output byte-identical (`2026-09-16-r341-qsa`) | above the sparse threshold the captured QSA path is single-job and falls back to eager for bsz>1, which is exactly the deep-context concurrency case. Build needs a CUDA devel base; the recipe is in `kubernetes-home/flan/docker/Dockerfile.tabbyapi-qsa` |
 | expert parallel for `qwen4_exp` | patch written, never executed; the authoring analysis lists upstream blockers | the only lever that attacks the layer-split ceiling directly — both cards computing every layer |
 | more slots | `max_batch_size: 8` already raised from TabbyAPI's recurrent default of 4 | more slots cost recurrent VRAM; the page pool, not the slot count, binds at deep context |
 | host KV tier | `sysmem_kv_cache: 0` | helps only after VRAM eviction; the deep-context admission test shows the pool is the constraint |

@@ -65,7 +65,10 @@ def filler(ctx_tokens, kind, salt=None):
 
 def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_force=False):
     if UNIQUE[0] and prompt.startswith(PREFIX[0]):
-        prompt = PREFIX[0] + filler(CTX[0], KIND[0], salt=1000 + idx) + prompt[len(PREFIX[0]):]
+        # REPLACE the shared filler, do not add to it: prepending the per-request passage to the shared one made a
+        # "120k" request carry 315,253 tokens and the server rejected it with a 400 (R345, arm 3). The unique
+        # passage goes where the shared one was, and the tail (the actual instruction) is kept.
+        prompt = filler(CTX[0], KIND[0], salt=1000 + idx) + prompt[len(PREFIX[0]):]
     if distinct:
         # Threads must not share a prefix: with the paged cache, identical prompts collapse onto the same pages
         # and an admission test then measures prefix reuse instead of concurrent context footprint.

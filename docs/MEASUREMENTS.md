@@ -131,6 +131,49 @@ changes nothing and enabling the policy does not change what the model says.
 Two requests across the arms stopped before the forced length (`finish_reason: stop` — the engine's loop detector);
 they are flagged and excluded from the rates above.
 
+## QSA sparse multi-job: the A/B — results `2026-09-16-r341-qsa`
+
+Both arms built from the same CUDA devel base, same pip resolution, same native rebuild — the only difference is
+`APPLY_QSA`. Deep context (152,761 prompt tokens), 1,024 forced code tokens, greedy.
+
+| arm | c2 decode/stream | c2 aggregate | c4 decode/stream | c4 aggregate |
+| --- | --- | --- | --- | --- |
+| control (unpatched) | 99.2 | 27.4 | 51.7 | 191.6 |
+| **treatment (QSA multi-job)** | **125.8** | 28.2 | **72.5** | **257.9** |
+
+**+27 % at c2 and +40 % per stream at c4**, at the depth where the captured QSA path used to fall back to eager for
+bsz>1 — the case the patch exists for. The c2 aggregate is unchanged because those two requests queue on a 262k
+pool against 2 × 152,761 tokens of context; the per-stream figures are the ones to read.
+
+The correctness gate passed on all three checks at 74,796-token contexts with bsz=2: the two concurrent greedy
+outputs match within each arm, and control == treatment byte for byte (`sha256` `2e0c2a563342…`, 1,365 bytes). An
+attention patch that changes what the model says is not a win, and this one does not.
+
+## The pool question, asked properly — results `2026-09-16-r345-pool`
+
+Three arms, and the third failed in a way worth keeping. Requested depths are labels: `probe.py` records the
+`prompt_tokens` the server actually saw, and its filler estimate runs high.
+
+| arm | prompts actually sent | jobs | admitted | TTFT (s) | decode/stream |
+| --- | --- | --- | --- | --- | --- |
+| shared prefix | 38,283 tokens each (306k total, page-shared) | 8 | **8/8** | 63.6 | 33.2 |
+| **unique contexts** | **78,233–79,139 tokens each (~628k total, no page sharing)** | 8 | **8/8** | 43.1–82.2 (median 43.8) | 37.0 |
+| unique, deeper | rejected before admission | 4 | 0/4 | — | — |
+
+So eight agents carrying **~628k tokens of mutually unrelated context** — more than twice the 262,144-token pool —
+are all admitted and all complete, with the surplus queued rather than refused: the first token arrives in 43 s for
+some jobs and 82 s for others, which is the queue draining. That is the answer a daily needs about this box: the
+pool schedules, it does not reject.
+
+The third arm is the guard, not a failure: the server answered `400 Prompt length 315,253 exceeds the available
+context size of 262,144 tokens` for each request. **That run had a bug in the instrument** — `--unique` prepended
+the per-request passage to the shared filler instead of replacing it, so a "120k" request carried 315k tokens. It
+is fixed in `bench/probe.py`; the 400 is the server behaving correctly, and it is recorded because a request that
+does not fit is refused with a reason rather than silently truncated.
+
+`r345` also captured the server's own log into the results directory, so the cache and length figures above come
+from the server rather than from timings.
+
 ## Head to head against the vLLM 27B daily — results `2026-09-16-r342-headtohead`
 
 Same instrument, same prompts, same forced length (2,048), greedy, same day, minutes apart; the two engines cannot
