@@ -56,9 +56,10 @@ no tensor parallelism in this engine for this architecture, so the ceiling is st
 
 The decision has moved during this session, and the honest state is this. **On the workload the box exists for —
 agentic coding — this seat is ahead of the current daily on matched instances: **46 of 49 against 27 of 49, with
-nineteen discordant pairs and every one of them in this seat's favour (p ≈ 2⁻¹⁹)**. The subsets are not disjoint —
+nineteen discordant pairs, every one of them in this seat's favour; the subsets were selected on the daily's
+own outcomes, so this is a descriptive tally and not a significance claim**. The subsets are not disjoint —
 68 instance-runs cover 49 unique instances — and the 19 repeated instances scored identically before and after the
-enablement, so the configuration now served was measured to be quality-neutral rather than assumed to be.** On short-answer reasoning and tool-calling the daily is ahead
+enablement, so the served configuration changed no outcome on those 19.** On short-answer reasoning and tool-calling the daily is ahead
 by **6.9 points on GSM8K** (0.985 against 0.9158, the latter now at n=1319 with a ±0.0077 interval, so the gap is
 several standard errors and not an artefact of the sample) and by about six points on tool-eval, which remains at its
 original n.

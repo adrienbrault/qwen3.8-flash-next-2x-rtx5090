@@ -19,11 +19,13 @@ instruments, and I made it once:
 | fingerprint | method | value |
 | --- | --- | --- |
 | `r363`/`r340` gate | sha256 of the single-file greedy capture, first 16 | `750e1459e177c47e` (1,989 bytes) |
-| `greedy_hash()` (`lib/greedy-compare.sh`) | directory hash over the 4-prompt capture: sorted (relative name, content) pairs | `18e30f17883a38eb` |
+| `greedy_hash()` (`lib/greedy-compare.sh`) | directory hash over the 4-prompt capture: count + sorted (relative name, content) pairs | `8179222fec8df3b8` |
 
-The directory fingerprint is the one restores check (`bench/r373-restore.sh`), and it prints the measured value when no
-reference is pinned rather than judging against a number from another method. `18e30f17883a38eb` is also the value the
-#290 and #246 arms produced, which is consistent with those variants being output-identical to the served
+An earlier `18e30f17883a38eb` from this function is superseded: the function was fixed to include the file count,
+to list files portably and to refuse the empty-input digest (see GOTCHAS 13), and every hash it produced before that
+is superseded. The directory fingerprint is the one restores check (`bench/r373-restore.sh`), and it prints the measured value when no
+reference is pinned rather than judging against a number from another method. `8179222fec8df3b8` is also the value the
+#290 re-captures and the #246 feature-off arm produced, which is consistent with those variants being output-identical to the served
 configuration — more evidence for what their own gates showed.
 
 , so a future A/B can prove it started from the same thing. The primary
@@ -505,12 +507,19 @@ of the daily-failure ten.
 | **unique instances, both engines** | **49** | **46** | **27** | mixed, see below |
 
 **46 of 49 against 27 of 49**, with **19 discordant pairs and every one of them in this seat's favour** — no instance
-the daily resolved and this seat did not. A sign test puts that at p ≈ 2⁻¹⁹.
+the daily resolved and this seat did not.
 
-**The 19 repeated instances are the control for the promotion, and they say quality did not move.** The stratified 18
+**Those discordant pairs do not license a p-value, and an earlier version of this section quoted one.** A sign test
+assumes the instances were selected independently of the outcome; every subset here was chosen *from* the daily's
+outcomes (r361 is drawn from its failures, r369 is stratified by its outcome, r359 is one repository), so the null
+distribution does not apply. Read the tally as descriptive: on the 49 instances both engines ran, this seat resolved
+46 and the daily 27, and the disagreement is one-directional. Making it inferential needs a held-out subset selected
+independently of either engine's results, which has not been run.
+
+**The 19 repeated instances are the control for the promotion, and they say quality did not move on those instances.** The stratified 18
 were run before the enablement and again inside the 30, and the one overlap with the daily-failure ten likewise:
 resolved 17 → 17 and 1 → 1, **zero outcomes changed**. So the configuration now served was measured, not assumed, to
-be quality-neutral on agentic tasks — independent of the byte-identity gates, and the reason the unique-instance
+be quality-neutral on those 19 — which is weaker than a general equivalence claim, and is all it shows — independent of the byte-identity gates, and the reason the unique-instance
 tally is unambiguous despite two configurations being involved.
 
 Caveats that stay attached to these numbers: the daily's column is its 2026-09-02 run on the RedHat NVFP4 checkpoint,

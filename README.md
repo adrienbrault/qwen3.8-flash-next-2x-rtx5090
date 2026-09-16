@@ -63,7 +63,8 @@ with 59,531 characters of reasoning in `reasoning_content`; the 131k-context ret
 
 **Quality, against the incumbent on matched instances.** On **49 unique** SWE-bench Verified instances — four subsets,
 68 runs, de-duplicated because the subsets overlap — this seat resolved **46** and the daily **27**, with nineteen
-discordant pairs and every one of them in this seat's favour (p ≈ 2⁻¹⁹). The 19 instances that ran both before and
+discordant pairs and every one of them in this seat's favour. Both are descriptive tallies: the subsets were selected
+on the daily's own outcomes, which is why no significance claim is made. The 19 instances that ran both before and
 after the enablement scored identically, so the served configuration is quality-neutral on agentic work, measured
 rather than assumed. The subsets are outcome-stratified by design, so 46/49 is not comparable to the daily's
 published 387/500 — its own rate on these same 49 is 27/49. Against this seat: the daily leads by **6.9 points on

@@ -163,3 +163,28 @@ The fix is a check that can fail, applied to every copy: byte count, a string th
 hashes on both ends. `r372-chain2.sh` now refuses to start if any step it was asked to run is under 500 bytes, so the
 condition cannot recur silently. The lesson generalises past this host: **a step that reports success without doing
 work is indistinguishable from a step that did the work quickly, unless something counts.**
+
+## 13. Two bugs in the identity helper, and one of them made my own tests vacuous (2026-09-16)
+
+An external review found the first; chasing it found the second. Both were in `lib/greedy-compare.sh`, the helper every
+identity gate uses.
+
+1. **Two empty directories compared EQUAL.** `greedy_hash` hashed an empty file listing into
+   `e3b0c44298fc1c14` — the SHA-256 prefix of the empty string, a *non-empty* string — and `greedy_same` only required
+   a non-empty, equal hash. So if both arms' captures silently failed, **the identity gate passed**. A gate reporting
+   success without measuring anything is the one outcome a gate must never produce, and this one guarded the results
+   I had been quoting all day. My own test had covered directories that did not *exist* (which correctly differ) and
+   never directories that existed and were *empty*.
+2. **The hash could not be computed on macOS at all.** The file listing used `find -printf`, a GNU-only primary. On
+   macOS that pipeline printed an error and hashed nothing, returning the same empty-input digest for *any* pair of
+   directories — so the local tests I ran of this helper were vacuous, while the ones run over ssh on the Linux host
+   were real. `greedy_hash` now includes the file count, lists files portably, picks `sha256sum` or `shasum` at
+   runtime, and returns empty rather than the empty-input digest when it cannot compute.
+
+Consequences, both applied: every hash the old function produced is superseded (`18e30f17883a38eb` ->
+`8179222fec8df3b8` for the served configuration), and the verdicts were re-derived with the fixed helper against the
+existing captures rather than assumed to survive — #290's paired re-capture is identical across all three arms, and
+#246 still reads control == feature-off, control != feature-on.
+
+The lesson is the same one this file has been accumulating all day, from the other direction: **the test of a check is
+whether it can fail**, and a check that cannot compute must refuse rather than return something plausible.
