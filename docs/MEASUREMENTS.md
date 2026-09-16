@@ -174,6 +174,43 @@ does not fit is refused with a reason rather than silently truncated.
 `r345` also captured the server's own log into the results directory, so the cache and length figures above come
 from the server rather than from timings.
 
+## The promoted configuration, validated on the real request — results `2026-09-16-r356-promoted`
+
+`IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'` booted as the served configuration, then the **exact agent
+request that failed** — the DSH payload rebuilt from the session archive, 36 tool schemas and a 10,481-token
+prompt — and the retrieval gate at depth.
+
+| check | result on the promoted configuration |
+| --- | --- |
+| the original failing agent request | `finish_reason=tool_calls`, tool calls parsed: **`skill`, `write`** — it plans, loads a skill and writes the file |
+| reasoning channel | 49,417 chars, 0.05 % non-Latin (the pre-fix run of the same request: 19,477 chars of multilingual salad in `content`) |
+| needle at 105,680 prompt tokens | **5/5 retrieved** |
+
+So the configuration this repository recommends is the configuration that has been run against the workload, not
+only against the instrument. The baseline was restored afterwards: promoting it to the served default is the
+operator's call.
+
+## Quality: GSM8K as served — `bench/r355-fn-gsm8k.sh`, results `2026-09-16-r355-fn-gsm8k`
+
+The daily's own instrument, same parameters as its R299b as-served arm: `gsm8k`, 5-shot,
+`--apply_chat_template`, temperature 0, `max_gen_toks 8192`, limit 200, `num_concurrent 4`, thinking on.
+
+| model / arm | exact_match (flexible-extract) | conditions |
+| --- | --- | --- |
+| vLLM 27B daily, as served | **0.985** | R299b, thinking on at effort medium |
+| Flash-Next, **as served here** | **0.925** (strict-match 0.920, stderr ±0.019) | this run, thinking on by configuration |
+| Flash-Next, think *off* | 0.950–0.955 | R257/R294b/R297, **llama.cpp** seat, same n |
+
+Two things to read carefully. First, the gap to the daily is **6 points on one instrument with one protocol**,
+which is a quality result and not an instrument artefact. Second, the comparison against Flash-Next's own think-off
+numbers is *not* clean: those came from the llama.cpp seat, so 0.955 vs 0.925 differ by engine as well as by the
+thinking flag, and ±0.019 at n=200 makes the difference about 1.6σ. It is suggestive, not established.
+
+Thinking is on in this arm and can be seen doing so: a hand-checked item returned 126 chars of
+`reasoning_content` plus the answer, and the per-request completion lengths across the 201 requests were
+min 13 / p50 232 / p90 449 / max 1,660 tokens. This checkpoint reasons **briefly** — that is its character, not a
+template flag left off.
+
 ## Both levers together — results `2026-09-16-r354-combined`
 
 Image `tabbyapi:qsa-cid` (QSA multi-job + concurrency-indexed draft depth, built from the same devel base, same

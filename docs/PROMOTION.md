@@ -22,6 +22,7 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 | 9 | a sampler appropriate for the workload | **PASS** | only after R338: the server was serving untruncated T=1.0 to every client that sent no sampler |
 | 10 | sustained load | **PASS** | 40 rounds at c4, drift 101.0 % of the start (63.5–65.5 t/s per stream, no error, no VRAM drift) |
 | 11 | structured output (JSON schema) | **PASS** | content parses *and* satisfies the schema; the server log shows the grammar engaged. Tool-call args, vision on a red PNG and the reasoning channel also pass (`2026-09-16-r348-capabilities`) |
+| 12 | quality on the daily's own GSM8K instrument | **0.925 as served** against the daily's **0.985** | same harness parameters as R299b's as-served arm, thinking on, n=200, ±0.019 (`2026-09-16-r355-fn-gsm8k`) |
 
 ## What the numbers say
 
@@ -44,7 +45,7 @@ no tensor parallelism in this engine for this architecture, so the ceiling is st
 | --- | --- | --- |
 | concurrency-indexed draft depth | **measured +35 % at c4** with byte-identical output (`2026-09-16-r340-ci-depth`); off by default, one config line to enable | recovers c1's depth-3 rate while dropping to depth 1 past two decoding jobs. No gain at c1 or c8; ceiling remains the layer split |
 | QSA sparse multi-job | **measured +27 % at c2 and +40 % per stream at c4** on 152,761-token contexts, output byte-identical (`2026-09-16-r341-qsa`) | above the sparse threshold the captured QSA path is single-job and falls back to eager for bsz>1, which is exactly the deep-context concurrency case. Build needs a CUDA devel base; the recipe is in `kubernetes-home/flan/docker/Dockerfile.tabbyapi-qsa` |
-| expert parallel for `qwen4_exp` | patch written, never executed; the authoring analysis lists upstream blockers | the only lever that attacks the layer-split ceiling directly — both cards computing every layer |
+| expert parallel for `qwen4_exp` | **assessed, not reachable from here**: all four blockers are code gaps, not GPU-only questions (`kubernetes-home/flan/patches/exllamav3/expert-parallel-qwen4exp-status.md`) | would be the only lever that touches the layer-split ceiling. Someone has to build QSA indexer transport, PLE module transport, a replica/output-selection policy and MTP adapters, then validate on a GPU. Upstream acceptance is optional; the engine work is not |
 | more slots | `max_batch_size: 8` already raised from TabbyAPI's recurrent default of 4 | more slots cost recurrent VRAM; the page pool, not the slot count, binds at deep context |
 | host KV tier | `sysmem_kv_cache: 0` | helps only after VRAM eviction; the deep-context admission test shows the pool is the constraint |
 
