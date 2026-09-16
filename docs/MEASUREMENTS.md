@@ -403,25 +403,33 @@ speaks to what the box is used for.
 filtered to the 109 that ended `Submitted` — a capability failure, not a budget one). All ten trajectories ended
 `Submitted`, 0 errors, 0 empty patches.
 
-### The three subsets together
+### All four subsets, de-duplicated
 
-| subset | n | this seat | daily |
-| --- | --- | --- | --- |
-| dataset's first ten (astropy) | 10 | **10** | 8 |
-| stratified, six repositories | 18 | **17** | 12 |
-| instances the daily failed | 10 | **9** | 0 |
-| **total on matched instances** | **38** | **36** | **20** |
+The subsets are **not disjoint**, and adding their columns is the way to get this wrong. Four runs cover 68
+instance-runs but only **49 unique instances**: the 30-instance subset re-ran all 18 of the stratified subset and one
+of the daily-failure ten.
 
-**Sixteen discordant pairs, every one in this seat's favour, none in the daily's** — a sign test puts that at
-p ≈ 2⁻¹⁶, which is not a marginal result. The caveats that remain are about *selection*, not about the comparison:
-the subsets are outcome-stratified by design (one takes only daily-failures, one is a single repository, the third is
-stratified 3:2 by the daily's own outcome), so **36/38 must not be read against the daily's published 387/500** — the
-daily's own rate on these same 38 instances is 20/38. What the numbers do establish is the matched claim: on the same
-instance, same harness, same official scorer, this seat solved 36 where the daily solved 20.
+| subset | n | this seat | daily | configuration |
+| --- | --- | --- | --- | --- |
+| dataset's first ten (astropy) | 10 | **10** | 8 | pre-enablement |
+| stratified, six repositories | 18 | **17** | 12 | pre-enablement |
+| the ten the daily failed | 10 | **9** | 0 | pre-enablement |
+| 30-instance stratified, six repos | 30 | **28** | 18 | enabled (`tabbyapi:qsa-cid` + policy) |
+| **unique instances, both engines** | **49** | **46** | **27** | mixed, see below |
 
-The daily's column is from its 2026-09-02 run on the RedHat NVFP4 checkpoint — the same engine family, not the same
-weights as today's daily — and its 495/500 completed with 0 errors, so its failures were real task failures rather
-than infrastructure.
+**46 of 49 against 27 of 49**, with **19 discordant pairs and every one of them in this seat's favour** — no instance
+the daily resolved and this seat did not. A sign test puts that at p ≈ 2⁻¹⁹.
+
+**The 19 repeated instances are the control for the promotion, and they say quality did not move.** The stratified 18
+were run before the enablement and again inside the 30, and the one overlap with the daily-failure ten likewise:
+resolved 17 → 17 and 1 → 1, **zero outcomes changed**. So the configuration now served was measured, not assumed, to
+be quality-neutral on agentic tasks — independent of the byte-identity gates, and the reason the unique-instance
+tally is unambiguous despite two configurations being involved.
+
+Caveats that stay attached to these numbers: the daily's column is its 2026-09-02 run on the RedHat NVFP4 checkpoint,
+executed by the same harness and scored by the same official grader; the subsets are outcome-stratified by design
+(r359 is one repository, r361 is drawn from the daily's failures, r369 is stratified by the daily's outcome), so
+**46/49 must not be read against the daily's published 387/500** — its own rate on these same 49 instances is 27/49.
 
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 

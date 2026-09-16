@@ -61,12 +61,14 @@ parsed tool calls. See `docs/MEASUREMENTS.md`, `docs/PROMOTION.md` and `docs/GOT
 to the one every number above was measured on; the original failing agent request returns `finish_reason=tool_calls`
 with 59,531 characters of reasoning in `reasoning_content`; the 131k-context retrieval gate is 5/5.
 
-**Quality, against the incumbent on matched instances.** On 38 SWE-bench Verified instances run by both engines and
-scored by the same official harness, this seat resolved **36** and the daily **20**, with sixteen discordant pairs
-all in this seat's favour (p ≈ 2⁻¹⁶). The subsets are outcome-stratified by design, so that is not comparable to the
-daily's published 387/500 — its own rate on these same instances is 20/38. Against it: the daily leads by about six
-points on GSM8K and on tool-eval, which is why `docs/PROMOTION.md` now recommends deciding by workload rather than
-picking a winner.
+**Quality, against the incumbent on matched instances.** On **49 unique** SWE-bench Verified instances — four subsets,
+68 runs, de-duplicated because the subsets overlap — this seat resolved **46** and the daily **27**, with nineteen
+discordant pairs and every one of them in this seat's favour (p ≈ 2⁻¹⁹). The 19 instances that ran both before and
+after the enablement scored identically, so the served configuration is quality-neutral on agentic work, measured
+rather than assumed. The subsets are outcome-stratified by design, so 46/49 is not comparable to the daily's
+published 387/500 — its own rate on these same 49 is 27/49. Against this seat: the daily leads by **6.9 points on
+GSM8K** (0.985 against 0.9158, the latter at n=1319 ±0.0077) and by about six on tool-eval, which is why
+`docs/PROMOTION.md` recommends deciding by workload rather than picking a winner.
 
 **The ceiling is structural and unchanged.** `qwen4_exp` forbids tensor parallelism, so the cards alternate at
 44–47 % duty cycle; expert parallelism is the only lever that would put both on every layer, and it is a project:
