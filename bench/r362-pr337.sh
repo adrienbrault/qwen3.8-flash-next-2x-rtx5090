@@ -22,8 +22,7 @@ log(){ echo "$(date -Is) [r362] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r362-pr337
 . /srv/qwen5090/lib/gpu-queue.sh
-exec 9>/srv/qwen5090/gpu-exclusive.lock
-flock -n 9 || { log "queued behind: $(gpu_queue_others)"; flock 9; }
+gpu_lock   # r363-enable runs this script while holding the lock: reuse its fd 9 instead of taking a second lock
 finish(){ rm -f "${GPU_QUEUE_MARK:-/nonexistent}"; log "=== R362 $1 ==="; }
 trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
 
