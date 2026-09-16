@@ -148,3 +148,18 @@ The general rule this session keeps re-learning: **a check must be able to fail.
 file, `bash -n` on an empty file, a probe that reads one channel of four, a build whose verification step imports
 without its library, a lock holder read from the wrong field of `/proc/locks` — each looked like a green light and
 each was measuring nothing.
+
+**It happened again, worse, an hour later.** Pushing four updated scripts to the host used a loop with no input
+redirection —
+
+    for f in a b c; do ssh flan "sudo cat > /srv/qwen5090/$f && chmod +x /srv/qwen5090/$f"; done
+
+— so `cat >` truncated each target and read nothing. **Three scripts became 0-byte files**, the check I ran was
+`bash -n` (which an empty script passes), and the chain then executed them as `### DONE r366-ourkernel in 0s`,
+`r364-hotvocab in 0s`, `r367-slots in 0s`. Three experiments completed in the log and did no work at all, and
+"completed in 0s" was the only signal — which is easy to read as "fast" rather than "empty".
+
+The fix is a check that can fail, applied to every copy: byte count, a string that must be present, and matching
+hashes on both ends. `r372-chain2.sh` now refuses to start if any step it was asked to run is under 500 bytes, so the
+condition cannot recur silently. The lesson generalises past this host: **a step that reports success without doing
+work is indistinguishable from a step that did the work quickly, unless something counts.**
