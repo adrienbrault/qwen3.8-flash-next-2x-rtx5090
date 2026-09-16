@@ -6,7 +6,7 @@
 #
 #   VARIANTS
 #     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022 (the Mac reaches it at <host>:8022)
-#     DRAFT=1 ./launch-flashnext.sh         # draft depth 1 instead of 3 (better at 4 concurrent requests)
+#     DRAFT=1 ./launch-flashnext.sh         # draft depth 1 at EVERY concurrency, by deriving the policy (see below)
 #     PORT=8023 ./launch-flashnext.sh
 #     STOP=1 ./launch-flashnext.sh          # stop the server
 #
@@ -47,25 +47,49 @@ PORT=${PORT:-8022}
 # MEASURED, not inferred: cache_size 393,216 FAILS the boot with
 #     "RuntimeError: Insufficient VRAM in split for model and cache"  (R337, 2026-09-16)
 # The earlier "~6.08 GiB budget / 444k tokens" figure was derived from FREE VRAM and was wrong -- free VRAM is
-# not allocatable VRAM. exllamav3 autosplits the model across the two GPUs and needs the weights plus the whole
-# cache to fit in that split, so the ceiling is well below the arithmetic. 262,144 boots; treat it as the cap.
+# not allocatable VRAM. The split is pinned BY HAND below (`gpu_split: [30, 30]`, `gpu_split_auto: false`), and the
+# weights plus the whole cache have to fit inside that split, so the ceiling is well below the arithmetic. (An
+# earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
+# when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
 CACHE=${CACHE:-262144}
+# log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
+# EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
+# warning never reached the launcher log.
+LOG=/srv/qwen5090/logs/flashnext-$PORT.log
+log(){ echo "$(date -Is) [flashnext] $*" | tee -a "$LOG"; }
 DRAFT=${DRAFT:-3}
 IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
-# CONCURRENCY-INDEXED DRAFT DEPTH (R340), off unless asked for. The patched engine reads a list of
+# CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
 #   DRAFT_POLICY='[[2, 3], [8, 1]]' ./launch-flashnext.sh
-# ENABLED BY DEFAULT SINCE 2026-09-16, because it was measured: depth 3 while two or fewer jobs are decoding,
-# depth 1 above. Against the same engine with the policy unset: +35 % aggregate at c4 on short contexts
+# Why it is on: against the same engine with the policy unset, +35 % aggregate at c4 on short contexts
 # (252-258 -> 338-347 t/s), no change at c1 or c8, and greedy output byte-identical (sha256 95726ace17d5...).
-# The parity arm — patched engine, policy unset — matched the unpatched control, so the patch alone changes nothing.
+# The parity arm -- patched engine, policy unset -- matched the unpatched control, so the patch alone changes nothing.
 # Disable: DRAFT_POLICY='' .
 # `${VAR-...}` and not `${VAR:-...}`: the colon form also fires on an EMPTY value, which would make the
 # documented `DRAFT_POLICY=''` silently keep the policy on and quietly corrupt any future A/B that tried to
 # disable it. Without the colon, empty means empty and the config line is omitted.
 DRAFT_POLICY=${DRAFT_POLICY-[[2, 3], [8, 1]]}
+# DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
+# the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
+# ABOVE the last ceiling (8). That branch is unreachable here because the generator clamps max_batch_size to
+# cache.num_slots, which is 8 (MAXBS), so with the policy on, `DRAFT=1` changed nothing observable: c1/c2 still
+# drafted 3, c3-c8 already selected 1 by policy, and even the cache's max_history and the generator's capacity are
+# max(DRAFT, policy depths) = 3 either way.
+# So a caller who sets DRAFT explicitly and leaves the policy alone gets that depth at EVERY concurrency, which is
+# what the header's "DRAFT=1 ... better at 4 concurrent requests" has always meant. Setting the policy explicitly
+# still wins -- that is the knob for non-uniform depth.
+if [ -n "${DRAFT+set}" ] && [ "${DRAFT:-3}" != 3 ]; then
+  if [ "$DRAFT_POLICY" = '[[2, 3], [8, 1]]' ]; then
+    DRAFT_POLICY="[[8, $DRAFT]]"
+    DRAFT_DERIVED=1
+  else
+    # Caller set both: say so rather than letting one silently beat the other.
+    log "NOTE: DRAFT=$DRAFT is overridden by the explicit DRAFT_POLICY=$DRAFT_POLICY"
+  fi
+fi
 # HOST KV TIER (R358). 0 keeps every page in VRAM. A nonzero value puts a second-tier KV cache in host RAM, which
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
@@ -93,10 +117,7 @@ TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotu
 CFG=/srv/qwen5090/flashnext-config.yml
 SAMP_PRESET=qwen38_thinking
 SAMP_DIR=/srv/qwen5090/sampler_overrides   # mounted into the container's cwd-relative sampler_overrides/
-LOG=/srv/qwen5090/logs/flashnext-$PORT.log
 mkdir -p /srv/qwen5090/logs "$TUNEDIR" "$SAMP_DIR"
-
-log(){ echo "$(date -Is) [flashnext] $*" | tee -a "$LOG"; }
 
 if [ "${STOP:-0}" = 1 ]; then
   sudo docker rm -f "$NAME" >/dev/null 2>&1 && log "stopped" || log "was not running"
@@ -162,10 +183,17 @@ model:
   # REASONING PARSER. Without this the model's thinking arrives INLINE in \`content\` with its ends
   # delimited by tags, and \`reasoning_content\` is null -- verified 2026-09-16, a reply came back as
   # 'We need to respond to user: ... \n\nMAC REACHES FLAN'. Harnesses render the two fields separately, so
-  # leaving this off leaks the reasoning into the visible answer. The default start/end tokens ( and
-  # ) match this checkpoint's chat template, so they are not overridden.
+  # leaving this off leaks the reasoning into the visible answer.
+  # The default start/end tokens are \` thinking\` and \` response\` (common/config_models.py), and this
+  # checkpoint's chat_template.jinja emits exactly those, so they are deliberately not overridden here. Pin them
+  # only if a template change makes the parser stop splitting -- the config as served does not pin them, and the
+  # 2026-09-16 verification that reasoning_content arrives separately is what checks the assumption.
   reasoning: true
-  # thinking_token_budget is an accepted ALIAS for reasoning_budget_tokens. PROVENANCE CORRECTED 2026-09-16:
+  # thinking_token_budget is a REQUEST-BODY alias for reasoning_budget_tokens (AliasChoices in
+  # endpoints/OAI/types/chat_completion.py) -- it is NOT a config-file alias. ModelConfig has no validation_alias and
+  # TabbyConfigModel.model_validate SILENTLY IGNORES unknown keys, so an editor who follows an earlier version of
+  # this comment and puts thinking_token_budget here would get no budget at all and no warning. This file uses
+  # reasoning_budget_tokens, which is the field the model actually has. PROVENANCE CORRECTED 2026-09-16:
   # this cap did NOT come from the vLLM daily, which has no server-side reasoning budget at all. The only
   # 32768 in that stack is CLIENT-side -- scripts/miniswe/qwen38-local.yaml sets \`max_tokens: 32768\` so a
   # runaway thinking loop releases its slot and the harness recovers from finish_reason=length. That is a
@@ -222,7 +250,7 @@ if sudo docker ps --format '{{.Names}}' | grep -qx vllm-27b; then
 fi
 sudo docker rm -f "$NAME" >/dev/null 2>&1
 for i in $(seq 24); do busy=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | awk '$1>1024{c++} END{print c+0}'); [ "$busy" = 0 ] && break; sleep 5; done
-log "starting on 0.0.0.0:$PORT, draft depth $DRAFT"
+log "starting on 0.0.0.0:$PORT, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
 # Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
 # the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
 HV=()

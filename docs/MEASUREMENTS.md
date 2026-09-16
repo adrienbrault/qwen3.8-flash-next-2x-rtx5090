@@ -12,11 +12,14 @@ architecture), MTP draft depth 3 with concurrency-indexed depth `[[2, 3], [8, 1]
 sampler preset `qwen38_thinking` (T=0.6, top_k 20, top_p 0.95 as **fallbacks**). See `docs/CONFIG.md` for why each
 value.
 
-**Identity of the served configuration**, so a future A/B can prove it started from the same thing: the generated
-config `/srv/qwen5090/flashnext-config.yml` (mounted read-only at the container's `/app/config.yml`, byte-identical
-inside and out) is `sha256 12252e838eaa2c76beb5a637e841992ef094ceb09299271fc7ca547798e18319`, and greedy output on the
-forced-length probe is `750e1459e177c47e` (1,989 bytes). Both recorded in results `2026-09-16-r363-enable`; the
-launcher regenerates the config and the fingerprint is what the A/B scripts compare against.
+**Identity of the served configuration**, so a future A/B can prove it started from the same thing. The primary
+identity is **behavioural**: greedy output on the forced-length probe is `750e1459e177c47e` (1,989 bytes), and the
+probe scripts compare against it. The generated config `/srv/qwen5090/flashnext-config.yml` (mounted read-only at
+the container's `/app/config.yml`, byte-identical inside and out) was `sha256 12252e838eaa…` at that moment, but
+**that hash moves when a comment in the launcher's heredoc moves** — the file carries its own explanation inline.
+Verified 2026-09-16: after correcting six comments, the rendered config differed from the served one in comment lines
+only, with no differing setting. Read the hash as a provenance marker, not as the contract; grep the file for the
+keys when it matters.
 
 ## Decode, code, forced length — `bench/probe.py`, results `2026-09-16-r339-longgen`
 
