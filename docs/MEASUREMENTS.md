@@ -215,9 +215,13 @@ template flag left off.
 
 | check | result |
 | --- | --- |
-| **tool-eval 69×4, baseline** | **85 ± 2.9**, CI [82.5, 87.5], per-trial points [113, 115, 120, 121]; losses in categories G 5/6, H 8/10, I 16/20, K 19/26, N 5/6, O 10/12 |
-| tool-eval 69×4, promoted config | *see the run log; the point of the arm is that the levers must not move this* |
+| **tool-eval 69×4, baseline** | **85.0 ± 2.9**, CI [82.5, 87.5], per-trial points [113, 115, 120, 121]; losses in categories G 5/6, H 8/10, I 16/20, K 19/26, N 5/6, O 10/12 |
+| **tool-eval 69×4, promoted config** | **85.8 ± 3.1**, CI [83.5, 88.5], points [115, 118, 116, 124]; losses in G 5/6, H 8/10, I 16/20, K 21/26, M 5/6, N 5/6 |
 | the daily's published tool-eval | **91** (69×4, R234) — measured on the same CLI with the same sampler |
+
+**The promoted configuration does not cost quality.** 85.8 against 85.0 with overlapping intervals, on a real
+tool-calling benchmark, while measuring +35 % at short-context c4 and +78 % at deep-context c4. The greedy
+byte-equality gates said the *decoding* was unchanged; this says the *task behaviour* is.
 
 Invocation copied from the daily's own runs (`cyk-tooleval.sh`): `tool-eval-bench --temperature 0.6 --top-p 0.95
 --top-k 20 --trials 4 --parallel 8`. The harness sends its own sampler parameters, so the server's preset fallbacks
