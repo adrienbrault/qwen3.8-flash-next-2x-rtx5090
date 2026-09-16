@@ -22,7 +22,11 @@ API=http://127.0.0.1:8022/v1
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
 LIVE=/srv/qwen5090/launch-flashnext.sh          # the live launcher, NOT the r340 snapshot
 EXPECT_IMG=${EXPECT_IMG:-tabbyapi:qsa-cid-pr337}
-EXPECT_PRINT=${EXPECT_PRINT:-750e1459e177c47e}
+# The fingerprint below is a DIRECTORY hash (lib/greedy-compare.sh greedy_hash) over the 4-prompt capture. The
+# 750e1459e177c47e recorded in docs/MEASUREMENTS.md comes from the OTHER capture tool, a single-file sha256, and
+# the two are not comparable -- comparing them is the same mistake as comparing numbers from two instruments.
+# Measure this one on the served configuration and record it there; until then an empty value means "not yet pinned".
+EXPECT_PRINT=${EXPECT_PRINT:-}
 WAIT_FOR=${WAIT_FOR:-r372-chain2}
 log(){ echo "$(date -Is) [r373] $*" | tee -a "$R/audit.log"; }
 export GPU_QUEUE_NAME=r373-restore
@@ -52,16 +56,22 @@ log "serving: $IMG"
 [ "$IMG" = "$EXPECT_IMG" ] || log "WARNING: expected $EXPECT_IMG — the live launcher's default is not the promoted image"
 
 # Same greedy fingerprint the enablement gate uses, so this asserts BEHAVIOUR and not just a tag.
-FILES=$R/greedy; rm -rf "$FILES"; mkdir -p "$FILES"
+# Do NOT create the directory: the probe calls dest.mkdir(parents=True, exist_ok=False) and refuses to share a name
+# with anything. Pre-creating it made the capture fail with FileExistsError, the capture wrote nothing, the
+# directory hash came out as the hash of the empty string, and the unit then reported a fingerprint MISMATCH --
+# a wrong conclusion about the server produced by a wrong assumption about the tool.
+FILES=$R/greedy; rm -rf "$FILES"
 python3 /srv/qwen5090/probes/hotvocab-greedy-capture.py --url "$API" --model "$MODEL" --out-dir "$FILES" \
   >> "$R/audit.log" 2>&1 || log "capture FAILED"
 . /srv/qwen5090/lib/greedy-compare.sh
 GOT=$(greedy_hash "$FILES")
 log "greedy dirhash: $GOT"
-if [ "$GOT" = "$EXPECT_PRINT" ]; then
+if [ -z "$EXPECT_PRINT" ]; then
+  log "measured dirhash: $GOT — no reference pinned yet; copy this into the launcher's record to pin it"
+elif [ "$GOT" = "$EXPECT_PRINT" ]; then
   log "PASS: the served configuration is byte-identical to the fingerprinted one"
 else
-  log "CHECK: dirhash differs from the recorded $EXPECT_PRINT — the served configuration is not the fingerprinted one"
+  log "CHECK: dirhash $GOT differs from the pinned $EXPECT_PRINT — the served configuration is not the fingerprinted one"
 fi
 log "policy line in the served config: $(sudo grep -c draft_num_tokens_by_batch /srv/qwen5090/flashnext-config.yml 2>/dev/null)"
 finish DONE
