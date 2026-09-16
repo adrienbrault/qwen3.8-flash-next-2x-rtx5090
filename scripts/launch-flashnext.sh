@@ -58,6 +58,10 @@ IMG=${IMG:-tabbyapi:53da7919-rqcount}      # TabbyAPI 53da7919 + ExLlamaV3 v1.5.
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
 #   DRAFT_POLICY='[[2, 3], [8, 1]]' ./launch-flashnext.sh
 DRAFT_POLICY=${DRAFT_POLICY:-}
+# HOST KV TIER (R358). 0 keeps every page in VRAM. A nonzero value puts a second-tier KV cache in host RAM, which
+# can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
+# admission test is the one to read it against. Same units as the config: MiB.
+SYS_KV=${SYS_KV:-0}
 CKPT=/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
 TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotune); survives container replacement
@@ -168,7 +172,7 @@ draft_model:
   dynamic_draft: false       # measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4
 memory:
   sysmem_recurrent_cache: 4096
-  sysmem_kv_cache: 0
+  sysmem_kv_cache: $SYS_KV
 sampling:
   # Fallbacks for clients that send no sampler at all -- see the header. Without this line TabbyAPI warns at
   # boot and serves every such request at temperature 1.0 with no truncation (R338).
