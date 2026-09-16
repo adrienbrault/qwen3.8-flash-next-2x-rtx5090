@@ -43,18 +43,29 @@ ASK_CODE = ("\n\nNow write the complete source of a production-quality Python mo
 
 
 NOFORCE = [False]
+UNIQUE = [False]
 
 
-def filler(ctx_tokens, kind):
+def filler(ctx_tokens, kind, salt=None):
     """Deterministic padded passage of roughly ctx_tokens tokens (~1.3 tokens per word)."""
     unit = CODE if kind == "code" else PROSE
     if ctx_tokens <= 0:
         return ""
+    if salt is not None:
+        # A per-request salt rebuilds the passage from a different RNG stream, so two requests share no token
+        # sequence at all. Without it, concurrent requests share the filler and the pool test measures prefix
+        # reuse instead of independent context footprint.
+        import random
+        rnd = random.Random(salt)
+        words = [rnd.choice(unit.split()) for _ in range(int(ctx_tokens / 1.6))]
+        return " ".join(words) + " "
     reps = int(ctx_tokens / 1.3 / max(len(unit.split()), 1)) + 1
     return (unit * reps)[: int(ctx_tokens * 4.2)]
 
 
 def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_force=False):
+    if UNIQUE[0] and prompt.startswith(PREFIX[0]):
+        prompt = PREFIX[0] + filler(CTX[0], KIND[0], salt=1000 + idx) + prompt[len(PREFIX[0]):]
     if distinct:
         # Threads must not share a prefix: with the paged cache, identical prompts collapse onto the same pages
         # and an admission test then measures prefix reuse instead of concurrent context footprint.
@@ -146,6 +157,11 @@ def round_run(url, model, conc, ntok, chat, prompt, timeout, sink, log, distinct
     return time.time() - t0
 
 
+PREFIX = [""]
+CTX = [0]
+KIND = ["code"]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", required=True)
@@ -159,12 +175,15 @@ def main():
     ap.add_argument("--kind", choices=["prose", "code"], default="prose")
     ap.add_argument("--completions", action="store_true", help="use /completions instead of /chat/completions")
     ap.add_argument("--no-force", action="store_true", help="omit min_tokens (reproduces the EOS trap)")
+    ap.add_argument("--unique", action="store_true",
+                    help="rebuild the filler per request from a different RNG stream: no shared token sequence")
     ap.add_argument("--distinct", action="store_true",
                     help="give every concurrent request a unique suffix so they cannot share cached pages")
     ap.add_argument("--timeout", type=float, default=3600)
     ap.add_argument("--out", required=True, help="JSONL: one line per request, never a summary")
     a = ap.parse_args()
     NOFORCE[0] = a.no_force
+    UNIQUE[0] = a.unique
 
     fill = filler(a.ctx[0], a.kind)
     ask = ASK_CODE if a.kind == "code" else ASK_PROSE
@@ -176,6 +195,9 @@ def main():
     for ctx in a.ctx:
         fill = filler(ctx, a.kind)
         prompt = (fill + ("\n\n" + ask if fill else ask.strip() + " Begin now."))
+        CTX[0] = ctx
+        KIND[0] = a.kind
+        PREFIX[0] = fill
         if len(a.ctx) > 1:
             print(f"  ### ctx~{ctx}", flush=True)
         for c in a.conc:

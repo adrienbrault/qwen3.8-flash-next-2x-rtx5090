@@ -60,21 +60,42 @@ server saw is quoted.
 A pass at every planted position, not just near the end, is what makes this a gate rather than a demonstration.
 The daily's equivalent instrument (`needle_gate.sh`) is a llama.cpp-era probe; this one speaks the OpenAI chat API.
 
-## Admission: eight distinct deep contexts at once — results `2026-09-16-r339-gates`
+## Decode and TTFT against prompt depth — `bench/probe.py`, results `2026-09-16-r343-depth`
 
-Eight concurrent requests, each with its **own** ~38,283-token prompt (unique suffixes, so no page sharing) and 512
-forced output tokens. `cache_size` is 262,144 tokens, so the eight prompts total 306k — more than the pool.
+Code, 1,024 forced tokens, c1, greedy. The rungs are labels: the filler's token estimate runs ~28 % high, so the
+`prompt tokens seen` column is what the server actually received.
+
+| requested depth | prompt tokens seen | decode (t/s) | TTFT (s) |
+| --- | --- | --- | --- |
+| 0 | 101 | 183.4 / 189.0 | 0.15 |
+| 30,000 | 38,266 | 155.5 / 158.9 | 0.74 cold, **0.24 warm** |
+| 120,000 | 152,761 | 150.1 / 155.6 | 24.0 cold, **0.43 warm** |
+
+Decode falls only 18 % from a 101-token prompt to a 152,761-token one. The larger result is the second column of
+TTFT: a 152k prompt costs 24 s cold and **0.43 s on a repeat**, a 56× improvement from the paged prefix cache. For
+an agent that resends a long conversation every step, that is the difference between usable and not.
+
+At c4 the same rungs read 50.3–53.7 t/s per stream at 38,283 prompt tokens (TTFT 0.73–1.01 s) and 46.9–49.9 t/s at
+152,778 (TTFT 1.62–1.67 s). **Those c4 rows share their filler prefix** — only a short suffix differs between the
+four requests — so they measure shared-prefix concurrency, which is what a fan-out of agents on one harness
+actually sends, not four independent contexts. Independent contexts are measured in `2026-09-16-r345-pool`.
+
+## Admission of deep contexts — results `2026-09-16-r339-gates` and `2026-09-16-r345-pool`
+
+Eight concurrent requests, each carrying 38,283 prompt tokens and 512 forced output tokens.
 
 | | value |
 | --- | --- |
 | admitted / completed | **8 / 8** |
 | TTFT | 59.4–62.4 s (all eight within 3 s of each other) |
 | decode | 28.5–33.6 t/s per stream, ~256 t/s aggregate |
-| wall | 77.3–77.8 s |
 
-So eight deep-context agents coexist: they interleave through the pool rather than being rejected, at a ~1 minute
-first-token cost when all eight arrive together. The daily's equivalent reads a 3.6 s TTFT at 30k for a *single*
-request (R177) — this is the cost of an 8-slot, 262k-token pool against a 16-slot, 1.39M-token one.
+All eight arrived together and prefilled concurrently, so the ~60 s is what it costs to put 8 × 38k tokens through
+this box at once — an effective prefill of ~5,100 t/s aggregate. **Caveat that the first run did not establish:**
+those eight requests shared one 38k-token filler and differed only in a short suffix, so this measures the
+realistic same-harness fan-out, not independent context footprint against the 262,144-token pool. `r345-pool`
+repeats it with a per-request RNG stream so the requests share no token sequence, and captures the server's own
+`cached_tokens` figures as evidence rather than inferring sharing from timings.
 
 ## Decode at the requeue boundary — 2,048 forced tokens, results `2026-09-16-r339-gates`
 

@@ -44,7 +44,11 @@ def one(idx, url, model, prompt, ntok, sink, timeout):
                 if c.get("usage"):
                     rec["usage"] = c["usage"]
                 for ch in c.get("choices") or []:
-                    rec["text"] += (ch.get("delta") or {}).get("content") or ""
+                    d = ch.get("delta") or {}
+                    # Reasoning first, then content: a capture that keeps only content records nothing while the
+                    # model is still thinking, and two empty captures compare equal.
+                    rec["text"] += d.get("reasoning_content") or ""
+                    rec["text"] += d.get("content") or ""
         rec["wall_s"] = round(time.time() - t0, 2)
         rec["decode_tps"] = round((rec["usage"] or {}).get("completion_tokens", 0) / max(rec["wall_s"], 1e-9), 1)
     except Exception as e:
@@ -75,6 +79,9 @@ def main():
     wall = round(time.time() - t0, 2)
     for rec in sorted(sink, key=lambda r: r["i"]):
         path = f"{a.out_prefix}.{rec['i']}.txt"
+        if len(rec["text"]) < 200:
+            print(f"  WARNING: captured text for conc{rec['i']} is {len(rec['text'])} bytes; "
+                  f"the equality gate would be vacuous", flush=True)
         open(path, "w").write(rec["text"])
         u = rec["usage"] or {}
         print(f"  conc{rec['i']}: prompt_tokens={u.get('prompt_tokens')} n={u.get('completion_tokens')} "

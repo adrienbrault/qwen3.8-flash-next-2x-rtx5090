@@ -48,21 +48,28 @@ print("engine marker _get_draft_depth:", "def _get_draft_depth(self, batch_size:
 PY
 }
 
-greedy_text(){  # one greedy request, text captured for the byte-equality gate
+greedy_text(){  # one greedy request, BOTH channels captured for the byte-equality gate
   curl -sN -m 600 "$API/chat/completions" -H 'Content-Type: application/json' \
     -d "{\"model\":\"$MODEL\",\"max_tokens\":512,\"min_tokens\":512,\"temperature\":0,\"stream\":true,
          \"messages\":[{\"role\":\"user\",\"content\":\"Write a Python LRU cache with type hints. Code only.\"}]}" \
     | sed -n 's/^data: //p' | grep -v '^\[DONE\]$' \
     | python3 -c '
 import sys, json
-out = []
+# BOTH channels, reasoning first: with `reasoning: true` the first hundreds of tokens are reasoning_content, and a
+# capture that keeps only content records nothing -- which would make two empty files compare equal and the gate
+# pass for the wrong reason.
+r, c = [], []
 for line in sys.stdin:
-    try: c = json.loads(line)
+    try: ch = json.loads(line)
     except Exception: continue
-    for ch in c.get("choices") or []:
-        out.append((ch.get("delta") or {}).get("content") or "")
-sys.stdout.write("".join(out))' > "$1"
-  wc -c < "$1" | xargs -I{} log "  greedy text captured: {} bytes -> $1"
+    for choice in ch.get("choices") or []:
+        d = choice.get("delta") or {}
+        if d.get("reasoning_content"): r.append(d["reasoning_content"])
+        if d.get("content"): c.append(d["content"])
+sys.stdout.write("REASONING:" + "".join(r) + "\nCONTENT:" + "".join(c))' > "$1"
+  local n; n=$(wc -c < "$1")
+  log "  greedy text captured: $n bytes -> $1"
+  if [ "$n" -lt 200 ]; then log "  ERROR: captured text is empty/implausibly short; the equality gate would be vacuous"; rm -f "$1"; return 1; fi
 }
 
 # --- arm 1: control (current baseline) -----------------------------------------------------------
@@ -82,9 +89,13 @@ $PROBE --tag treatment --out "$R/records.jsonl" 2>&1 | tee -a "$R/audit.log"
 
 # --- correctness gates ---------------------------------------------------------------------------
 log "=== byte-equality of greedy output (both arms select depth 3 at c1) ==="
-if cmp -s "$R/greedy-control.txt" "$R/greedy-treatment.txt"; then log "PASS control == treatment";
+# cmp -s on two missing/empty files reports equality. Refuse to run the gate unless both captures are real.
+for f in greedy-control greedy-parity greedy-treatment; do
+  [ -s "$R/$f.txt" ] || { log "GATE INVALID: $f.txt is missing or empty -- not comparing fingerprints"; GATE_OK=0; }
+done
+if [ "${GATE_OK:-1}" = 1 ] && cmp -s "$R/greedy-control.txt" "$R/greedy-treatment.txt"; then log "PASS control == treatment";
 else log "FAIL control != treatment ($(cmp -l "$R/greedy-control.txt" "$R/greedy-treatment.txt" | wc -l | tr -d ' ') differing bytes)"; fi
-if cmp -s "$R/greedy-control.txt" "$R/greedy-parity.txt"; then log "PASS control == parity (patch alone changes nothing)";
+if [ "${GATE_OK:-1}" = 1 ] && cmp -s "$R/greedy-control.txt" "$R/greedy-parity.txt"; then log "PASS control == parity (patch alone changes nothing)";
 else log "FAIL control != parity -- the patch alone changes output"; fi
 
 # --- back to the baseline ------------------------------------------------------------------------
