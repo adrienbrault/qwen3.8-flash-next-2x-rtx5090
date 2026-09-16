@@ -46,7 +46,23 @@ probes(){  # <tag> [prefill-heavy]
      --tokens 1024 --ctx 120000 --conc 4 --runs 1 --out "$R/records-$1.jsonl" 2>&1 | grep -E "^  c=|FAILED" | tee -a "$R/audit.log"
   # Prefill ladder: what #246's assessment says its claim is about. TTFT is the column to read.
   python3 /srv/qwen5090/probes/fn_bench.py --url "$API" --model "$MODEL" --tag "$1-prefill" --kind code \
-     --tokens 64 --ctx 0 30000 240000 --conc 1 --runs 1 --out "$R/records-$1.jsonl" 2>&1 | grep -E "^  c=" | tee -a "$R/audit.log"
+     --tokens 64 --ctx 0 30000 120000 --conc 1 --runs 1 --out "$R/records-$1.jsonl" 2>&1 | grep -E "^  c=" | tee -a "$R/audit.log"
+   # BOUNDARY GATE, replacing a rung that could never measure anything. The probe's filler is approximate -- it aims
+   # for ~1.3 tokens per word and overshoots: `--ctx 30000` produced prompt_tokens 38266 and `--ctx 120000` produced
+   # 152761, both about 1.27x. So `--ctx 240000` (which this ladder used to ask for) is a ~306,000-token prompt
+   # against a 262,144-token window and can only ever return HTTP 400 -- which is exactly what it did on 2026-09-16,
+   # on every arm, and the rung measured nothing while looking like a failed measurement.
+   # Kept as an explicit gate instead, because the answer is worth knowing: an over-window request must be REFUSED,
+   # not silently truncated to the window. A 400 here is a PASS.
+   log "  boundary: a ~306k-token prompt against the 262,144 window (expect HTTP 400, not a truncated answer)"
+   bout=$(python3 /srv/qwen5090/probes/fn_bench.py --url "$API" --model "$MODEL" --tag "boundary-over-window" --kind code \
+     --tokens 64 --ctx 240000 --conc 1 --runs 1 --out "$R/records-$1.jsonl" 2>&1)
+   echo "$bout" | grep -E "FAILED|^  c=" | tee -a "$R/audit.log"
+   if echo "$bout" | grep -q "HTTP Error 400"; then
+     log "  boundary PASS: refused with 400 rather than truncating to the window"
+   else
+     log "  boundary CHECK: no 400 seen — either it was accepted (read the row) or it failed for another reason"
+   fi
 }
 
 build(){  # build <dir> <dockerfile> <tag> [extra build-args...]
