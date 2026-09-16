@@ -70,6 +70,11 @@ DRAFT_POLICY=${DRAFT_POLICY-[[2, 3], [8, 1]]}
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
 SYS_KV=${SYS_KV:-0}
+# MTP HOT VOCABULARY (upstream PR #303, ported to this checkpoint's qwen4_exp_mtp). Empty means the feature is off,
+# which is also the control arm: the patched engine's disabled path must be byte-identical to the unpatched one.
+# Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.
+#   HOTVOCAB_MAP=/srv/qwen5090/mtp-hot-blocks.txt
+HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 CKPT=/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
 TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotune); survives container replacement
@@ -206,7 +211,17 @@ fi
 sudo docker rm -f "$NAME" >/dev/null 2>&1
 for i in $(seq 24); do busy=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | awk '$1>1024{c++} END{print c+0}'); [ "$busy" = 0 ] && break; sleep 5; done
 log "starting on 0.0.0.0:$PORT, draft depth $DRAFT"
-sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped \
+# Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
+# the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
+HV=()
+if [ -n "$HOTVOCAB_MAP" ]; then
+  [ -f "$HOTVOCAB_MAP" ] || { log "ABORT: HOTVOCAB_MAP $HOTVOCAB_MAP not found"; exit 3; }
+  HV=(-v "$HOTVOCAB_MAP":/models/mtp-hot-blocks.txt:ro
+      -e EXL3_MTP_HOT_BLOCKS=/models/mtp-hot-blocks.txt
+      -e EXL3_MTP_HOT_EMBED_DTYPE=fp16
+      -e EXL3_MTP_VALIDATE_SUBHEAD=0)
+fi
+sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${HV[@]}" \
   -v "$TUNEDIR":/exl3-cache -e TRITON_CACHE_DIR=/exl3-cache -e EXLLAMAV3_TUNE_CACHE=/exl3-cache \
   -p 0.0.0.0:$PORT:$PORT \
   -v /srv/qwen5090/models:/models:ro -v "$CFG":/app/config.yml:ro \

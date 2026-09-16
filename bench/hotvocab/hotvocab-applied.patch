@@ -1,0 +1,388 @@
+diff --git a/exllamav3/__init__.py b/exllamav3/__init__.py
+--- a/exllamav3/__init__.py
++++ b/exllamav3/__init__.py
+@@ -43,4 +43,5 @@
+ from .tokenizer import Tokenizer, MMEmbedding
+ from .cache import Cache, CacheLayer_fp16, CacheLayer_quant
+ from .generator import Generator, Job, AsyncGenerator, AsyncJob, Filter, FormatronFilter, LLGuidanceFilter
+-from .generator.sampler import *
+\ No newline at end of file
++from .generator.sampler import *
++from .architecture.mtp_hot_vocab import MTPHotVocabConfig
+diff --git a/exllamav3/architecture/qwen4_exp_mtp.py b/exllamav3/architecture/qwen4_exp_mtp.py
+--- a/exllamav3/architecture/qwen4_exp_mtp.py
++++ b/exllamav3/architecture/qwen4_exp_mtp.py
+@@ -10,6 +10,8 @@
+ from ..modules.module import Module
+ from ..modules.arch_specific.qwen4_exp_mtp import Qwen4ExpMTPInputLayer
+ from ..modules.attn import prepare_for_attn
++from ..modules.quant.exl3 import LinearEXL3
++from .mtp_hot_vocab import MTPHotVocabConfig, validate_mtp_hot_blocks
+ 
+ from typing import TYPE_CHECKING
+ if TYPE_CHECKING:
+@@ -63,9 +65,13 @@
+     def __init__(
+         self,
+         config: Qwen4ExpConfig,
++        mtp_hot_vocab_config: MTPHotVocabConfig | None = None,
+         **kwargs
+     ):
+         super().__init__(config, **kwargs)
++        self.mtp_hot_vocab_config = (
++            mtp_hot_vocab_config if mtp_hot_vocab_config is not None else MTPHotVocabConfig.from_env()
++        )
+         from .qwen4_exp import build_qwen4_block
+ 
+         self.input_layer = Qwen4ExpMTPInputLayer(
+@@ -122,6 +128,10 @@
+         self.target_embed = None
+         self.target_lm_head = None
+         self.attached_model = None
++        self.mtp_sub_lm_head = None
++        self.mtp_hot_vocab = 0
++        self.mtp_hot_id_map = None
++        self.mtp_subhead_validation = None
+ 
+     @override
+     def prepare_inputs(self, input_ids: torch.Tensor, params: dict) -> torch.Tensor:
+@@ -150,12 +160,103 @@
+         assert isinstance(target.modules[-1], Linear), "Expected Linear lm_head as last target module"
+         self.target_lm_head = weakref.ref(target.modules[-1])
+ 
++        # Experimental single-GPU MTP fast path. Draft against a selected vocabulary subset and
++        # keep its matching input embeddings on GPU. The full target head still verifies every
++        # proposed token, so the subset changes draft cost and acceptance rather than target quality.
++        self._clear_hot_vocab()
++        hot_config = self.mtp_hot_vocab_config
++        hot_blocks_path = hot_config.blocks_path
++        full_head = target.modules[-1].inner
++        if hot_blocks_path:
++            if target.loaded_tp:
++                raise ValueError("MTP hot vocabulary currently supports layer-split inference only")
++            if not isinstance(full_head, LinearEXL3):
++                raise ValueError("MTP hot vocabulary currently requires an EXL3 lm_head")
++            # Keep the entire target/draft on one CUDA device (CPU embeddings/experts allowed).
++            devices = {torch.device("cuda", d) for d in target.active_devices + self.active_devices}
++            if devices != {full_head.trellis.device} or full_head.trellis.device.type != "cuda":
++                raise ValueError("MTP hot vocabulary requires target and draft on the same single GPU")
++            if self.input_layer.device != full_head.trellis.device or self.stack_out.mixer.device != full_head.trellis.device:
++                raise ValueError("MTP input and mixer must be loaded on the head device before attachment")
++            if target_embed.normalize or target_embed.multiplier != 1.0:
++                raise ValueError("MTP hot vocabulary requires unscaled, unnormalized embeddings")
++            full_vocab = target.modules[-1].out_features_unpadded
++            with open(hot_blocks_path, "r", encoding = "utf-8") as f:
++                block_ids = [int(line) for line in f if line.strip() and not line.lstrip().startswith("#")]
++            validate_mtp_hot_blocks(block_ids, full_vocab)
++            block_idx = torch.tensor(block_ids, device = full_head.trellis.device, dtype = torch.long)
++            token_ids = (
++                block_idx[:, None] * 16 +
++                torch.arange(16, device = block_idx.device)[None, :]
++            ).flatten()
++            token_ids = token_ids[token_ids < full_vocab]
++            # Keep complete packed blocks. The model's vocabulary is block-aligned today;
++            # rejecting a partial final block avoids ambiguous EXL3 output dimensions.
++            if token_ids.numel() != len(block_ids) * 16:
++                raise ValueError("MTP hot blocks may not include a partial final vocabulary block")
++            hot_vocab = token_ids.numel()
++            trellis = full_head.trellis.index_select(1, block_idx).contiguous()
++            svh = full_head.svh.index_select(0, token_ids).contiguous()
++            bias = full_head.bias.index_select(0, token_ids).contiguous() if full_head.bias is not None else None
++            self.mtp_hot_id_map = token_ids
++            self.mtp_sub_lm_head = LinearEXL3(
++                config = target.config,
++                in_features = full_head.in_features,
++                out_features = hot_vocab,
++                suh = full_head.suh,
++                svh = svh,
++                trellis = trellis,
++                mcg = full_head.mcg_tensor,
++                mul1 = full_head.mul1_tensor,
++                bias = bias,
++                out_dtype = full_head.out_dtype,
++                key = "mtp.hot_lm_head",
++            )
++            weight = target_embed.embedding.weight
++            embed = weight.detach().index_select(0, token_ids.to(weight.device))
++            embed_dtype = hot_config.embedding_dtype.lower()
++            if embed_dtype in ("fp8", "float8", "e4m3"):
++                embed_dtype = torch.float8_e4m3fn
++            elif embed_dtype in ("fp16", "float16", "half"):
++                embed_dtype = torch.float16
++            else:
++                raise ValueError(f"Unsupported MTP hot-embedding dtype: {embed_dtype!r}")
++            self.input_layer.hot_embedding = embed.to(
++                device = full_head.trellis.device,
++                dtype = embed_dtype,
++            ).contiguous()
++            inverse = torch.full((full_vocab,), -1, device = token_ids.device, dtype = torch.long)
++            inverse[token_ids] = torch.arange(hot_vocab, device = token_ids.device)
++            self.input_layer.hot_inverse = inverse
++            self.mtp_hot_vocab = hot_vocab
++
++            if hot_config.validate_full_head:
++                self.mtp_subhead_validation = {
++                    "total": 0,
++                    "full_in_hot_vocab": 0,
++                    "matches_when_full_in_hot_vocab": 0,
++                }
++
++
+         target_mixer = target.modules[target.logit_layer_idx - 1]
+         assert isinstance(target_mixer, GatedResidual) and not target_mixer.use_combine, \
+             "Expected the trunk's combine-less mixer immediately before lm_head"
+         self.draft_verifier_params.update({
+             "export_state_norm_keys": {target_mixer.key},
+         })
++
++    def _clear_hot_vocab(self):
++        self.mtp_hot_vocab = 0
++        self.mtp_sub_lm_head = None
++        self.mtp_hot_id_map = None
++        self.mtp_subhead_validation = None
++        self.input_layer.hot_embedding = None
++        self.input_layer.hot_inverse = None
++
++    @override
++    def unload(self):
++        self._clear_hot_vocab()
++        super().unload()
+ 
+     def default_load_shape_dtype(self, chunk_size):
+         return (1, 1), torch.long
+@@ -173,6 +274,27 @@
+         bsz, seq, _ = state.shape
+         stack = to_device(state, mixer.device).view(bsz, seq, mixer.hc_mult, mixer.hidden_size)
+         state = mixer.forward(stack, params)
++        if self.mtp_sub_lm_head is not None:
++            state = to_device(state, self.mtp_sub_lm_head.trellis.device).contiguous()
++            logits = self.mtp_sub_lm_head.forward(state, params)
++            if params.get("export_draft_conf"):
++                conf, sub_argmax = torch.max(logits, dim = -1)
++                params["draft_conf"] = conf
++            else:
++                sub_argmax = torch.argmax(logits, dim = -1)
++            sub_argmax = self.mtp_hot_id_map[sub_argmax]
++            if self.mtp_subhead_validation is not None:
++                ll = self.attached_model().logit_layer_idx
++                lm = self.attached_model().modules[ll]
++                full_state = lm.prepare_for_device(state, params)
++                full_argmax = torch.argmax(lm.forward(full_state, params)[..., :self.attached_model().config.vocab_size], dim = -1)
++                in_hot = self.input_layer.hot_inverse[full_argmax] >= 0
++                matches = sub_argmax == full_argmax
++                stats = self.mtp_subhead_validation
++                stats["total"] += full_argmax.numel()
++                stats["full_in_hot_vocab"] += in_hot.sum().item()
++                stats["matches_when_full_in_hot_vocab"] += (matches & in_hot).sum().item()
++            return sub_argmax
+         ll = self.attached_model().logit_layer_idx
+         lm = self.attached_model().modules[ll]
+         logits = lm.prepare_for_device(state, params)
+diff --git a/exllamav3/generator/generator.py b/exllamav3/generator/generator.py
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -748,6 +748,8 @@
+         cal = self.draft_calibrator
+         conf_cols = []
+         reach = None
++        hot_vocab = getattr(self.draft_model, "mtp_hot_vocab", 0)
++        draft_ids_gpu = [] if hot_vocab else None
+         for idx in range(window):
+             params = {
+                 "target_hidden": temp_hidden,
+@@ -755,6 +757,7 @@
+                 "block_table": block_index,
+                 "cache": self.draft_cache,
+                 "cache_seqlens": cache_seqlens,
++                "mtp_hot_embedding": bool(hot_vocab and idx > 0),
+             }
+             if cal is not None:
+                 params["export_draft_conf"] = True
+@@ -762,8 +765,12 @@
+             lm_head = self.model.modules[self.model.logit_layer_idx]
+             batch_state = lm_head.prepare_for_device(batch_state, params)
+             new_ids = self.draft_model.sample_from_state(batch_state, params)
+-            self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
+-            batch_ids.copy_(new_ids)
++            if hot_vocab:
++                draft_ids_gpu.append(new_ids)
++                batch_ids = new_ids
++            else:
++                self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
++                batch_ids.copy_(new_ids)
+             cache_seqlens += 1
+             temp_hidden = batch_state
+             draft_conf = params.get("draft_conf")
+@@ -775,6 +782,9 @@
+                 if idx + 1 < window and max(reach) < cal.confidence:
+                     window = idx + 1
+                     break
++
++        if hot_vocab:
++            self.draft_ids_pinned[:batch_size, :window].copy_(torch.cat(draft_ids_gpu, dim = -1))
+ 
+         if conf_cols and len(conf_cols) == window:
+             self._draft_conf_round = {
+@@ -1146,6 +1156,9 @@
+                 accepted_length = 1
+                 rejected = 0
+ 
++                if self.record_draft_stats and draft_tokens is not None:
++                    job.draft_token_ids.extend(draft_tokens[j].tolist())
++
+                 for i in range(batch_logits.shape[1]):
+                     token_logits = job_logits[:, i:i + 1, :]
+                     next_token, next_k_tokens, next_k_probs, next_prob = job.receive_logits(
+diff --git a/exllamav3/generator/job.py b/exllamav3/generator/job.py
+--- a/exllamav3/generator/job.py
++++ b/exllamav3/generator/job.py
+@@ -278,6 +278,7 @@
+         self.rq_prompt_tokens = rq_state.get("prompt_tokens")
+         self.rq_cached = rq_state.get("cached")
+         self.draft_stats = []
++        self.draft_token_ids = []
+         self.cached_pages = 0
+         self.cached_tokens = 0
+         self.is_finished = False
+diff --git a/exllamav3/model_init.py b/exllamav3/model_init.py
+--- a/exllamav3/model_init.py
++++ b/exllamav3/model_init.py
+@@ -7,6 +7,7 @@
+ from argparse import ArgumentParser
+ import yaml
+ from pathlib import Path
++from .architecture.mtp_hot_vocab import MTPHotVocabConfig
+ 
+ def add_args(
+     parser: ArgumentParser,
+@@ -121,6 +122,10 @@
+         parser.add_argument("-dds", "--dynamic_draft", action = "store_true", help = "Dynamically adapt draft length to acceptance rate (num_draft_tokens acts as ceiling)")
+         parser.add_argument("-dc", "--draft_confidence", type = float, help = "Confidence target for dynamic draft truncation, default: 0.4", default = 0.4)
+         parser.add_argument("-dmcl", "--draft_moe_cpu_layers", type = int, help = "Experimental: like --moe_cpu_offload, but for the draft model (or MTP head)", default = 0)
++
++        parser.add_argument("--mtp_hot_blocks", type = str, default = None, help = "Experimental: packed EXL3 block map for the Qwen MTP draft head")
++        parser.add_argument("--mtp_hot_embedding_dtype", choices = ("fp16", "fp8"), default = None, help = "Embedding-copy dtype for --mtp_hot_blocks (default: fp16)")
++        parser.add_argument("--mtp_hot_validate", action = "store_true", default = None, help = "Validate subset-head argmax against the full draft head (slow; diagnostics only)")
+ 
+ 
+ def get_arg_sampler(args):
+@@ -259,10 +264,25 @@
+ 
+     # Model instance
+     model = Model.from_config(config, swa_full = args.swa_full)
++    hot_env = MTPHotVocabConfig.from_env()
++    hot_config = MTPHotVocabConfig(
++        blocks_path = getattr(args, "mtp_hot_blocks", None) or hot_env.blocks_path,
++        embedding_dtype = getattr(args, "mtp_hot_embedding_dtype", None) or hot_env.embedding_dtype,
++        validate_full_head = (
++            getattr(args, "mtp_hot_validate", None)
++            if getattr(args, "mtp_hot_validate", None) is not None else hot_env.validate_full_head
++        ),
++    )
++    if hot_config.enabled:
++        from .architecture.qwen4_exp_mtp import Qwen4ExpMTPModel
++        if not use_mtp or draft_config.model_classes.get("mtp") is not Qwen4ExpMTPModel:
++            raise ValueError("This MTP hot-vocabulary port requires qwen4_exp --mtp")
++    draft_kwargs = {"mtp_hot_vocab_config": hot_config} if hot_config.enabled else {}
+     draft_model = Model.from_config(
+         draft_config,
+         swa_full = args.swa_full,
+         component = "mtp" if use_mtp else "text",
++        **draft_kwargs,
+     ) if draft_model_dir else None
+ 
+     # Cache
+diff --git a/exllamav3/modules/arch_specific/qwen4_exp_mtp.py b/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
+--- a/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
++++ b/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ from typing_extensions import override
+ import torch
++import torch.nn.functional as F
+ from ...util.device_copy import to_device
+ from ...model.config import Config
+ from ...modules import Module, Linear, RMSNorm
+@@ -80,6 +81,8 @@
+ 
+         # Populated by attach_to()
+         self.attached_model = None
++        self.hot_embedding = None
++        self.hot_inverse = None
+ 
+         self.caps.update({"x_cpu": True})
+ 
+@@ -151,7 +154,12 @@
+         h = self.fc_hidden.forward(normed.half().contiguous(), params)         # (b, s, H, D)
+ 
+         # Token embedding via the attached model
+-        emb = self.attached_model().modules[0].forward(x, params, out_dtype = torch.half)
++        if params.get("mtp_hot_embedding") and self.hot_embedding is not None:
++            # Only steps after the first consume proposals from the selected head.
++            # IDs remain global everywhere except this embedding lookup.
++            emb = F.embedding(self.hot_inverse[x], self.hot_embedding).half()
++        else:
++            emb = self.attached_model().modules[0].forward(x, params, out_dtype = torch.half)
+         emb = self.pre_fc_norm_embedding.forward(to_device(emb, self.device), params)
+         emb = self.fc_embedding.forward(emb, params)                           # (b, s, D)
+ 
+diff --git a/exllamav3/architecture/mtp_hot_vocab.py b/exllamav3/architecture/mtp_hot_vocab.py
+--- /dev/null
++++ b/exllamav3/architecture/mtp_hot_vocab.py
+@@ -0,0 +1,56 @@
++from __future__ import annotations
++
++from dataclasses import dataclass
++import os
++from pathlib import Path
++
++
++@dataclass(frozen = True)
++class MTPHotVocabConfig:
++    """Configuration for the experimental EXL3 MTP vocabulary-subset fast path.
++
++    ``blocks_path`` loads packed 16-token EXL3 block IDs produced by
++    ``util/build_mtp_hot_blocks.py``.
++    """
++
++    blocks_path: str | Path | None = None
++    embedding_dtype: str = "fp16"
++    validate_full_head: bool = False
++
++    def __post_init__(self):
++        if self.validate_full_head and not self.enabled:
++            raise ValueError("validate_full_head requires a hot-vocabulary selection")
++        dtype = self.embedding_dtype.lower()
++        if dtype not in ("fp16", "float16", "half", "fp8", "float8", "e4m3"):
++            raise ValueError(f"Unsupported MTP hot-embedding dtype: {self.embedding_dtype!r}")
++
++    @property
++    def enabled(self) -> bool:
++        return bool(self.blocks_path)
++
++    @classmethod
++    def from_env(cls) -> MTPHotVocabConfig:
++        """Build configuration from environment variables for server integrations."""
++        return cls(
++            blocks_path = os.environ.get("EXL3_MTP_HOT_BLOCKS"),
++            embedding_dtype = os.environ.get("EXL3_MTP_HOT_EMBED_DTYPE", "fp16"),
++            validate_full_head = os.environ.get("EXL3_MTP_VALIDATE_SUBHEAD", "0") != "0",
++        )
++
++
++def validate_mtp_hot_blocks(block_ids: list[int], full_vocab: int):
++    """Validate packed EXL3 output blocks before constructing a reordered draft head."""
++    if not block_ids or block_ids[0] < 0:
++        raise ValueError("MTP hot blocks must be a nonempty list of nonnegative IDs")
++    if block_ids != sorted(set(block_ids)):
++        raise ValueError("MTP hot blocks must be unique and sorted")
++    if block_ids[-1] >= full_vocab // 16:
++        raise ValueError("MTP hot block ID exceeds the model vocabulary")
++    # EXL3 applies an independent output Hadamard transform to each 128-token group.
++    # Reordering smaller units produces plausible-shaped but invalid logits.
++    if len(block_ids) % 8:
++        raise ValueError("MTP hot blocks must contain complete 128-token groups")
++    for offset in range(0, len(block_ids), 8):
++        first = block_ids[offset]
++        if first % 8 or block_ids[offset:offset + 8] != list(range(first, first + 8)):
++            raise ValueError("MTP hot blocks must be aligned contiguous groups of 8 packed blocks")

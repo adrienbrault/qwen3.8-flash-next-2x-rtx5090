@@ -1,0 +1,34 @@
+# MTP hot vocabulary (upstream PR #303), ported to this checkpoint's qwen4_exp_mtp.
+#
+# WHAT IT IS. The MTP draft head proposes at depth 3; its forward pass is on the critical path of every decode step.
+# #303's mechanism restricts the draft head's *embedding/output* work to a "hot" subset of the vocabulary selected
+# from a representative corpus, which its author measured as up to 22% faster MTP decoding upstream. The port's own
+# note is honest that 22% is not a forecast for this checkpoint, and that it would not close the concurrency gap.
+#
+# WHY THE DISABLED PATH MATTERS. The generic half is duck-typed, so the patched engine with no map must behave
+# exactly like the unpatched one. The build asserts the patch landed (sha256 of all seven files) and the A/B asserts
+# byte-equality of greedy output with the feature off; without that, a throughput win could not be trusted.
+#
+# Built ON TOP of the enabled configuration so the experiment measures the feature and not a different baseline.
+ARG BASE=tabbyapi:qsa-cid
+FROM ${BASE}
+
+COPY hotvocab-applied.patch /tmp/hotvocab/hotvocab-applied.patch
+COPY hotvocab-sha256.txt /tmp/hotvocab/hotvocab-sha256.txt
+RUN set -eu; \
+    site="$(python3 -c 'import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec("exllamav3").origin).parent.parent)')"; \
+    patch --batch --forward --fuzz=0 --dry-run -p1 -d "$site" -i /tmp/hotvocab/hotvocab-applied.patch; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" -i /tmp/hotvocab/hotvocab-applied.patch; \
+    cd "$site"; \
+    sha256sum --check /tmp/hotvocab/hotvocab-sha256.txt; \
+    python3 -m py_compile exllamav3/__init__.py exllamav3/architecture/mtp_hot_vocab.py \
+        exllamav3/architecture/qwen4_exp_mtp.py exllamav3/modules/arch_specific/qwen4_exp_mtp.py \
+        exllamav3/generator/generator.py exllamav3/generator/job.py exllamav3/model_init.py; \
+    patch --batch --fuzz=0 --dry-run -R -p1 -d "$site" -i /tmp/hotvocab/hotvocab-applied.patch; \
+    echo "MTP hot-vocab patch applied, seven files verified against the port's sha256 manifest"
+
+# The map builder is deliberately outside the installed package.
+COPY build_mtp_hot_blocks.py /opt/hotvocab/build_mtp_hot_blocks.py
+
+# NOT enabled by default: no EXL3_MTP_HOT_BLOCKS in this image. A map is mounted at runtime by the launcher's
+# HOTVOCAB_MAP knob, and absence of that map is the control arm.
