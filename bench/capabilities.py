@@ -136,17 +136,19 @@ def main():
                          {"type": "text", "text": "What colour fills this image? One word."},
                          {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}}]}]})
     msg = r["choices"][0]["message"]
-    ans = ((msg.get("content") or "") + (msg.get("reasoning_content") or "")).lower()
+    ans = ((msg.get("content") or "") + (msg.get("reasoning_content") or msg.get("reasoning") or "")).lower()
     report("vision", "red" in ans, f"answer: {(msg.get('content') or '')[:120]!r}")
 
     # --- 4. reasoning channel ---------------------------------------------------------------------
     r = post(a.url, {"model": a.model, "max_tokens": 1024, "temperature": 0,
                      "messages": [{"role": "user", "content": "How many r are in strawberry? Explain briefly."}]})
     msg = r["choices"][0]["message"]
-    has_r = bool((msg.get("reasoning_content") or "").strip())
+    has_r = bool((msg.get("reasoning_content") or msg.get("reasoning") or "").strip())
     has_c = bool((msg.get("content") or "").strip())
+    r_field = "reasoning_content" if msg.get("reasoning_content") else ("reasoning" if msg.get("reasoning") else "none")
     report("reasoning_channel", has_r and has_c,
-           f"reasoning_content {len(msg.get('reasoning_content') or '')} chars, content {len(msg.get('content') or '')} chars")
+           f"thinking channel = {r_field} ({len(msg.get('reasoning_content') or msg.get('reasoning') or '')} chars), "
+           f"content {len(msg.get('content') or '')} chars")
 
     log.close()
     print(f"failures: {fails}", flush=True)

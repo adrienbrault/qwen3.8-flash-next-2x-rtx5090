@@ -20,8 +20,8 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 | 7 | reasoning channel, tool parsing, vision | **PASS** | reasoning in `reasoning_content`, `qwen3_coder` calls parsed as `tool_calls`, vision used in anger |
 | 8 | honest usage accounting | **PASS** | only after the R338 image patch: the engine under-reported long generations by ~5× |
 | 9 | a sampler appropriate for the workload | **PASS** | only after R338: the server was serving untruncated T=1.0 to every client that sent no sampler |
-| 10 | sustained load | *see the soak section* | `2026-09-16-r339-gates` |
-| 11 | structured output (JSON schema) | *not yet measured* | grammar filters exist in this backend; not exercised here |
+| 10 | sustained load | **PASS** | 40 rounds at c4, drift 101.0 % of the start (63.5–65.5 t/s per stream, no error, no VRAM drift) |
+| 11 | structured output (JSON schema) | **PASS** | content parses *and* satisfies the schema; the server log shows the grammar engaged. Tool-call args, vision on a red PNG and the reasoning channel also pass (`2026-09-16-r348-capabilities`) |
 
 ## What the numbers say
 
@@ -33,10 +33,10 @@ counters and a `/completions` code prompt against a chat prompt; the head-to-hea
 honest statement is "within a fifth, not equal".
 
 **Under concurrency it is not in the same class.** Eight slots against sixteen, a 262k pool against 1.39M, and at
-the same instrument the daily reads 868 t/s aggregate at c4 and 1,574 at c8 against 250 and 313. Layer splitting
-serialises the cards; there is no tensor parallelism in this engine for this architecture, so the ceiling is
-structural, not a tuning miss. The measured consequence is concrete: eight agents holding ~38k tokens of context
-each share this box at ~256 t/s aggregate and pay ~60 s for their first token when they arrive together.
+the same instrument the daily reads 868 t/s aggregate at c4 and 1,574 at c8 against 250 and 313. On the
+deep-context fan-out arm — eight concurrent 38k-token requests — the daily holds a **1.76 s** first token and
+**626.7 t/s** aggregate where this stack takes 63.6 s and 51.6 t/s. Layer splitting serialises the cards; there is
+no tensor parallelism in this engine for this architecture, so the ceiling is structural, not a tuning miss.
 
 ## What would change the concurrency verdict
 

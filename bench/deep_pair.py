@@ -47,7 +47,7 @@ def one(idx, url, model, prompt, ntok, sink, timeout):
                     d = ch.get("delta") or {}
                     # Reasoning first, then content: a capture that keeps only content records nothing while the
                     # model is still thinking, and two empty captures compare equal.
-                    rec["text"] += d.get("reasoning_content") or ""
+                    rec["text"] += d.get("reasoning_content") or d.get("reasoning") or ""
                     rec["text"] += d.get("content") or ""
         rec["wall_s"] = round(time.time() - t0, 2)
         rec["decode_tps"] = round((rec["usage"] or {}).get("completion_tokens", 0) / max(rec["wall_s"], 1e-9), 1)

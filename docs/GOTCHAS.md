@@ -73,6 +73,39 @@ between the clean and dirty rounds — the only variable was the build.
 **Fix:** nothing runs on the box during a measurement except the measurement. That includes builds, and it is the
 reason the A/B scripts in `bench/` take the GPU lock even when they only probe.
 
+## 10. The two servers name the thinking channel differently, and one probe read only one name (2026-09-16)
+
+**Looks like:** the vLLM 27B daily refusing concurrent deep-context work. Eight 38,283-token requests: one or two
+complete, the rest come back with a `usage` block reporting 512 completion tokens, **no text at all** and no error,
+each after ~16 s — while the daily's own log shows `200 OK` for every one of them. Read at face value that is "the
+incumbent drops 6 of 8 deep-context requests", and it was twice reproduced before being questioned.
+
+**Is:** two OpenAI-compatible servers naming the same thing differently, and an instrument that knew one name.
+
+- **vLLM's** OpenAI server streams the model's thinking as `delta.reasoning` — captured raw:
+  `data: {…"delta":{"reasoning":"The"}…}`, with the delta keys observed as `content, reasoning, role`. This repo's
+  own daily documentation says "API serves reasoning as message.reasoning".
+- **TabbyAPI** streams it as `delta.reasoning_content`.
+
+`bench/probe.py` collected text from `delta.content` and `delta.reasoning_content` only. On the daily, a request
+whose entire forced length went into thinking therefore looked like a request that returned nothing — and with
+`min_tokens: 512` forcing exactly 512 tokens, `content` is *legitimately* empty for a request that never finished
+thinking. The counts agree with that reading: 157–179 frames arrive per request, none of them content.
+
+It now reads `content`, `reasoning_content` **and** `reasoning`, in the probe, the pair probe and the capability
+gate. The re-measurement is `2026-09-16-r353-daily-admit2`.
+
+**Second, dumber version of the same mistake, in the same hunt:** the raw-capture script passed a 250 KB JSON body
+as a `curl` argv element and got `OSError: [Errno 7] Argument list too long`. Eight empty capture files, and the
+`200 OK` lines the server logged belonged to other clients. Bodies now go through a file
+(`--data-binary @body.json`), and a capture that writes zero bytes prints its curl exit status and stderr instead
+of looking like a server that said nothing.
+
+**The lesson, since this is the third instrument defect of the day:** a probe that reports "no text" must also
+report *why* — frame shapes and field names seen, the raw bytes for at least one request, curl's exit status, or the
+server's own log. Every one of today's false alarms was one unread field away from a wrong conclusion about an
+engine, and the two that mattered were caught only because a second instrument or a raw capture disagreed.
+
 ## 9. Decode rate is content-dependent by ~2× on this checkpoint
 
 Same config, same box, same day: `/completions` code at 176.3–187.1 t/s with 62–72 % draft acceptance, versus a

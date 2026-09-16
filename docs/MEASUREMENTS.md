@@ -192,10 +192,40 @@ daily is **3.5×** ahead in aggregate; at c8 it is **5.0×** ahead. The daily al
 c4 per stream* (253.9 → 257.5), i.e. its batching is nearly free, while Flash-Next's layer split makes every
 concurrent request pay.
 
-The daily's admission arm returned 1 of 8 concurrent 38k-context requests with text; the other seven came back
-with a usage block reporting 512 completion tokens, no text deltas and no error. That is an anomaly I could not
-diagnose because `r342` stopped the container before capturing its log, so it is re-run with the log kept
-(`bench/r349-daily-admit.sh`) and no claim is made about it until that run lands.
+**The admission row of this table was wrong and is retracted.** The daily appeared to return text for only 1 of 8
+concurrent 38k requests: seven came back with a usage block reporting 512 completion tokens, no text and no error.
+Raw capture (`bench/r352-daily-raw.sh`, `results/2026-09-16-r352-daily-raw`) shows the frames all arrive — 157–179
+per request — with the thinking in a delta field called **`reasoning`**, which is vLLM's name for what TabbyAPI
+calls `reasoning_content`. With `min_tokens: 512` forcing exactly 512 tokens and the model still thinking, `content`
+is legitimately empty, so a probe reading only `content` and `reasoning_content` saw nothing and blamed the engine.
+
+Re-measured with both names read (`results/2026-09-16-r353-daily-admit2`), the same arm:
+
+| arm | admitted | TTFT | decode/stream | aggregate |
+| --- | --- | --- | --- | --- |
+| vLLM 27B daily | **8/8** | **1.76 s** | 111.0 t/s | **626.7 t/s** |
+| Flash-Next (this stack) | 8/8 | 63.6 s | 32.1 t/s | 51.6 t/s |
+
+So the incumbent is **12× faster to first token and 12× higher aggregate** on the deep-context fan-out arm. The
+broken instrument had it backwards, and the correction strengthens rather than weakens the promotion verdict.
+
+## Stamina — results `2026-09-16-r347-soak`
+
+Forty rounds of c4, 1,024 forced code tokens each, alone on the box: per-round median decode 63.5–65.5 t/s,
+**drift 101.0 % of the start** (first three rounds 64.5, last five 65.1). No decay, no error, no VRAM drift.
+
+That is the number the first attempt could not produce: the gate suite's soak ran while a native extension was
+compiling on the same host and read 40.5 t/s from round six onward, which looks exactly like stamina decay and was
+not. See `docs/GOTCHAS.md` #8.
+
+## Capabilities — `bench/capabilities.py`, results `2026-09-16-r348-capabilities`
+
+| check | result |
+| --- | --- |
+| JSON-schema structured output | **PASS** — content parses *and* satisfies the schema (`city`, `population`, `coastal`, `climate`), and the server log shows the grammar engaged (`constrained generation … json_schema (req)`), so it is not the model being agreeable |
+| tool call parsing | **PASS** — `write_note` with `{"file_path": "/tmp/gate-note.txt", "content": "hello from the gate"}`, arguments JSON-valid and limited to declared parameters |
+| vision | **PASS** — a red 32×32 PNG built in-process, answer "Red" |
+| reasoning channel | **PASS** — 309 chars in `reasoning_content`, 61 in `content` |
 
 ## Decode is content-dependent — same box, same day
 
