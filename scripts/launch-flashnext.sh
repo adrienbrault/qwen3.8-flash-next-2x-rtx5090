@@ -256,8 +256,11 @@ log "starting on 0.0.0.0:$PORT, draft depth $DRAFT, policy '${DRAFT_POLICY:-none
 HV=()
 if [ -n "$HOTVOCAB_MAP" ]; then
   [ -f "$HOTVOCAB_MAP" ] || { log "ABORT: HOTVOCAB_MAP $HOTVOCAB_MAP not found"; exit 3; }
-  HV=(-v "$HOTVOCAB_MAP":/models/mtp-hot-blocks.txt:ro
-      -e EXL3_MTP_HOT_BLOCKS=/models/mtp-hot-blocks.txt
+  # NOT under /models: that tree is mounted READ-ONLY, so docker cannot create the mountpoint for a file mount inside
+  # it -- "create mountpoint for /models/mtp-hot-blocks.txt mount: ... read-only file system", which surfaced only as
+  # "docker run FAILED" until the error was captured. A file mount needs a point in the container's writable rootfs.
+  HV=(-v "$HOTVOCAB_MAP":/hotvocab/mtp-hot-blocks.txt:ro
+      -e EXL3_MTP_HOT_BLOCKS=/hotvocab/mtp-hot-blocks.txt
       -e EXL3_MTP_HOT_EMBED_DTYPE=fp16
       -e EXL3_MTP_VALIDATE_SUBHEAD=0)
 fi
@@ -266,8 +269,8 @@ sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart
   -p 0.0.0.0:$PORT:$PORT \
   -v /srv/qwen5090/models:/models:ro -v "$CFG":/app/config.yml:ro \
   -v "$SAMP_DIR/$SAMP_PRESET.yml":/app/sampler_overrides/$SAMP_PRESET.yml:ro \
-  --entrypoint python3 "$IMG" main.py --host 0.0.0.0 --port $PORT --disable-auth true >/dev/null 2>&1 \
-  || { log "docker run FAILED"; exit 1; }
+  --entrypoint python3 "$IMG" main.py --host 0.0.0.0 --port $PORT --disable-auth true >"$LOG.docker" 2>&1 \
+  || { log "docker run FAILED — docker said:"; tail -5 "$LOG.docker" | tee -a "$LOG"; exit 1; }
 
 up=0
 for i in $(seq 90); do
