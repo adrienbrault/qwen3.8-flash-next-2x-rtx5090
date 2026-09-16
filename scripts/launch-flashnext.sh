@@ -52,12 +52,20 @@ PORT=${PORT:-8022}
 MAXLEN=${MAXLEN:-262144}
 CACHE=${CACHE:-262144}
 DRAFT=${DRAFT:-3}
-IMG=${IMG:-tabbyapi:53da7919-rqcount}      # TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 + the R338 requeue token-count fix, built by flan/docker/Dockerfile.tabbyapi. Overridable so a patch variant can be A/B'd without editing this file: IMG=tabbyapi:53da7919-rqcount-cid ./launch-flashnext.sh
+IMG=${IMG:-tabbyapi:qsa-cid}            # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), off unless asked for. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
 #   DRAFT_POLICY='[[2, 3], [8, 1]]' ./launch-flashnext.sh
-DRAFT_POLICY=${DRAFT_POLICY:-}
+# ENABLED BY DEFAULT SINCE 2026-09-16, because it was measured: depth 3 while two or fewer jobs are decoding,
+# depth 1 above. Against the same engine with the policy unset: +35 % aggregate at c4 on short contexts
+# (252-258 -> 338-347 t/s), no change at c1 or c8, and greedy output byte-identical (sha256 95726ace17d5...).
+# The parity arm — patched engine, policy unset — matched the unpatched control, so the patch alone changes nothing.
+# Disable: DRAFT_POLICY='' .
+# `${VAR-...}` and not `${VAR:-...}`: the colon form also fires on an EMPTY value, which would make the
+# documented `DRAFT_POLICY=''` silently keep the policy on and quietly corrupt any future A/B that tried to
+# disable it. Without the colon, empty means empty and the config line is omitted.
+DRAFT_POLICY=${DRAFT_POLICY-[[2, 3], [8, 1]]}
 # HOST KV TIER (R358). 0 keeps every page in VRAM. A nonzero value puts a second-tier KV cache in host RAM, which
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
