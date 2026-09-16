@@ -47,12 +47,41 @@ own layers run, measured 44–47 % utilisation at 227/218 W against 600/575 W li
 avoiding per-layer all-reduce over PCIe 3.0; it is recovered by concurrency, and the concurrency available here is
 eight slots in a 262k-token pool, not sixteen in 1.39M.**
 
-**Two measured levers move that**, both validated with byte-identical output and both off by default:
-`IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'` measures **+35 % aggregate at short-context c4 and +78 % at
-deep-context c4** (91.4 t/s per stream against 51.4), and the exact agent request that failed before this session's
-fix runs on that configuration returning parsed tool calls. See `docs/MEASUREMENTS.md` and `docs/PROMOTION.md`.
+**Two measured levers move that**, both validated with byte-identical output. They were off by default when
+measured; **both are now on**, and the box serves `tabbyapi:qsa-cid-pr337` with `DRAFT_POLICY='[[2, 3], [8, 1]]'`
+(`IMG=tabbyapi:qsa-cid` is the same engine without PR #337, `IMG=tabbyapi:53da7919-rqcount` the improvement-free
+baseline). The policy measures **+35 % aggregate at short-context c4 and +78 % at deep-context c4** (91.4 t/s per
+stream against 51.4); PR #337 is byte-identical and flat except at 152k-token prompts, where it reads 207.5 against
+181.7. The exact agent request that failed before this session's fixes runs on the served configuration returning
+parsed tool calls. See `docs/MEASUREMENTS.md`, `docs/PROMOTION.md` and `docs/GOTCHAS.md`.
 
-## What is in the box
+## Where this stands (2026-09-16)
+
+**Verified on the served configuration, not asserted:** the greedy fingerprint `750e1459e177c47e` is byte-identical
+to the one every number above was measured on; the original failing agent request returns `finish_reason=tool_calls`
+with 59,531 characters of reasoning in `reasoning_content`; the 131k-context retrieval gate is 5/5.
+
+**Quality, against the incumbent on matched instances.** On 38 SWE-bench Verified instances run by both engines and
+scored by the same official harness, this seat resolved **36** and the daily **20**, with sixteen discordant pairs
+all in this seat's favour (p ≈ 2⁻¹⁶). The subsets are outcome-stratified by design, so that is not comparable to the
+daily's published 387/500 — its own rate on these same instances is 20/38. Against it: the daily leads by about six
+points on GSM8K and on tool-eval, which is why `docs/PROMOTION.md` now recommends deciding by workload rather than
+picking a winner.
+
+**The ceiling is structural and unchanged.** `qwen4_exp` forbids tensor parallelism, so the cards alternate at
+44–47 % duty cycle; expert parallelism is the only lever that would put both on every layer, and it is a project:
+two of its four prerequisites (QSA indexer transport, PLE module transport) now have implemented but unvalidated
+patches, and the remaining two (MTP adapters, replica/output-selection policy) are estimated smaller and larger
+respectively. The two upstream candidates that looked like ways around it are closed with reasons: #299 does not
+distribute decode across the cards and would need a fresh conversion from BF16 source weights, and #284 has no
+production caller.
+
+**Open, and honest about it:** the aggregate-throughput gap at c4/c8 (250/313 against 868/1,574) and the six-point
+quality gaps on GSM8K and tool-eval are both real and unclosed. On the kernel side, every upstream candidate was
+triaged by reading dispatch logic — a good filter, not a measurement — so `bench/` carries a `torch.profiler` harness
+whose job is to make the next kernel decision trace-driven instead of arithmetic-driven.
+
+
 
 | path | what it is |
 | --- | --- |
