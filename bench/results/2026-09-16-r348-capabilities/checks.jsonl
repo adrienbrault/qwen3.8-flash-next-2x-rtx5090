@@ -1,0 +1,4 @@
+{"check": "json_schema", "pass": true, "evidence": "parsed and schema-valid: {'city': 'Mumbai', 'population': 20411000, 'coastal': True, 'climate': 'tropical', 'climate_details': 'hot and humid with a monsoon season from June to September'}"}
+{"check": "tools", "pass": true, "evidence": "name=write_note args={'file_path': '/tmp/gate-note.txt', 'content': 'hello from the gate'}"}
+{"check": "vision", "pass": true, "evidence": "answer: '\\n\\nRed'"}
+{"check": "reasoning_channel", "pass": true, "evidence": "reasoning_content 309 chars, content 61 chars"}

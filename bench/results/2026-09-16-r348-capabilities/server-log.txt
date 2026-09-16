@@ -1,0 +1,57 @@
+03:34:12.256 INFO:     Sampler preset "qwen38_thinking": temperature 0.6, top_k
+                       20, top_p 0.95
+03:34:12.295 INFO:     exllamav3 version: 1.5.0
+03:34:13.747 INFO:     Using main model MTP component for drafting
+03:34:13.747 INFO:     Context: max_seq_len 262,144 tokens (configured),
+                       cache_size 262,144 tokens
+03:34:13.804 INFO:     Using tool format: qwen3_coder
+03:34:13.804 INFO:     Using template "chat_template" for chat completions.
+03:34:15.990 INFO:     Loading model /models/qwen3.8-flash-next-exl3-3.05bpw
+                       (manual GPU split)
+Loading vision modules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:00
+Loading draft modules  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 3/3   0:00:00
+Loading model modules  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 53/53 0:00:00
+03:34:26.598 INFO:     Model loaded in 12.8 s
+
+03:34:26.598 WARNING:  Disabling authentication makes your instance vulnerable.
+                       Set the `disable_auth` flag to False in config.yml if you
+                       want to share this instance with others.
+03:34:26.599 WARNING:  With authentication disabled and `allowed_origins` left
+                       at ["*"], any website open in a browser on this machine
+                       can send requests to this instance and read the
+                       responses, including admin endpoints. Set
+                       `network.allowed_origins` to your own frontends (or [])
+                       unless you use a browser-based frontend that needs it.
+03:34:26.599 INFO:     Serving OAI API on http://0.0.0.0:8022 (docs at
+                       http://0.0.0.0:8022/redoc)
+03:34:30.821 INFO:     #2 completions: 3 prompt tokens · temperature: 0, greedy
+                       (req), max_tokens: 16 (req)
+03:34:31.105 INFO:     #2 completions: 16 tokens generated at 105.3 T/s · prompt
+                       3 tokens, none cached, 3 new in 0.13 s · first token 0.13
+                       s, total 0.28 s · draft 7/27 accepted (26%) · max_tokens
+                       reached
+03:35:26.615 WARNING:  The reasoning budget is ignored because the request uses
+                       constrained generation (json_schema, regex_pattern or
+                       grammar_string).
+03:35:27.374 INFO:     #5 chat/completions: 64 prompt tokens · temperature: 0,
+                       greedy (req), max_tokens: 2048 (req), json_schema (req)
+03:35:28.481 INFO:     #5 chat/completions: 160 tokens generated at 167.9 T/s ·
+                       prompt 64 tokens, none cached, 64 new in 0.14 s · first
+                       token 0.16 s, total 1.11 s · draft 102/174 accepted (59%)
+03:35:28.490 INFO:     #6 chat/completions: 338 prompt tokens · temperature: 0,
+                       greedy (req), max_tokens: 2048 (req)
+03:35:29.123 INFO:     #6 chat/completions: parsed 1 tool call (qwen3_coder)
+03:35:29.124 INFO:     #6 chat/completions: 84 tokens generated at 235.3 T/s ·
+                       prompt 338 tokens, none cached, 338 new in 0.27 s (1,252
+                       T/s) · first token 0.27 s, total 0.63 s · draft 62/66
+                       accepted (94%)
+03:35:29.158 INFO:     #7 chat/completions: 127 prompt tokens · temperature: 0,
+                       greedy (req), max_tokens: 1024 (req)
+03:35:29.926 INFO:     #7 chat/completions: 104 tokens generated at 165.2 T/s ·
+                       prompt 127 tokens, none cached, 127 new in 0.14 s · first
+                       token 0.14 s, total 0.77 s · draft 67/111 accepted (60%)
+03:35:29.928 INFO:     #8 chat/completions: 62 prompt tokens · temperature: 0,
+                       greedy (req), max_tokens: 1024 (req)
+03:35:30.710 INFO:     #8 chat/completions: 150 tokens generated at 213.4 T/s ·
+                       prompt 62 tokens, none cached, 62 new in 0.08 s · first
+                       token 0.08 s, total 0.78 s · draft 106/132 accepted (80%)

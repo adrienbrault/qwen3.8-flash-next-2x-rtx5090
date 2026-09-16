@@ -1,0 +1,34 @@
+REASONING:We need to respond to user: "Write a Python LRU cache with type hints. Code only." Need produce code only, no explanation. Need likely provide Python code implementing LRU cache with type hints. Need decide format. Could be a class LRUCache[K, V] with get, put, maybe __getitem__, __setitem__, __len__, __contains__. Use OrderedDict or dict + doubly linked list? Type hints. Code only. Need ensure Python version? Use typing Generic, Optional, OrderedDict. Could implement with OrderedDict for simplicity. Need maybe thread-safe? Not requested. Code only. Need final only code block? User says Code only. Could output just code without markdown? Probably code only. Need include from __future__? Maybe not. Need type hints. Let's craft robust LRU cache.
+
+Potential code:
+from __future__ import annotations
+from collections import OrderedDict
+from typing import Generic, Hashable, Optional, TypeVar
+
+K = TypeVar("K", bound=Hashable)
+V = TypeVar("V")
+
+class LRUCache(Generic[K, V]):
+    def __init__(self, capacity: int) -> None:
+        if capacity <= 0: raise ValueError...
+        self._capacity = capacity
+        self._cache: OrderedDict[K, V] = OrderedDict()
+    def get(self, key: K, default: Optional[V] = None) -> Optional[V]:
+        if key not in self._cache: return default
+        self._cache.move_to_end(key)
+        return self._cache[key]
+    def put(self, key: K, value: V) -> None:
+        if key in self._cache:
+            self._cache.move_to_end(key)
+        elif len(self._cache) >= self._capacity:
+            self._cache.popitem(last=False)
+        self._cache[key] = value
+    def __getitem__(self, key: K) -> V:
+        if key not in self._cache: raise KeyError(key)
+        self._cache.move_to_end(key)
+        return self._cache[key]
+    def __setitem__(self, key: K, value: V) -> None: self.put(key,value)
+    def __contains__(self, key: object) -> bool: return key in self._cache
+    def __len__(self) -> int: return len(self._cache)
+    def __repr__(self)
+CONTENT:

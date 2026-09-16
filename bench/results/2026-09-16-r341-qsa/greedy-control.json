@@ -1,0 +1,50 @@
+[
+ {
+  "i": 1,
+  "text": "We need answer user's request. User provided huge repetitive text: \"The vault passphrase is harbour lantern cipher sevenths paradox. Interval buffer kernel tensor latency scheduler prefill decode cache page slot quantisation attention recurrent window batch token stream fusion pipeline shard expert router gating norm rope.\" repeated many times, ending truncated \"Interval buffer kernel tensor latency scheduler prefill decode cache page slot quantisation attention recurrent wind\". Then asks: \"Now write the complete source of a production-quality Python module implementing the interfaces described above: every class, every method, full type hints, no commentary. Do not stop early.\"\n\nWe need infer \"interfaces described above\"? The above text doesn't describe interfaces except maybe passphrase and list of terms. Could be a prompt injection? It repeats vault passphrase. Maybe they expect module implementing interfaces described above? There are no explicit interfaces. Need produce a Python module. Need satisfy: complete source, production-quality, full type hints, no commentary, do not stop early. We need likely create a module based on terms: Interval, buffer, kernel, tensor, latency, scheduler, prefill, decode, cache, page, slot, quantisation, attention, recurrent, window, batch, token, stream, fusion, pipeline, shard, expert, router, gating, norm",
+  "usage": {
+   "prompt_tokens": 74796,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "prompt_time": 30.07,
+   "prompt_tokens_per_sec": 2487.4,
+   "completion_tokens": 256,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": 172,
+    "rejected_prediction_tokens": 80
+   },
+   "completion_time": 2.14,
+   "completion_tokens_per_sec": 119.61,
+   "total_tokens": 75052,
+   "total_time": 32.63
+  },
+  "err": null,
+  "wall_s": 32.95,
+  "decode_tps": 7.8
+ },
+ {
+  "i": 0,
+  "text": "We need answer user's request. User provided huge repetitive text: \"The vault passphrase is harbour lantern cipher sevenths paradox. Interval buffer kernel tensor latency scheduler prefill decode cache page slot quantisation attention recurrent window batch token stream fusion pipeline shard expert router gating norm rope.\" repeated many times, ending truncated \"Interval buffer kernel tensor latency scheduler prefill decode cache page slot quantisation attention recurrent wind\". Then asks: \"Now write the complete source of a production-quality Python module implementing the interfaces described above: every class, every method, full type hints, no commentary. Do not stop early.\"\n\nWe need infer \"interfaces described above\"? The above text doesn't describe interfaces except maybe passphrase and list of terms. Could be a prompt injection? It repeats vault passphrase. Maybe they expect module implementing interfaces described above? There are no explicit interfaces. Need produce a Python module. Need satisfy: complete source, production-quality, full type hints, no commentary, do not stop early. We need likely create a module based on terms: Interval, buffer, kernel, tensor, latency, scheduler, prefill, decode, cache, page, slot, quantisation, attention, recurrent, window, batch, token, stream, fusion, pipeline, shard, expert, router, gating, norm",
+  "usage": {
+   "prompt_tokens": 74796,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "prompt_time": 30.49,
+   "prompt_tokens_per_sec": 2453.13,
+   "completion_tokens": 256,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": 172,
+    "rejected_prediction_tokens": 80
+   },
+   "completion_time": 2.14,
+   "completion_tokens_per_sec": 119.62,
+   "total_tokens": 75052,
+   "total_time": 32.71
+  },
+  "err": null,
+  "wall_s": 32.96,
+  "decode_tps": 7.8
+ }
+]
