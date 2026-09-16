@@ -25,6 +25,7 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 | 12 | quality on the daily's own GSM8K instrument | **0.925 as served** against the daily's **0.985** | same harness parameters as R299b's as-served arm, thinking on, n=200, ±0.019 (`2026-09-16-r355-fn-gsm8k`) |
 | 13 | quality on the daily's tool-eval 69×4 | **85.0 ± 2.9** against the daily's **91** | same CLI, same sampler, `--trials 4 --parallel 8` (`2026-09-16-r357-tooleval`) |
 | 14 | the promoted levers preserve quality | **PASS** | tool-eval 85.8 ± 3.1 (CI [83.5, 88.5]) against the baseline's 85.0 ± 2.9, overlapping intervals, while measuring +35 %/+78 % (`2026-09-16-r357-tooleval`) |
+| 15 | agentic coding, the job the box exists for | **PASS on the first subset** | SWE-bench Verified, daily's harness, official scorer: **10/10 resolved** against the daily's **8/10** on the same instances — the two the daily failed, this seat resolved. n=10, one repository, so the margin is noise; a stratified 18-instance run across six repositories is in flight (`2026-09-16-r359-swebench-10`, `r360`) |
 
 ## What the numbers say
 
