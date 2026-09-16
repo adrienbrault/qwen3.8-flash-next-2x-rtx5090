@@ -41,8 +41,14 @@ def main():
                 captured |= bool(text)
         if not captured:
             raise RuntimeError(f"No output text in response {i}")
+        # 2026-09-16: TabbyAPI returns `"usage": null` on some responses, and this line used to be
+        # `data.get("usage", {}).get(...)` -- a default that only covers an ABSENT key, not a present null. The
+        # AttributeError aborted the capture AFTER the text files were written, so every run logged "capture FAILED"
+        # and silently lost only the metadata file. Record null rather than dying for a token count.
+        usage = data.get("usage") or {}
         metadata = {"finish_reason": choice.get("finish_reason"),
-                    "completion_tokens": data.get("usage", {}).get("completion_tokens")}
+                    "completion_tokens": usage.get("completion_tokens"),
+                    "usage_present": data.get("usage") is not None}
         (dest / f"{i}.json").write_text(json.dumps(metadata, sort_keys=True) + "\n")
 
 
