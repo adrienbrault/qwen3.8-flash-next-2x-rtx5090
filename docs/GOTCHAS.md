@@ -111,3 +111,25 @@ engine, and the two that mattered were caught only because a second instrument o
 Same config, same box, same day: `/completions` code at 176.3–187.1 t/s with 62–72 % draft acceptance, versus a
 chat prose analysis at 94.1 t/s with 46 %. MTP acceptance tracks how predictable the continuation is, and prose
 analysis is not predictable. A decode number without its kind is not comparable to another one.
+
+## 11. A GPU unit stalled behind its own child, and the diagnostic said nobody held the lock (2026-09-16, fixed)
+
+`r363-enable.sh` takes the GPU-exclusive lock and then runs `r362-pr337.sh` as its child. r362 took the lock too. A
+child that **re-opens the lock path** gets a *second* lock on the same file, so it waited for the parent — which was
+waiting for it. Nothing ran, the GPU sat idle, and seven other units queued behind the pair.
+
+The diagnostic was wrong twice over, and the wrongness is the lesson:
+
+1. `flock` holders are **not** reported in `/proc/PID/fdinfo` — that field is for POSIX record locks. The right source
+   is `/proc/locks`, whose inode field is **decimal**; grepping a hex-translated inode returns nothing, which I read as
+   "nobody holds it" and briefly believed the kernel had lost a lock.
+2. "No process is building or probing" is not evidence that no unit is running. Both processes were alive and idle by
+   construction: each was blocked on the other.
+
+Fixed in `flan/lib/gpu-queue.sh`: `gpu_lock()` reuses fd 9 when it is already the lock file, so an inherited descriptor
+shares the holder's open file description and `flock` succeeds at once. r362 calls it. The general rule for this host:
+**a script that the lock-holder invokes must not take the lock itself** — inline `exec 9>` + `flock` is only safe at
+the top level, which is what every unit except this pair is.
+
+The queue was also rebuilt as a single chain (`bench/r370-chain.sh`) rather than eight units sharing one flock: the
+order in which waiters acquire a flock is not defined, so "queued" never meant "ordered".

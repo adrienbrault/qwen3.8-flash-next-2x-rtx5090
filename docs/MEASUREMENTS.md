@@ -190,6 +190,28 @@ So the configuration this repository recommends is the configuration that has be
 only against the instrument. The baseline was restored afterwards: promoting it to the served default is the
 operator's call.
 
+## PR #337, the layer-split device context — results `2026-09-16-r362-pr337`
+
+The patch keeps the process-wide CUDA current device on the module's device across `forward_ls`/`prefill_ls`. Its
+author found the bug via an out-of-tree kernel whose fault was misattributed to autotune; stock wrappers self-guard,
+so the honest expectation ranged from nothing to "removes accidental P2P traffic". Because it moves device placement,
+**its correctness gate ran first**: greedy output, 1,989 bytes, byte-identical between arms (`greedy-baseline.txt`
+vs `greedy-pr337.txt`).
+
+Aggregate decode, both arms as served (`tabbyapi:53da7919-rqcount` with and without the patch), one run each:
+
+| arm | c1 | c4 | c8 | c4 at 152k-token prompts |
+| --- | --- | --- | --- | --- |
+| baseline | 208.2 | 254.8 | 319.5 | 181.7 |
+| **PR #337** | 208.9 | 256.0 | 318.7 | **207.5** |
+| delta | +0.3 % | +0.5 % | −0.3 % | **+14.2 %** |
+
+Six columns are flat within run-to-run noise. The seventh is the deep-context arm, and it is the only place the
+patch's mechanism predicts an effect: 152k-token prompts are where accidental cross-card traffic in a layer-split
+forward would show. **One run per arm, so +14 % is consistent-with-the-mechanism, not established** — the right
+reading is "no regression anywhere, a plausible deep-context gain where the mechanism predicts one, and byte-identical
+output", which is why the patch is carried into the served image rather than being adopted for speed.
+
 ## Quality: GSM8K as served — `bench/r355-fn-gsm8k.sh`, results `2026-09-16-r355-fn-gsm8k`
 
 The daily's own instrument, same parameters as its R299b as-served arm: `gsm8k`, 5-shot,
