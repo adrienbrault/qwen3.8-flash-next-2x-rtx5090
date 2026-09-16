@@ -27,6 +27,15 @@ WAIT_FOR=${WAIT_FOR:-r372-chain2}
 log(){ echo "$(date -Is) [r373] $*" | tee -a "$R/audit.log"; }
 export GPU_QUEUE_NAME=r373-restore
 . /srv/qwen5090/lib/gpu-queue.sh
+# WAIT BEFORE LOCKING, and this order is the whole point. Taking the lock and then sleeping for the chain deadlocks:
+# the chain's steps each take the same lock, so it waits for this unit while this unit waits for it -- which is
+# exactly what happened at 10:06 on 2026-09-16, with r367 blocked behind a sleeping r373 for as long as the mutual
+# wait lasted. A unit that waits must wait OUTSIDE the critical section.
+if [ -n "$WAIT_FOR" ] && systemctl is-active --quiet "$WAIT_FOR"; then
+  log "waiting for $WAIT_FOR to finish (poll 60 s) -- before taking the lock"
+  while systemctl is-active --quiet "$WAIT_FOR"; do sleep 60; done
+fi
+
 gpu_lock
 finish(){ rm -f "${GPU_QUEUE_MARK:-/nonexistent}"; log "=== R373 $1 ==="; }
 trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
@@ -34,11 +43,6 @@ trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
 # The live launcher must be a real file: this session shipped three scripts to this host as 0-byte files, and a
 # restore that runs an empty script exits 0 and restores nothing.
 [ -s "$LIVE" ] && [ "$(wc -c < "$LIVE")" -gt 1000 ] || { log "ABORT: $LIVE is missing or truncated"; finish ABORTED; exit 3; }
-
-if [ -n "$WAIT_FOR" ] && systemctl is-active --quiet "$WAIT_FOR"; then
-  log "waiting for $WAIT_FOR to finish (poll 60 s)"
-  while systemctl is-active --quiet "$WAIT_FOR"; do sleep 60; done
-fi
 
 log "booting the served configuration from the LIVE launcher (no IMG override)"
 bash "$LIVE" >> "$R/audit.log" 2>&1 || { log "BOOT FAILED"; finish ABORTED; exit 1; }
