@@ -30,6 +30,7 @@ log(){ echo "$(date -Is) [r366] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r366-ourkernel
 . /srv/qwen5090/lib/gpu-queue.sh
+. /srv/qwen5090/lib/greedy-compare.sh   # greedy_same(): directory-safe identity checks
 exec 9>/srv/qwen5090/gpu-exclusive.lock
 flock -n 9 || { log "queued behind: $(gpu_queue_others)"; flock 9; }
 finish(){ rm -f "${GPU_QUEUE_MARK:-/nonexistent}"; log "=== R366 $1 ==="; }
@@ -67,7 +68,7 @@ arm control   tabbyapi:qsa-devel
 arm candidate tabbyapi:ourkernel
 
 log "=== gates ==="
-if [ -s "$R/greedy-control"/* ] && cmp -s "$R/greedy-control"/* "$R/greedy-candidate"/*; then
+if greedy_same "$R/greedy-control" "$R/greedy-candidate"; then
   log "PASS control == candidate (greedy byte-identical): the change is dispatch-only"
 else
   log "FAIL/NOT-RUN greedy differs — the change touches arithmetic after all; investigate before reading rates"

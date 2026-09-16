@@ -25,6 +25,7 @@ log(){ echo "$(date -Is) [r365] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r365-kernels
 . /srv/qwen5090/lib/gpu-queue.sh
+. /srv/qwen5090/lib/greedy-compare.sh   # greedy_same(): directory-safe identity checks
 exec 9>/srv/qwen5090/gpu-exclusive.lock
 flock -n 9 || { log "queued behind: $(gpu_queue_others)"; flock 9; }
 finish(){ rm -f "${GPU_QUEUE_MARK:-/nonexistent}"; log "=== R365 $1 ==="; }
@@ -74,11 +75,17 @@ for ARM in unpatched fix reduction; do
 done
 
 log "=== #290 gate: a memory fix must not change output ==="
+# Compare a HASH OF THE WHOLE DIRECTORY, not `cmp -s dir/* dir/*`. The glob form takes one file per side, so it works
+# only while every capture happens to write exactly one channel file -- the model answers in reasoning_content on
+# some prompts and in content on others, and `cmp` with three operands fails on "extra operand" rather than
+# comparing. A directory hash is agnostic to how many files a capture produced and to their names.
+dirhash(){ find "$1" -type f -printf '%P\n' 2>/dev/null | LC_ALL=C sort | while read -r f; do sha256sum "$1/$f"; done | sha256sum | cut -c1-16; }
 for ARM in fix reduction; do
-  if [ -s "$R/greedy-290-unpatched"/* ] && [ -s "$R/greedy-290-$ARM"/* ] && cmp -s "$R/greedy-290-unpatched"/* "$R/greedy-290-$ARM"/*; then
-    log "  PASS unpatched == $ARM (byte-identical)"
+  a=$(dirhash "$R/greedy-290-unpatched"); b=$(dirhash "$R/greedy-290-$ARM")
+  if [ -n "$a" ] && [ "$a" = "$b" ]; then
+    log "  PASS unpatched == $ARM (byte-identical, dirhash $a)"
   else
-    log "  FAIL/NOT-RUN unpatched vs $ARM"
+    log "  FAIL/NOT-RUN unpatched($a) vs $ARM($b)"
   fi
 done
 
@@ -96,8 +103,8 @@ if sudo docker image inspect kernel246:0 >/dev/null 2>&1 && sudo docker image in
   log "#246 patched, feature ON: the treatment — read TTFT, not decode"
   boot kernel246:1 "EXL3_MOE_ROUTE_PACKED=1" && { greedy "$R/greedy-246-on"; probes "k246-on"; }
   log "=== #246 gates ==="
-  cmp -s "$R/greedy-246-control"/* "$R/greedy-246-off"/* 2>/dev/null && log "  PASS control == patched-off" || log "  FAIL/NOT-RUN control vs patched-off"
-  cmp -s "$R/greedy-246-control"/* "$R/greedy-246-on"/* 2>/dev/null && log "  PASS control == patched-on" || log "  NOTE patched-on differs (expected only if the kernel reorders numerics; investigate)"
+  greedy_same "$R/greedy-246-control" "$R/greedy-246-off" && log "  PASS control == patched-off" || log "  FAIL/NOT-RUN control vs patched-off"
+  greedy_same "$R/greedy-246-control" "$R/greedy-246-on" && log "  PASS control == patched-on" || log "  NOTE patched-on differs (expected only if the kernel reorders numerics; investigate)"
 else
   log "#246: one or both images missing; the pair cannot be A/B'd"
 fi

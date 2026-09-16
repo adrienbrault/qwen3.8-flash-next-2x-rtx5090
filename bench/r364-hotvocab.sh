@@ -30,6 +30,7 @@ log(){ echo "$(date -Is) [r364] $*" | tee -a "$R/audit.log"; }
 
 export GPU_QUEUE_NAME=r364-hotvocab
 . /srv/qwen5090/lib/gpu-queue.sh
+. /srv/qwen5090/lib/greedy-compare.sh   # greedy_same(): directory-safe identity checks
 exec 9>/srv/qwen5090/gpu-exclusive.lock
 flock -n 9 || { log "queued behind: $(gpu_queue_others)"; flock 9; }
 finish(){ rm -f "${GPU_QUEUE_MARK:-/nonexistent}"; log "=== R364 $1 ==="; }
@@ -110,12 +111,12 @@ grep -aoE "draft [0-9]+/[0-9]+ accepted \([0-9]+%\)" "$R/server-log.txt" | tail 
 
 # --- 6. gates and comparison -------------------------------------------------------------------------
 log "=== gates ==="
-if [ -s "$R/greedy-served"/* ] && [ -s "$R/greedy-patched-off"/* ] && cmp -s "$R/greedy-served"/* "$R/greedy-patched-off"/*; then
+if greedy_same "$R/greedy-served" "$R/greedy-patched-off"; then
   log "PASS served == patched-off (byte-identical): the port's disabled path changes nothing"
 else
   log "FAIL served != patched-off — do not read the treatment column"
 fi
-if cmp -s "$R/greedy-patched-on"/* "$R/greedy-served"/*; then
+if greedy_same "$R/greedy-patched-on" "$R/greedy-served"; then
   log "PASS patched-on == served: greedy target output unchanged with the feature enabled"
 else
   log "NOTE patched-on differs from served — the port's plan says a changed proposal is expected but a changed"
