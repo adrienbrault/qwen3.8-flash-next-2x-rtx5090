@@ -238,6 +238,22 @@ A ten-instance subset cannot resolve three points — the repository's own note 
 — but "the daily resolved all ten and this seat resolved three" and "both resolved eight" are different verdicts
 about whether this seat can be handed the job at all, which is the question no synthetic probe answers.
 
+**Result — `2026-09-16-r359-swebench-10`:** this seat resolved **10 of 10**; the daily resolved **8 of 10** on the
+same instances (it failed `astropy-13977` and `astropy-14182`, both of which this seat resolved). All ten
+trajectories ended `Submitted` with a non-empty patch, at 45–163 steps — the 250-step limit was never reached, so
+nothing was truncated by the harness.
+
+Read it with these caveats, which are why `r360` exists:
+
+- **n=10 and one repository.** The difference between 10/10 and 8/10 is two instances — statistical noise. What the
+  run does establish is the direction: this seat is *not* materially worse at agentic coding on these tasks, which
+  is the opposite of what the two −6-point reasoning/tool-calling gaps would have predicted.
+- **The daily's column is from a different checkpoint of the same engine family** (RedHat NVFP4, 2026-09-02; the
+  current daily is NVIDIA NVFP4) and from a full-run dataset order, but every instance compared here was executed by
+  both, so the comparison is matched per instance.
+- It agrees with the repository's own finding that SWE-bench cannot adjudicate quantisation on this model: four
+  checkpoints spanning the whole fidelity range scored 386–388.
+
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
 `sysmem_kv_cache` was 0 in every measurement above; this boots it at 4096 MiB and runs the three shapes that could
