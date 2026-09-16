@@ -37,8 +37,13 @@ steps=(
   "r369-swebench-30:/srv/qwen5090/r369-swebench-30.sh"
 )
 
+# SKIP='r363-enable r365-kernels' resumes the chain without re-running steps that are already done or that have to be
+# re-done from a fixed artifact. A step is skipped by NAME, and a skipped step is logged: a chain that silently drops
+# work is worse than one that re-runs it.
+skip=" ${SKIP:-} "
 for step in "${steps[@]}"; do
   name=${step%%:*}; script=${step##*:}
+  case "$skip" in *" $name "*) log "### SKIP  $name (SKIP='${SKIP:-}')"; continue;; esac
   [ -f "$script" ] || { log "MISSING $script — skipped"; continue; }
   t0=$(date +%s)
   log "### START $name (timeout ${STEP_TIMEOUT}s)"
