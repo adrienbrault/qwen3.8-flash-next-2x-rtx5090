@@ -60,7 +60,20 @@ It reads llama.cpp's `timings` block for `predicted_per_second`; TabbyAPI return
 prints is a zero that looks like a measurement — the same trap `oai_conc.py` documents for `usage: null`. Use
 `bench/probe.py` here, or the client-side rate from SSE timestamps.
 
-## 7. Decode rate is content-dependent by ~2× on this checkpoint
+## 8. A CPU-bound build next to a GPU measurement perturbs it (2026-09-16)
+
+**Looks like:** stamina decay. A c4 soak that held 62–66 t/s per stream for five rounds dropped to 40.5 t/s at
+round six and stayed there — exactly the shape of a thermal or fragmentation story.
+
+**Is:** a native extension rebuild running on the same box. Compiling exllamav3's extension starts 487 compiler
+processes and took the load average to 18.6; the decode path needs host CPU for sampling, launching and the PLE
+gather, so the GPU starved while it was "idle" at 17 % utilisation. Same configuration, same server, no restart
+between the clean and dirty rounds — the only variable was the build.
+
+**Fix:** nothing runs on the box during a measurement except the measurement. That includes builds, and it is the
+reason the A/B scripts in `bench/` take the GPU lock even when they only probe.
+
+## 9. Decode rate is content-dependent by ~2× on this checkpoint
 
 Same config, same box, same day: `/completions` code at 176.3–187.1 t/s with 62–72 % draft acceptance, versus a
 chat prose analysis at 94.1 t/s with 46 %. MTP acceptance tracks how predictable the continuation is, and prose

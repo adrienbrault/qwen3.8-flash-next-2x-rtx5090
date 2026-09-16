@@ -52,7 +52,12 @@ PORT=${PORT:-8022}
 MAXLEN=${MAXLEN:-262144}
 CACHE=${CACHE:-262144}
 DRAFT=${DRAFT:-3}
-IMG=tabbyapi:53da7919-rqcount              # TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 + the R338 requeue token-count fix, built by flan/docker/Dockerfile.tabbyapi
+IMG=${IMG:-tabbyapi:53da7919-rqcount}      # TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 + the R338 requeue token-count fix, built by flan/docker/Dockerfile.tabbyapi. Overridable so a patch variant can be A/B'd without editing this file: IMG=tabbyapi:53da7919-rqcount-cid ./launch-flashnext.sh
+# CONCURRENCY-INDEXED DRAFT DEPTH (R340), off unless asked for. The patched engine reads a list of
+# [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
+# the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
+#   DRAFT_POLICY='[[2, 3], [8, 1]]' ./launch-flashnext.sh
+DRAFT_POLICY=${DRAFT_POLICY:-}
 CKPT=/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
 MODEL=qwen3.8-flash-next-exl3-3.05bpw
 TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotune); survives container replacement
@@ -157,6 +162,7 @@ draft_model:
   # THE SCHEMA FIELD IS \`draft_num_tokens\`. \`num_draft_tokens\` is not a schema field and is silently ignored,
   # which would run the default depth while the config appeared to say otherwise.
   draft_num_tokens: $DRAFT
+  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
   # draft_cache_mode accepts only FP16/Q8/Q6/Q4 -- pair syntax like "8,8" is rejected by the draft schema.
   draft_cache_mode: Q8
   dynamic_draft: false       # measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4

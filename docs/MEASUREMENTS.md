@@ -45,6 +45,48 @@ by ~5× until the R338 image patch, and these rows never crossed that boundary, 
 | 4 | 252.7 | 70.2 | 0.33 |
 | 8 | 283.5 | 42.9 | 0.51 |
 
+## Long-context retrieval — `bench/needle.py`, results `2026-09-16-r339-gates`
+
+One unique passphrase planted at five positions (8 %, 30 %, 55 %, 80 %, 96 %) of a deterministic document, asked
+for by name. Requested depths are labels: the filler's estimate runs ~28 % high, so the actual `prompt_tokens` the
+server saw is quoted.
+
+| requested depth | prompt tokens seen | retrieved |
+| --- | --- | --- |
+| 32,768 | 26,518 | **5 / 5** |
+| 131,072 | 105,680 | **5 / 5** |
+| 196,608 | 158,452 | **5 / 5** |
+
+A pass at every planted position, not just near the end, is what makes this a gate rather than a demonstration.
+The daily's equivalent instrument (`needle_gate.sh`) is a llama.cpp-era probe; this one speaks the OpenAI chat API.
+
+## Admission: eight distinct deep contexts at once — results `2026-09-16-r339-gates`
+
+Eight concurrent requests, each with its **own** ~38,283-token prompt (unique suffixes, so no page sharing) and 512
+forced output tokens. `cache_size` is 262,144 tokens, so the eight prompts total 306k — more than the pool.
+
+| | value |
+| --- | --- |
+| admitted / completed | **8 / 8** |
+| TTFT | 59.4–62.4 s (all eight within 3 s of each other) |
+| decode | 28.5–33.6 t/s per stream, ~256 t/s aggregate |
+| wall | 77.3–77.8 s |
+
+So eight deep-context agents coexist: they interleave through the pool rather than being rejected, at a ~1 minute
+first-token cost when all eight arrive together. The daily's equivalent reads a 3.6 s TTFT at 30k for a *single*
+request (R177) — this is the cost of an 8-slot, 262k-token pool against a 16-slot, 1.39M-token one.
+
+## Decode at the requeue boundary — 2,048 forced tokens, results `2026-09-16-r339-gates`
+
+2,048 is TabbyAPI's requeue budget on this config (`chunk_size 2048`, `output_chunking: true`), so these rows sit
+exactly at the boundary where the engine's own token accounting used to break.
+
+| kind | concurrency | decode per stream (t/s) | aggregate (t/s) | TTFT (s) |
+| --- | --- | --- | --- | --- |
+| code | 1 | 210.7–210.8 | 207.7–207.8 | 0.145 |
+| code | 4 | 64.4 | 252.4 | 0.511 |
+| prose | 1 | 162.4–167.2 | 160.6–165.3 | 0.14–0.15 |
+
 ## Decode is content-dependent — same box, same day
 
 | shape | kind | decode (t/s) | draft acceptance |
