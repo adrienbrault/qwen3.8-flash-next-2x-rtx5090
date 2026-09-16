@@ -46,6 +46,14 @@ is a nicety rather than a defect — but a cut becomes reachable as thinking len
 Drafts are sampled **greedily**; the target is not. Acceptance therefore tracks how predictable the continuation
 is, which is why decode rate is content-dependent (see `GOTCHAS.md` #7).
 
+## Launcher knobs (not config keys)
+
+| knob | default | what it does |
+| --- | --- | --- |
+| `IMG=` | `tabbyapi:53da7919-rqcount` | which image to serve; a patch variant is A/B'd without editing the launcher |
+| `DRAFT_POLICY=` | empty | expands into `draft_model.draft_num_tokens_by_batch` only when set, so the unpatched path stays byte-identical |
+| `SYS_KV=` | 0 | the host KV tier (measured flat, above) |
+
 ## Sampling — the preset, not the config
 
 `sampling.override_preset: qwen38_thinking` names a file the launcher writes to
@@ -76,7 +84,7 @@ values. Verified in the log: a greedy probe still reads `temperature: 0, greedy 
 | setting | value | why |
 | --- | --- | --- |
 | `sysmem_recurrent_cache` | 4096 (MiB) | host-tier cache for GDN recurrent checkpoints; hybrid prefix reuse needs both the KV pages and a matching stashed checkpoint |
-| `sysmem_kv_cache` | 0 | the host KV tier only helps after VRAM eviction and adds no active slots |
+| `sysmem_kv_cache` | `$SYS_KV`, default 0 | the host KV tier. Set to 4096 MiB and **measured**: nothing moves — same 8/8 and 48.4 t/s aggregate on eight unique ~40k-prompt jobs, same 0.43 s repeat TTFT on a 152,761-token prompt. The pool is never spilled to host at these shapes (`2026-09-16-r358-hostkv`) |
 
 ## Image
 
