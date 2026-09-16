@@ -50,14 +50,16 @@ no tensor parallelism in this engine for this architecture, so the ceiling is st
 
 ## Recommendation
 
-Serve Flash-Next when the workload is one agent or a few, deep context, interactive latency: that is what it is
-better at than the incumbent, and it is measurably at parity on the number that matters there.
+Serve Flash-Next when the workload is one agent or a few, deep context, interactive latency — and if it is served,
+serve it with **both measured levers on**: `IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'` is **+35 % at
+short-context c4 and +78 % at deep-context c4** over the baseline, with byte-identical output. That does not close
+the gap to the incumbent (deep-context c4 is 323.6 t/s against the daily's 868 aggregate at c4), but it is a real,
+validated, one-line configuration change rather than a tuning hope.
 
-Keep the vLLM 27B daily for multi-agent fan-out. Nothing measured here closes the 5× aggregate gap, and the four
-levers above are engine work, not configuration: two are unexecuted patches and one is blocked on a build
-toolchain. Promoting Flash-Next to the *only* daily today would trade a 1,476 t/s aggregate ceiling for a 305 t/s
-one to gain nothing measurable at c1.
+Keep the vLLM 27B daily for multi-agent fan-out. Nothing measured here closes the 5× aggregate gap, and the
+remaining levers are engine work: expert parallel is an unexecuted patch whose own analysis lists upstream
+blockers, and it is the only one that touches the layer-split ceiling directly.
 
-The stack itself — launcher, image, sampler policy, instruments, this document — is at daily standard. The
-candidate engine is not, and that is a statement about `qwen4_exp` and ExLlamaV3's concurrency path, not about the
-work done here.
+The stack itself — launcher, image, sampler policy, instruments, this document — is at daily standard, and the
+three instrument defects found today are recorded in `docs/GOTCHAS.md` because two of them had already produced
+confident wrong numbers before being caught.
