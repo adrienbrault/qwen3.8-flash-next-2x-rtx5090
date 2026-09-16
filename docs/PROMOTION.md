@@ -38,7 +38,7 @@ their first token when they arrive together.
 
 | lever | state | expected effect |
 | --- | --- | --- |
-| concurrency-indexed draft depth | patched engine built, A/B in `2026-09-16-r340-ci-depth` | recovers c1's depth-3 rate while dropping to depth 1 past two decoding jobs; R335 measured the depth×concurrency interaction it automates. Ceiling: the layer split, not the drafter |
+| concurrency-indexed draft depth | **measured +35 % at c4** with byte-identical output (`2026-09-16-r340-ci-depth`); off by default, one config line to enable | recovers c1's depth-3 rate while dropping to depth 1 past two decoding jobs. No gain at c1 or c8; ceiling remains the layer split |
 | QSA sparse multi-job | patch applies cleanly to v1.5.0; needs a CUDA devel image to rebuild the extension | above the sparse threshold the captured QSA path is single-job and falls back to eager for bsz>1; multi-job sparse is what deep-context concurrency wants |
 | expert parallel for `qwen4_exp` | patch written, never executed; the authoring analysis lists upstream blockers | the only lever that attacks the layer-split ceiling directly — both cards computing every layer |
 | more slots | `max_batch_size: 8` already raised from TabbyAPI's recurrent default of 4 | more slots cost recurrent VRAM; the page pool, not the slot count, binds at deep context |
