@@ -59,6 +59,8 @@ fix runs on that configuration returning parsed tool calls. See `docs/MEASUREMEN
 | `docs/CONFIG.md` | every setting and why it has that value, including which ones are fit constraints |
 | `docs/GOTCHAS.md` | the traps, as "what it looks like" vs "what it is" |
 | `docs/MEASUREMENTS.md` | the numbers with their conditions |
+| `docs/PROMOTION.md` | the daily-worthiness decision, gate by gate |
+| `docs/RUNBOOK.md` | how to serve, measure, rebuild and hand the box back from this repo alone |
 
 ## Two defects this stack had, and what they cost
 

@@ -211,6 +211,27 @@ Thinking is on in this arm and can be seen doing so: a hand-checked item returne
 min 13 / p50 232 / p90 449 / max 1,660 tokens. This checkpoint reasons **briefly** — that is its character, not a
 template flag left off.
 
+## SWE-bench Verified, a matched subset — results `2026-09-16-r359-swebench`
+
+The workload the box exists for, and the one neither GSM8K nor tool-eval measures. Same harness as the daily's own
+campaigns: mini-SWE-agent 2.4.6, the builtin `benchmarks/swebench.yaml` (the leaderboard's bash-only setting,
+step_limit 250), `--subset verified --split test`, scored by the official swebench harness in the official task
+images. The overlay is the daily's, byte for byte, except for the endpoint — and the sampler arrives by a different
+mechanism on each side (the daily from `--override-generation-config`, this seat from its preset, because mini-swe
+sends only `max_tokens`).
+
+**The subset is matched, not sampled.** Every run uses the same dataset order, so the first N instances are the
+same tasks the daily ran. Read from the daily's own scored run
+(`results/2026-09-02-miniswe-rh-nvidia`, 387/500 = 77.4%, 495 completed, 0 errors, 5 empty patches):
+
+| instances (dataset order 0-9) | daily | Flash-Next |
+| --- | --- | --- |
+| resolved | **8 / 10** | *this run* |
+
+A ten-instance subset cannot resolve three points — the repository's own note about k=1 coin-flip variance applies
+— but 8/10 against 3/10 and 8/10 against 7/10 are different verdicts about whether this seat can be handed the job
+at all, which is the question a synthetic probe cannot answer.
+
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
 `sysmem_kv_cache` was 0 in every measurement above; this boots it at 4096 MiB and runs the three shapes that could
