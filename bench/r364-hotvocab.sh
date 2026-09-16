@@ -71,22 +71,28 @@ probes(){  # <tag>
 }
 
 # --- 2. arm `served`: the enabled configuration ----------------------------------------------------
-log "=== arm served: IMG=tabbyapi:qsa-cid, the enabled configuration ==="
-IMG=tabbyapi:qsa-cid bash "$L" >> "$R/audit.log" 2>&1 || { log "served boot FAILED"; finish ABORTED; exit 1; }
+log "=== arm served: the launcher's default image, i.e. the enabled configuration ==="
+# NO IMG OVERRIDE: the launcher default IS the served configuration, and pinning it here is how this arm
+# drifted from what the box actually serves when PR #337 was promoted.
+bash "$L" >> "$R/audit.log" 2>&1 || { log "served boot FAILED"; finish ABORTED; exit 1; }
 greedy "$R/greedy-served"
 probes served
 
 # --- 3. the ported image, plus its map -------------------------------------------------------------
-log "=== building tabbyapi:qsa-cid-hotvocab ==="
-if ! (cd /srv/qwen5090/hotvocab && sudo docker build -f Dockerfile.hotvocab -t tabbyapi:qsa-cid-hotvocab . \
-        >> "$R/build.log" 2>&1); then
+# BUILD ON THE SERVED BASE. The recipe defaults to tabbyapi:qsa-cid, but the box now serves
+# tabbyapi:qsa-cid-pr337, and a treatment built on the older base would carry PR #337 as a second difference in a
+# comparison whose whole point is "the feature, nothing else".
+HOTVOCAB_IMG=tabbyapi:qsa-cid-pr337-hotvocab
+log "=== building $HOTVOCAB_IMG (BASE=tabbyapi:qsa-cid-pr337) ==="
+if ! (cd /srv/qwen5090/hotvocab && sudo docker build -f Dockerfile.hotvocab -t "$HOTVOCAB_IMG" \
+        --build-arg BASE=tabbyapi:qsa-cid-pr337 . >> "$R/build.log" 2>&1); then
   log "BUILD FAILED"; tail -6 "$R/build.log" | cut -c1-170 | tee -a "$R/audit.log"; finish ABORTED; exit 1
 fi
 log "image built"
 
 log "=== generating the hot-vocab map (4096 groups) from the corpus; no model forward needed ==="
 sudo docker run --rm -v "$CKPT":/models/qwen3.8-flash-next-exl3-3.05bpw:ro -v "$CORPUS":/corpus:ro \
-  -v /srv/qwen5090:/out --entrypoint python3 tabbyapi:qsa-cid-hotvocab \
+  -v /srv/qwen5090:/out --entrypoint python3 "$HOTVOCAB_IMG" \
   /opt/hotvocab/build_mtp_hot_blocks.py -m /models/qwen3.8-flash-next-exl3-3.05bpw -c /corpus \
   -b 4096 -o /out/mtp-hot-blocks.txt >> "$R/audit.log" 2>&1
 [ -s "$MAP" ] && log "map: $(wc -c < "$MAP") bytes, $(head -1 "$MAP" | cut -c1-120)" \
@@ -94,13 +100,13 @@ sudo docker run --rm -v "$CKPT":/models/qwen3.8-flash-next-exl3-3.05bpw:ro -v "$
 
 # --- 4. arm `patched-off`: the disabled path must be byte-identical ---------------------------------
 log "=== arm patched-off: same image, feature disabled (must match served exactly) ==="
-IMG=tabbyapi:qsa-cid-hotvocab bash "$L" >> "$R/audit.log" 2>&1 || { log "patched-off boot FAILED"; finish ABORTED; exit 1; }
+IMG="$HOTVOCAB_IMG" bash "$L" >> "$R/audit.log" 2>&1 || { log "patched-off boot FAILED"; finish ABORTED; exit 1; }
 greedy "$R/greedy-patched-off"
 probes patched-off
 
 # --- 5. arm `patched-on`: the treatment --------------------------------------------------------------
 log "=== arm patched-on: map mounted, fp16, sub-head validation off ==="
-IMG=tabbyapi:qsa-cid-hotvocab HOTVOCAB_MAP="$MAP" bash "$L" >> "$R/audit.log" 2>&1 || { log "patched-on boot FAILED"; finish ABORTED; exit 1; }
+IMG="$HOTVOCAB_IMG" HOTVOCAB_MAP="$MAP" bash "$L" >> "$R/audit.log" 2>&1 || { log "patched-on boot FAILED"; finish ABORTED; exit 1; }
 sudo docker exec flashnext sh -c 'echo "EXL3_MTP_HOT_BLOCKS=$EXL3_MTP_HOT_BLOCKS dtype=$EXL3_MTP_HOT_EMBED_DTYPE validate=$EXL3_MTP_VALIDATE_SUBHEAD"' >> "$R/audit.log" 2>&1
 greedy "$R/greedy-patched-on"
 probes patched-on
@@ -123,5 +129,6 @@ else
   log "     greedy target output needs an explanation before the throughput columns are believed"
 fi
 log "restoring the enabled configuration (tabbyapi:qsa-cid, no hot vocab)"
-IMG=tabbyapi:qsa-cid bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+# No IMG override: restore to whatever the launcher considers served, which is the point of a restore.
+bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

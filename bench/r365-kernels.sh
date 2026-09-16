@@ -110,5 +110,7 @@ else
 fi
 
 log "restoring the enabled configuration"
-IMG=tabbyapi:qsa-cid bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+# No IMG override: the launcher default is the served configuration, and pinning the image here is how a
+# restore silently reverts a promotion.
+bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

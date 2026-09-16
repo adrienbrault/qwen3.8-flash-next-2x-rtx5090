@@ -50,5 +50,6 @@ log "=== ladder, all rungs side by side ==="
 python3 /srv/qwen5090/probes/summarize.py "$R"/records-*.jsonl 2>&1 | grep -E "^==|^slots" | tee -a "$R/audit.log"
 
 log "restoring the served configuration (slots 8) with the enabled levers"
-MAXBS=8 IMG=tabbyapi:qsa-cid bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+# Slots back to 8 and NO image override: the launcher default is the served configuration.
+MAXBS=8 bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE

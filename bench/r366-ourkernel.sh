@@ -77,5 +77,6 @@ log "=== the falsifier, side by side (decode per stream at the pinned depth 3) =
 python3 /srv/qwen5090/probes/summarize.py "$R/records-control.jsonl" "$R/records-candidate.jsonl" 2>&1 | grep -E "^==|c=" | tee -a "$R/audit.log"
 
 log "restoring the enabled configuration"
-IMG=tabbyapi:qsa-cid bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
+# No IMG override: restore to the launcher default, which is the served configuration.
+bash "$L" >> "$R/audit.log" 2>&1 || log "RESTORE FAILED"
 finish DONE
