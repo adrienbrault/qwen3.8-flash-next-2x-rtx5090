@@ -36,8 +36,14 @@ trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
 curl -sf -m 8 "$U/v1/model" >/dev/null || { log "ABORT: no server on $U"; exit 3; }
 SERVED=$(curl -s -m 5 "$U/v1/model" | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
 log "served: $SERVED | image: $(sudo docker inspect flashnext --format '{{.Config.Image}}')"
-log "harness: gsm8k, 5-shot, apply_chat_template, temperature 0, max_gen_toks 8192, limit 1319, num_concurrent 8"
-log "(the daily's as-served arm in R299b used exactly these parameters and read 98.5 at n=200; this run is n=1319 for a tighter interval on this seat's own number)"
+log "harness: gsm8k, 5-shot, apply_chat_template, temperature 0, max_gen_toks 8192, limit 1319, num_concurrent 4"
+log "(this line said num_concurrent 8 until 2026-09-16 while the invocation below asked for 4 -- the daily's"
+log " R299b arm ran at 4, so the record disagreed with the measurement, which is the one thing a record must not do)"
+log "(the daily's as-served arm in R299b used the same parameters and read 98.5 at n=200; this run is n=1319 for a tighter interval on this seat's own number)"
+# lm-eval reads `message.content`, so this measurement is only meaningful if the model puts the ANSWER there and
+# keeps the thinking in reasoning_content. Checked against the live server on this configuration before trusting the
+# run: a GSM8K item came back with 126 chars of reasoning and 131 chars of content ending "Answer: 72 clips" --
+# the right answer in the right field, and the brief reasoning the CONFIG notes describe.
 
 # Thinking-on costs generations that run to the 8192 budget, and c4 is what the harness asks for. A timeout here
 # is a measurement that did not finish, not a score.

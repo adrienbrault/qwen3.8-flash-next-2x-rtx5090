@@ -222,6 +222,21 @@ forward would show. **One run per arm, so +14 % is consistent-with-the-mechanism
 reading is "no regression anywhere, a plausible deep-context gain where the mechanism predicts one, and byte-identical
 output", which is why the patch is carried into the served image rather than being adopted for speed.
 
+
+The n=1319 run above is the one to quote. It tightens the interval from ±0.019 to **±0.0077** and lands at 0.9158
+flexible-extract / 0.9151 strict-match, i.e. within its own previous interval of the n=200 reading — the first
+number was not wrong, it was under-powered.
+
+**The gap to the daily is therefore 6.9 points and decisive**: 0.985 at n=200 has a standard error of about 0.0086,
+so the two intervals do not overlap by a wide margin. The daily's arm is still n=200 — a matched n=1319 arm would
+cost the daily's own down/up and an hour of exclusive GPU for a conclusion that cannot change, so it is left
+available rather than done, and the comparison is stated with both n's visible.
+
+Measured on this seat's own configuration, so it is the served article's number, not a proxy for it. One check
+before trusting the run: lm-eval reads `message.content`, and this seat serves `reasoning: true`, so the score is only
+meaningful if answers land in `content` rather than in the thinking channel. Verified against the live server: a
+GSM8K item returned 126 chars of reasoning and 131 chars of content ending "Answer: 72 clips".
+
 ## Upstream #246 changes numerics for a prefill gain within noise — results `2026-09-16-r365-kernels`
 
 Its assessment said the claim is prefill-only and that ordinary c1/c4/c8 decode cannot use it, so the columns to read
@@ -277,6 +292,7 @@ The daily's own instrument, same parameters as its R299b as-served arm: `gsm8k`,
 | --- | --- | --- |
 | vLLM 27B daily, as served | **0.985** | R299b, thinking on at effort medium |
 | Flash-Next, **as served here** | **0.925** (strict-match 0.920, stderr ±0.019) | this run, thinking on by configuration |
+| Flash-Next, **as served here, n=1319** | **0.9158** flexible-extract, **0.9151** strict-match, stderr **±0.0077** | `2026-09-16-r368-gsm8k-1319`, same parameters at 6.6× the sample |
 | Flash-Next, think *off* | 0.950–0.955 | R257/R294b/R297, **llama.cpp** seat, same n |
 
 Two things to read carefully. First, the gap to the daily is **6 points on one instrument with one protocol**,

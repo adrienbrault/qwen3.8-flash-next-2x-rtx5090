@@ -22,7 +22,7 @@ This document answers whether `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + Ex
 | 9 | a sampler appropriate for the workload | **PASS** | only after R338: the server was serving untruncated T=1.0 to every client that sent no sampler |
 | 10 | sustained load | **PASS** | 40 rounds at c4, drift 101.0 % of the start (63.5–65.5 t/s per stream, no error, no VRAM drift) |
 | 11 | structured output (JSON schema) | **PASS** | content parses *and* satisfies the schema; the server log shows the grammar engaged. Tool-call args, vision on a red PNG and the reasoning channel also pass (`2026-09-16-r348-capabilities`) |
-| 12 | quality on the daily's own GSM8K instrument | **0.925 as served** against the daily's **0.985** | same harness parameters as R299b's as-served arm, thinking on, n=200, ±0.019 (`2026-09-16-r355-fn-gsm8k`) |
+| 12 | quality on the daily's own GSM8K instrument | **0.9158** flexible-extract as served against the daily's **0.985**; **6.9 points**, several standard errors | same harness parameters as R299b's as-served arm, thinking on; n=1319 ±0.0077 (`2026-09-16-r368-gsm8k-1319`), the earlier n=200 ±0.019 reading being within its own interval of this one |
 | 13 | quality on the daily's tool-eval 69×4 | **85.0 ± 2.9** against the daily's **91** | same CLI, same sampler, `--trials 4 --parallel 8` (`2026-09-16-r357-tooleval`) |
 | 14 | the promoted levers preserve quality | **PASS** | tool-eval 85.8 ± 3.1 (CI [83.5, 88.5]) against the baseline's 85.0 ± 2.9, overlapping intervals, while measuring +35 %/+78 % (`2026-09-16-r357-tooleval`) |
 | 15 | agentic coding, the job the box exists for | **PASS on the first subset** | SWE-bench Verified, daily's harness, official scorer: **10/10 resolved** against the daily's **8/10** on the same instances — the two the daily failed, this seat resolved. n=10, one repository, so the margin is noise; a stratified 18-instance run across six repositories is in flight (`2026-09-16-r359-swebench-10`, `r360`) |
@@ -57,7 +57,9 @@ no tensor parallelism in this engine for this architecture, so the ceiling is st
 The decision has moved during this session, and the honest state is this. **On the workload the box exists for —
 agentic coding — this seat is ahead of the current daily on matched instances: 36 of 38 against 20, with sixteen
 discordant pairs all in this seat's favour (p ≈ 2⁻¹⁶).** On short-answer reasoning and tool-calling the daily is ahead
-by about six points on each of two instruments.
+by **6.9 points on GSM8K** (0.985 against 0.9158, the latter now at n=1319 with a ±0.0077 interval, so the gap is
+several standard errors and not an artefact of the sample) and by about six points on tool-eval, which remains at its
+original n.
 
 So the verdict is no longer "serve it for one agent, keep the daily for fan-out". It is: **serve this seat with both
 measured levers on, and decide by workload.** The configuration to serve is validated and verified
