@@ -1,0 +1,67 @@
+{
+ "url": "http://127.0.0.1:8022/v1",
+ "model": "qwen3.8-flash-next-exl3-3.05bpw",
+ "tokens": 256,
+ "rows": [
+  {
+   "conc": 1,
+   "aggregate_tps": 177.6,
+   "per_stream_tps": 177.6,
+   "ttft_median_s": 0.103,
+   "aggregate_runs": [
+    169.6,
+    185.6
+   ],
+   "per_stream_runs": [
+    169.6,
+    185.6
+   ],
+   "failed": 0
+  },
+  {
+   "conc": 2,
+   "aggregate_tps": 232.8,
+   "per_stream_tps": 129.0,
+   "ttft_median_s": 0.18,
+   "aggregate_runs": [
+    211.2,
+    254.4
+   ],
+   "per_stream_runs": [
+    127.6,
+    130.5
+   ],
+   "failed": 0
+  },
+  {
+   "conc": 4,
+   "aggregate_tps": 252.7,
+   "per_stream_tps": 70.2,
+   "ttft_median_s": 0.326,
+   "aggregate_runs": [
+    242.1,
+    263.4
+   ],
+   "per_stream_runs": [
+    70.9,
+    69.5
+   ],
+   "failed": 0
+  },
+  {
+   "conc": 8,
+   "aggregate_tps": 283.5,
+   "per_stream_tps": 42.9,
+   "ttft_median_s": 0.511,
+   "aggregate_runs": [
+    277.5,
+    289.6
+   ],
+   "per_stream_runs": [
+    43.5,
+    42.2
+   ],
+   "failed": 0
+  }
+ ]
+}
