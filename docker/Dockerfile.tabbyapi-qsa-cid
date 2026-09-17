@@ -1,0 +1,74 @@
+# R350 — both measured engine levers in one image: QSA multi-job + concurrency-indexed draft depth.
+#
+# WHY. Each won on its own, at different shapes:
+#   QSA multi-job        +27 % at c2, +40 % per stream at c4 on 152,761-token contexts   (r341)
+#   draft depth policy   +35 % aggregate at c4 on short contexts (2,048 forced tokens)   (r340)
+# Both were validated with byte-identical greedy output. A daily would want both, so this builds the
+# combination on the same devel base with the same pip resolution, and the A/B that matters is
+# baseline vs combined at BOTH shapes.
+#
+# The ci-depth half is pure Python (2 engine files + 3 TabbyAPI files) and its TabbyAPI half must be applied
+# to /app; the QSA half changes libtorch/attention.cpp and needs the native extension rebuilt, which is why
+# this base is the devel image rather than the serving one.
+ARG CUDA_BASE=nvidia/cuda:12.8.1-devel-ubuntu24.04
+ARG TABBY_SHA=53da7919d4e45c63f4acbcbbc00cbe0f60a1ce65
+FROM ${CUDA_BASE}
+
+ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential git curl ca-certificates patch ninja-build \
+      python3.12 python3.12-dev python3.12-venv python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3.12 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip
+
+WORKDIR /app
+ARG TABBY_SHA
+RUN git clone --quiet https://github.com/theroyallab/tabbyAPI.git . \
+ && git checkout --quiet --detach "${TABBY_SHA}" \
+ && test "$(git rev-parse HEAD)" = "${TABBY_SHA}" \
+ && git log --oneline -1 > /app/TABBY.txt
+RUN pip install ".[cu12]"
+
+RUN python -c "from importlib.metadata import version as v; import torch; \
+    e = v('exllamav3'); print('exllamav3', e, '| torch', torch.__version__, '| cuda', torch.version.cuda); \
+    assert e.split('+')[0] == '1.5.0', 'WRONG EXLLAMAV3: ' + e"
+
+# --- half 1: QSA multi-job (python + C++, needs the rebuild below) ---------------------------------
+COPY qsa-multijob-applied.patch /tmp/qsa-multijob-applied.patch
+RUN set -eu; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" < /tmp/qsa-multijob-applied.patch; \
+    grep -Fq 'BC-attn QSA slot layer' "$site/exllamav3/modules/attention_fn/bc_attn.py"; \
+    grep -Fq 'auto live_scores = s.qsa_scores.narrow(1, 0, t_scan);' "$site/exllamav3/exllamav3_ext/libtorch/attention.cpp"; \
+    echo "QSA patch applied"
+
+# --- half 2: concurrency-indexed draft depth (pure python; engine + TabbyAPI) ----------------------
+COPY ci-depth-applied.patch /tmp/ci-depth-applied.patch
+COPY tabby-split.patch /tmp/tabby-split.patch
+RUN set -eu; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" < /tmp/ci-depth-applied.patch; \
+    grep -Fq 'def _get_draft_depth(self, batch_size: int) -> int:' "$site/exllamav3/generator/generator.py"; \
+    patch --batch --forward --fuzz=0 -p1 -d /app < /tmp/tabby-split.patch; \
+    grep -Fq 'draft_num_tokens_by_batch' /app/common/config_models.py; \
+    grep -Fq 'draft_num_tokens_by_batch' /app/backends/exllamav3/model.py; \
+    echo "ci-depth patch applied (engine + backend)"
+
+# --- native rebuild, once, for the C++ half --------------------------------------------------------
+COPY rebuild-native.py /tmp/rebuild-native.py
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN set -eu; command -v nvcc; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    cd /tmp; python /tmp/rebuild-native.py build_ext --force --build-lib "$site"; \
+    python -c 'import importlib.util; s = importlib.util.find_spec("exllamav3_ext"); assert s and s.origin; print("ext:", s.origin)'
+RUN python3 -m py_compile \
+      /opt/venv/lib/python3.12/site-packages/exllamav3/generator/generator.py \
+      /opt/venv/lib/python3.12/site-packages/exllamav3/generator/job.py \
+      /opt/venv/lib/python3.12/site-packages/exllamav3/modules/attention_fn/bc_attn.py \
+      /app/common/config_models.py /app/backends/exllamav3/model.py
+
+EXPOSE 5000
+ENTRYPOINT ["python3"]
+CMD ["main.py", "--host", "0.0.0.0"]

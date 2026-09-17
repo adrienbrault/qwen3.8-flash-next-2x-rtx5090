@@ -5,7 +5,7 @@
 # engine's default; the reasons are in docs/CONFIG.md and the raw numbers in docs/MEASUREMENTS.md.
 #
 #   VARIANTS
-#     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022 (the Mac reaches it at <host>:8022)
+#     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022 (reachable on the LAN at <box-ip>:8022)
 #     DRAFT=1 ./launch-flashnext.sh         # draft depth 1 at EVERY concurrency, by deriving the policy (see below)
 #     PORT=8023 ./launch-flashnext.sh
 #     STOP=1 ./launch-flashnext.sh          # stop the server
@@ -59,7 +59,41 @@ CACHE=${CACHE:-262144}
 LOG=/srv/qwen5090/logs/flashnext-$PORT.log
 log(){ echo "$(date -Is) [flashnext] $*" | tee -a "$LOG"; }
 DRAFT=${DRAFT:-3}
-IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
+# PROMOTED 2026-09-17 02:20 CEST (R414, user: "you dont need me to promote for this qwen next"): the MoE decode tier
+# admits 16 flattened rows (MAX_BSZN 16, flan/patches/exllamav3/bszn/bszn16.patch) so c8 with depth-1 drafts stays on the
+# fused path. Paired on the same day: c1/c4/c8 = 203/375/443 t/s vs 204/339/313 served (R412); c1 greedy fingerprint
+# identical; agent replay, needle 5/5 at 131k, GSM8K c8 0.935, tool-eval 86.2 +- 1.3 all PASS (R414); 40k-depth c8 +13 %,
+# 20-round c4 soak +6 % with no drift (R416). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337 DRAFT_POLICY='[[2, 3], [8, 1]]'
+# (= flan/launch-flashnext-r340.sh). The previous default line is kept below for the record.
+# PROMOTED 2026-09-17 03:20 CEST (R421 v2): fused-MoE coop kernel stage-B wide tile at >= 128 slots (flan/docker/coopwide.patch
+# over the bszn16 image). Clean paired A/B (re-archive job stopped): c1 205-210 vs 206-209 (greedy byte-identical), c4 372-383 vs
+# 369-376 (noise), c8 434-449 vs 469-478 (+7.5 %); GSM8K c8 0.935 = control with the same kernels forced (R420).
+# ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16 (= flan/launch-flashnext-r414-bszn16.sh).
+# PROMOTED 2026-09-17 04:20 CEST (R425): + the host-gap overlay (GDN rewind descriptors from strides, Python-only,
+# flan/patches/exllamav3/hostgap, image = coopwide + flan/docker/Dockerfile.tabbyapi-pyfile). Needs EXL3_HOST_GAP_REWIND=1 in the
+# container (EXTRA_ENV default below). Paired vs coopwide: c1 203-211 vs 204-211, c4 373-382 vs 366-380, c8 480-503 vs 468-483,
+# greedy byte-identical (R422 on bszn16: +1.5/+2/+2.5 %). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide EXTRA_ENV=
+# (= flan/launch-flashnext-r421-coopwide.sh).
+# PROMOTED 2026-09-17 05:05 CEST (R428): + the hyper-connection mixer V2 (codex, native gr_mix_v2 kernel, flan/patches/exllamav3/hcmix
+# r1+r2, image = coopwide + hc-mix-v2 + hc-mix-v2-r2 + hostgap overlay). Bit-exact vs the V1 mixer (unit test on both cards, R423/R426)
+# and byte-identical c1 greedy in serving (R428, MIN_R 1 arm). Opt-in inside the image: EXL3_HC_MIX_V2=1 and EXL3_HC_MIX_V2_MIN_R=1
+# (V2 at every row count; the default gate 8 kept V1 at c1) are in the EXTRA_ENV default below. R428 paired on this stack:
+# c1 213-218 vs 209-212 (base), c4 422-434 vs ~388, c8 537-548 vs 481-522. ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hostgap
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1' (= flan/launch-flashnext-r425-stack.sh).
+# PROMOTED 2026-09-17 (R442): + the prefill-only stage pipeline (codex, Python-only, flan/patches/exllamav3/ppipe: round-2 pipeline +
+# round-3 no-sync (inert, off) + round-4 MTP eligibility (time_first_token) + the R441 free-VRAM guard fix flan/docker/ppipe-memfix).
+# Chunked prefill of one job runs stage A (cuda:0) of chunk i+1 while stage B (cuda:1) runs chunk i; decode untouched. Harness:
+# 30k prefill 6.4 -> 4.3 s with the draft loaded, both cards busy at once 43 % (R441); serving numbers in FINDINGS R442. Needs
+# EXL3_LS_PREFILL_PIPELINE=1 (EXTRA_ENV default below). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1' (= flan/launch-flashnext-r428-hcmix2.sh).
+# R460 (2026-09-17 12:45 CEST): codex MoE coop V2 decode kernel (flan/patches/exllamav3/moecoop, overlay image …-moecoopv2 = the
+# R442 image + exl3_moe_coop_v2_kernel.cuh, extension rebuilt in-image; opt-in EXL3_MOE_COOP_V2=1 in EXTRA_ENV below). R460: c1 + 30k
+# greedy fingerprints byte-identical (1474eee2f5945248 / 4a255910dee2d9c5), GPU test bit-exact at R=1..16 for every routing pattern,
+# ladder OFF 207-216 / 403-434 / 526-557 vs ON 207-214 / 425-450 / 550-604 (c4 +4 %, c8 +8 %), GSM8K c8 n=200 0.935 (= daily).
+# ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1' (= flan/launch-flashnext-r442-ppipe.sh).
+IMG=${IMG:-tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2}
+# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
@@ -71,7 +105,8 @@ IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable a
 # `${VAR-...}` and not `${VAR:-...}`: the colon form also fires on an EMPTY value, which would make the
 # documented `DRAFT_POLICY=''` silently keep the policy on and quietly corrupt any future A/B that tried to
 # disable it. Without the colon, empty means empty and the config line is omitted.
-DRAFT_POLICY=${DRAFT_POLICY-[[2, 3], [8, 1]]}
+# R414 promotion: depth 3 up to 4 requests (16 rows = MAX_BSZN 16), depth 1 up to 8. Served before: [[2, 3], [8, 1]].
+DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [8, 1]]}
 # DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
 # the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
 # ABOVE the last ceiling (8). That branch is unreachable here because the generator clamps max_batch_size to
@@ -106,7 +141,12 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # GENERIC ENV PASSTHROUGH for engine features that are switched by environment rather than by config, e.g. upstream's
 # route-packed MoE schedule (EXL3_MOE_ROUTE_PACKED=1). Space-separated KEY=VALUE pairs. Empty means no extra env.
 #   EXTRA_ENV='EXL3_MOE_ROUTE_PACKED=1' ./launch-flashnext.sh
-EXTRA_ENV=${EXTRA_ENV:-}
+# R425: the host-gap overlay is opt-in inside the image; the daily turns it on. Experiments that override EXTRA_ENV must
+# include EXL3_HOST_GAP_REWIND=1 themselves if they want the daily's behaviour (r427 does; the OFF arm of an A/B may not).
+# R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
+# R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
+# R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1}
 EV=()
 for kv in $EXTRA_ENV; do
   case "$kv" in *=*) EV+=(-e "$kv");; *) log "WARN: ignoring EXTRA_ENV entry without '=': $kv";; esac

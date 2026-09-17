@@ -1,0 +1,12 @@
+# Apply a PYTHON-ONLY patch (no native rebuild) onto a TabbyAPI/exllamav3 image; seconds.
+#   docker build -f Dockerfile.tabbyapi-pypatch --build-arg BASE=<image> --build-arg PATCH=prefill-pipeline.patch -t <tag> .
+ARG BASE=tabbyapi:qsa-cid-pr337-bszn16
+FROM ${BASE}
+USER root
+ARG PATCH
+COPY ${PATCH} /tmp/py.patch
+RUN set -eu; site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    ! grep -qE '^\+\+\+ b/.*\.(cu|cuh|cpp|h)$' /tmp/py.patch || { echo "native files in a python-only patch"; exit 1; }; \
+    patch --batch --forward --fuzz=0 --dry-run -p1 -d "$site" < /tmp/py.patch; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" < /tmp/py.patch; \
+    for f in $(grep -E '^\+\+\+ b/' /tmp/py.patch | sed 's|^+++ b/||'); do python3 -m py_compile "$site/$f"; done; rm /tmp/py.patch

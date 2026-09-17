@@ -701,3 +701,15 @@ deliberation delivered as the visible answer.
 Depth ladder (decode and TTFT against KV depth), long-context retrieval, admission at 8 distinct deep contexts,
 soak stability, and the two patch A/Bs (concurrency-indexed draft depth, QSA multi-job). See `bench/r339-gates.sh`
 for the suite and `bench/results/` for what has landed.
+
+## 2026-09-17 — the promoted layers, in order (each admitted by its own gate; see `docker/README.md`)
+
+| promoted (CEST) | layer | gate evidence | decode c1 / c4 / c8 (fn_bench code 2048) | prefill 30k / 120k | results |
+| --- | --- | --- | --- | --- | --- |
+| 02:15 | bszn16 + policy `[[4, 3], [8, 1]]` | c1 fingerprint identical; GSM8K, tool-eval under concurrency | 203 / 375 / 443 | — | `2026-09-17-r414-*` |
+| 03:15 | coopwide | c1 byte-identical; c8 +7.5 % | 206–209 / 369–376 / 469–478 | — | `2026-09-17-r421-coopwide-ab` |
+| 04:32 | hcmix2 (`EXL3_HC_MIX_V2=1`, `MIN_R=1`) + hostgap (`EXL3_HOST_GAP_REWIND=1`) | identical at MIN_R 1; c4 +12 %, c8 +8 % | 213–218 / 422–434 / 537–548 | — | `2026-09-17-r428-hcmix2-stack-ab` |
+| 07:35 | prefill pipeline + nosync + mtpfix2 (`EXL3_LS_PREFILL_PIPELINE=1`) | c1 and 30k fingerprints identical | 213 / 430 / 540 | **3.5 s / 13.1 s** (was 5.5 / 22.3) | `2026-09-17-r442-ppipe-memfix-ab`, gates `2026-09-17-r446-gates-ppipe` |
+| 12:45 | MoE coop V2 (`EXL3_MOE_COOP_V2=1`) | bit-exact at R = 1..16 in the kernel test, c1 + 30k fingerprints identical, five gates (`2026-09-17-r461-gates-moecoopv2`: GSM8K 0.935, tool-eval 85.5 ± 1.7, needle 5/5) | 207–214 / 425–450 / **550–604** (per stream 75–77) | unchanged | `2026-09-17-r460-moecoop-v2-ab`, `2026-09-17-r460b-moecoop-v2-gputest` |
+
+Pool: 262,144 tokens at 8-bit KV is the ceiling on this box under any split (393,216 and 327,680 fail to boot: `2026-09-17-r452-exl3-cache-bits`, R337). Structured output (llguidance `json_schema` / `response_format` / `regex_pattern`) works, thinking on and off, at c4: `2026-09-17-r453-exl3-structured`.

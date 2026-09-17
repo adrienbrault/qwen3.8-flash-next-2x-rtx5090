@@ -1,0 +1,407 @@
+diff --git a/exllamav3/exllamav3_ext/libtorch/attention.cpp b/exllamav3/exllamav3_ext/libtorch/attention.cpp
+--- a/exllamav3/exllamav3_ext/libtorch/attention.cpp
++++ b/exllamav3/exllamav3_ext/libtorch/attention.cpp
+@@ -362,10 +362,10 @@
+ 
+     if (regime == 1)
+     {
+-        // Sparse slots are single-job (bsz 1) but cover q_len 1..MAX_QLEN: every query row has
+-        // its own index list, scored/expanded with per-row causal bounds (SEQ constexpr), and
+-        // the gather kernel treats rows as its batch axis with a shared block-table row
+-        TORCH_CHECK(bsz == 1 && q_len <= MAX_QLEN, "BC_Attention: QSA sparse slots are single-job");
++        // Rows are job-major (r = job * q_len + local_query). Selection and partials keep
++        // that row axis; scoring/expansion/gather use r / q_len to find the owning job.
++        TORCH_CHECK(1 <= bsz && bsz <= MAX_BSZ && 1 <= q_len && q_len <= MAX_QLEN,
++                    "BC_Attention: QSA sparse shape out of range");
+         TORCH_CHECK(wts && scores && pool_idx && indices && k_fewq && k_expand &&
+                     k_split && k_combine, "BC_Attention: QSA sparse statics/kernels missing");
+         s.qsa_wts = wts.value();
+@@ -654,7 +654,7 @@
+ 
+     if (regime == 1)
+     {
+-        // Sparse regime (bsz == 1, q_len == 1): rope the indexer queries, score the pooled
++        // Sparse regime: each job owns q_len independent selections. Rope queries, score the pooled
+         // plane (uniform head weights), select top-k blocks, expand to token indices plus the
+         // query's tail block, and gather-attend. The index list is a slot static; causality
+         // lives entirely in the selection
+@@ -677,40 +677,45 @@
+                 (void*) s.qsa_scores.data_ptr(),
+                 (void*) (uintptr_t) (uint32_t) (int) t_scan,
+                 (void*) (uintptr_t) (uint32_t) R,
+-                (void*) (uintptr_t) (uint32_t) (int) position,
++                (void*) cache_seqlens.data_ptr(),
+                 (void*) (uintptr_t) (uint32_t) (int) t_scan,
+                 (void*) block_table.data_ptr(),
+-                (void*) (uintptr_t) (uint32_t) 0,
++                (void*) (uintptr_t) (uint32_t) (int) block_table.size(1),
+             };
+             s.k_qsa_fewq->launch(R, s.qsa_fewq_gy, 1, args, stream);
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_fewq->handle(), GP_dsa_T, 4, 4);
+-                graph->record_param(s.k_qsa_fewq->handle(), GP_dsa_qpos, 6, 4);
++                // q_pos0 is now a device pointer, not a 32-bit scalar position.
++                graph->record_param(s.k_qsa_fewq->handle(), GP_attn_seqlens, 6);
+                 graph->record_param(s.k_qsa_fewq->handle(), GP_dsa_bound_max, 7, 4);
+                 graph->record_param(s.k_qsa_fewq->handle(), GP_attn_block_table, 8);
++                graph->record_param(s.k_qsa_fewq->handle(), GP_attn_num_pages, 9, 4);
+                 graph->record_param(s.k_qsa_fewq->handle(), GP_end, 0);
+             }
+         }
+-        dsa_topk_gr(s.qsa_scores, s.qsa_pool_idx, qsa_topk, graph);
++        // Shared score scratch can contain a previous slot/layer's longer history. Narrow
++        // the scan in warmup AND capture, keeping the static row stride; replay patches T.
++        auto live_scores = s.qsa_scores.narrow(1, 0, t_scan);
++        dsa_topk_gr(live_scores, s.qsa_pool_idx, qsa_topk, graph);
+         {
+             std::vector<void*> args =
+             {
+                 (void*) s.qsa_pool_idx.data_ptr(),
+                 (void*) s.qsa_indices.data_ptr(),
+-                (void*) (uintptr_t) (uint32_t) (int) position,
++                (void*) cache_seqlens.data_ptr(),
+             };
+             int k_pad = (int) s.qsa_indices.size(1);
+             s.k_qsa_expand->launch(R, CEIL_DIVIDE(k_pad, 256), 1, args, stream);
+             if (graph)
+             {
+-                graph->record_param(s.k_qsa_expand->handle(), GP_dsa_qpos, 2, 4);
++                graph->record_param(s.k_qsa_expand->handle(), GP_attn_seqlens, 2);
+                 graph->record_param(s.k_qsa_expand->handle(), GP_end, 0);
+             }
+         }
+         {
+-            // num_pages_per_seq 0: the kernel's per-row "batch" index then always selects
+-            // block-table row 0, shared by all q_len rows of the single job
++            // Use the live job-table stride. The gather's SEQ constexpr maps each query
++            // row back to its job; the selection and output remain per-query.
+             std::vector<void*> args =
+             {
+                 (void*) s.q.data_ptr(),
+@@ -721,7 +726,7 @@
+                 (void*) s.partial_o.data_ptr(),
+                 (void*) s.partial_ml.data_ptr(),
+                 (void*) (intptr_t) (int) s.qsa_indices.size(1),
+-                (void*) (intptr_t) 0,
++                (void*) (intptr_t) (int) block_table.size(1),
+                 (void*) (intptr_t) s.qsa_splits,
+                 (void*) (intptr_t) s.qsa_split_len,
+                 // Packed K/V pages: group scales + H32 (dead args for fp16 caches)
+@@ -733,6 +738,7 @@
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_split->handle(), GP_attn_block_table, 3);
++                graph->record_param(s.k_qsa_split->handle(), GP_attn_num_pages, 8, 4);
+                 graph->record_param(s.k_qsa_split->handle(), GP_end, 0);
+             }
+         }
+@@ -985,13 +991,17 @@
+             params.emplace_back(GP_rope_position_ids, position_ids ? (void*) position_ids.value().data_ptr() : nullptr);
+             params.emplace_back(GP_rope_pid_stride, (void*) (uintptr_t) pid_stride);
+         }
++        // Match the recorded sites in launch order. Reordered/replaced jobs need fresh
++        // length pointers AND page-table strides at scoring, expansion and gather.
+         params.emplace_back(GP_dsa_T, (void*) (uintptr_t) (uint32_t) t_scan);
+-        params.emplace_back(GP_dsa_qpos, (void*) (uintptr_t) (uint32_t) position);
++        params.emplace_back(GP_attn_seqlens, (void*) cache_seqlens.data_ptr());
+         params.emplace_back(GP_dsa_bound_max, (void*) (uintptr_t) (uint32_t) t_scan);
+         params.emplace_back(GP_attn_block_table, (void*) block_table.data_ptr());
++        params.emplace_back(GP_attn_num_pages, (void*) (uintptr_t) bt_width);
+         params.emplace_back(GP_dsa_T, (void*) (uintptr_t) (uint32_t) t_scan);   // top-k
+-        params.emplace_back(GP_dsa_qpos, (void*) (uintptr_t) (uint32_t) position);   // expand
+-        params.emplace_back(GP_attn_block_table, (void*) block_table.data_ptr());    // gather
++        params.emplace_back(GP_attn_seqlens, (void*) cache_seqlens.data_ptr()); // expand
++        params.emplace_back(GP_attn_block_table, (void*) block_table.data_ptr()); // gather
++        params.emplace_back(GP_attn_num_pages, (void*) (uintptr_t) bt_width);
+     }
+     else
+     {
+diff --git a/exllamav3/exllamav3_ext/libtorch/attention.h b/exllamav3/exllamav3_ext/libtorch/attention.h
+--- a/exllamav3/exllamav3_ext/libtorch/attention.h
++++ b/exllamav3/exllamav3_ext/libtorch/attention.h
+@@ -25,7 +25,7 @@
+ // QSA (Qwen3.8-Flash-Next): set_qsa() arms the sparse-indexer stages, following the DSA-on-MLA
+ // pattern (mla_attention.h). Armed instances project + append raw indexer keys and rebuild the
+ // touched pooled block keys every step in BOTH regimes, so the planes stay complete while dense
+-// slots serve; regime-1 slots (context past the sparse threshold, bsz == 1, q_len == 1)
++// slots serve; regime-1 slots (context past the sparse threshold, bsz/q_len within slot limits)
+ // additionally norm + rope the indexer queries, score the pooled plane (fewq with uniform head
+ // weights), select top-k blocks (capture-safe radix top-k), expand them to token indices plus
+ // the query's tail block, and run the gathered GQA attention instead of the dense flash-decoding
+@@ -177,9 +177,9 @@
+         at::Tensor qsa_q4;       // rope view (bsz, q_len, H_i, rotate_dims)
+         at::Tensor qsa_kraw;     // (R, D_i) raw keys
+         at::Tensor qsa_wts;      // (R, H_i) fp16, filled with 1.0 (uniform head weights)
+-        at::Tensor qsa_scores;   // (R, S_max) fp16, -inf filled once
++        at::Tensor qsa_scores;   // (R, S_max) fp16, live scan [0, T) overwritten every call
+         at::Tensor qsa_pool_idx; // (R, KP_pool) i32 selected block ids
+-        at::Tensor qsa_indices;  // (R, K_pad) i32 expanded token indices
++        at::Tensor qsa_indices;  // (R, K_pad) i32 job-local tokens; r = job * q_len + query
+         std::shared_ptr<TritonKernel> k_qsa_stage, k_qsa_raw_append, k_qsa_pool_update,
+             k_qsa_fewq, k_qsa_expand, k_qsa_split, k_qsa_combine;
+         int qsa_fewq_gy = 0;
+diff --git a/exllamav3/modules/attention_fn/bc_attn.py b/exllamav3/modules/attention_fn/bc_attn.py
+--- a/exllamav3/modules/attention_fn/bc_attn.py
++++ b/exllamav3/modules/attention_fn/bc_attn.py
+@@ -26,7 +26,7 @@
+ QSA (Qwen3.8-Flash-Next): modules with a qsa_indexer arm the sparse-selection stages
+ (set_qsa), following the DSA-on-MLA pattern in bc_mla.py. Armed instances maintain the
+ indexer's raw/pooled key planes in-graph on every step (dense slots included, so the planes
+-stay complete below the sparse threshold) and regime-1 slots (single-job, q_len 1..16,
++stay complete below the sparse threshold) and regime-1 slots (bsz 1..8, q_len 1..16,
+ context past the threshold) run scoring / top-k / expansion / gathered GQA attention instead 
+ of the dense flash-decoding kernels. Scoring and expansion reuse the DSA kernels (QSA's 
+ uniform-head-weight relu score and forced tail block match them exactly); the stage, pool-update
+@@ -41,7 +41,7 @@
+ 
+ bc_attn_enable = os.environ.get("EXL3_BC_ATTN", "1") != "0"
+ 
+-# EXL3_BC_ATTN_TRACE=1: print build/decline per module/layer (activation check for A/B tests)
++# EXL3_BC_ATTN_TRACE=1: print build/decline and QSA slot configuration (not each replay)
+ _bc_trace = os.environ.get("EXL3_BC_ATTN_TRACE", "0") != "0"
+ 
+ def _trace_build(m, result, kind):
+@@ -474,32 +474,32 @@
+             cap = self.qsa_layer.pooled.shape[0] * self.qsa_layer.pooled.shape[1]
+             s_max = -(-cap // 128) * 128
+             scores = sbuf("bca_qsa_scores", R, s_max)
+-            # The scoring kernel writes only [0, T); the warmup top-k scans the full static
+-            # width, so the tail must hold -inf from this one-time fill (the captured graph
+-            # patches the top-k scan width to T afterwards)
+-            scores.fill_(-float("inf"))
++            # Every row writes [0, T), including -inf beyond that job's causal bound.
++            # C++ limits top-k to T even during warmup; shared scratch past T may be stale.
+             pool_idx = sbuf("bca_qsa_pool_idx", R, kp_pool, dtype = torch.int32)
+             indices = sbuf("bca_qsa_indices", R, k_pad, dtype = torch.int32)
+ 
+             k_fewq = _compile_kernel(dev, _dsa_indexer_fewq_kernel,
+                 {"q_idx": "*fp16:16", "w": "*fp16:16", "k_idx": "*fp16:16",
+-                 "scores": "*fp16:16", "T": "i32", "R": "i32", "q_pos0": "i32",
++                 "scores": "*fp16:16", "T": "i32", "R": "i32", "q_pos0": "*i32",
+                  "bound_max": "i32", "block_table": "*i32:16", "num_pages_per_row": "i32"}
+                 | {n: "constexpr" for n in (
+                     "H_i", "H_pad", "D_i", "S_stride", "compress_rate", "scale", "BLOCK_N",
+-                    "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES")},
++                    "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES", "SHARED_BOUNDS")},
+                 dict(H_i = Hi, H_pad = max(16, 1 << (Hi - 1).bit_length()), D_i = Di,
+                      S_stride = s_max, compress_rate = cr, scale = float(idx.scale),
+-                     BLOCK_N = 128, SEQ = q_len, MULTIROW = 0, EPP = PAGE_SIZE // cr,
+-                     DEBUG_BOUNDS = 0, DEBUG_PAGES = 0), 8, 2)
++                     # Rows are job-major: r // q_len owns the cache length/page table.
++                     # T is a shared scan width; each job still has its own causal bound.
++                     BLOCK_N = 128, SEQ = q_len, MULTIROW = 1, EPP = PAGE_SIZE // cr,
++                     DEBUG_BOUNDS = 0, DEBUG_PAGES = 0, SHARED_BOUNDS = 1), 8, 2)
+             fewq_gy = s_max // 128
+ 
+             k_expand = _compile_kernel(dev, _dsa_pool_expand_kernel,
+-                {"pool_idx": "*i32", "out": "*i32", "q_pos0": "i32"}
++                {"pool_idx": "*i32", "out": "*i32", "q_pos0": "*i32"}
+                 | {n: "constexpr" for n in (
+                     "P", "SEL", "K_pad", "KP_pool", "TAIL", "SEQ", "MULTIROW", "BLOCK")},
+                 dict(P = cr, SEL = idx.block_topk, K_pad = k_pad, KP_pool = kp_pool,
+-                     TAIL = 1, SEQ = q_len, MULTIROW = 0, BLOCK = 256), 4, 1)
++                     TAIL = 1, SEQ = q_len, MULTIROW = 1, BLOCK = 256), 4, 1)
+ 
+             # Quantized K/V: the gather reads the packed pages through the shared QC
+             # loaders (scales + H32 appended to the runtime args, same as the dense slots)
+@@ -511,11 +511,11 @@
+                  "split_len": "i32", "k_scales": "*fp16", "v_scales": "*fp16", "h32": "*fp16"}
+                 | {n: "constexpr" for n in (
+                     "n_q_heads", "n_kv_heads", "page_size", "head_dim", "K_pad", "scale",
+-                    "BLOCK_H", "BLOCK_N", "PAGED", "QCK", "QCV")},
++                    "BLOCK_H", "BLOCK_N", "PAGED", "QCK", "QCV", "SEQ")},
+                 dict(n_q_heads = self.num_q_heads, n_kv_heads = self.num_kv_heads,
+                      page_size = PAGE_SIZE, head_dim = self.head_dim, K_pad = k_pad,
+                      scale = float(self.sm_scale), BLOCK_H = block_h, BLOCK_N = block_n,
+-                     PAGED = 1, QCK = self.k_bits, QCV = self.v_bits),
++                     PAGED = 1, QCK = self.k_bits, QCV = self.v_bits, SEQ = q_len),
+                 4, 2)
+ 
+             k_sp_combine = _compile_kernel(dev, _paged_attn_decode_combine_kernel,
+@@ -564,14 +564,15 @@
+             assert host_seqlens is not None, "BC_Attention: QSA step requires host seqlens"
+             t_total = int(host_seqlens.max().item()) + q_len
+             if t_total > self.qsa_threshold:
+-                # sparse slots are single-job; every query row of the chunk gets its own
+-                # selection (MTP-verify shapes included)
+-                if bsz > 1 or not causal:
++                # Each job owns q_len selection rows, including MTP verification. Selection
++                # uses cache positions and admits only causal tokens, so non-causal stays eager.
++                if not causal:
+                     return None
+                 regime = 1
+-                # The generator usually passes positions as a tensor and leaves the scalar at
+-                # 0; the scoring/expansion bounds consume the scalar
+-                position = int(host_seqlens[0].item())
++                # Preserve the single-job scalar RoPE fallback. Multi-job RoPE keeps the
++                # caller's position sources; selection reads per-job device cache lengths.
++                if bsz == 1:
++                    position = int(host_seqlens[0].item())
+ 
+         # The captured graph freezes the inv_freq table geometry (table flag, stride, partial
+         # head dim) and the causality of the attention kernels, so either changing means
+@@ -582,6 +583,10 @@
+         if self.slot_widths.get((bsz, q_len, regime), ...) != skey:
+             self._configure(bsz, q_len, causal, regime)
+             self.slot_widths[(bsz, q_len, regime)] = skey
++            if self.qsa and _bc_trace:
++                # A built module alone does not prove that a multi-job sparse slot is used.
++                print(f" -- BC-attn QSA slot layer {self.module.layer_idx} device {self.device}"
++                      f" bsz={bsz} q_len={q_len} regime={regime}")
+         y = torch.empty((bsz, q_len, self.hidden_size), dtype = self.o_dtype, device = x.device)
+         self.bc.run(bsz, q_len, x, y, cache_seqlens, block_table, position, positions,
+                     position_ids, inv_freq, regime, t_total)
+diff --git a/exllamav3/modules/attention_fn/dsa_triton.py b/exllamav3/modules/attention_fn/dsa_triton.py
+--- a/exllamav3/modules/attention_fn/dsa_triton.py
++++ b/exllamav3/modules/attention_fn/dsa_triton.py
+@@ -684,6 +684,7 @@
+     EPP: tl.constexpr = 0,           # pool entries per page; 0 = contiguous k_idx
+     DEBUG_BOUNDS: tl.constexpr = 0,
+     DEBUG_PAGES: tl.constexpr = 0,
++    SHARED_BOUNDS: tl.constexpr = 0, # MULTIROW: T/bound_max scalar, q_pos0 per-job cache lengths
+ ):
+     """Few-query variant (decode): one program per (query row, key tile) with HEADS as
+     the MMA M dim. A single dot replaces the head loop, which is a serial latency chain
+@@ -693,39 +694,43 @@
+     if MULTIROW:
+         job = r // SEQ
+         loc = r % SEQ
+-        T = tl.load(T + job)
++        if not SHARED_BOUNDS:
++            T = tl.load(T + job)
++            bound_max = tl.load(bound_max + job)
+         q_pos0 = tl.load(q_pos0 + job)
+-        bound_max = tl.load(bound_max + job)
+         block_table = block_table + job * num_pages_per_row
+     else:
+         loc = r
+     # In a captured graph the grid is sized for the FULL score buffer (pool capacity)
+-    # with T patched per replay; tiles past T retire immediately (their region of the
+-    # scores buffer holds the required -inf from the one-time fill)
++    # with T patched per replay; tiles past T retire immediately. SHARED_BOUNDS callers
++    # must also restrict top-k to T during warmup, since scratch past T is not cleared
+     if pid_n * BLOCK_N >= T:
+         return
+     offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
+     offs_d = tl.arange(0, D_i)
+     offs_h = tl.arange(0, H_pad)
+     valid_n = offs_n < T
++    bound = tl.minimum((q_pos0 + loc + 1) // compress_rate, bound_max)
++    # A shorter job may have invalid page-table padding inside the shared scan width.
++    # Mask BEFORE page/key loads; still write -inf to every scanned but invisible score.
++    load_n = valid_n & (offs_n < bound) if SHARED_BOUNDS else valid_n
+     valid_h = offs_h < H_i
+ 
+     qh = tl.load(q_idx + (r * H_i + offs_h)[:, None] * D_i + offs_d[None, :],
+                  mask = valid_h[:, None], other = 0.0)                     # (H_pad, D)
+     if EPP > 0:
+-        phys = tl.load(block_table + offs_n // EPP, mask = valid_n, other = 0)
++        phys = tl.load(block_table + offs_n // EPP, mask = load_n, other = 0)
+         if DEBUG_BOUNDS:
+-            tl.device_assert(tl.where(valid_n, (phys >= 0) & (phys < DEBUG_PAGES), True), "dsa_fewq: pool page OOB")
++            tl.device_assert(tl.where(load_n, (phys >= 0) & (phys < DEBUG_PAGES), True), "dsa_fewq: pool page OOB")
+         k_rows = phys * EPP + offs_n % EPP
+     else:
+         k_rows = offs_n
+     kt = tl.load(k_idx + k_rows[None, :] * D_i + offs_d[:, None],
+-                 mask = valid_n[None, :], other = 0.0)                     # (D, N)
++                 mask = load_n[None, :], other = 0.0)                     # (D, N)
+     logits = tl.dot(qh, kt)                                                # (H_pad, N)
+     wh = tl.load(w + r * H_i + offs_h, mask = valid_h, other = 0.0)
+     acc = tl.sum(tl.maximum(logits, 0.0) * wh[:, None].to(tl.float32), axis = 0) * scale
+ 
+-    bound = tl.minimum((q_pos0 + loc + 1) // compress_rate, bound_max)
+     acc = tl.where(offs_n < bound, acc, -float("inf"))
+     tl.store(scores + r * S_stride + offs_n, acc.to(tl.float16), mask = valid_n)
+ 
+diff --git a/exllamav3/modules/attention_fn/qsa_triton.py b/exllamav3/modules/attention_fn/qsa_triton.py
+--- a/exllamav3/modules/attention_fn/qsa_triton.py
++++ b/exllamav3/modules/attention_fn/qsa_triton.py
+@@ -25,8 +25,9 @@
+     directly (the nc path, where each "batch" is one query row of a from-scratch forward).
+ 
+ The sparse kernels assume one index list per query row (rows cannot share K/V tiles): the
+-paged/BC form runs decode rows (q_len == 1), the flat form any (B * S) row set. All bounds are
+-runtime arguments or derived on device, so the kernels are CUDA-graph-safe.
++paged/BC form flattens (B, S) to query rows and uses SEQ=S to share a page table within a job;
++the eager form supplies one page-table row per query and keeps SEQ=1. All bounds are runtime
++arguments or derived on device, so the kernels are CUDA-graph-safe.
+ """
+ 
+ import torch
+@@ -170,6 +171,7 @@
+     PAGED: tl.constexpr = 1,
+     QCK: tl.constexpr = 0,   # packed quantized K pages (bits), 0 = fp16
+     QCV: tl.constexpr = 0,   # packed quantized V pages (bits), 0 = fp16
++    SEQ: tl.constexpr = 1,   # query rows per job; eager callers already expand the page table
+ ):
+     """Gathered GQA flash-decoding phase 1 over an index list, q_len == 1: one program per
+     (batch, kv_head, h_block, split), iterating the row's indices instead of the sequential
+@@ -210,7 +212,10 @@
+         valid_n = (idx >= 0) & (offs_n < n_end)
+         idx_c = tl.where(valid_n, idx, 0)
+         if PAGED:
+-            phys = tl.load(block_table + batch * num_pages_per_seq + idx_c // page_size,
++            # The selection/output axis is a query row; only the page-table axis is a job.
++            # Dividing here preserves distinct MTP selections within each job's q_len rows.
++            job = batch // SEQ
++            phys = tl.load(block_table + job * num_pages_per_seq + idx_c // page_size,
+                            mask = valid_n, other = 0)
+             tok = phys * page_size + idx_c % page_size
+         else:
+diff --git a/exllamav3/modules/attention_fn/bc_dsa.py b/exllamav3/modules/attention_fn/bc_dsa.py
+--- a/exllamav3/modules/attention_fn/bc_dsa.py
++++ b/exllamav3/modules/attention_fn/bc_dsa.py
+@@ -226,12 +226,14 @@
+                 "block_table": "*i32:16", "num_pages_per_row": "i32",
+             } | {n: "constexpr" for n in (
+                 "H_i", "H_pad", "D_i", "S_stride", "compress_rate", "scale", "BLOCK_N",
+-                "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES")}
++                "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES", "SHARED_BOUNDS")}
+             consts = dict(
+                 H_i = Hi, H_pad = max(16, 1 << (Hi - 1).bit_length()), D_i = Di,
+                 S_stride = self.scores_max, compress_rate = self.m_rate,
+                 scale = Di ** -0.5 * Hi ** -0.5, BLOCK_N = 128,
+                 SEQ = 1, MULTIROW = 0, EPP = self.epp, DEBUG_BOUNDS = 0, DEBUG_PAGES = 0,
++                # Preserve this AOT caller's existing scalar/per-job-array bounds ABI.
++                SHARED_BOUNDS = 0,
+             )
+             k_fewq = _compile_kernel(dev, _dsa_indexer_fewq_kernel, sig, consts, 8, 2)
+ 
+@@ -536,12 +538,14 @@
+                 "block_table": "*i32:16", "num_pages_per_row": "i32",
+             } | {n: "constexpr" for n in (
+                 "H_i", "H_pad", "D_i", "S_stride", "compress_rate", "scale", "BLOCK_N",
+-                "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES")}
++                "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES", "SHARED_BOUNDS")}
+             consts = dict(
+                 H_i = Hi, H_pad = max(16, 1 << (Hi - 1).bit_length()), D_i = Di,
+                 S_stride = self.scores_max, compress_rate = self.m_rate,
+                 scale = Di ** -0.5 * Hi ** -0.5, BLOCK_N = 128,
+                 SEQ = S, MULTIROW = 1, EPP = self.epp, DEBUG_BOUNDS = 0, DEBUG_PAGES = 0,
++                # Preserve this AOT caller's existing scalar/per-job-array bounds ABI.
++                SHARED_BOUNDS = 0,
+             )
+             k_fewq = _compile_kernel(dev, _dsa_indexer_fewq_kernel, sig, consts, 8, 2)
+ 
+diff --git a/exllamav3/modules/attention_fn/bc_mla.py b/exllamav3/modules/attention_fn/bc_mla.py
+--- a/exllamav3/modules/attention_fn/bc_mla.py
++++ b/exllamav3/modules/attention_fn/bc_mla.py
+@@ -418,13 +418,15 @@
+                     "bound_max": bnd_t, "block_table": "*i32:16", "num_pages_per_row": "i32",
+                 } | {n: "constexpr" for n in (
+                     "H_i", "H_pad", "D_i", "S_stride", "compress_rate", "scale", "BLOCK_N",
+-                    "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES")}
++                    "SEQ", "MULTIROW", "EPP", "DEBUG_BOUNDS", "DEBUG_PAGES", "SHARED_BOUNDS")}
+                 consts = dict(
+                     H_i = Hi, H_pad = max(16, 1 << (Hi - 1).bit_length()), D_i = Di,
+                     S_stride = s_max, compress_rate = P if P else 1,
+                     scale = Di ** -0.5 * Hi ** -0.5, BLOCK_N = 128,
+                     SEQ = q_len, MULTIROW = mr, EPP = PAGE_SIZE // P if P else PAGE_SIZE,
+                     DEBUG_BOUNDS = 0, DEBUG_PAGES = 0,
++                    # Preserve this AOT caller's existing scalar/per-job-array bounds ABI.
++                    SHARED_BOUNDS = 0,
+                 )
+                 k_fewq = _compile_kernel(dev, _dsa_indexer_fewq_kernel, sig, consts, 8, 2)
+                 fewq_gy = s_max // 128

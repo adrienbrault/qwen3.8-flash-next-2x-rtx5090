@@ -1,0 +1,171 @@
+diff --git a/common/config_models.py b/common/config_models.py
+--- a/common/config_models.py
++++ b/common/config_models.py
+@@ -5,8 +5,9 @@
+     Field,
+     PrivateAttr,
+     field_validator,
++    model_validator,
+ )
+-from typing import List, Literal, Optional, Union
++from typing import Annotated, List, Literal, Optional, Tuple, Union
+ 
+ 
+ CACHE_SIZES = Literal["FP16", "Q8", "Q6", "Q4"]
+@@ -505,6 +506,13 @@
+     model_config = ConfigDict(protected_namespaces=())
+ 
+ 
++# Strict positive integers prevent booleans, floats and numeric strings from changing policy meaning
++DraftDepthRule = Tuple[
++    Annotated[int, Field(strict=True, gt=0)],
++    Annotated[int, Field(strict=True, gt=0)],
++]
++
++
+ class DraftModelConfig(BaseConfigModel):
+     """
+     Options for draft models (speculative decoding)
+@@ -570,11 +578,23 @@
+             "(e.g. DFlash with 15 tokens by default) shorter drafts may be preferable."
+         ),
+     )
++    draft_num_tokens_by_batch: Optional[List[DraftDepthRule]] = Field(
++        None,
++        min_length=1,
++        description=(
++            "Optional ascending [max_batch_size, depth] pairs for exllamav3.\n"
++            "The first inclusive limit covering decode-ready jobs selects the draft ceiling.\n"
++            "Above all limits, draft_num_tokens (or the drafter default) is used.\n"
++            "Limits and depths must be positive integers; only single-sequence jobs are supported.\n"
++            "Confidence and n-gram matching may shorten the selected ceiling.\n"
++            "The largest mapped or default depth determines buffer and cache-history capacity."
++        ),
++    )
+     dynamic_draft: Optional[bool] = Field(
+         False,
+         description=(
+             "Adjust number of draft tokens dynamically based on observed acceptance rates.\n"
+-            "Ceiling is given by num_draft_tokens."
++            "Ceiling is given by draft_num_tokens, or the selected batch policy depth if configured."
+         ),
+     )
+     ngram_match_min: Optional[int] = Field(
+@@ -584,6 +604,25 @@
+             "Only used when draft_mode is ngram."
+         ),
+     )
++
++    @field_validator("draft_num_tokens_by_batch")
++    @classmethod
++    def validate_draft_num_tokens_by_batch(cls, rules):
++        # Reject ambiguous or reordered ceilings instead of silently changing the policy
++        if rules is not None and any(a[0] >= b[0] for a, b in zip(rules, rules[1:])):
++            raise ValueError("draft_num_tokens_by_batch limits must be strictly increasing")
++        return rules
++
++    @model_validator(mode="after")
++    def validate_batch_draft_mode(self):
++        if self.draft_num_tokens_by_batch is not None:
++            # A configured policy must be usable; never silently ignore it on a disabled drafter
++            mode = self.draft_mode or "model"
++            if mode == "disabled" or (mode == "model" and not self.draft_model_name):
++                raise ValueError("draft_num_tokens_by_batch requires an enabled draft mode")
++            if self.draft_num_tokens is not None and self.draft_num_tokens <= 0:
++                raise ValueError("draft_num_tokens must be positive with a batch policy")
++        return self
+ 
+ 
+ class SamplingConfig(BaseConfigModel):
+diff --git a/backends/exllamav3/model.py b/backends/exllamav3/model.py
+--- a/backends/exllamav3/model.py
++++ b/backends/exllamav3/model.py
+@@ -7,6 +7,7 @@
+ 
+ import torch
+ from itertools import zip_longest
++from inspect import signature
+ from typing import (
+     Any,
+     AsyncIterator,
+@@ -19,6 +20,7 @@
+     AsyncJob,
+     Cache,
+     Config,
++    Generator,
+     Model,
+     Tokenizer,
+ )
+@@ -29,6 +31,7 @@
+ from backends.exllamav3.utils import exllama_supports_nccl
+ from backends.exllamav3.vision import clear_image_embedding_cache, image_embedding_cache
+ from common.concurrency import iterate_in_threadpool
++from common.config_models import DraftModelConfig
+ from common.gen_logging import (
+     format_settings,
+     log_generation_params,
+@@ -137,6 +140,7 @@
+     max_rq_tokens: Optional[int] = 2048
+     max_batch_size: Optional[int] = None
+     draft_num_tokens: Optional[int] = None
++    draft_num_tokens_by_batch: Optional[List[tuple[int, int]]] = None
+     dynamic_draft: Optional[bool] = False
+     ngram_match_min: int = 0
+ 
+@@ -261,6 +265,14 @@
+             else None
+         )
+         self.dynamic_draft = draft_args.get("dynamic_draft", False)
++        self.draft_num_tokens_by_batch = None
++        if draft_args.get("draft_num_tokens_by_batch") is not None:
++            # Inline/load overrides need the same validation as config.yml, before cache allocation
++            draft_policy = DraftModelConfig.model_validate(draft_args)
++            self.draft_num_tokens_by_batch = draft_policy.draft_num_tokens_by_batch
++            # Older Generator versions accept **kwargs and would silently ignore this capability
++            if "num_draft_tokens_by_batch" not in signature(Generator.__init__).parameters:
++                raise RuntimeError("Batch-indexed drafting requires the matching ExLlamaV3 patch")
+ 
+         # Always disable draft if params are incorrectly configured
+         if draft_mode == "model" and draft_args and draft_model_name is None:
+@@ -619,6 +631,13 @@
+             ),
+         }
+ 
++        if self.draft_num_tokens_by_batch is not None:
++            # Recurrent rejection can rewind any policy depth, regardless of the first batch size
++            batch_draft_args["max_history"] = max(
++                batch_draft_args["max_history"],
++                *(depth for _, depth in self.draft_num_tokens_by_batch),
++            )
++
+         if split_cache_mode:
+             draft_k_bits = int(split_cache_mode.group(1))
+             draft_v_bits = int(split_cache_mode.group(2))
+@@ -820,6 +839,7 @@
+                 recurrent_cache_size=config.memory.sysmem_recurrent_cache * 1024**2,
+                 cpu_cache_size=config.memory.sysmem_kv_cache * 1024**2,
+                 num_draft_tokens=self.draft_num_tokens,
++                num_draft_tokens_by_batch=self.draft_num_tokens_by_batch,
+                 dynamic_draft_tokens=self.dynamic_draft,
+                 ngram_match_min=self.ngram_match_min,
+             )
+diff --git a/config_sample.yml b/config_sample.yml
+--- a/config_sample.yml
++++ b/config_sample.yml
+@@ -321,8 +321,15 @@
+   # (e.g. DFlash with 15 tokens by default) shorter drafts may be preferable.
+   draft_num_tokens:
+ 
++  # Optional ascending [max_batch_size, depth] pairs; null preserves the fixed-depth behavior.
++  # Count only jobs ready to decode. The first inclusive limit wins; above all limits,
++  # fall back to draft_num_tokens (or the drafter default). Both entries must be positive integers.
++  # Choose depths by measurement. The largest depth, including fallback, reserves cache history.
++  # Requires enabled drafting and single-sequence jobs. Reload to change the policy itself.
++  draft_num_tokens_by_batch:
++
+   # Adjust number of draft tokens dynamically based on observed acceptance rates (default: False)
+-  # Ceiling is given by num_draft_tokens.
++  # Confidence can shorten, but never exceed, draft_num_tokens or the selected batch policy depth.
+   dynamic_draft:
+ 
+   # Minimum match length for exllamav3 n-gram drafting (default: 2).

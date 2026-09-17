@@ -1,0 +1,76 @@
+--- a/exllamav3/modules/block_sparse_mlp.py
++++ b/exllamav3/modules/block_sparse_mlp.py
+@@ -41,7 +41,7 @@
+ # Deterministic (slot + gather) accumulation for the fused kernel's outputs; EXL3_MOE_FUSED_DET=0
+ # restores the atomic adds
+ FUSED_DET = os.environ.get("EXL3_MOE_FUSED_DET", "1") != "0"
+-MAX_BSZN = 8  # must match MAX_BSZN in exllamav3_ext/libtorch/blocksparse_mlp.h
++MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/blocksparse_mlp.h
+ 
+ @dataclass
+ class FusedBuffers:
+--- a/exllamav3/modules/mlp.py
++++ b/exllamav3/modules/mlp.py
+@@ -12,7 +12,7 @@
+ from .multilinear import MultiLinear
+ from ..util.tensor import g_tensor_cache
+ 
+-MAX_BSZN = 8  # must match MAX_BSZN in exllamav3_ext/libtorch/mlp.h and block_sparse_mlp.py
++MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/mlp.h and block_sparse_mlp.py
+ 
+ class MLP(Module):
+ 
+--- a/exllamav3/exllamav3_ext/libtorch/mlp.h
++++ b/exllamav3/exllamav3_ext/libtorch/mlp.h
+@@ -8,7 +8,7 @@
+ #include "linear.h"
+ #include "../graph.cuh"
+ 
+-#define MAX_BSZN 8   // must match MAX_BSZN in blocksparse_mlp.h / BlockSparseMLP.py
++#define MAX_BSZN 16   // must match MAX_BSZN in blocksparse_mlp.h / BlockSparseMLP.py
+ 
+ // Gate and up projections run as one fused MGEMM when the pointer tables are given, otherwise
+ // as two separate GEMV/GEMM calls -- for num_tokens > 1 these go directly through exl3_gemm_gr
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop_kernel.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop_kernel.cuh
+@@ -43,11 +43,13 @@
+ template <bool WIDE> constexpr int tile_cols() { return tile_wn<WIDE>() * COLS; }
+ template <bool WIDE> constexpr int tile_gpc() { return tile_cols<WIDE>() >= 128 ? 1 : 128 / tile_cols<WIDE>(); }  // block groups per 128-chunk
+ template <bool WIDE> constexpr int tile_cpb() { return tile_cols<WIDE>() >= 128 ? tile_cols<WIDE>() / 128 : 1; }  // 128-chunks per block
+-constexpr int MAX_SLOTS = 256;                  // MAX_BSZN * top_k bound (top_k <= 32)
++constexpr int MAX_SLOTS = 512;                  // MAX_BSZN * top_k bound (top_k <= 32)
+ constexpr int STAGE_WORDS = WNT * 8 * 8;        // words per warp per k-slice at 8 bpw
+ constexpr float R_SCALE = 0.088388347648f;      // 1/sqrt(128)
+ 
+ static_assert(THREADS == MOE_COOP_THREADS, "block size mismatch");
++static_assert(ROWS == 8, "MMA fragment mapping requires eight rows");
++static_assert(MAX_SLOTS <= THREADS, "run builder needs one thread per slot");
+ 
+ // Register-dequant widths (shuffle extraction, no staging). 3 bpw stays on the staged generic
+ // path on Ampere where its register form loses to the block-pipelined kernel)
+@@ -252,12 +254,11 @@
+     const int my_e = t < slots ? sh_local[t] : -1;
+     if (my_e >= 0)
+     {
+-        const int key = (my_e << 8) | t;
+         int rank = 0;
+         for (int u = 0; u < slots; ++u)
+         {
+             const int eu = sh_local[u];
+-            rank += (eu >= 0 && ((eu << 8) | u) < key) ? 1 : 0;
++            rank += (eu >= 0 && (eu < my_e || (eu == my_e && u < t))) ? 1 : 0;
+         }
+         sh_order[rank] = (int16_t) t;
+         atomicMax(sh_res, rank + 1);     // active slot count
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -190,7 +190,8 @@
+     check_scratch(act_out, p.I);
+     check_scratch(d_out, p.Ho);
+     TORCH_CHECK(out.dim() >= 2 && out.stride(-1) == 1, "exl3_moe_coop: out shape");
+-    TORCH_CHECK(slots_max >= 1 && slots_max <= 256, "exl3_moe_coop: scratch must hold 1..256 slots");
++    TORCH_CHECK(slots_max >= 1 && slots_max <= exl3_moe_coop_ns::MAX_SLOTS,
++                "exl3_moe_coop: scratch must hold 1..", exl3_moe_coop_ns::MAX_SLOTS, " slots");
+ 
+     // Counters: the gate/up stage's block covers every slot the scratch can hold, the down
+     // stage's every token row the output can hold

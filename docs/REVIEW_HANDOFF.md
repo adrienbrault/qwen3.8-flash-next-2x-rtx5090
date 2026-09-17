@@ -252,4 +252,4 @@ For each performance A/B, record the exact baseline/candidate identities and raw
 
 The handoff is complete when the responsible agent can report which findings were fixed or superseded, the tests that establish each outcome, the actual restored/served identity after authorized live work, and measured before/after results for any chosen optimization. No speedup estimate in this document should be treated as a promised result.
 
-Optional next-session skills: [diagnose](~/.agents/skills/diagnose/SKILL.md) for reproducing failures and bottlenecks, and [tdd](~/.agents/skills/tdd/SKILL.md) for durable behavior tests. Read their setup requirements before using them; this handoff did not initialize or change the repository's issue workflow.
+Optional next-session skills: `diagnose` for reproducing failures and bottlenecks, and `tdd` for durable behavior tests. Read their setup requirements before using them; this handoff did not initialize or change the repository's issue workflow.

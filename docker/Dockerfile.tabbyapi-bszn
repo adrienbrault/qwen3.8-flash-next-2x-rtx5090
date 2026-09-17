@@ -1,0 +1,22 @@
+# R412 — raise the fused MoE decode row limit MAX_BSZN (codex deliverable flan/patches/exllamav3/bszn/).
+# Native rebuild: the served image carries nvcc (it derives from the CUDA devel base) and rebuild-native.py is the same
+# step Dockerfile.tabbyapi-qsa-cid ran. Build one candidate per tag:
+#   docker build -f Dockerfile.tabbyapi-bszn --build-arg PATCH=bszn16.patch -t tabbyapi:qsa-cid-pr337-bszn16 .
+#   docker build -f Dockerfile.tabbyapi-bszn --build-arg PATCH=bszn32.patch -t tabbyapi:qsa-cid-pr337-bszn32 .
+ARG BASE=tabbyapi:qsa-cid-pr337
+FROM ${BASE}
+USER root
+ARG PATCH=bszn16.patch
+ARG MAX_JOBS=6
+COPY ${PATCH} /tmp/bszn.patch
+COPY rebuild-native.py /tmp/rebuild-native.py
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN set -eu; command -v nvcc; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    patch --batch --forward --fuzz=0 --dry-run -p1 -d "$site" < /tmp/bszn.patch; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" < /tmp/bszn.patch; \
+    python3 -m py_compile "$site/exllamav3/modules/block_sparse_mlp.py" "$site/exllamav3/modules/mlp.py"; \
+    grep -E 'define MAX_BSZN' "$site/exllamav3/exllamav3_ext/libtorch/mlp.h"; \
+    cd /tmp; MAX_JOBS=${MAX_JOBS} nice -n 19 python3 /tmp/rebuild-native.py build_ext --force --build-lib "$site"; \
+    python3 -c 'import importlib.util; s = importlib.util.find_spec("exllamav3_ext"); assert s and s.origin; print("ext:", s.origin)'
+LABEL local.bszn.base="tabbyapi:qsa-cid-pr337"

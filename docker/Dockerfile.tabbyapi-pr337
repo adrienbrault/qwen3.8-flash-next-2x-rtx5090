@@ -1,0 +1,24 @@
+# R362 — upstream PR #337 on top of the served image: keep the current CUDA device on the module's device during a
+# layer-split forward.
+#
+# WHY THIS ONE, out of the twenty open exllamav3 PRs. It is the only one that (a) applies cleanly to v1.5.0
+# (`git apply --check` passes, one file, `exllamav3/model/model_ls.py`), and (b) touches the exact topology this
+# seat runs — `tensor_parallel: false` with `gpu_split: [30, 30]`, i.e. `forward_ls`/`prefill_ls`.
+#
+# The author's claim, from the commit message: nothing sets the process-wide current device during a layer-split
+# forward, so an unguarded eager launch runs on cuda:0 against foreign tensors — "silently over P2P on peer pairs, an
+# illegal access on non-peer pairs". This box has working patched-driver P2P in both directions, so the failure mode
+# here would be the silent one: extra P2P traffic rather than a crash. Whether any path in this configuration is
+# unguarded is not known, and is exactly what the A/B decides.
+#
+# Pure Python: no nvcc needed, so this builds on the serving image rather than the devel one.
+ARG BASE=tabbyapi:53da7919-rqcount
+FROM ${BASE}
+COPY upstream-pr337-layer-split-device.patch /tmp/pr337.patch
+RUN set -eu; \
+    site="$(python3 -c 'import importlib.metadata as m; print(m.distribution("exllamav3").locate_file(""))')"; \
+    patch --batch --forward --fuzz=0 --dry-run -p1 -d "$site" < /tmp/pr337.patch; \
+    patch --batch --forward --fuzz=0 -p1 -d "$site" < /tmp/pr337.patch; \
+    grep -Fq '_LSDeviceContext' "$site/exllamav3/model/model_ls.py"; \
+    python3 -m py_compile "$site/exllamav3/model/model_ls.py"; \
+    echo "PR337 applied and asserted (layer-split device context present)"

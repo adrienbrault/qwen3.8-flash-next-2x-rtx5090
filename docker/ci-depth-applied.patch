@@ -1,0 +1,258 @@
+diff --git a/exllamav3/generator/generator.py b/exllamav3/generator/generator.py
+index 45042ef..dc90712 100644
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -46,6 +46,7 @@ class Generator:
+         dynamic_draft_tokens: bool = False,
+         draft_confidence: float = 0.4,
+         record_draft_stats: bool = False,
++        num_draft_tokens_by_batch: list[tuple[int, int]] | None = None,
+         **kwargs
+     ):
+         """
+@@ -84,6 +85,14 @@ class Generator:
+             Number of future tokens to draft. Default is 4 unless the draft model has a preference (e.g.
+             from DFlash block size)
+ 
++        :param num_draft_tokens_by_batch:
++            Optional ascending (max_batch_size, depth) pairs. Select the first inclusive batch-size
++            ceiling covering the jobs ready to decode this round; otherwise use num_draft_tokens.
++            Both values must be positive integers. Only single-sequence jobs are supported with
++            this policy. Confidence or n-gram matching may shorten the selected window further.
++            Reserve recurrent cache max_history for the largest mapped or default depth before
++            loading the model. The policy is fixed at construction; only its selection varies.
++
+         :param ngram_match_min:
+             Minimum number of tokens to match for n-gram draft (0 = disabled).
+ 
+@@ -170,10 +179,44 @@ class Generator:
+         else:
+             self.num_draft_tokens = 0
+ 
++        # Keep the fallback separate from capacity: a later batch may select a deeper window
++        # than the current one, so buffers and queued jobs must reserve the largest possible depth
++        self.num_draft_tokens_by_batch = None
++        self.max_num_draft_tokens = self.num_draft_tokens
++        if num_draft_tokens_by_batch is not None:
++            if not isinstance(num_draft_tokens_by_batch, (list, tuple)) or not num_draft_tokens_by_batch:
++                raise ValueError("num_draft_tokens_by_batch must be a nonempty sequence of pairs")
++            if not (draft_model or ngram_match_min):
++                raise ValueError("num_draft_tokens_by_batch requires drafting to be enabled")
++            if type(self.num_draft_tokens) is not int or self.num_draft_tokens <= 0:
++                raise ValueError("The fallback draft depth must be a positive integer with a batch policy")
++            rules = []
++            previous_limit = 0
++            for rule in num_draft_tokens_by_batch:
++                if not isinstance(rule, (list, tuple)) or len(rule) != 2:
++                    raise ValueError("Each draft policy entry must be (max_batch_size, depth)")
++                limit, depth = rule
++                if type(limit) is not int or type(depth) is not int or limit <= 0 or depth <= 0:
++                    raise ValueError("Draft policy batch limits and depths must be positive integers")
++                if limit <= previous_limit:
++                    raise ValueError("Draft policy batch limits must be strictly increasing")
++                rules.append((limit, depth))
++                previous_limit = limit
++            # Own an immutable copy so caller mutations cannot exceed the allocated capacity
++            self.num_draft_tokens_by_batch = tuple(rules)
++            self.max_num_draft_tokens = max(self.num_draft_tokens, *(depth for _, depth in rules))
++            # Diffusion produces a fixed block including its seed; never verify unwritten columns
++            if draft_model is not None and draft_model.caps.get("dflash_draft", False):
++                if self.max_num_draft_tokens > draft_model.config.block_size - 1:
++                    raise ValueError("Draft policy and fallback must fit the diffusion draft block")
++            # Cache history is allocated before Generator; it must cover every possible rewind
++            if cache.recurrent_layers and cache.max_history < self.max_num_draft_tokens:
++                raise ValueError("Cache max_history must cover the largest mapped or default draft depth")
++
+         self.ngram_match_min = ngram_match_min
+         self.dynamic_draft = dynamic_draft_tokens and self.num_draft_tokens > 0
+         self.record_draft_stats = record_draft_stats
+-        max_q_size = max(self.num_draft_tokens + 1, max_q_size)
++        max_q_size = max(self.max_num_draft_tokens + 1, max_q_size)
+ 
+         # Chunking/partitioning
+         self.max_batch_size = max_batch_size
+@@ -200,7 +243,7 @@ class Generator:
+                 pin_memory = False
+             )
+             self.draft_ids_pinned = torch.empty(
+-                (max_batch_size, self.num_draft_tokens),
++                (max_batch_size, self.max_num_draft_tokens),
+                 dtype = torch.long,
+                 pin_memory = False
+             )
+@@ -598,16 +641,26 @@ class Generator:
+         self.visualizer.update(chains, usage)
+ 
+ 
++    def _get_draft_depth(self, batch_size: int) -> int:
++        # All rows in this round share one window; pending and still-prefilling jobs do not count
++        if self.num_draft_tokens_by_batch is not None:
++            for limit, depth in self.num_draft_tokens_by_batch:
++                if batch_size <= limit:
++                    return depth
++        return self.num_draft_tokens
++
++
+     def iterate_draftmodel_gen(self, results: list):
+ 
+         self._draft_conf_round = None
+ 
++        # Block tables reserve the policy maximum; verification still uses only returned draft columns
+         # Get shape of active batch
+         batch_size = 0
+         max_seq_len = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+-            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.num_draft_tokens + 1)
++            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.max_num_draft_tokens + 1)
+             batch_size += 1
+         if batch_size == 0:
+             return None
+@@ -644,7 +697,9 @@ class Generator:
+         batch_ids.copy_(torch.cat(input_ids_list, dim = 0))
+ 
+         # Greedy sample batched draft tokens. With a confidence calibrator, drafting stops early
+-        window = self.num_draft_tokens
++        # Capacity is fixed, but this round's depth follows its decode-ready job count.
++        # Existing confidence/match truncation may only reduce this ceiling
++        window = self._get_draft_depth(batch_size)
+         cal = self.draft_calibrator
+         conf_cols = []
+         reach = None
+@@ -698,12 +753,13 @@ class Generator:
+ 
+         self._draft_conf_round = None
+ 
++        # Block tables reserve the policy maximum; verification still uses only returned draft columns
+         # Get shape of active batch
+         batch_size = 0
+         max_seq_len = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+-            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.num_draft_tokens + 1)
++            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.max_num_draft_tokens + 1)
+             batch_size += 1
+         if batch_size == 0:
+             return None
+@@ -744,7 +800,9 @@ class Generator:
+         # Greedy sample batched draft tokens. As in iterate_draftmodel_gen, drafting stops once
+         # every row's running product of estimated conditional acceptance probabilities falls
+         # below the confidence target, keeping the first low-confidence token as the label probe
+-        window = self.num_draft_tokens
++        # Capacity is fixed, but this round's depth follows its decode-ready job count.
++        # Existing confidence/match truncation may only reduce this ceiling
++        window = self._get_draft_depth(batch_size)
+         cal = self.draft_calibrator
+         conf_cols = []
+         reach = None
+@@ -791,6 +849,7 @@ class Generator:
+ 
+         self._draft_conf_round = None
+ 
++        # Block tables reserve the policy maximum; verification still uses only returned draft columns
+         # Get shape of active batch
+         batch_size = 0
+         max_seq_len = 0
+@@ -798,7 +857,7 @@ class Generator:
+             if not job.is_prefill_done(): continue
+             max_seq_len = max(
+                 max_seq_len,
+-                job.get_max_seq_len() + self.num_draft_tokens + 1,
++                job.get_max_seq_len() + self.max_num_draft_tokens + 1,
+                 job.get_max_seq_len() + self.draft_model.config.block_size + 1
+             )
+             batch_size += 1
+@@ -806,7 +865,9 @@ class Generator:
+             return None
+ 
+         # The diffusion drafter always runs at its fixed block size, dynamic window truncates the drafted block
+-        window = self.num_draft_tokens
++        # Capacity is fixed, but this round's depth follows its decode-ready job count.
++        # Existing confidence/match truncation may only reduce this ceiling
++        window = self._get_draft_depth(batch_size)
+ 
+         # Create block index table for batch
+         max_pages_batch = (max_seq_len + PAGE_SIZE - 1) // PAGE_SIZE
+@@ -884,18 +945,21 @@ class Generator:
+ 
+     def iterate_ngram_gen(self, results: list):
+ 
++        # Reserve the policy maximum in the batch-length calculation
+         # Get shape of active batch
+         batch_size = 0
+         max_seq_len = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+-            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.num_draft_tokens + 1)
++            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.max_num_draft_tokens + 1)
+             batch_size += 1
+         if batch_size == 0:
+             return None
+ 
+         # Generate draft
+-        window = self.num_draft_tokens
++        # Capacity is fixed, but this round's depth follows its decode-ready job count.
++        # Existing confidence/match truncation may only reduce this ceiling
++        window = self._get_draft_depth(batch_size)
+         draft_ids = []
+         min_len = window
+         for job in self.active_jobs:
+@@ -928,6 +992,7 @@ class Generator:
+ 
+     def iterate_gen(self, results: list, draft_tokens: torch.Tensor | None = None):
+ 
++        # Block tables reserve the policy maximum; verification still uses only returned draft columns
+         # Get shape of active batch
+         # Only jobs that have finished prefill can participate in token generation. The maximum sequence length
+         # determines how many cache pages the temporary block table needs for this iteration.
+@@ -935,7 +1000,7 @@ class Generator:
+         max_seq_len = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+-            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.num_draft_tokens)
++            max_seq_len = max(max_seq_len, job.get_max_seq_len() + self.max_num_draft_tokens)
+             batch_size += len(job.sequences)
+         if batch_size == 0:
+             return
+diff --git a/exllamav3/generator/job.py b/exllamav3/generator/job.py
+index 5428773..6c8b337 100644
+--- a/exllamav3/generator/job.py
++++ b/exllamav3/generator/job.py
+@@ -630,7 +630,8 @@ class Job:
+ 
+         # Accept token
+         self.new_tokens += 1
+-        requeue_now = self.new_tokens > self.max_rq_tokens - self.generator.num_draft_tokens
++        # Reserve the policy maximum even if this round is shallow: the next batch may be deeper
++        requeue_now = self.new_tokens > self.max_rq_tokens - self.generator.max_num_draft_tokens
+ 
+         for seq in self.sequences:
+ 
+@@ -1101,11 +1102,16 @@ class Job:
+         self.pagetable = generator.pagetable
+         self.skips = 0
+ 
++        # Draft rows and verification rows must have the same one-job/one-sequence ordering
++        if generator.num_draft_tokens_by_batch is not None and len(self.sequences) != 1:
++            raise ValueError("Batch-indexed drafting requires single-sequence jobs")
++
+         # No explicit limit: whatever the cache can still hold beyond the prompt, less the default
+-        # requeue budget's headroom below so that budget still fits the cache exactly
++        # requeue budget's headroom below so that budget still fits the cache exactly.
++        # Headroom covers every mapped depth, since the policy can change while this job is queued
+         if self.max_new_tokens is None:
+             self.max_new_tokens = max(1, self.generator.max_total_tokens - len(self.sequences[0].input_ids)
+-                                      - 1 - self.generator.num_draft_tokens)
++                                      - 1 - self.generator.max_num_draft_tokens)
+ 
+         # Align max_rq_tokens to page boundary or recurrent checkpoint
+         if self.max_rq_tokens is not None:
+@@ -1117,7 +1123,7 @@ class Job:
+                 self.max_rq_tokens = y - x
+         else:
+             # Default budget: the whole response plus one speculative window past the limit
+-            self.max_rq_tokens = self.max_new_tokens + 1 + self.generator.num_draft_tokens
++            self.max_rq_tokens = self.max_new_tokens + 1 + self.generator.max_num_draft_tokens
+ 
+         # Compatibility checks
+         if self.banned_strings and self.generator.recurrent_cache is not None:

@@ -1,0 +1,14 @@
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -77,7 +77,10 @@
+     const int mode = moe_coop_wide_mode();
+     if (mode >= 0) return mode != 0;
+     if (DevCtx::instance().get_cc(device) < CC_BLACKWELL) return true;
+-    return kslices >= 256 || (kslices >= 128 && slots >= 32);
++    // R419 (2026-09-17, RTX 5090): at 16 rows x top-10 = 160 slots the wide tile is 5-7 % faster end to end even for
++    // the short-k stage B (I/16 = 40 k-slices), while at 40 slots (c1 depth 3) forcing it wide costs 11 %. Threshold
++    // between the two measured points; numerics change only for slots >= 128 (c1 output is unchanged).
++    return kslices >= 256 || (kslices >= 128 && slots >= 32) || slots >= 128;
+ }
+ 
+ // Dynamic shared memory above the 48 KB default needs an opt-in per kernel (once per process)

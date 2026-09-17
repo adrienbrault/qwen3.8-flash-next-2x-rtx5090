@@ -1,0 +1,13 @@
+# Overlay ONE Python source file onto a TabbyAPI/exllamav3 image (no native rebuild; seconds).
+#   docker build -f Dockerfile.tabbyapi-pyfile --build-arg BASE=tabbyapi:qsa-cid-pr337-bszn16 \
+#     --build-arg SRC=hostgap-gated_delta_net.py --build-arg DST=exllamav3/modules/gated_delta_net.py \
+#     -t tabbyapi:qsa-cid-pr337-bszn16-hostgap .
+ARG BASE=tabbyapi:qsa-cid-pr337-bszn16
+FROM ${BASE}
+USER root
+ARG SRC
+ARG DST
+COPY ${SRC} /tmp/overlay.py
+RUN set -eu; site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    test -f "$site/${DST}"; sha256sum "$site/${DST}"; cp /tmp/overlay.py "$site/${DST}"; sha256sum "$site/${DST}"; \
+    python3 -m py_compile "$site/${DST}"; rm /tmp/overlay.py

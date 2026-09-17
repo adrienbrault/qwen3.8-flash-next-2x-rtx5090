@@ -1,0 +1,52 @@
+# TabbyAPI for ExLlamaV3 — the concurrency path (R331). ExLlamaV3's own tree has NO server; TabbyAPI is its
+# official API backend and is now ExLlamaV3-native ("an OAI compatible exllamav3 API", README 2026-09-15).
+#
+# Vendored from their docker/Dockerfile rather than hand-rolled: the `cu12` extra pins torch+cu128,
+# exllamav3+cu128 AND flash-linear-attention together, and getting that triple wrong is exactly the kind of
+# ABI mismatch that produced our earlier "no CUDA wheel for our torch" dead ends.
+#
+# Pinned by SHA — their main moves fast (the README says internals and CLI can change between commits).
+ARG TABBY_SHA=53da7919d4e45c63f4acbcbbc00cbe0f60a1ce65
+
+FROM nvidia/cuda:12.8.1-runtime-ubuntu24.04
+ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1
+# python3.12-dev is NOT optional: Triton JIT-builds its cuda_utils extension at runtime and needs Python.h.
+# Their own Dockerfile calls this out (tabbyAPI#453) — the venv resolves its include path to the system
+# Python, so the headers must come from apt and not from the venv.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential git curl ca-certificates \
+      python3.12 python3.12-dev python3.12-venv python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+RUN python3.12 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip
+WORKDIR /app
+ARG TABBY_SHA
+RUN git clone --quiet https://github.com/theroyallab/tabbyAPI.git . \
+ && git checkout --quiet --detach "${TABBY_SHA}" \
+ && test "$(git rev-parse HEAD)" = "${TABBY_SHA}" \
+ && git log --oneline -1 > /app/TABBY.txt
+RUN pip install ".[cu12]"
+# Prove the engine inside the image at BUILD time. A silent resolution to a different exllamav3 (or a CPU-only
+# torch) would make every serving number meaningless, and the failure would look like "the flags did nothing".
+# Same class of mistake as the R323 version assert, so it is done here rather than discovered on the GPU.
+RUN python -c "from importlib.metadata import version as v; import torch; \
+    e = v('exllamav3'); print('exllamav3', e, '| torch', torch.__version__, '| cuda', torch.version.cuda); \
+    assert e.startswith('1.5'), 'WRONG EXLLAMAV3: ' + e; \
+    assert torch.cuda.is_available() is not None"
+# R338: exllamav3's requeue loses the accumulated token count. prepare_for_requeue builds the state carried
+# into the next segment with "rq_new_tokens": self.new_tokens -- the CURRENT segment only -- and the final
+# result reports rq_new_tokens + new_tokens, so a long generation is reported as at most its last two
+# segments. With the 2048-token requeue budget that is ~4k however long the generation ran: measured
+# 2026-09-16, 3,500 reported for a 17,544-token generation, and the same number feeds the logged T/s and the
+# client's usage, so the server reads ~5x slower than it is (32.7 T/s reported, ~155 T/s real).
+# Token LIMITS are unaffected -- max_new_tokens is carried from the sequence (last_completed_tokens), not
+# from this counter -- so this is a reporting fix, verified by the count matching the tokenizer.
+RUN set -e; \
+    J=/opt/venv/lib/python3.12/site-packages/exllamav3/generator/job.py; \
+    sed -i 's/"rq_new_tokens": self\.new_tokens,/"rq_new_tokens": self.rq_new_tokens + self.new_tokens,/' "$J"; \
+    grep -q 'self.rq_new_tokens + self.new_tokens' "$J"; \
+    echo "exllamav3 requeue token count patched"
+EXPOSE 5000
+ENTRYPOINT ["python3"]
+CMD ["main.py", "--host", "0.0.0.0"]
