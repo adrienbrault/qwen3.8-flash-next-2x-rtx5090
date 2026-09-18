@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Daily-capability gate for the Flash-Next TabbyAPI endpoint: structured output, tool calls, vision, reasoning.
+"""Capability gate for the Flash-Next TabbyAPI endpoint: structured output, tool calls, vision, reasoning.
 
 Why it exists: PROMOTION.md lists structured output as the one capability this stack had not exercised. Grammar
 filters exist in this backend, but "the flag exists" is not evidence, so each capability below is asserted on the
 response the server actually returned:
 
   json_schema  a response_format json_schema request must return content that parses as JSON AND satisfies the
-               schema (required keys present, types correct, enum respected) -- not merely "looks like JSON"
+               schema (required keys present, types correct, enum respected), not only "looks like JSON"
   tools        a request carrying a tool must come back with parsed tool_calls whose arguments parse as JSON and
                name only parameters the tool's schema declares
   vision       a 32x32 PNG sent as a data URI must be described with the colour it actually contains

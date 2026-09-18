@@ -5,16 +5,15 @@
 # `reasoning: true` the first hundreds of tokens of this model arrive as `reasoning_content` — so both captures
 # were empty and `cmp` reported them equal. A gate that passes on empty input is worse than no gate; both gates
 # now keep reasoning and content in a fixed order and refuse to compare when either capture is implausibly short.
-# The first chain was stopped mid-flight rather than edited in place, because bash reads a running script
+# The first chain was stopped mid-run rather than edited in place, because bash reads a running script
 # incrementally and an edit can make it misparse what is left.
 #
 # ORDER. Cheapest and most certain first:
 #   1. r340 ci-depth A/B with the repaired gate (three boots, ~15 min)
-#   2. r342 head to head against the vLLM daily (~25 min, the only step that touches the daily)
-#   3. QSA control image, then r341 QSA A/B (~30 min, most likely to fail)
-#   4. r345 pool test: shared prefix vs genuinely independent deep contexts (~15 min)
-#   5. a clean soak, alone on the box this time (~15 min)
-#   6. baseline restored as the served configuration
+#   2. QSA control image, then r341 QSA A/B (~30 min, most likely to fail)
+#   3. r345 pool test: shared prefix vs genuinely independent deep contexts (~15 min)
+#   4. a clean soak, alone on the box this time (~15 min)
+#   5. baseline restored as the served configuration
 #
 # RUN: sudo systemd-run --unit=r346-chain --collect -p User=adrienbrault -p RuntimeMaxSec=28800 \
 #        bash /srv/qwen5090/r346-chain.sh
@@ -27,7 +26,6 @@ step(){  # step <label> <script>
 }
 
 step ci-depth-ab      /srv/qwen5090/r340-ci-depth.sh
-step daily-headtohead /srv/qwen5090/r342-daily-headtohead.sh
 
 log "### waiting for the qsa-devel build before building its control twin"
 for i in $(seq 240); do systemctl is-active --quiet qsa-build || break; sleep 15; done

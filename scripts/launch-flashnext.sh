@@ -89,7 +89,7 @@ DRAFT=${DRAFT:-3}
 # R460 (2026-09-17 12:45 CEST): codex MoE coop V2 decode kernel (flan/patches/exllamav3/moecoop, overlay image …-moecoopv2 = the
 # R442 image + exl3_moe_coop_v2_kernel.cuh, extension rebuilt in-image; opt-in EXL3_MOE_COOP_V2=1 in EXTRA_ENV below). R460: c1 + 30k
 # greedy fingerprints byte-identical (1474eee2f5945248 / 4a255910dee2d9c5), GPU test bit-exact at R=1..16 for every routing pattern,
-# ladder OFF 207-216 / 403-434 / 526-557 vs ON 207-214 / 425-450 / 550-604 (c4 +4 %, c8 +8 %), GSM8K c8 n=200 0.935 (= daily).
+# ladder OFF 207-216 / 403-434 / 526-557 vs ON 207-214 / 425-450 / 550-604 (c4 +4 %, c8 +8 %), GSM8K c8 n=200 0.935 (= served config).
 # ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2
 # EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1' (= flan/launch-flashnext-r442-ppipe.sh).
 IMG=${IMG:-tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2}
@@ -141,8 +141,8 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # GENERIC ENV PASSTHROUGH for engine features that are switched by environment rather than by config, e.g. upstream's
 # route-packed MoE schedule (EXL3_MOE_ROUTE_PACKED=1). Space-separated KEY=VALUE pairs. Empty means no extra env.
 #   EXTRA_ENV='EXL3_MOE_ROUTE_PACKED=1' ./launch-flashnext.sh
-# R425: the host-gap overlay is opt-in inside the image; the daily turns it on. Experiments that override EXTRA_ENV must
-# include EXL3_HOST_GAP_REWIND=1 themselves if they want the daily's behaviour (r427 does; the OFF arm of an A/B may not).
+# R425: the host-gap overlay is opt-in inside the image; the served config turns it on. Experiments that override EXTRA_ENV must
+# include EXL3_HOST_GAP_REWIND=1 themselves if they want the served config's behaviour (r427 does; the OFF arm of an A/B may not).
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
@@ -169,7 +169,7 @@ sudo docker image inspect "$IMG" >/dev/null 2>&1 || { log "ABORT: image $IMG mis
 
 # --- sampler fallbacks ------------------------------------------------------------------------------
 # Quoted heredoc: this file is pure data, so nothing in it may be expanded. Values are the checkpoint's
-# thinking-mode recommendation (temperature 0.6, top_p 0.95, top_k 20) -- the same triple the 27B vLLM daily
+# thinking-mode recommendation (temperature 0.6, top_p 0.95, top_k 20) -- the same triple the box's other engine
 # applies through --override-generation-config. `force: false` on every entry: these apply only to requests
 # that omit the parameter, so a client that samples deliberately is never overridden.
 cat > "$SAMP_DIR/$SAMP_PRESET.yml" <<'YML'
@@ -234,11 +234,11 @@ model:
   # TabbyConfigModel.model_validate SILENTLY IGNORES unknown keys, so an editor who follows an earlier version of
   # this comment and puts thinking_token_budget here would get no budget at all and no warning. This file uses
   # reasoning_budget_tokens, which is the field the model actually has. PROVENANCE CORRECTED 2026-09-16:
-  # this cap did NOT come from the vLLM daily, which has no server-side reasoning budget at all. The only
+  # this cap did NOT come from the box's other engine, which has no server-side reasoning budget at all. The only
   # 32768 in that stack is CLIENT-side -- scripts/miniswe/qwen38-local.yaml sets \`max_tokens: 32768\` so a
   # runaway thinking loop releases its slot and the harness recovers from finish_reason=length. That is a
   # different mechanism: it ends the request, where this budget forces the end-of-thinking tag INTO the
-  # stream mid-thought. Keep the cap (it bounds a spiral), but do not read it as the daily's behaviour.
+  # stream mid-thought. Keep the cap (it bounds a spiral), but do not read it as the other engine's behaviour.
   # Not the cause of the 2026-09-16 DSH breakage: that request produced ~17k reasoning tokens and the cap is
   # 32768, so it never fired -- the sampler did it (R338).
   reasoning_budget_tokens: 32768
@@ -282,10 +282,10 @@ for f in /dev/shm/vllm_offload_*.mmap /dev/shm/psm_*; do
 done
 
 # --- start ------------------------------------------------------------------------------------------
-# The vLLM 27B daily and this model CANNOT coexist: the 27B daily is TP=2 across both cards and Flash-Next
+# The box's other engine (container vllm-27b) and this model CANNOT coexist: it is TP=2 across both cards and Flash-Next
 # needs both cards resident. Whichever is being served owns the box.
 if sudo docker ps --format '{{.Names}}' | grep -qx vllm-27b; then
-  log "stopping the vLLM 27B daily -- it holds both GPUs and cannot coexist with this model"
+  log "stopping the box's other engine (vllm-27b) -- it holds both GPUs and cannot coexist with this model"
   sudo docker rm -f vllm-27b >/dev/null 2>&1
 fi
 sudo docker rm -f "$NAME" >/dev/null 2>&1

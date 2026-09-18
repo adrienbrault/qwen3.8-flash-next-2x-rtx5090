@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
-# R359 — SWE-bench Verified, a subset, on the Flash-Next seat: the workload the box is actually used for.
+# R359 — SWE-bench Verified, a subset, on the Flash-Next seat: agentic coding.
 #
-# WHY. GSM8K and tool-eval bracket this seat six points behind the daily on two instruments. Neither is the job:
-# the daily's headline capability is agentic coding — SWE-bench Verified, 387/500 (77.4%) at k=1. This runs the same
-# harness, the same builtin `benchmarks/swebench.yaml` (leaderboard bash-only, step_limit 250) and the same limits
-# against :8022 with an overlay identical to the daily's except for the endpoint.
+# WHY. GSM8K and tool-eval measure short-answer reasoning and tool calling, not agentic coding. This runs
+# mini-SWE-agent with the builtin `benchmarks/swebench.yaml` (leaderboard bash-only, step_limit 250) against :8022.
 #
-# A SUBSUET, AND WHY IT IS STILL WORTH RUNNING. The repository's own note says k=1 single-task flips carry coin-flip
-# variance, so a subset cannot resolve 3 points. It can resolve 20: if this seat lands near the daily's 77%, the
-# six-point gaps elsewhere are a consistent picture; if it lands near 50%, the seat is materially worse at the job
-# the box exists for, which no synthetic probe would have shown.
+# A SUBSET, AND WHAT IT CAN RESOLVE. k=1 single-task flips carry high variance, so a subset of this size cannot
+# resolve a few points. It can resolve tens of points: a resolve rate near 75% and a rate near 50% are different
+# statements about whether this seat can be handed the work, and no synthetic probe answers that.
 #
 # Scoring is the official swebench harness in the official task images (miniswe-score.sh), cache_level=instance.
 #

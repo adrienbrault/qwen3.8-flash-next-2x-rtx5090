@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# R367 — the slot ladder: does more concurrency inside the fast decode path buy aggregate throughput?
+# R367 — the slot ladder: whether more concurrency inside the fast decode path buys aggregate throughput.
 #
 # WHY. Two levers are already enabled and validated (QSA multi-job, concurrency-indexed draft depth), and a kernel
-# change is in flight (the 32-row MoE envelope). But the one *config* lever never tested is the slot count. TabbyAPI
-# derives 4 slots for a recurrent model, this seat has been served at `max_batch_size: 8`, and the incumbent daily
-# runs 16 sequences. Aggregate throughput is the measured gap (250 t/s at c4, 313 at c8, against 868 and 1,574), so
-# the question is whether more slots let more jobs share the fast path — or whether the layer split saturates and
-# they only queue.
+# change is under test (the 32-row MoE envelope). The one *config* lever never tested is the slot count. TabbyAPI
+# derives 4 slots for a recurrent model and this seat has been served at `max_batch_size: 8`. Aggregate throughput
+# is the weakest measured axis (250 t/s at c4, 313 at c8, 2026-09-16), so these arms measure whether more slots let
+# more jobs share the fast path or whether the layer split saturates and they only queue.
 #
 # WHAT IT COSTS. Slots are recurrent-state allocations: more of them consume VRAM that the page pool also wants. So
-# each rung records VRAM free after boot, and a rung that cannot boot is itself the answer.
+# each rung records VRAM free after boot, and a rung that cannot boot is itself a result.
 #
 # ARMS: MAXBS 8 (served), 12, 16 — at c4, c8, c12, c16 with forced 512-token code decode, plus an admission arm of
 # 12 concurrent jobs at ~20k context each to see whether extra slots admit real agent contexts or only queue them.

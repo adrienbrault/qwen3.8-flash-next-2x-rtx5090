@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
-# R368 — GSM8K at n=1319 as served: the same instrument as R355, full test split, for a tighter interval, on the instrument the daily was measured with.
+# R368 — GSM8K at n=1319 as served: the same instrument and parameters as R355, full test split, tighter interval.
 #
-# WHY. R299b measured the daily on this task twice: 88.0 with thinking off, 98.5 as served (thinking on,
-# reasoning_effort medium, 8192-token budget). Every Flash-Next number on record is think-OFF and comes from the
-# llama.cpp board (95.0-95.5 at n=200). Two different invocations, so quoting them against each other would be the
-# category error R300's own header warns about. This runs the *as-served* arm against the live TabbyAPI instance on
-# :8022 — the configuration a user of this seat actually gets — with the daily's exact harness parameters.
+# WHY. R355 measured the served seat at n=200, which gives ±0.019. The full test split gives ±0.0077 on the same
+# configuration, so the figure can be quoted without the interval swallowing the differences of interest.
 #
 # WHAT DIFFERS FROM R300, ON PURPOSE. R300 booted llama.cpp and removed its think-off flag. Here the engine is
 # already running and thinking is on by configuration (`reasoning: true`), so nothing about the route is being
-# changed for the measurement; the point is to measure the seat as served, not a variant of it.
+# changed for the measurement: the arm measures the seat as served rather than a variant of it.
 #
 # No restart, no reboot: it takes the GPU lock so nothing else disturbs the run, and leaves the server alone.
 #
@@ -37,9 +34,9 @@ curl -sf -m 8 "$U/v1/model" >/dev/null || { log "ABORT: no server on $U"; exit 3
 SERVED=$(curl -s -m 5 "$U/v1/model" | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
 log "served: $SERVED | image: $(sudo docker inspect flashnext --format '{{.Config.Image}}')"
 log "harness: gsm8k, 5-shot, apply_chat_template, temperature 0, max_gen_toks 8192, limit 1319, num_concurrent 4"
-log "(this line said num_concurrent 8 until 2026-09-16 while the invocation below asked for 4 -- the daily's"
-log " R299b arm ran at 4, so the record disagreed with the measurement, which is the one thing a record must not do)"
-log "(the daily's as-served arm in R299b used the same parameters and read 98.5 at n=200; this run is n=1319 for a tighter interval on this seat's own number)"
+log "(this line said num_concurrent 8 until 2026-09-16 while the invocation below asked for 4; the invocation is"
+log " authoritative, and a record that disagrees with the measurement is a defect)"
+log "(R355 ran these same parameters at n=200; this run is n=1319 for a tighter interval on this seat's own figure)"
 # lm-eval reads `message.content`, so this measurement is only meaningful if the model puts the ANSWER there and
 # keeps the thinking in reasoning_content. Checked against the live server on this configuration before trusting the
 # run: a GSM8K item came back with 126 chars of reasoning and 131 chars of content ending "Answer: 72 clips" --

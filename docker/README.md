@@ -1,6 +1,6 @@
 # The served image, layer by layer
 
-The daily on `:8022` runs `tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2` (since 2026-09-17 12:45 CEST). The tag is the build history: each suffix is one layer built on the previous one, from the files in this directory. Provenance and licences for every input are in [`../THIRD_PARTY.md`](../THIRD_PARTY.md); the measurement that admitted each layer is in [`../docs/MEASUREMENTS.md`](../docs/MEASUREMENTS.md).
+The served configuration on `:8022` runs `tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2` (since 2026-09-17 12:45 CEST). The tag is the build history: each suffix is one layer built on the previous one, from the files in this directory. Provenance and licences for every input are in [`../THIRD_PARTY.md`](../THIRD_PARTY.md); the measurement that admitted each layer is in [`../docs/MEASUREMENTS.md`](../docs/MEASUREMENTS.md).
 
 | layer (tag suffix) | recipe | inputs | what it adds | admitted by |
 |---|---|---|---|---|

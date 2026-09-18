@@ -43,4 +43,7 @@ else
   [ -n "$out" ] && { echo "$out"; hits=1; }
 fi
 if [ "$hits" = 1 ]; then echo "check-public-hygiene: FAIL (see lines above)"; exit 1; fi
+# Prose rules (CLAUDE.md "Prose"): the staged Markdown files must pass scripts/check-prose.sh.
+md=$(git diff --cached --name-only --diff-filter=AM -- "*.md" ":!CLAUDE.md" | grep -avE "^bench/results/" || true)
+if [ -n "$md" ]; then bash scripts/check-prose.sh $md || exit 1; fi
 echo "check-public-hygiene: OK"

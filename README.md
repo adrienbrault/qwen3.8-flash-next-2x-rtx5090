@@ -4,7 +4,7 @@ The serving configuration, launcher, image recipe, instruments and measurements 
 
 Every number here was measured on the `flan` box on the date given, next to the results directory it came from; the instruments are in [`bench/`][bench]. Nothing is a projection. Three numbers this track published before 2026-09-16 were measured wrong, which is why the instruments record the server's token count beside the client's and why [`docs/GOTCHAS.md`][gotchas] exists.
 
-**This repository is not published.** The Flash-Next / ExLlamaV3 track stays private; do not push it or mirror it into the public 27B repository. See [`CLAUDE.md`][claude-md].
+**This repository is not published.** The Flash-Next / ExLlamaV3 track stays private; do not push it or mirror it into any public repository. See [`CLAUDE.md`][claude-md].
 
 ## What is served (since 2026-09-17 12:45 CEST)
 
@@ -24,26 +24,26 @@ Verified as served, not asserted: the c1 and 30k-prompt greedy fingerprints are 
 
 ## The numbers
 
-Every decode rate in this repository names its kind, code or prose, because the two are not interchangeable on this checkpoint: draft acceptance tracks how predictable the text is, and on 2026-09-16 code decoded at 208 t/s against 161–165 t/s for prose at c1 ([r339 gates][r339]). Unless a row says prose, a decode rate here is **code**: `fn_bench` ([`bench/probe.py`][probe]) with `--kind code`, 2,048 forced tokens per request, greedy, steady-state, aggregate over the streams. The vLLM 27B column is the head-to-head of 2026-09-16 on the same instrument and prompts ([`2026-09-16-r342-headtohead`][r342]); that incumbent has not been re-measured since.
+Every decode rate in this repository names its kind, code or prose, because the two are not interchangeable on this checkpoint: draft acceptance tracks how predictable the text is, and on 2026-09-16 code decoded at 208 t/s against 161–165 t/s for prose at c1 ([r339 gates][r339]). Unless a row says prose, a decode rate here is **code**: `fn_bench` ([`bench/probe.py`][probe]) with `--kind code`, 2,048 forced tokens per request, greedy, steady-state, aggregate over the streams. Prefill is stated in prompt tokens per second with the wall time beside it. The vLLM column is the same checkpoint served by vLLM through the [vllm-exl3][vllm-exl3] route (TP2, CUDA graphs, vLLM main, 2026-09-18, [`2026-09-18-vllm-exl3-route`][vllm-route]); its cells name the KV dtype and MTP depth because the route has no single served configuration yet.
 
-| | Flash-Next, served now (2026-09-17) | Flash-Next, 2026-09-16 | vLLM 27B daily, 2026-09-16 |
+| | ExLlamaV3, served now (2026-09-17) | ExLlamaV3, 2026-09-16 | vLLM, same checkpoint (2026-09-18) |
 | --- | --- | --- | --- |
-| decode c1, code | **207–214 t/s** | 207.0 | 253.9 |
-| decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 868.3 |
-| decode c8 aggregate, code | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | 1,574.5 |
-| decode c1, prose | not yet measured on this configuration (queued 2026-09-18, `r477-daily-prose-code`) | 160.6–165.3 ([r339][r339]), 163.1 ([r342][r342]) | 285.3 |
-| decode c4 aggregate, prose | not yet measured on this configuration (same run) | — | 779.7 (238.5 per stream) |
-| prefill, 30k-token prompt | **3.5 s** | 5.5 s | — |
-| prefill, 120k-token prompt | **13.1 s** | 22.3 s | — |
-| TTFT, 152,761-token prompt, repeat | 0.43 s (prefix cache; 24 s cold) | same | — |
-| long-context retrieval | 5/5 at every planted position, 26.5k / 105.7k / 158.5k prompt tokens | same | — |
-| pool | 262,144 tokens, 8-bit KV (327,680 and 393,216 do not boot) | same | 1,391,795 |
-| boot to serving | 11.2–11.5 s load + 0.3 s warmup, warm caches | same | — |
-| VRAM resident | 31.9 GB / 30.1 GB of 32.6 GB per card | same | — |
+| decode c1, code | **207–214 t/s** | 207.0 | 131.6 (BF16 KV, MTP depth 3); 121.7 (depth 2); 117.0 (fp8 KV, MTP depth 1) |
+| decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 475.4 (BF16 KV, MTP depth 3); 421.4 (depth 2); 339.2 (fp8 KV, MTP depth 1) |
+| decode c8 aggregate, code | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | not measured (the route serves 4 sequences until its next image) |
+| decode c1, prose | not yet measured on this configuration (queued 2026-09-18, `r477-daily-prose-code`) | 160.6–165.3 aggregate ([r339][r339]) | not measured |
+| decode c4 aggregate, prose | not yet measured on this configuration (same run) | — | not measured |
+| prefill, 27,501-token prompt | **7,700–7,820 t/s** (3.52–3.57 s) | 4,880–4,990 t/s (5.51–5.64 s) | not measured |
+| prefill, 110,081-token prompt | **8,380–8,390 t/s** (13.12–13.14 s) | 4,920–4,940 t/s (22.29–22.36 s) | not measured |
+| TTFT, 152,761-token prompt, repeat | 0.43 s (prefix cache; cold 24 s = 6,365 t/s) | same | not measured |
+| long-context retrieval | 5/5 at every planted position, 26.5k / 105.7k / 158.5k prompt tokens | same | not measured |
+| pool | 262,144 tokens, 8-bit KV (327,680 and 393,216 do not boot) | same | 95,183 (BF16 KV, MTP depth 3); 108,651 (depth 2); 159,744 (fp8 KV, MTP depth 1); 309,657 (fp8 KV, no MTP) |
+| boot to serving | 11.2–11.5 s load + 0.3 s warmup, warm caches | same | 390 s, warm caches (in-image preflight 100 s, weights 55 s, warmup 90 s) |
+| VRAM resident | 31.9 GB / 30.1 GB of 32.6 GB per card | same | both cards, TP2 |
 
-Sources: the served-now column is the promotion ladder in [`docs/MEASUREMENTS.md`][measurements] ([`2026-09-17-r428-hcmix2-stack-ab`][r428], [`2026-09-17-r442-ppipe-memfix-ab`][r442], [`2026-09-17-r460-moecoop-v2-ab`][r460]); the pool ceiling is [`2026-09-17-r452-exl3-cache-bits`][r452]; retrieval and prefix-cache TTFT are [`2026-09-16-r339-gates`][r339-gates] and [`2026-09-16-r343-depth`][r343]; boot and footprint are from the launcher log.
+Sources: the served-now column is the promotion ladder in [`docs/MEASUREMENTS.md`][measurements] ([`2026-09-17-r428-hcmix2-stack-ab`][r428], [`2026-09-17-r442-ppipe-memfix-ab`][r442], [`2026-09-17-r460-moecoop-v2-ab`][r460]); the pool ceiling is [`2026-09-17-r452-exl3-cache-bits`][r452]; retrieval and prefix-cache TTFT are [`2026-09-16-r339-gates`][r339-gates] and [`2026-09-16-r343-depth`][r343]; the prefill token counts are the probe's fixed prompts tokenized with the checkpoint's tokenizer (23,000 and 92,000 words); boot and footprint are from the launcher log; the vLLM column is [`2026-09-18-vllm-exl3-route`][vllm-route].
 
-What changed in a day: single-stream is flat (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill fell by a third. Against the incumbent on the same instrument the gap went from 3.5× to about 2× at c4 and from 5× to about 2.7× at c8. Decode rate on this checkpoint depends on what is being generated (code decoded 1.3× faster than prose at c1 on 2026-09-16, [r339][r339]; draft acceptance tracks predictability), so a rate without its kind is not comparable to another one.
+Between 2026-09-16 and 2026-09-17 the c1 rate did not move (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill rose 1.6–1.7×. Against vLLM on the same checkpoint, the vLLM route's best profile reads 1.06–1.12× this stack's c4 aggregate and 0.62–0.64× its c1; the route's pool with fp8 KV is 1.2× this stack's. Decode rate on this checkpoint depends on what is being generated (code decoded 1.3× faster than prose at c1 on 2026-09-16, [r339][r339]; draft acceptance tracks predictability), so a rate without its kind is not comparable to another one.
 
 ## How it got here: the promotion ladder
 
@@ -56,41 +56,41 @@ Every layer is one patch on the previous image, each admitted by its own gate, m
 | 2026-09-17 02:15 | [`bszn16.patch`][bszn16] + policy `[[4, 3], [8, 1]]` | fused MoE decode path admits 16 rows instead of 8, so depth-1 drafts at c8 stay on the fast path | c1 fingerprint identical; GSM8K and tool-eval under concurrency | 203 / 375 / 443 | `2026-09-17-r414-*` |
 | 03:15 | [`coopwide.patch`][coopwide] | wide stage-B MoE tile at ≥ 128 slots | byte-identical; c8 +7.5 % | 206–209 / 369–376 / 469–478 | [`r421-coopwide-ab`][r421] |
 | 04:32 | [`hc-mix-v2-r2.patch`][hcmix] + [`hostgap-gated_delta_net.py`][hostgap] | bit-exact rewrite of the hyper-connection mixer kernels; host-side gaps removed from the GDN decode path | identical at `MIN_R 1`; c4 +12 %, c8 +8 % | 213–218 / 422–434 / 537–548 | [`r428-hcmix2-stack-ab`][r428] |
-| 07:35 | [`prefill-pipeline.patch`][ppipe] + [`prefill-nosync`][nosync] + [`prefill-pipeline-mtp`][mtpfix] overlays | two-card prefill pipeline for the layer split, without blocking host syncs, with the MTP eligibility and free-VRAM guard fixes | c1 and 30k fingerprints identical | 213 / 430 / 540; prefill 30k 5.5 → 3.5 s | [`r442-ppipe-memfix-ab`][r442], gates [`r446-gates-ppipe`][r446] |
+| 07:35 | [`prefill-pipeline.patch`][ppipe] + [`prefill-nosync`][nosync] + [`prefill-pipeline-mtp`][mtpfix] overlays | two-card prefill pipeline for the layer split, without blocking host syncs, with the MTP eligibility and free-VRAM guard fixes | c1 and 30k fingerprints identical | 213 / 430 / 540; prefill of the 27,501-token prompt 4,900 → 7,800 t/s | [`r442-ppipe-memfix-ab`][r442], gates [`r446-gates-ppipe`][r446] |
 | 12:45 | [`moe-coop-v2`][moecoop] overlay | bit-exact V2 of the fused MoE decode kernel: bounded work loops, batched completions | bit-exact at R = 1..16 in the kernel test, fingerprints identical, five gates | 207–214 / 425–450 / 550–604 | [`r460-moecoop-v2-ab`][r460], [`r461-gates-moecoopv2`][r461] |
 
 Measured and not promoted: MoE coop mode 3 (bit-identical, 2–3 % slower, [`r462-moecoop-v3-ab`][r462]); [exllamav3#303][pr303] MTP hot vocabulary (inapplicable on a two-card layer split by construction, [`r377-hotvocab-on`][r377]); [exllamav3#246][pr246] (changes numerics for a prefill gain within noise) and [exllamav3#290][pr290] (output-neutral, no gain), both in [`r365-kernels`][r365]; the host KV tier (flat, [`r358-hostkv`][r358]); our own 32-row MoE decode envelope (correct, no effect, [`r366-ourkernel`][r366]); dynamic draft (184 vs 191 t/s at c1, code). Each verdict is in [`docs/MEASUREMENTS.md`][measurements] with its arms.
 
 ## Quality
 
-Measured against the vLLM 27B daily on the daily's own instruments. The two servers are different models (a 3.05 bpw quant of the sparse-MoE Flash-Next against an NVFP4 27B dense), so these are the workload's numbers, not an engine A/B.
+Measured on this stack as served with [lm-eval][lm-eval], [tool-eval-bench][tool-eval] and [mini-SWE-agent][mini-swe]. The vLLM route on the same checkpoint has one quality figure so far, GSM8K at n=200.
 
-| gate | Flash-Next, as served | vLLM 27B daily | results |
+| gate | ExLlamaV3 (this stack), as served | vLLM, same checkpoint | results |
 | --- | --- | --- | --- |
-| GSM8K 5-shot ([lm-eval][lm-eval]), thinking on, n=1319 | **0.9158** (±0.0077) | 0.985 | [`2026-09-16-r368-gsm8k-1319`][r368] |
-| GSM8K, n=200, on the final image | 0.935 | — | [`r461-gates-moecoopv2`][r461] |
-| [tool-eval-bench][tool-eval] 69×4 | **85.8 ± 3.1** (baseline 85.0 ± 2.9) | 91 | [`2026-09-16-r357-tooleval`][r357] |
-| SWE-bench Verified, 49 matched instances, [mini-SWE-agent][mini-swe] bash-only, official scorer | **46 / 49**, 19 discordant pairs all in this seat's favour | 27 / 49 on the same instances (387/500 overall) | [`2026-09-16-r359-swebench`][r359] |
+| GSM8K 5-shot ([lm-eval][lm-eval]), thinking on, n=1319 | **0.9158** (±0.0077) | — | [`2026-09-16-r368-gsm8k-1319`][r368] |
+| GSM8K, n=200, on the final image | 0.935 | 0.92 (BF16 KV, MTP depth 2); 0.93 (full CUDA graphs, MTP depth 2) | [`r461-gates-moecoopv2`][r461], [`2026-09-18-vllm-exl3-route`][vllm-route] |
+| [tool-eval-bench][tool-eval] 69×4 | **85.8 ± 3.1** (baseline 85.0 ± 2.9) | — | [`2026-09-16-r357-tooleval`][r357] |
+| SWE-bench Verified, 49 matched instances, [mini-SWE-agent][mini-swe] bash-only, official scorer | **46 / 49** resolved | — | [`2026-09-16-r359-swebench`][r359] |
 | structured output ([llguidance][llguidance] `json_schema`, `response_format`, `regex_pattern`), thinking on and off, c4 | PASS | — | [`2026-09-17-r453-exl3-structured`][r453] |
 | tool-call parsing, vision, reasoning channel | PASS | — | [`2026-09-16-r348-capabilities`][r348] |
 | stamina, 40 rounds at c4 | drift 101.0 % of the start, no error, no VRAM drift | — | [`2026-09-16-r347-soak`][r347] |
 
-The SWE-bench tally is descriptive, not inferential: the subsets were selected on the daily's outcomes (one repository, the daily's failures, stratified by its outcome), so no p-value applies and 46/49 must not be read against the daily's published 387/500. The 19 instances that ran both before and after the enablement scored identically, which is the control for the promotion. Full account in [`docs/MEASUREMENTS.md`][measurements]; the daily-worthiness verdict, gate by gate, in [`docs/PROMOTION.md`][promotion].
+The SWE-bench subsets (68 instance-runs over 49 unique instances) were selected on earlier outcomes, not sampled, so 46/49 is a tally on those instances and not an estimate of a full-set score. The 19 instances that ran both before and after the enablement scored identically, which is the control for the promotion. Full account in [`docs/MEASUREMENTS.md`][measurements]; the serving decision, gate by gate, in [`docs/PROMOTION.md`][promotion].
 
-The [2.05 bpw checkpoint][ckpt] from the same converter decodes at about the 3.05's speed (code, c1: 187.4 t/s) and loses 17 GSM8K points on this box (0.765 against 0.935, n=200; `2026-09-16-r395-baseline-205`, `2026-09-16-r396-gsm8k-305-control`). It is not served.
+The [2.05 bpw checkpoint][ckpt] from the same converter decodes at about the 3.05's speed (code, c1: 187.4 t/s) and scores 17 GSM8K points lower on this box (0.765 against 0.935, n=200; `2026-09-16-r395-baseline-205`, `2026-09-16-r396-gsm8k-305-control`). It is not served.
 
 ## The ceiling, and what has been tried against it
 
-`qwen4_exp` raises `NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration` in this engine, so the two cards take turns over their own layers. A single request keeps each card 44–47 % busy at 227/218 W against 600/575 W limits; under eight bursty agents it reads 45 % / 38 %. That idle half is the price of avoiding a per-layer all-reduce over PCIe, and it is recovered only by concurrency: eight slots in a 262k pool, not sixteen in 1.39M.
+`qwen4_exp` raises `NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration` in this engine, so the two cards take turns over their own layers. A single request keeps each card 44–47 % busy at 227/218 W against 600/575 W limits; under eight bursty agents it reads 45 % / 38 %. That idle half is the price of avoiding a per-layer all-reduce over PCIe, and it is recovered only by concurrency: eight slots in a 262k pool.
 
 - **Expert parallelism** was built and served on the 2.05 bpw checkpoint, all four prerequisites patched (QSA indexer transport, PLE module transport, MTP adapters, replica/output policy). It recovers nothing: −9.5 % at c1, −4.5 % at c4, +2.5 % at c8 against the layer split at the same settings (`2026-09-16-r408-ep-served`); deterministic and at GSM8K parity, but not bit-identical to the layer split (`2026-09-16-r410-ep-correctness`). Parked.
 - **Upstream topology PRs**: [exllamav3#299][pr299] (per-layer split or fused-uniform QKV topology) does not distribute decode across the cards and needs a fresh conversion from BF16 weights; [exllamav3#284][pr284] (fused additive kernels) has no production caller. Both closed with reasons in [`docs/PROMOTION.md`][promotion].
 - **The remaining lever on the served engine is host/device overlap.** A `torch.profiler` capture of the served stack puts the launch gap between decode steps at 2.5 ms of a 10 ms c1 step (the harness's own fixed prompt, not the code or prose probe), of which 1.6 ms is untraced host work and 0.7 ms an explicit 8-byte device-to-host sync. The next kernel decision is made on that trace, not on dispatch-logic arithmetic.
-- **A second route** loads the same EXL3 checkpoint into vLLM through [vcruz305/vllm-exl3][vllm-exl3] with TP2 and CUDA graphs; fp8 KV gives it a 309,657-token pool on the 3.05 and MTP works; on vLLM main (2026-09-18) its code decode is 121.7 t/s at c1 and 421.4 aggregate at c4 against this stack's 207–214 and 425–450, so c4 is at parity and c1 is 57 %. It is not served and its patch series is not in this repository.
+- **vLLM on the same checkpoint** ([vcruz305/vllm-exl3][vllm-exl3], TP2, CUDA graphs, MTP) is the comparison column above: on vLLM main (2026-09-18) its best profile (BF16 KV, MTP depth 3) reads 131.6 t/s at c1 and 475.4 aggregate at c4 on code against this stack's 207–214 and 425–450 (c4 above this stack, c1 at 62 %), its pool with fp8 KV is 309,657 tokens against 262,144 here, and its c8, prose, prefill and long-context figures are not measured yet. It is not served and its patch series is not in this repository.
 
 ## Two defects this stack had, and what they cost
 
-**Every client that sent no sampler was served at temperature 1.0, untruncated** (fixed 2026-09-16, [GOTCHAS 5][gotchas]). TabbyAPI has no sampling fallbacks unless a preset is named and it says so at boot; a harness that sends only `max_tokens` had its reasoning spiral into multilingual word salad, emit an end-of-thinking tag inside the debris, and deliver the rest as the visible answer. The launcher now writes a preset of fallbacks.
+**Every client that sent no sampler was served at temperature 1.0, untruncated** (fixed 2026-09-16, [GOTCHAS 5][gotchas]). TabbyAPI has no sampling fallbacks unless a preset is named and it says so at boot; a harness that sends only `max_tokens` had its reasoning degrade into mixed-language text, emit an end-of-thinking tag inside that text, and deliver the rest as the visible answer. The launcher now writes a preset of fallbacks.
 
 **The engine under-reported its own generation by about 5×** for anything past the 2,048-token requeue boundary (fixed 2026-09-16, one line, asserted at image build time, [GOTCHAS 4][gotchas]). A 17,544-token generation was reported as 3,500 tokens at 32.7 t/s. It made this server look five times slower than it is, and it is why [`bench/probe.py`][probe] records the server's count and the client's frames side by side.
 
@@ -103,29 +103,30 @@ IMG=tabbyapi:qsa-cid-pr337 EXTRA_ENV= bash scripts/launch-flashnext.sh   # the 2
 STOP=1 bash scripts/launch-flashnext.sh                   # stop
 ```
 
-The launcher refuses to start if the checkpoint or the image is missing, stops the vLLM 27B daily first (the two cannot coexist), waits for the cards to drain, mounts the Triton and coop-autotune caches (a cold first inference costs 34–50 s, a warm one 0.3 s) and logs the warmup cost. Rebuilding the image chain, running every measurement and handing the box back are in [`docs/RUNBOOK.md`][runbook].
+The launcher refuses to start if the checkpoint or the image is missing, stops any other engine holding the cards first, waits for the cards to drain, mounts the Triton and coop-autotune caches (a cold first inference costs 34–50 s, a warm one 0.3 s) and logs the warmup cost. Rebuilding the image chain, running every measurement and handing the box back are in [`docs/RUNBOOK.md`][runbook].
 
 ## Repository map
 
 | path | what it is |
 | --- | --- |
 | [`scripts/launch-flashnext.sh`][launcher] | the launcher: writes the served config and the sampler preset, mounts both, starts the container, warms the kernels |
-| [`scripts/check-public-hygiene.sh`][hygiene] | fails a commit that carries private addresses, local paths or credential-shaped strings |
+| [`scripts/check-public-hygiene.sh`][hygiene] | fails a commit that carries private addresses, local paths or credential-shaped strings, and runs the prose check on staged Markdown |
+| [`scripts/check-prose.sh`][prose] | fails on evaluative words, rhetorical devices, exclamation marks and questions in running text (the rule is in [`CLAUDE.md`][claude-md]) |
 | [`docker/`][docker-readme] | the served image, layer by layer: Dockerfiles, the patches, and the SHA-pinned overlays with their installers and kernel tests |
 | [`bench/probe.py`][probe] | decode / concurrency / depth instrument; forces length with `min_tokens` (the only field that works here), one JSONL line per request |
 | [`bench/needle.py`][needle] | long-context retrieval gate at five planted positions per depth |
 | [`bench/capabilities.py`][capabilities] | JSON schema, tool parsing, vision and reasoning-channel checks |
 | [`bench/summarize.py`][summarize] | reads the records, never a printed summary |
 | [`bench/r*.sh`][bench] | every runner, one per results directory, under the GPU lock |
-| [`bench/results/`][bench-results] | the raw records for the 2026-09-16 runs |
+| [`bench/results/`][bench-results] | the raw records for the runs quoted here, 2026-09-16 to 2026-09-18 |
 | [`docs/CONFIG.md`][config] | every setting and why it has that value, including which are fit constraints |
 | [`docs/MEASUREMENTS.md`][measurements] | the numbers with their conditions, and the promotion ladder |
-| [`docs/PROMOTION.md`][promotion] | the daily-worthiness decision, gate by gate |
+| [`docs/PROMOTION.md`][promotion] | the serving decision, gate by gate |
 | [`docs/GOTCHAS.md`][gotchas] | the traps, as "what it looks like" against "what it is" |
 | [`docs/RUNBOOK.md`][runbook] | serve, measure, rebuild and hand the box back from this repository alone |
 | [`docs/REVIEW_HANDOFF.md`][review] | an outside review of the harnesses and the fixes it produced |
 | [`THIRD_PARTY.md`][third-party] | where every input came from and under which licence |
-| [`CLAUDE.md`][claude-md] | the working agreement: visibility, box rules, measurement rules |
+| [`CLAUDE.md`][claude-md] | the working agreement: visibility, prose rules, box rules, measurement rules |
 
 ## Attribution and licence
 
@@ -152,6 +153,7 @@ The original work here (documentation, instruments, launcher, overlay installers
 
 [launcher]: scripts/launch-flashnext.sh
 [hygiene]: scripts/check-public-hygiene.sh
+[prose]: scripts/check-prose.sh
 [docker-readme]: docker/README.md
 [bszn16]: docker/bszn16.patch
 [coopwide]: docker/coopwide.patch
@@ -181,7 +183,7 @@ The original work here (documentation, instruments, launcher, overlay installers
 [r340]: bench/results/2026-09-16-r340-ci-depth
 [r341]: bench/results/2026-09-16-r341-qsa
 [r339]: docs/MEASUREMENTS.md#decode-at-the-requeue-boundary--2048-forced-tokens-results-2026-09-16-r339-gates
-[r342]: bench/results/2026-09-16-r342-headtohead
+[vllm-route]: bench/results/2026-09-18-vllm-exl3-route
 [r343]: docs/MEASUREMENTS.md
 [r347]: bench/results/2026-09-16-r347-soak
 [r348]: bench/results/2026-09-16-r348-capabilities

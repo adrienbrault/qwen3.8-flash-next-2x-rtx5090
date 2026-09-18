@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # R364 — MTP hot vocabulary (upstream PR #303, ported): build, generate the map, A/B it.
 #
-# THE QUESTION. The MTP draft head's forward is on the critical path of every decode step, and this seat is behind the
-# incumbent at every concurrency (207 t/s c1, 250 aggregate at c4, 313 at c8 against 253.9 / 868 / 1,574). #303
-# restricts the draft head to a hot vocabulary subset; its author measured up to 22% faster MTP decoding upstream.
-# The port's own note says 22% is not a forecast here and would not close the concurrency gap — this run replaces
-# both statements with a number.
+# WHAT IS UNDER TEST. The MTP draft head's forward is on the critical path of every decode step. The served
+# configuration reads 207 t/s at c1, 250 aggregate at c4 and 313 at c8 (2026-09-16). #303 restricts the draft head
+# to a hot vocabulary subset; its author measured up to 22% faster MTP decoding upstream. The port's own note says
+# 22% is not a forecast here — this run replaces that with a measured number.
 #
 # ARMS, in the order the port's plan prescribes:
 #   served      tabbyapi:qsa-cid (the enabled configuration) — the reference this experiment must not degrade

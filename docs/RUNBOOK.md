@@ -13,7 +13,7 @@ is the command that produced a results directory named beside it.
 | probes | flashed from `bench/*.py` to `/srv/qwen5090/probes/` |
 | runners | flashed from `bench/*.sh` to `/srv/qwen5090/` |
 | GPU lock | `/srv/qwen5090/lib/gpu-queue.sh` + `/srv/qwen5090/gpu-exclusive.lock`; every runner takes it |
-| the daily | `bash /srv/qwen5090/daily-restore-retry.sh` (and the two engines cannot coexist) |
+| the box's other engine | `bash /srv/qwen5090/daily-restore-retry.sh` (and the two engines cannot coexist) |
 
 Flashing a probe: `scp bench/probe.py flan:/srv/qwen5090/probes/fn_bench.py`. The runners expect that name.
 
@@ -41,8 +41,7 @@ all taking the GPU lock so nothing else runs beside them.
 | `r340-ci-depth.sh` | control / parity / treatment for the draft-depth policy, with the byte-equality gate | `2026-09-16-r340-ci-depth` |
 | `r341-qsa-ab.sh` | QSA multi-job control vs treatment, concurrent-greedy equality first | `2026-09-16-r341-qsa` |
 | `r354-combined.sh` | both levers together against the baseline | `2026-09-16-r354-combined` |
-| `r342-daily-headtohead.sh` | the same instrument against the vLLM 27B daily | `2026-09-16-r342-headtohead` |
-| `r355-fn-gsm8k.sh` | GSM8K on the daily's instrument, as served | `2026-09-16-r355-fn-gsm8k` |
+| `r355-fn-gsm8k.sh` | GSM8K, lm-eval, as served | `2026-09-16-r355-fn-gsm8k` |
 | `r357-tooleval.sh` | tool-eval 69×4 on the baseline and on the promoted config | `2026-09-16-r357-tooleval` |
 | `r358-hostkv.sh` | host KV tier, three shapes | `2026-09-16-r358-hostkv` |
 | `r359-swebench.sh [N]` | SWE-bench Verified, first N instances, scored by the official harness | `2026-09-16-r359-swebench-N` |
@@ -82,7 +81,7 @@ did nothing fails instead of serving.
 
 ```sh
 ssh flan 'STOP=1 bash /srv/qwen5090/launch-flashnext-r340.sh'   # stop this seat
-ssh flan 'bash /srv/qwen5090/daily-restore-retry.sh'            # bring the vLLM 27B daily back
+ssh flan 'bash /srv/qwen5090/daily-restore-retry.sh'            # restore the box's other engine
 ```
 
 Decide per run whether the restore is needed: the two cannot coexist, and whichever is served owns the box.

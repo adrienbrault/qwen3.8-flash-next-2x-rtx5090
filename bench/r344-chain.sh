@@ -7,9 +7,8 @@
 # treatment build. A single process that executes the steps in order, each still taking the lock so nothing else
 # can interleave, is deterministic where a set of waiting units is not.
 #
-# WHY THIS ORDER. Cheap read-only probes first (the depth ladder), then the two engine A/Bs, then the head to head
-# against the vLLM daily — which is the slowest and the only step that has to touch the daily — and last the QSA
-# pair, because its control image has to be built first and it is the most likely step to fail.
+# WHY THIS ORDER. Cheap read-only probes first (the depth ladder), then the engine A/B, and last the QSA pair,
+# because its control image has to be built first and it is the most likely step to fail.
 #
 # RUN: sudo systemd-run --unit=r344-chain --collect -p User=adrienbrault -p RuntimeMaxSec=28800 \
 #        bash /srv/qwen5090/r344-chain.sh
@@ -24,8 +23,6 @@ step(){  # step <label> <script>
 step depth-ladder       /srv/qwen5090/r343-depth.sh
 
 step ci-depth-ab        /srv/qwen5090/r340-ci-depth.sh
-
-step daily-headtohead   /srv/qwen5090/r342-daily-headtohead.sh
 
 # QSA: the treatment image must exist, then its control twin is built on the identical tree so the compiler is not
 # a confound between the arms.

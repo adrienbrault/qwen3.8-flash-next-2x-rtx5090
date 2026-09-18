@@ -22,6 +22,16 @@ The **Flash-Next / llama.cpp / ExLlamaV3 track is NOT public** (user, 2026-09-12
   engines and different worlds. `launch-flashnext.sh` in `kubernetes-home/flan/` is the *llama.cpp* variant of
   this model; it is not this script.
 
+## Prose (README, THIRD_PARTY.md, docs/)
+
+Enforced by `scripts/check-prose.sh`, which `scripts/check-public-hygiene.sh` runs on every staged Markdown file.
+
+- Declarative sentences. Each states what was measured, when, on which configuration, where the raw output is, and what it means.
+- No evaluative or promotional words, no rhetorical devices, no exclamation marks, no questions in running text, no jokes, no asides about how the work felt. The banned list is in the script; extend it when a new one gets through.
+- Numbers carry their conditions: kind (code or prose) for every decode rate, prompt tokens and tokens per second for every prefill figure, concurrency, forced length, sampler, results directory.
+- Comparisons are between ExLlamaV3 (TabbyAPI) and vLLM on this checkpoint. No other model or daily is compared against or named in the measurements.
+- A line that must keep a flagged word (a quoted error string, a proper name) carries `prose-ok: <reason>`.
+
 ## Operating rules for the box
 
 - **`flashnext` and the 27B vLLM daily cannot coexist.** Both need both cards resident. Taking the box means the

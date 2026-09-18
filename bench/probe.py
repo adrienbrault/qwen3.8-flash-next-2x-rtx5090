@@ -111,7 +111,7 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
                     # THREE shapes exist in the wild and an instrument that knows only one of them reports a
                     # request with no text, which looks like an engine failure: SSE delta (the normal streaming
                     # case), a /completions-style `text`, and a COMPLETE chat completion wrapped in a single SSE
-                    # frame as `message` (vLLM does this when it stops streaming mid-request). R342/R349 recorded
+                    # frame as `message` (vLLM does this when it stops streaming mid-request). an earlier probe against vLLM recorded
                     # seven such responses as "usage, no text, no error" for exactly this reason.
                     d = ch.get("delta") or ch.get("message") or {}
                     # `reasoning_content` is TabbyAPI's name for the thinking channel; vLLM's OpenAI server here

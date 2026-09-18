@@ -22,13 +22,13 @@ instruments, and I made it once:
 | `greedy_hash()` (`lib/greedy-compare.sh`) | directory hash over the 4-prompt capture: count + sorted (relative name, content) pairs | `8179222fec8df3b8` |
 
 An earlier `18e30f17883a38eb` from this function is superseded: the function was fixed to include the file count,
-to list files portably and to refuse the empty-input digest (see GOTCHAS 13), and every hash it produced before that
-is superseded. The directory fingerprint is the one restores check (`bench/r373-restore.sh`), and it prints the measured value when no
-reference is pinned rather than judging against a number from another method. `8179222fec8df3b8` is also the value the
-#290 re-captures and the #246 feature-off arm produced, which is consistent with those variants being output-identical to the served
-configuration — more evidence for what their own gates showed.
+to list files portably and to refuse the empty-input digest (see `docs/GOTCHAS.md` #13), and every hash it produced
+before that is superseded. The directory fingerprint is the one restores check (`bench/r373-restore.sh`), and it
+prints the measured value when no reference is pinned rather than judging against a number from another method.
+`8179222fec8df3b8` is also the value the #290 re-captures and the #246 feature-off arm produced, which is consistent
+with those variants being output-identical to the served configuration, as their own gates showed.
 
-, so a future A/B can prove it started from the same thing. The primary
+Both fingerprints are recorded so a future A/B can establish that it started from the same configuration. The primary
 identity is **behavioural**: greedy output on the forced-length probe is `750e1459e177c47e` (1,989 bytes), and the
 probe scripts compare against it. The generated config `/srv/qwen5090/flashnext-config.yml` (mounted read-only at
 the container's `/app/config.yml`, byte-identical inside and out) was `sha256 12252e838eaa…` at that moment, but
@@ -49,19 +49,18 @@ keys when it matters.
 | 4 | 65.5–70.3 | ~265 | 0.49–0.57 |
 | 8 | *see below* | | |
 
-The c1 number is the one that matters for interactive use: **217.6 t/s steady-state on code**, against the vLLM
-27B daily's 216 t/s code c1 measured on the same box in R234. Single-stream parity, from a 3.05 bpw checkpoint
-that fits two cards with a 262k window.
+The c1 figure is the one interactive use sees: **217.6 t/s steady-state on code**, from a 3.05 bpw checkpoint that
+fits two cards with a 262k window.
 
 Aggregate scaling is the weakness: 1→4 buys 1.22×, and the whole ladder buys 1.60× from c1 to c8 (256-token
-requests, below). That is the price of layer splitting: with `tensor_parallel: false` the two cards take turns, so
+requests, below). That is the cost of layer splitting: with `tensor_parallel: false` the two cards take turns, so
 each card is busy only while its own layers run (measured 44–47 % utilisation, 236/225 W against 600/575 W limits,
-while a request is in flight). vLLM's daily instead runs TP=2 and reads 1,476 t/s aggregate at c8.
+during a request).
 
 ## Concurrency, short generations — `oai_conc.py`, results `2026-09-16-r339-honest-conc`
 
 256 forced-by-prompt-length tokens, greedy, `temperature 0`, streaming, 2 runs. This is the same instrument R219
-and R331 used, but the `usage` figures are now honest: the engine under-reported any generation past ~2048 tokens
+and R331 used, but the `usage` figures are now correct: the engine under-reported any generation past ~2048 tokens
 by ~5× until the R338 image patch, and these rows never crossed that boundary, so they are unaffected either way.
 
 | concurrency | aggregate (t/s) | per stream (t/s) | TTFT (s) |
@@ -83,8 +82,8 @@ server saw is quoted.
 | 131,072 | 105,680 | **5 / 5** |
 | 196,608 | 158,452 | **5 / 5** |
 
-A pass at every planted position, not just near the end, is what makes this a gate rather than a demonstration.
-The daily's equivalent instrument (`needle_gate.sh`) is a llama.cpp-era probe; this one speaks the OpenAI chat API.
+A pass at every planted position, not only near the end, is what makes this a gate rather than a demonstration.
+`bench/needle.py` speaks the OpenAI chat API, so it runs unchanged against any OpenAI-compatible server.
 
 ## Decode and TTFT against prompt depth — `bench/probe.py`, results `2026-09-16-r343-depth`
 
@@ -97,9 +96,9 @@ Code, 1,024 forced tokens, c1, greedy. The rungs are labels: the filler's token 
 | 30,000 | 38,266 | 155.5 / 158.9 | 0.74 cold, **0.24 warm** |
 | 120,000 | 152,761 | 150.1 / 155.6 | 24.0 cold, **0.43 warm** |
 
-Decode falls only 18 % from a 101-token prompt to a 152,761-token one. The larger result is the second column of
-TTFT: a 152k prompt costs 24 s cold and **0.43 s on a repeat**, a 56× improvement from the paged prefix cache. For
-an agent that resends a long conversation every step, that is the difference between usable and not.
+Decode falls 18 % from a 101-token prompt to a 152,761-token one. The second TTFT column is the larger effect: a
+152k prompt costs 24 s cold and **0.43 s on a repeat**, a 56× reduction from the paged prefix cache. An agent that
+resends a long conversation every step pays the warm figure, not the cold one.
 
 At c4 the same rungs read 50.3–53.7 t/s per stream at 38,283 prompt tokens (TTFT 0.73–1.01 s) and 46.9–49.9 t/s at
 152,778 (TTFT 1.62–1.67 s). **Those c4 rows share their filler prefix** — only a short suffix differs between the
@@ -175,9 +174,9 @@ The correctness gate passed on all three checks at 74,796-token contexts with bs
 outputs match within each arm, and control == treatment byte for byte (`sha256` `2e0c2a563342…`, 1,365 bytes). An
 attention patch that changes what the model says is not a win, and this one does not.
 
-## The pool question, asked properly — results `2026-09-16-r345-pool`
+## The pool, measured with independent contexts — results `2026-09-16-r345-pool`
 
-Three arms, and the third failed in a way worth keeping. Requested depths are labels: `probe.py` records the
+Three arms; the third failed, and its failure is recorded below. Requested depths are labels: `probe.py` records the
 `prompt_tokens` the server actually saw, and its filler estimate runs high.
 
 | arm | prompts actually sent | jobs | admitted | TTFT (s) | decode/stream |
@@ -188,8 +187,7 @@ Three arms, and the third failed in a way worth keeping. Requested depths are la
 
 So eight agents carrying **~628k tokens of mutually unrelated context** — more than twice the 262,144-token pool —
 are all admitted and all complete, with the surplus queued rather than refused: the first token arrives in 43 s for
-some jobs and 82 s for others, which is the queue draining. That is the answer a daily needs about this box: the
-pool schedules, it does not reject.
+some jobs and 82 s for others, which is the queue draining. The pool schedules; it does not reject.
 
 The third arm is the guard, not a failure: the server answered `400 Prompt length 315,253 exceeds the available
 context size of 262,144 tokens` for each request. **That run had a bug in the instrument** — `--unique` prepended
@@ -220,7 +218,7 @@ operator's call.
 
 The patch keeps the process-wide CUDA current device on the module's device across `forward_ls`/`prefill_ls`. Its
 author found the bug via an out-of-tree kernel whose fault was misattributed to autotune; stock wrappers self-guard,
-so the honest expectation ranged from nothing to "removes accidental P2P traffic". Because it moves device placement,
+so the expectation stated before the run ranged from no effect to "removes accidental P2P traffic". Because it moves device placement,
 **its correctness gate ran first**: greedy output, 1,989 bytes, byte-identical between arms (`greedy-baseline.txt`
 vs `greedy-pr337.txt`).
 
@@ -234,24 +232,22 @@ Aggregate decode, both arms as served (`tabbyapi:53da7919-rqcount` with and with
 
 Six columns are flat within run-to-run noise. The seventh is the deep-context arm, and it is the only place the
 patch's mechanism predicts an effect: 152k-token prompts are where accidental cross-card traffic in a layer-split
-forward would show. **One run per arm, so +14 % is consistent-with-the-mechanism, not established** — the right
-reading is "no regression anywhere, a plausible deep-context gain where the mechanism predicts one, and byte-identical
-output", which is why the patch is carried into the served image rather than being adopted for speed.
+forward would show. **One run per arm, so +14 % is consistent with the mechanism and not established.** What the run
+establishes is no regression at any measured shape, a deep-context gain where the mechanism predicts one, and
+byte-identical output. The patch is carried into the served image on those grounds rather than for the +14 %.
 
 
-The n=1319 run above is the one to quote. It tightens the interval from ±0.019 to **±0.0077** and lands at 0.9158
-flexible-extract / 0.9151 strict-match, i.e. within its own previous interval of the n=200 reading — the first
-number was not wrong, it was under-powered.
+## GSM8K at n=1319 — results `2026-09-16-r368-gsm8k-1319`
 
-**The gap to the daily is therefore 6.9 points and decisive**: 0.985 at n=200 has a standard error of about 0.0086,
-so the two intervals do not overlap by a wide margin. The daily's arm is still n=200 — a matched n=1319 arm would
-cost the daily's own down/up and an hour of exclusive GPU for a conclusion that cannot change, so it is left
-available rather than done, and the comparison is stated with both n's visible.
+The full test split, with the same harness parameters as the n=200 arm recorded below, at 6.6× the sample. It
+tightens the interval from ±0.019 to **±0.0077** and lands at 0.9158 flexible-extract / 0.9151 strict-match, inside
+the n=200 reading's own interval: the earlier figure was under-powered rather than wrong. This is the GSM8K figure to
+quote for the served configuration.
 
-Measured on this seat's own configuration, so it is the served article's number, not a proxy for it. One check
-before trusting the run: lm-eval reads `message.content`, and this seat serves `reasoning: true`, so the score is only
+Measured on this seat's own configuration, so it is the served article's number rather than a proxy for it. One check
+before using the run: lm-eval reads `message.content`, and this seat serves `reasoning: true`, so the score is only
 meaningful if answers land in `content` rather than in the thinking channel. Verified against the live server: a
-GSM8K item returned 126 chars of reasoning and 131 chars of content ending "Answer: 72 clips".
+GSM8K item returned 126 chars of reasoning and 131 chars of content ending "Answer: 72 clips". <!-- prose-ok: quoted model output -->
 
 ## Upstream #246 changes numerics for a prefill gain within noise — results `2026-09-16-r365-kernels`
 
@@ -285,8 +281,8 @@ this model does not route through changes anything; the gate is therefore **outp
 | +fix | `294407485b5b792c` | 6 responses | `18e30f17883a38eb` |
 | +fix+reduction | `fb0f3690b357c436` | 6 responses | `18e30f17883a38eb` |
 
-**All three identical.** The arms are provably distinct binaries, which is the precondition that makes the identity
-mean anything — three arms sharing one binary would have been an identity result about nothing. Aggregate decode,
+**All three identical.** The three extension hashes differ, which is the precondition that makes the identity
+mean anything: three arms sharing one binary would have been an identity result about nothing. Aggregate decode,
 fix vs unpatched: c1 220.5 vs 222.3, c4 381.8 vs 381.8, c8 319.3 vs 319.7, i.e. within run-to-run noise. So the fix
 can be adopted on correctness grounds with no behavioural or throughput cost.
 
@@ -311,10 +307,9 @@ File "exllamav3/architecture/qwen4_exp_mtp.py", line 178, in attach_to
 The served configuration is a **two-card layer split** (`gpu_split: [30, 30]`, `tensor_parallel: false`), and the feature
 requires the target model and the MTP draft head on one GPU. So this is not a build problem, a patch problem, or an
 experiment that needs better parameters: **the lever does not exist for this serving configuration.** The only
-configuration in which it could be measured is single-GPU serving, which idles the second card — the exact waste the
-layer split exists to avoid, in a cheaper form.
+configuration in which it could be measured is single-GPU serving, which leaves the second card idle.
 
-Two things this cost, both worth recording. The first is that the failure surfaced as `docker run FAILED` and nothing
+Two consequences of this arm. The first is that the failure surfaced as `docker run FAILED` and nothing
 else for three separate attempts, because the launcher's run command ended in `>/dev/null 2>&1`; the error was captured
 and printed only after that was fixed, and it named the cause immediately. The second is that the arm's container then
 crash-looped under `--restart unless-stopped` while the launcher waited for readiness, and the runner's TERM trap
@@ -348,8 +343,8 @@ candidate  min 0.485  p50 0.858  max 1.238  ->  2.55x within ONE configuration
 
 **c8 TTFT varies by 2.6x inside a single configuration**, so any single-run c8 TTFT comparison smaller than that is
 noise. That includes the #246 result recorded above: control 1.249 s against feature-on 0.635 s is a ratio of 1.97,
-*inside* the within-configuration spread. The tempting reading — "the feature halves c8 TTFT" — is not supported, and
-the prefill columns in the same run moved 1.3-1.6 %, which is the honest size of anything #246 did here.
+*inside* the within-configuration spread. "The feature halves c8 TTFT" is therefore not supported; the prefill
+columns in the same run moved 1.3-1.6 %, which is the size of the effect #246 produced here.
 
 This is a metric-defect finding rather than an engine finding: **TTFT at high concurrency is dominated by queueing, so
 it needs many runs or a median-and-spread report, never one sample per arm.** The r375 arms were rewritten around that
@@ -359,10 +354,9 @@ forced tokens because the reading is TTFT, and four runs per concurrency with th
 ## The slot ladder and 12-agent admission — results `2026-09-16-r367-slots`
 
 `max_batch_size` is the last untested *config* lever on the weakest axis. TabbyAPI derives 4 slots for a recurrent
-model, this seat is served at 8, and the incumbent daily runs 16 in a 1.39M-token pool — so the question was whether
-more slots admit more real work.
+model and this seat is served at 8, so the arms below measure whether more slots admit more real work.
 
-**Answer: more slots are not reachable here at all.** Both arms above the served value fail to boot:
+**More slots are not reachable here at all.** Both arms above the served value fail to boot:
 
 ```
 max_batch_size 12 -> RuntimeError: Insufficient VRAM in split for model and cache
@@ -370,9 +364,9 @@ max_batch_size 16 -> RuntimeError: Insufficient VRAM in split for model and cach
 ```
 
 That is the same wall the 393,216-token cache hits, and it has the same cause: the manual layer split has to hold the
-weights *and* the whole cache, and the recurrent-state planes grow with the slot count. So the ladder's answer is not
-"12 is better than 8" or "16 is worse" — it is that **8 is the maximum this cache size supports**, and any future
-argument for more slots has to be an argument for a smaller cache.
+weights *and* the whole cache, and the recurrent-state planes grow with the slot count. The ladder therefore does not
+rank 8 against 12 or 16: **8 is the maximum this cache size supports**, and any future argument for more slots has to
+be an argument for a smaller cache.
 
 With the served 8 slots, offering more concurrency buys nothing (the probe's own aggregate, 512 forced tokens, two runs
 each):
@@ -392,25 +386,21 @@ and c16 pays for it in TTFT: 7.2 s, two waves. **And real agent contexts collaps
 each return 97.7 t/s aggregate with a 43-second TTFT, which is what "admission" means here — the box does not host
 twelve deep agents, it queues them.
 
-The c1 column reads 163.7 against the 207 t/s this repository quotes elsewhere; that is GOTCHAS 9 (content and
-generation-length dependence), not a regression: 512 forced tokens of code versus 2,048.
+The c1 column reads 163.7 against the 207 t/s this repository quotes elsewhere; that is `docs/GOTCHAS.md` #9
+(content and generation-length dependence), not a regression: 512 forced tokens of code versus 2,048.
 
 ## Quality: GSM8K as served — `bench/r355-fn-gsm8k.sh`, results `2026-09-16-r355-fn-gsm8k`
 
-The daily's own instrument, same parameters as its R299b as-served arm: `gsm8k`, 5-shot,
-`--apply_chat_template`, temperature 0, `max_gen_toks 8192`, limit 200, `num_concurrent 4`, thinking on.
+GSM8K, lm-eval, as served: `gsm8k`, 5-shot, `--apply_chat_template`, temperature 0, `max_gen_toks 8192`, limit 200,
+`num_concurrent 4`, thinking on.
 
-| model / arm | exact_match (flexible-extract) | conditions |
+| arm | exact_match (flexible-extract) | conditions |
 | --- | --- | --- |
-| vLLM 27B daily, as served | **0.985** | R299b, thinking on at effort medium |
-| Flash-Next, **as served here** | **0.925** (strict-match 0.920, stderr ±0.019) | this run, thinking on by configuration |
-| Flash-Next, **as served here, n=1319** | **0.9158** flexible-extract, **0.9151** strict-match, stderr **±0.0077** | `2026-09-16-r368-gsm8k-1319`, same parameters at 6.6× the sample |
-| Flash-Next, think *off* | 0.950–0.955 | R257/R294b/R297, **llama.cpp** seat, same n |
+| **as served here** | **0.925** (strict-match 0.920, stderr ±0.019) | this run, thinking on by configuration |
+| **as served here, n=1319** | **0.9158** flexible-extract, **0.9151** strict-match, stderr **±0.0077** | `2026-09-16-r368-gsm8k-1319`, same parameters at 6.6× the sample |
 
-Two things to read carefully. First, the gap to the daily is **6 points on one instrument with one protocol**,
-which is a quality result and not an instrument artefact. Second, the comparison against Flash-Next's own think-off
-numbers is *not* clean: those came from the llama.cpp seat, so 0.955 vs 0.925 differ by engine as well as by the
-thinking flag, and ±0.019 at n=200 makes the difference about 1.6σ. It is suggestive, not established.
+The n=1319 row is the figure to quote; the n=200 row is the same measurement at a wider interval. The vllm-exl3
+route's GSM8K figure on the same checkpoint is in the vLLM-route section below.
 
 Thinking is on in this arm and can be seen doing so: a hand-checked item returned 126 chars of
 `reasoning_content` plus the answer, and the per-request completion lengths across the 201 requests were
@@ -428,9 +418,8 @@ template flag left off.
 
 This is the layer-split signature, and it is *not* a tuning miss: with `tensor_parallel: false` and
 `gpu_split: [30, 30]` the two cards take turns over their own layers, so each is busy only while its own layers
-execute. Under a real eight-agent load it is worse than the 44–47 % measured with a single request in flight,
-because agent turns are short and bursty — the cards are idle waiting for the next request as well as for each
-other.
+execute. Under a real eight-agent load it is lower than the 44–47 % measured during a single request, because agent
+turns are short and bursty: the cards are idle waiting for the next request as well as for each other.
 
 What moves it and what does not, from this session's own measurements:
 
@@ -442,113 +431,67 @@ What moves it and what does not, from this session's own measurements:
 | expert parallelism | would put both cards on every layer — assessed as needing engine work, not a patch (`supports_tp` is still False in this tree) |
 | tensor parallelism | forbidden for this architecture in this engine |
 
-## SWE-bench Verified, a matched subset — results `2026-09-16-r359-swebench`
+## SWE-bench Verified, four subsets — results `2026-09-16-r359-swebench`
 
-The workload the box exists for, and the one neither GSM8K nor tool-eval measures. Same harness as the daily's own
-campaigns: mini-SWE-agent 2.4.6, the builtin `benchmarks/swebench.yaml` (the leaderboard's bash-only setting,
-step_limit 250), `--subset verified --split test`, scored by the official swebench harness in the official task
-images. The overlay is the daily's, byte for byte, except for the endpoint — and the sampler arrives by a different
-mechanism on each side (the daily from `--override-generation-config`, this seat from its preset, because mini-swe
-sends only `max_tokens`).
+Agentic coding, which neither GSM8K nor tool-eval measures. Harness: mini-SWE-agent 2.4.6, the builtin
+`benchmarks/swebench.yaml` (the leaderboard's bash-only setting, step_limit 250), `--subset verified --split test`,
+scored by the official swebench harness in the official task images. The sampler reaches the server through this
+seat's preset, because mini-swe sends only `max_tokens`.
 
-**The subset is matched by instance id, not by position.** The daily has a full scored run to draw from
-(`results/2026-09-02-miniswe-rh-nvidia`, 387/500 = 77.4%, 495 completed, 0 errors, 5 empty patches), so for every
-instance this slice runs, the daily's outcome on *that instance* is known — no sampling error at all on the
-comparison, only on the subset's ability to represent the 500. **A first attempt at this comparison read the
-"first 10" from `preds.json`, which is ordered by completion, not by dataset order — that would have compared
-against the wrong instances.** The correct list is the one this run actually executed.
+**How the subsets were chosen, and what that forbids.** Each subset is drawn from a prior 500-instance scored run on
+this box and stratified by that run's per-instance outcomes; none of them is a random sample of SWE-bench Verified.
+The rates below therefore describe these instances only, and must not be read against a full-run rate. **A first
+attempt read the "first 10" from `preds.json`, which is ordered by completion rather than by dataset order, and would
+have executed the wrong instances.** The list each run executed is recorded in its results directory.
 
-| instance (dataset order, as executed) | daily |
+**Result — `2026-09-16-r359-swebench-10`, the dataset's first ten instances (all astropy):** resolved **10 of 10**.
+All ten trajectories ended `Submitted` with a non-empty patch, at 45–163 steps; the 250-step limit was never reached,
+so nothing was truncated by the harness. n=10 and one repository, so the subset cannot resolve a few points.
+
+**Result — `2026-09-16-r360-swebench-strat`, 18 instances across six repositories, officially scored:** resolved
+**17/18**. All 18 trajectories ended `Submitted` with a non-empty patch, 34–143 steps.
+
+| repo | resolved |
 | --- | --- |
-| `astropy__astropy-13033` | resolved |
-| `astropy__astropy-13236` | resolved |
-| `astropy__astropy-14096` | resolved |
-| *remaining 7, and the Flash-Next column, from the run's own scoring* | |
+| django | 2/3 |
+| matplotlib | 3/3 |
+| pydata | 3/3 |
+| scikit-learn | 3/3 |
+| sphinx-doc | 3/3 |
+| sympy | 3/3 |
+| **total** | **17/18** |
 
-A ten-instance subset cannot resolve three points — the repository's own note about k=1 coin-flip variance applies
-— but "the daily resolved all ten and this seat resolved three" and "both resolved eight" are different verdicts
-about whether this seat can be handed the job at all, which is the question no synthetic probe answers.
+**Result — `2026-09-16-r361-swebench-failed`, ten instances selected because the prior scored run failed them after
+submitting a patch** (drawn from its 113 unresolved, filtered to the 109 that ended `Submitted`, so the selection is
+on capability failures rather than budget ones)**:** resolved **9/10**. All ten trajectories ended `Submitted`,
+0 errors, 0 empty patches.
 
-**Result — `2026-09-16-r359-swebench-10`:** this seat resolved **10 of 10**; the daily resolved **8 of 10** on the
-same instances (it failed `astropy-13977` and `astropy-14182`, both of which this seat resolved). All ten
-trajectories ended `Submitted` with a non-empty patch, at 45–163 steps — the 250-step limit was never reached, so
-nothing was truncated by the harness.
-
-Read it with these caveats, which are why `r360` exists:
-
-- **n=10 and one repository.** The difference between 10/10 and 8/10 is two instances — statistical noise. What the
-  run does establish is the direction: this seat is *not* materially worse at agentic coding on these tasks, which
-  is the opposite of what the two −6-point reasoning/tool-calling gaps would have predicted.
-- **The daily's column is from a different checkpoint of the same engine family** (RedHat NVFP4, 2026-09-02; the
-  current daily is NVIDIA NVFP4) and from a full-run dataset order, but every instance compared here was executed by
-  both, so the comparison is matched per instance.
-- It agrees with the repository's own finding that SWE-bench cannot adjudicate quantisation on this model: four
-  checkpoints spanning the whole fidelity range scored 386–388.
-
-**Result — `2026-09-16-r360-swebench-strat`, 18 instances across six repositories, officially scored:** this seat
-resolved **17/18**; the daily resolved **12/18** on the same instances. The seat resolved five the daily failed
-(`matplotlib-20826`, `pydata-3993`, `scikit-learn-12973`, `sphinx-doc-10435`, `sympy-13091`) and the daily resolved
-none that this seat failed.
-
-| repo | seat | daily |
-| --- | --- | --- |
-| django | 2/3 | 2/3 |
-| matplotlib | 3/3 | 2/3 |
-| pydata | 3/3 | 2/3 |
-| scikit-learn | 3/3 | 2/3 |
-| sphinx-doc | 3/3 | 2/3 |
-| sympy | 3/3 | 2/3 |
-| **total** | **17/18** | **12/18** |
-
-Five discordant pairs, all one way: a sign test puts that at p ≈ 0.06 two-sided — suggestive, not decisive, and it is
-the reason a larger subset is queued rather than a claim being made from it. All 18 trajectories ended `Submitted`
-with a non-empty patch, 34–143 steps.
-
-**The tension this creates, stated plainly.** On short-answer reasoning and tool-calling the daily is ahead
-(GSM8K 0.985 against 0.925; tool-eval 91 against 85), and on agentic coding — the workload the box exists for —
-this seat is ahead on both subsets measured (10/10 vs 8/10 on the dataset's first ten, 17/18 vs 12/18 across six
-repositories). Those are not contradictory, but they are also not the same measurement, and only the third one
-speaks to what the box is used for.
-
-**Result — `2026-09-16-r361-swebench-failed`, the ten instances the daily submitted-and-failed:** this seat resolved
-**9/10**; the daily's score on those instances is **0/10 by construction** (they are drawn from its own 113 unresolved,
-filtered to the 109 that ended `Submitted` — a capability failure, not a budget one). All ten trajectories ended
-`Submitted`, 0 errors, 0 empty patches.
+GSM8K, tool-eval and SWE-bench measure three different things on this stack; only SWE-bench measures agentic coding.
 
 ### All four subsets, de-duplicated
 
-The subsets are **not disjoint**, and adding their columns is the way to get this wrong. Four runs cover 68
-instance-runs but only **49 unique instances**: the 30-instance subset re-ran all 18 of the stratified subset and one
-of the daily-failure ten.
+The subsets are **not disjoint**, and adding their totals gives the wrong count. Four runs cover 68 instance-runs but
+only **49 unique instances**: the 30-instance subset re-ran all 18 of the stratified subset and one of the ten
+selected from prior failures.
 
-| subset | n | this seat | daily | configuration |
-| --- | --- | --- | --- | --- |
-| dataset's first ten (astropy) | 10 | **10** | 8 | pre-enablement |
-| stratified, six repositories | 18 | **17** | 12 | pre-enablement |
-| the ten the daily failed | 10 | **9** | 0 | pre-enablement |
-| 30-instance stratified, six repos | 30 | **28** | 18 | enabled (`tabbyapi:qsa-cid` + policy) |
-| **unique instances, both engines** | **49** | **46** | **27** | mixed, see below |
+| subset | n | resolved | configuration |
+| --- | --- | --- | --- |
+| dataset's first ten (astropy) | 10 | **10** | pre-enablement |
+| stratified, six repositories | 18 | **17** | pre-enablement |
+| ten selected from prior failures | 10 | **9** | pre-enablement |
+| 30-instance stratified, six repos | 30 | **28** | enabled (`tabbyapi:qsa-cid` + policy) |
+| **unique instances** | **49** | **46** | mixed, see below |
 
-**46 of 49 against 27 of 49**, with **19 discordant pairs and every one of them in this seat's favour** — no instance
-the daily resolved and this seat did not.
+**46 of 49 unique instances resolved.** Every subset was selected on a prior run's outcomes, so this is a descriptive
+rate on these 49 instances and not an estimate of a rate on SWE-bench Verified. An earlier version of this section
+attached a p-value to it: a sign test assumes selection independent of outcome, which does not hold here. An
+inferential claim needs a held-out subset selected independently of any engine's results, which has not been run.
 
-**Those discordant pairs do not license a p-value, and an earlier version of this section quoted one.** A sign test
-assumes the instances were selected independently of the outcome; every subset here was chosen *from* the daily's
-outcomes (r361 is drawn from its failures, r369 is stratified by its outcome, r359 is one repository), so the null
-distribution does not apply. Read the tally as descriptive: on the 49 instances both engines ran, this seat resolved
-46 and the daily 27, and the disagreement is one-directional. Making it inferential needs a held-out subset selected
-independently of either engine's results, which has not been run.
-
-**The 19 repeated instances are the control for the promotion, and they say quality did not move on those instances.** The stratified 18
-were run before the enablement and again inside the 30, and the one overlap with the daily-failure ten likewise:
-resolved 17 → 17 and 1 → 1, **zero outcomes changed**. So the configuration now served was measured, not assumed, to
-be quality-neutral on those 19 — which is weaker than a general equivalence claim, and is all it shows — independent of the byte-identity gates, and the reason the unique-instance
-tally is unambiguous despite two configurations being involved.
-
-Caveats that stay attached to these numbers: the daily's column is its 2026-09-02 run on the RedHat NVFP4 checkpoint,
-executed by the same harness and scored by the same official grader; the subsets are outcome-stratified by design
-(r359 is one repository, r361 is drawn from the daily's failures, r369 is stratified by the daily's outcome), so
-**46/49 must not be read against the daily's published 387/500** — its own rate on these same 49 instances is 27/49.
+**The 19 repeated instances are the control for the enablement.** The stratified 18 were run before the enablement
+and again inside the 30, and the one overlap with the failure-selected ten likewise: resolved 17 → 17 and 1 → 1,
+**zero outcomes changed**. The configuration now served was therefore measured, rather than assumed, to be
+quality-neutral on those 19 instances, independent of the byte-identity gates. That is weaker than a general
+equivalence claim and is all it shows.
 
 ## The host KV tier is not a lever — results `2026-09-16-r358-hostkv`
 
@@ -564,9 +507,9 @@ recomputation.
 | 8 × unique ~40k prompts at once | **8/8**, 48.4 agg, TTFT 17.7–116.1 s | **8/8**, 48.4 agg, TTFT 18.5–113.0 s |
 | 4 × shared 152,761-token prompts | 51.4 per stream, 190.7 agg, TTFT 1.58 s | 48.8 per stream, 179.4 agg, TTFT 1.74 s |
 
-Nothing moves. The prefix that matters already stays in VRAM (0.43 s on the repeat, either way), and the pool is
-never spilled to host under these shapes. **A clean negative: the last configuration knob that could have addressed
-the deep-context weakness does not.** The launcher keeps `SYS_KV` as a knob and defaults it to 0.
+Nothing moves. The reused prefix already stays in VRAM (0.43 s on the repeat, either way), and the pool is never
+spilled to host under these shapes. **A negative result: the last configuration knob that could have addressed the
+deep-context weakness does not.** The launcher keeps `SYS_KV` as a knob and defaults it to 0.
 
 ## Quality: tool-eval 69×4 — results `2026-09-16-r357-tooleval`
 
@@ -574,16 +517,14 @@ the deep-context weakness does not.** The launcher keeps `SYS_KV` as a knob and 
 | --- | --- |
 | **tool-eval 69×4, baseline** | **85.0 ± 2.9**, CI [82.5, 87.5], per-trial points [113, 115, 120, 121]; losses in categories G 5/6, H 8/10, I 16/20, K 19/26, N 5/6, O 10/12 |
 | **tool-eval 69×4, promoted config** | **85.8 ± 3.1**, CI [83.5, 88.5], points [115, 118, 116, 124]; losses in G 5/6, H 8/10, I 16/20, K 21/26, M 5/6, N 5/6 |
-| the daily's published tool-eval | **91** (69×4, R234) — measured on the same CLI with the same sampler |
 
-**The promoted configuration does not cost quality.** 85.8 against 85.0 with overlapping intervals, on a real
+**The promoted configuration does not cost quality.** 85.8 against 85.0 with overlapping intervals, on a
 tool-calling benchmark, while measuring +35 % at short-context c4 and +78 % at deep-context c4. The greedy
-byte-equality gates said the *decoding* was unchanged; this says the *task behaviour* is.
+byte-equality gates establish that the *decoding* is unchanged; this establishes that the *task behaviour* is.
 
-Invocation copied from the daily's own runs (`cyk-tooleval.sh`): `tool-eval-bench --temperature 0.6 --top-p 0.95
---top-k 20 --trials 4 --parallel 8`. The harness sends its own sampler parameters, so the server's preset fallbacks
-are not part of this measurement on either arm — deliberately, so the two arms and the daily's published figure are
-comparable.
+Invocation: `tool-eval-bench --temperature 0.6 --top-p 0.95 --top-k 20 --trials 4 --parallel 8`. The harness sends
+its own sampler parameters, so the server's preset fallbacks are not part of this measurement on either arm, which
+is what makes the two arms comparable.
 
 ## Both levers together — results `2026-09-16-r354-combined`
 
@@ -603,51 +544,36 @@ policy alone is measured at short context): at four concurrent deep-context jobs
 back to eager *and* the drafter stops paying for depth 3. Output is byte-identical to the baseline
 (`sha256` `750e1459e177c47e…`, 1,989 bytes).
 
-That is the configuration this stack should be served in if it is served at all: **+35 % to +78 % at the
-concurrency a fan-out of agents reaches, with provably unchanged output.**
+That is the configuration to serve: **+35 % to +78 % at the concurrency a fan-out of agents reaches, with
+byte-identical output.**
 
-## Head to head against the vLLM 27B daily — results `2026-09-16-r342-headtohead`
+## ExLlamaV3 against vLLM on the same checkpoint — results `2026-09-18-vllm-exl3-route`
 
-Same instrument, same prompts, same forced length (2,048), greedy, same day, minutes apart; the two engines cannot
-coexist, so each was booted alone and probed. This removes the instrument confound that made the daily's published
-numbers (client-side SSE here against vLLM Prometheus counters there) not directly comparable.
+The vllm-exl3 route serves the same `qwen3.8-flash-next-exl3-3.05bpw` checkpoint through vLLM main (2026-09-18),
+TP2 on both cards. Same instrument as this stack's own rows: `fn_bench`, 2,048 forced tokens, greedy, code.
 
-| arm | kind | c1 decode | c4 decode/stream | c4 aggregate | c8 decode/stream | c8 aggregate |
+| engine | profile | kind | c1 decode (t/s) | c4 aggregate (t/s) | KV pool (tokens) | GSM8K |
 | --- | --- | --- | --- | --- | --- | --- |
-| **vLLM 27B daily** | code | 253.9 | 257.5 | **868.3** | 245.3 | **1,574.5** |
-| **Flash-Next (this stack)** | code | 207.0 | 63.8 | 250.2 | 40.5 | 313.2 |
-| vLLM 27B daily | prose | 285.3 | 238.5 | 779.7 | — | — |
-| Flash-Next (this stack) | prose | 163.1 | *see `r342`* | | | |
+| ExLlamaV3 + TabbyAPI (this stack, 2026-09-17) | served, 8-bit KV, MTP depth 3 | code | 207–214 | 425–450 | 262,144 | 0.9158 (n=1319) |
+| vLLM | `d-mtp3` — BF16 KV, MTP depth 3 | code | 131.6 | 475.4 | 95,183 | not run yet |
+| vLLM | `d-mtp2` — BF16 KV, MTP depth 2 | code | 121.7 | 421.4 | 108,651 | 0.92 (n=200) |
+| vLLM | `e-fp8` — fp8 KV, no MTP | code | 75.6 | 222.2 | 309,657 | — |
+| vLLM | `e-fp8-mtp1` — fp8 KV, MTP depth 1 | code | 117.0 | 339.2 | 159,744 | — |
 
-Read it as three facts: single-stream, Flash-Next is within ~20 % of the daily on the same instrument; at c4 the
-daily is **3.5×** ahead in aggregate; at c8 it is **5.0×** ahead. The daily also finishes c1 *faster than it does
-c4 per stream* (253.9 → 257.5), i.e. its batching is nearly free, while Flash-Next's layer split makes every
-concurrent request pay.
+At c4 the vLLM route's best profile (`d-mtp3`) reads 475.4 t/s aggregate on code against 425–450 here, 1.06–1.12× this stack; at c1 it reads 131.6 t/s against 207–214 here, 62–64 % of this stack's rate. The depth-2 profile reads 421.4 and 121.7 (parity at c4, 57–59 % at c1). The KV pool tracks the KV dtype and the draft depth across the rows: 309,657 tokens with fp8 KV and no MTP on the vLLM route, 262,144 with 8-bit KV here, 159,744 with fp8 KV at MTP depth 1, 108,651 with BF16 KV at depth 2 and 95,183 at depth 3. Pool figures are the engine's `GPU KV cache size` lines, collected in `kv-pools.txt` in the results directory; the e-fp8-mtp1 aggregates are the `fn_bench` summary lines in `r475-audit.log`; the d-mtp3 row is one run from `r476-d-mtp3-records.jsonl`.
 
-**The admission row of this table was wrong and is retracted.** The daily appeared to return text for only 1 of 8
-concurrent 38k requests: seven came back with a usage block reporting 512 completion tokens, no text and no error.
-Raw capture (`bench/r352-daily-raw.sh`, `results/2026-09-16-r352-daily-raw`) shows the frames all arrive — 157–179
-per request — with the thinking in a delta field called **`reasoning`**, which is vLLM's name for what TabbyAPI
-calls `reasoning_content`. With `min_tokens: 512` forcing exactly 512 tokens and the model still thinking, `content`
-is legitimately empty, so a probe reading only `content` and `reasoning_content` saw nothing and blamed the engine.
-
-Re-measured with both names read (`results/2026-09-16-r353-daily-admit2`), the same arm:
-
-| arm | admitted | TTFT | decode/stream | aggregate |
-| --- | --- | --- | --- | --- |
-| vLLM 27B daily | **8/8** | **1.76 s** | 111.0 t/s | **626.7 t/s** |
-| Flash-Next (this stack) | 8/8 | 63.6 s | 32.1 t/s | 51.6 t/s |
-
-So the incumbent is **12× faster to first token and 12× higher aggregate** on the deep-context fan-out arm. The
-broken instrument had it backwards, and the correction strengthens rather than weakens the promotion verdict.
+c8, prose, prefill and long-context are **not measured on the vLLM route**. This stack's figures for those shapes,
+for reference: c8 aggregate 550–604 t/s on code; prose c1 160.6–165.3 t/s; a 27,501-token prompt prefills in 3.5 s
+(7,700–7,800 t/s) and a 110,081-token prompt in 13.1 s (8,380–8,390 t/s), both on 2026-09-17; long-context
+retrieval 5/5 at 26.5k, 105.7k and 158.5k prompt tokens.
 
 ## Stamina — results `2026-09-16-r347-soak`
 
 Forty rounds of c4, 1,024 forced code tokens each, alone on the box: per-round median decode 63.5–65.5 t/s,
 **drift 101.0 % of the start** (first three rounds 64.5, last five 65.1). No decay, no error, no VRAM drift.
 
-That is the number the first attempt could not produce: the gate suite's soak ran while a native extension was
-compiling on the same host and read 40.5 t/s from round six onward, which looks exactly like stamina decay and was
+That is the figure the first attempt could not produce: the gate suite's soak ran while a native extension was
+compiling on the same host and read 40.5 t/s from round six onward, which has the shape of stamina decay and was
 not. See `docs/GOTCHAS.md` #8.
 
 ## Capabilities — `bench/capabilities.py`, results `2026-09-16-r348-capabilities`
@@ -677,7 +603,7 @@ decode rate without its kind is not comparable to another one.
 | model load | 11.2–11.5 s | warm Triton + coop-autotune caches on disk |
 | warmup (first inference after load) | 0.27–0.36 s | same |
 | VRAM at idle, model resident | 31.9 GB / 30.1 GB of 32.6 GB per card | both cards held by one process |
-| GPU power at idle-resident | ~227 W / ~218 W of 600/575 W | request in flight, layer-split duty cycle |
+| GPU power at idle-resident | ~227 W / ~218 W of 600/575 W | measured during a request, layer-split duty cycle |
 
 ## A real agent turn — DSH session `session-652732d8`, 2026-09-16
 
@@ -698,9 +624,9 @@ deliberation delivered as the visible answer.
 
 ## Not yet measured
 
-Depth ladder (decode and TTFT against KV depth), long-context retrieval, admission at 8 distinct deep contexts,
-soak stability, and the two patch A/Bs (concurrency-indexed draft depth, QSA multi-job). See `bench/r339-gates.sh`
-for the suite and `bench/results/` for what has landed.
+On the vllm-exl3 route: c8 aggregate, prose decode, prefill at depth, and long-context retrieval. On this stack:
+deep-context fan-out past the eight concurrent 38,283-token requests already recorded. See `bench/r339-gates.sh` for
+the gate suite and `bench/results/` for what has landed.
 
 ## 2026-09-17 — the promoted layers, in order (each admitted by its own gate; see `docker/README.md`)
 
@@ -714,4 +640,4 @@ for the suite and `bench/results/` for what has landed.
 
 Pool: 262,144 tokens at 8-bit KV is the ceiling on this box under any split (393,216 and 327,680 fail to boot: `2026-09-17-r452-exl3-cache-bits`, R337). Structured output (llguidance `json_schema` / `response_format` / `regex_pattern`) works, thinking on and off, at c4: `2026-09-17-r453-exl3-structured`.
 
-Not promoted, 2026-09-17 14:20 CEST: MoE coop mode 3 (`EXL3_MOE_COOP_V2=3`, V1 path for singleton expert runs inside the V2 kernel) is bit-identical to mode 1 (same c1 and 30k fingerprints, GSM8K c8 0.935) but 2–3 % slower at c1, c4 and c8 (214 / 115 / 70 per stream against 220 / 118 / 73), because the mode-3 kernel is 8–19 % slower than V1 on rows that route to distinct or partly overlapping experts, which is what decode rows look like: `2026-09-17-r462-moecoop-v3-ab`. The daily keeps mode 1.
+Not promoted, 2026-09-17 14:20 CEST: MoE coop mode 3 (`EXL3_MOE_COOP_V2=3`, V1 path for singleton expert runs inside the V2 kernel) is bit-identical to mode 1 (same c1 and 30k fingerprints, GSM8K c8 0.935) but 2–3 % slower at c1, c4 and c8 (214 / 115 / 70 per stream against 220 / 118 / 73), because the mode-3 kernel is 8–19 % slower than V1 on rows that route to distinct or partly overlapping experts, which is what decode rows look like: `2026-09-17-r462-moecoop-v3-ab`. The served configuration keeps mode 1.

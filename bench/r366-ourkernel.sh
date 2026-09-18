@@ -3,17 +3,17 @@
 #
 # THE CHANGE. v1.5.0 flattens batch x query rows for the fused MoE decode kernel and caps the fast path at 8 rows.
 # A depth-3 draft window is four rows per job, so c1 (4 rows) and c2 (8) take the cooperative path while **c4 (16)
-# and c8 (32) fall back to the grouped path at every MoE block** — precisely this box's weakest shapes (250 t/s
-# aggregate at c4, 313 at c8, against the vLLM daily's 868 and 1,574). The change raises that envelope to 32, grows
+# and c8 (32) fall back to the grouped path at every MoE block** — this box's weakest shapes (250 t/s aggregate at
+# c4, 313 at c8, 2026-09-16). The change raises that envelope to 32, grows
 # the shared-expert graph capacity to match, and keeps the CUDA kernel's separate 256-slot structural bound by
 # chunking token rows in C++. The arithmetic is untouched; dispatch and staging changed.
 #
 # DRAFT DEPTH IS PINNED OFF IN BOTH ARMS, deliberately: the concurrency-indexed policy would drop to depth 1 at c4/c8
-# and the verification window would shrink to 2 rows, which is exactly the cliff under test. The measurement is the
+# and the verification window would shrink to 2 rows, which is the case under test. The measurement is the
 # full-window case.
 #
 # THE FALSIFIER, FROM THE CHANGE'S OWN AUTHOR: warmed baseline/candidate c4, depth 3, forced 512-token decode,
-# confirming 16-row dispatch. No repeatable decode-time improvement falsifies the expected win.
+# confirming 16-row dispatch. No repeatable decode-time improvement falsifies the expected gain.
 #
 # BOTH ARMS CARRY THE QSA PATCH, as the author required — the control is tabbyapi:qsa-devel and the candidate is that
 # image plus this change, so the only variable is the envelope.

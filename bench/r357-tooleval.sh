@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 # R357 — tool-eval 69x4 on both the baseline and the promoted configuration.
 #
-# WHY. The daily's published tool-eval figure is 91 (69x4, R234). This stack has never been measured on it, so
-# "Flash-Next can call tools" rests on one agent session and a four-check capability gate — good evidence, but not
-# the instrument the daily is quoted on. And the two levers being promoted are documented as *greedy*
-# byte-identical; tool-eval runs at the daily's sampler (0.6/0.95/20), where that guarantee does not apply, so the
-# promoted configuration needs a behavioural check of its own rather than an inherited one.
+# WHY. This stack has never been measured on tool-eval, so "Flash-Next can call tools" rests on one agent session
+# and a four-check capability gate. The two levers being promoted are documented as *greedy* byte-identical;
+# tool-eval runs at sampler 0.6/0.95/20, where that guarantee does not apply, so the promoted configuration needs a
+# behavioural check of its own rather than an inherited one.
 #
-# Invocation copied from the daily's own tool-eval runs (cyk-tooleval.sh): same CLI, same sampler, --trials 4 to
-# match the published 69x4.
+# Invocation: tool-eval-bench, sampler 0.6/0.95/20, --trials 4 --parallel 8 (the standard 69x4 shape).
 #
 # The harness sends its own sampler parameters, so the server's preset fallbacks are not part of this measurement
-# on either arm — that is deliberate: it makes the two arms, and the daily's published number, comparable.
+# on either arm. That is deliberate: it is what makes the two arms comparable.
 #
 # RUN: sudo systemd-run --unit=r357-tooleval --collect -p User=adrienbrault -p RuntimeMaxSec=21600 \
 #        bash /srv/qwen5090/r357-tooleval.sh

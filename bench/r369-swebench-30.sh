@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
-# R369 — SWE-bench Verified, stratified, 30 instances: six repositories, sampled by the daily's own outcome.
+# R369 — SWE-bench Verified, stratified, 30 instances: six repositories, selected by a prior scored run's outcomes.
 #
 # WHY NOT THE FIRST TEN. r359 took `--slice 0:10`, a contiguous slice in dataset order, and the dataset's first ten
-# are ALL astropy. That answers "can this seat do the astropy tasks the daily could" and nothing about the other
-# eleven repositories in this benchmark, which is the wrong shape for a comparison.
+# are ALL astropy. That covers one repository and says nothing about the other eleven in this benchmark.
 #
-# THE SELECTION, AND WHY IT IS DEFENSIBLE. From the daily's full scored run (`2026-09-02-miniswe-rh-nvidia`: 500
-# submitted, 387 resolved, 113 unresolved), the six repositories with the most resolved instances are taken, and
-# from each: the first two instances the daily RESOLVED and the first one it did NOT. That gives
+# THE SELECTION. From a prior 500-instance scored run on this box, the six repositories with the most resolved
+# instances are taken, and from each: the instances that run resolved and the ones it did not, in a 2:1 split. That
+# gives
 #   - repository diversity (6 against 1),
-#   - a 2:1 resolved:unresolved split, so the subset contains instances where the daily failed and a difference can
-#     show in either direction,
-#   - exact matching: the daily's outcome is known per instance, so the comparison carries no sampling error —
-#     only the subset's ability to represent the 500 does.
-# n=18 gives ±11 % at 1σ on a pass rate, which is enough to separate "comparable to the daily" from "materially
-# worse", and not enough to resolve three points. The selection is deterministic and is reproduced by the regex
-# below rather than by a random draw, so the same 18 can be re-run.
+#   - a subset that contains instances the reference run failed, so a difference can show in either direction.
+# The selection is outcome-stratified rather than random, so its rate describes these 30 instances only. It is
+# deterministic and is reproduced by the regex below rather than by a random draw, so the same 30 can be re-run.
 #
 # RUN: sudo systemd-run --unit=r369-swebench-30 --collect -p User=adrienbrault -p RuntimeMaxSec=21600 \
 #        bash /srv/qwen5090/r369-swebench-30.sh
@@ -40,7 +35,7 @@ trap 'log "### SIGTERM ###"; finish ABORTED; exit 4' TERM
 curl -sf -m 8 "$API/v1/model" >/dev/null || { log "ABORT: no seat on $API"; exit 3; }
 BUILTIN=$("$VENV/bin/python" -c "from minisweagent.config import builtin_config_dir; print(builtin_config_dir/'benchmarks'/'swebench.yaml')" | tail -1)
 log "seat: $(curl -s -m 5 "$API/v1/model" | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])') image $(sudo docker inspect flashnext --format '{{.Config.Image}}')"
-log "30 instances across django, sympy, sphinx-doc, scikit-learn, matplotlib, pydata; 2 daily-resolved + 1 daily-unresolved each"
+log "30 instances across django, sympy, sphinx-doc, scikit-learn, matplotlib, pydata; 2:1 resolved:unresolved in the reference run"
 log "builtin: $BUILTIN"
 log "cached sweb images: $(sudo docker images --format '{{.Repository}}' | grep -c 'sweb' || true)"
 
@@ -62,7 +57,4 @@ PY
 log "scoring with the official harness"
 SCORE_WORKERS=6 bash /srv/qwen5090/miniswe-score.sh "$R" "fn-strat30" 2>&1 \
   | grep -aE "predictions|OFFICIAL|resolved|error_ids|non-zero" | tee -a "$R/audit.log"
-
-log "matched comparison against the daily"
-python3 /srv/qwen5090/probes/match-daily-swebench.py "$R" 2>&1 | tee -a "$R/audit.log"
 finish DONE

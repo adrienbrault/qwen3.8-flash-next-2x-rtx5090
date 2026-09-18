@@ -1,15 +1,15 @@
 # GOTCHAS — what it looks like vs what it is
 
-Every entry here was paid for with a wrong number or a dead session on this box. Dates are when it bit.
+Each entry records a wrong number or a lost session on this box. The date is when it happened.
 
 ## 1. A `--tokens 8192` run that measured 8 tokens (2026-09-16)
 
 **Looks like:** c1 aggregate throughput of 9.0 t/s, where the same config reads 157–177 t/s at c1 elsewhere.
 It reads as a collapse at long generation.
 
-**Is:** the probe posted a bare `/completions` prompt at `temperature 0` and let the model stop when it wanted.
-On this checkpoint it emits EOS after 8 tokens, so the row divided 8 tokens by a wall that included prefill. The
-server log shows it plainly: `#168 completions (stream): 8 tokens generated`, `#177 … 1 tokens generated`. A
+**Is:** the probe posted a bare `/completions` prompt at `temperature 0` and let the model stop on its own. On this
+checkpoint it emits EOS after 8 tokens, so the row divided 8 tokens by a wall that included prefill. The server log
+records it: `#168 completions (stream): 8 tokens generated`, `#177 … 1 tokens generated`. A
 `--tokens 8192` arm never generated 8192 tokens.
 
 **Fix:** force the length with **`min_tokens`** (see #2), and record the finish reason.
@@ -63,7 +63,7 @@ prints is a zero that looks like a measurement — the same trap `oai_conc.py` d
 ## 8. A CPU-bound build next to a GPU measurement perturbs it (2026-09-16)
 
 **Looks like:** stamina decay. A c4 soak that held 62–66 t/s per stream for five rounds dropped to 40.5 t/s at
-round six and stayed there — exactly the shape of a thermal or fragmentation story.
+round six and stayed there, which is the shape a thermal or fragmentation cause would produce.
 
 **Is:** a native extension rebuild running on the same box. Compiling exllamav3's extension starts 487 compiler
 processes and took the load average to 18.6; the decode path needs host CPU for sampling, launching and the PLE
@@ -75,36 +75,33 @@ reason the A/B scripts in `bench/` take the GPU lock even when they only probe.
 
 ## 10. The two servers name the thinking channel differently, and one probe read only one name (2026-09-16)
 
-**Looks like:** the vLLM 27B daily refusing concurrent deep-context work. Eight 38,283-token requests: one or two
-complete, the rest come back with a `usage` block reporting 512 completion tokens, **no text at all** and no error,
-each after ~16 s — while the daily's own log shows `200 OK` for every one of them. Read at face value that is "the
-incumbent drops 6 of 8 deep-context requests", and it was twice reproduced before being questioned.
+**Looks like:** a vLLM server on the same box refusing concurrent deep-context work. Eight 38,283-token requests:
+one or two complete, the rest come back with a `usage` block reporting 512 completion tokens, **no text at all** and
+no error, each after ~16 s — while that server's own log shows `200 OK` for every one of them. Read at face value
+that is "the server drops 6 of 8 deep-context requests", and it was twice reproduced before being questioned.
 
 **Is:** two OpenAI-compatible servers naming the same thing differently, and an instrument that knew one name.
 
 - **vLLM's** OpenAI server streams the model's thinking as `delta.reasoning` — captured raw:
-  `data: {…"delta":{"reasoning":"The"}…}`, with the delta keys observed as `content, reasoning, role`. This repo's
-  own daily documentation says "API serves reasoning as message.reasoning".
+  `data: {…"delta":{"reasoning":"The"}…}`, with the delta keys observed as `content, reasoning, role`.
 - **TabbyAPI** streams it as `delta.reasoning_content`.
 
-`bench/probe.py` collected text from `delta.content` and `delta.reasoning_content` only. On the daily, a request
-whose entire forced length went into thinking therefore looked like a request that returned nothing — and with
-`min_tokens: 512` forcing exactly 512 tokens, `content` is *legitimately* empty for a request that never finished
-thinking. The counts agree with that reading: 157–179 frames arrive per request, none of them content.
+`bench/probe.py` collected text from `delta.content` and `delta.reasoning_content` only. Against a vLLM server, a
+request whose entire forced length went into thinking therefore looked like a request that returned nothing — and
+with `min_tokens: 512` forcing exactly 512 tokens, `content` is *legitimately* empty for a request that never
+finished thinking. The counts agree with that reading: 157–179 frames arrive per request, none of them content.
 
 It now reads `content`, `reasoning_content` **and** `reasoning`, in the probe, the pair probe and the capability
-gate. The re-measurement is `2026-09-16-r353-daily-admit2`.
+gate.
 
-**Second, dumber version of the same mistake, in the same hunt:** the raw-capture script passed a 250 KB JSON body
-as a `curl` argv element and got `OSError: [Errno 7] Argument list too long`. Eight empty capture files, and the
-`200 OK` lines the server logged belonged to other clients. Bodies now go through a file
-(`--data-binary @body.json`), and a capture that writes zero bytes prints its curl exit status and stderr instead
-of looking like a server that said nothing.
+**The same mistake in the same investigation:** the raw-capture script passed a 250 KB JSON body as a `curl` argv
+element and got `OSError: [Errno 7] Argument list too long`. Eight empty capture files, and the `200 OK` lines the
+server logged belonged to other clients. Bodies now go through a file (`--data-binary @body.json`), and a capture
+that writes zero bytes prints its curl exit status and stderr instead of looking like a server that said nothing.
 
-**The lesson, since this is the third instrument defect of the day:** a probe that reports "no text" must also
-report *why* — frame shapes and field names seen, the raw bytes for at least one request, curl's exit status, or the
-server's own log. Every one of today's false alarms was one unread field away from a wrong conclusion about an
-engine, and the two that mattered were caught only because a second instrument or a raw capture disagreed.
+**The rule this produced:** a probe that reports "no text" must also report *why* — frame shapes and field names
+seen, the raw bytes for at least one request, curl's exit status, or the server's own log. Both of the 2026-09-16
+false readings were caught only because a second instrument or a raw capture disagreed.
 
 ## 9. Decode rate is content-dependent by ~2× on this checkpoint
 
@@ -118,11 +115,11 @@ analysis is not predictable. A decode number without its kind is not comparable 
 child that **re-opens the lock path** gets a *second* lock on the same file, so it waited for the parent — which was
 waiting for it. Nothing ran, the GPU sat idle, and seven other units queued behind the pair.
 
-The diagnostic was wrong twice over, and the wrongness is the lesson:
+The diagnostic was wrong in two ways:
 
-1. `flock` holders are **not** reported in `/proc/PID/fdinfo` — that field is for POSIX record locks. The right source
-   is `/proc/locks`, whose inode field is **decimal**; grepping a hex-translated inode returns nothing, which I read as
-   "nobody holds it" and briefly believed the kernel had lost a lock.
+1. `flock` holders are **not** reported in `/proc/PID/fdinfo` — that field is for POSIX record locks. The correct
+   source is `/proc/locks`, whose inode field is **decimal**; grepping a hex-translated inode returns nothing, which
+   was read as "nobody holds it".
 2. "No process is building or probing" is not evidence that no unit is running. Both processes were alive and idle by
    construction: each was blocked on the other.
 
@@ -138,18 +135,17 @@ order in which waiters acquire a flock is not defined, so "queued" never meant "
 
 Copying a script to the host and checking it with `bash -n` reported success on a **0-byte file**: an empty script is
 valid bash. The transfer had produced an empty file, the check confirmed nothing, and the unit was launched, exited
-immediately with status 0, and read as "ran successfully" — the third time this session that a passing check measured
-the absence of a thing rather than the thing.
+immediately with status 0, and read as "ran successfully". It was the third passing check that session which
+measured the absence of a thing rather than the thing.
 
 What the check should have been, and now is: `wc -c`, plus a grep for a string that must be present (`greedy_same`),
 plus comparing hashes of both copies. Size and content are different claims; a syntax checker answers neither.
 
-The general rule this session keeps re-learning: **a check must be able to fail.** `cmp` with a glob that matches one
-file, `bash -n` on an empty file, a probe that reads one channel of four, a build whose verification step imports
-without its library, a lock holder read from the wrong field of `/proc/locks` — each looked like a green light and
-each was measuring nothing.
+The general rule: **a check must be able to fail.** `cmp` with a glob that matches one file, `bash -n` on an empty
+file, a probe that reads one channel of four, a build whose verification step imports without its library, a lock
+holder read from the wrong field of `/proc/locks` — each returned success and each measured nothing.
 
-**It happened again, worse, an hour later.** Pushing four updated scripts to the host used a loop with no input
+**The same condition recurred an hour later.** Pushing four updated scripts to the host used a loop with no input
 redirection —
 
     for f in a b c; do ssh flan "sudo cat > /srv/qwen5090/$f && chmod +x /srv/qwen5090/$f"; done
@@ -157,28 +153,27 @@ redirection —
 — so `cat >` truncated each target and read nothing. **Three scripts became 0-byte files**, the check I ran was
 `bash -n` (which an empty script passes), and the chain then executed them as `### DONE r366-ourkernel in 0s`,
 `r364-hotvocab in 0s`, `r367-slots in 0s`. Three experiments completed in the log and did no work at all, and
-"completed in 0s" was the only signal — which is easy to read as "fast" rather than "empty".
+"completed in 0s" was the only signal, which does not distinguish fast from empty.
 
 The fix is a check that can fail, applied to every copy: byte count, a string that must be present, and matching
 hashes on both ends. `r372-chain2.sh` now refuses to start if any step it was asked to run is under 500 bytes, so the
-condition cannot recur silently. The lesson generalises past this host: **a step that reports success without doing
-work is indistinguishable from a step that did the work quickly, unless something counts.**
+condition cannot recur silently. **A step that reports success without doing work is indistinguishable from a step
+that did the work quickly, unless something counts.**
 
-## 13. Two bugs in the identity helper, and one of them made my own tests vacuous (2026-09-16)
+## 13. Two bugs in the identity helper, one of which made its own tests vacuous (2026-09-16)
 
-An external review found the first; chasing it found the second. Both were in `lib/greedy-compare.sh`, the helper every
-identity gate uses.
+An external review found the first; investigating it found the second. Both were in `lib/greedy-compare.sh`, the
+helper every identity gate uses.
 
 1. **Two empty directories compared EQUAL.** `greedy_hash` hashed an empty file listing into
    `e3b0c44298fc1c14` — the SHA-256 prefix of the empty string, a *non-empty* string — and `greedy_same` only required
-   a non-empty, equal hash. So if both arms' captures silently failed, **the identity gate passed**. A gate reporting
-   success without measuring anything is the one outcome a gate must never produce, and this one guarded the results
-   I had been quoting all day. My own test had covered directories that did not *exist* (which correctly differ) and
-   never directories that existed and were *empty*.
+   a non-empty, equal hash. So if both arms' captures silently failed, **the identity gate passed**, and that gate
+   guarded every identity result quoted that day. The helper's own test covered directories that did not *exist*
+   (which correctly differ) and never directories that existed and were *empty*.
 2. **The hash could not be computed on macOS at all.** The file listing used `find -printf`, a GNU-only primary. On
    macOS that pipeline printed an error and hashed nothing, returning the same empty-input digest for *any* pair of
-   directories — so the local tests I ran of this helper were vacuous, while the ones run over ssh on the Linux host
-   were real. `greedy_hash` now includes the file count, lists files portably, picks `sha256sum` or `shasum` at
+   directories, so local runs of this helper measured nothing while the ones run over ssh on the Linux host were
+   valid. `greedy_hash` now includes the file count, lists files portably, picks `sha256sum` or `shasum` at
    runtime, and returns empty rather than the empty-input digest when it cannot compute.
 
 Consequences, both applied: every hash the old function produced is superseded (`18e30f17883a38eb` ->
@@ -186,5 +181,5 @@ Consequences, both applied: every hash the old function produced is superseded (
 existing captures rather than assumed to survive — #290's paired re-capture is identical across all three arms, and
 #246 still reads control == feature-off, control != feature-on.
 
-The lesson is the same one this file has been accumulating all day, from the other direction: **the test of a check is
-whether it can fail**, and a check that cannot compute must refuse rather than return something plausible.
+**The test of a check is whether it can fail**, and a check that cannot compute must refuse rather than return a
+plausible value.

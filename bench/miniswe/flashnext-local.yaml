@@ -1,13 +1,11 @@
 # mini-SWE-agent overlay for the Flash-Next TabbyAPI seat (:8022), SWE-bench Verified.
 #
-# Identical to the daily's overlay in the public 27B repository (scripts/miniswe/qwen38-local.yaml) except for the
-# endpoint and the model name, so a score from either seat is a score on the same harness, the same builtin
-# benchmarks/swebench.yaml (the leaderboard's bash-only setting, step_limit 250) and the same limits. Serving
-# plumbing only: no prompt or limit changes.
+# Serving plumbing only: it sets the endpoint and the model name and changes no prompt and no limit, so a score
+# from this overlay is a score on the stock harness, the stock builtin benchmarks/swebench.yaml (the leaderboard's
+# bash-only setting, step_limit 250) and the stock limits.
 #
-# Sampling: the daily gets 0.6/0.95/20 from `--override-generation-config`; this seat gets the same triple from its
-# sampler preset (qwen38_thinking) because mini-swe sends only max_tokens. Same sampler both sides, by different
-# mechanisms.
+# Sampling: 0.6/0.95/20 reaches the server from this seat's sampler preset (qwen38_thinking), because mini-swe
+# sends only max_tokens.
 model:
   model_name: openai/qwen3.8-flash-next-exl3-3.05bpw
   cost_tracking: ignore_errors      # local model: litellm has no price entry and would raise
@@ -15,8 +13,8 @@ model:
     api_base: http://127.0.0.1:8022/v1
     api_key: local
     timeout: 1800
-    max_tokens: 32768               # same as the daily's overlay: a runaway thinking loop releases its slot and
-                                    # mini-swe recovers from finish_reason=length
+    max_tokens: 32768               # a runaway thinking loop releases its slot and mini-swe recovers from
+                                    # finish_reason=length
     drop_params: true
     parallel_tool_calls: true
 environment:

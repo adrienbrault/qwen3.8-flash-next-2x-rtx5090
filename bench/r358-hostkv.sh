@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
-# R358 — does a host KV tier help the one thing this box is worst at?
+# R358 — whether a host KV tier helps deep-context concurrency, the weakest measured axis on this box.
 #
 # THE WEAKNESS, MEASURED. Eight concurrent jobs of 78,233-79,139 tokens each (~628k of unrelated context) fit in
 # this box's 262,144-token VRAM pool only by queueing: all eight complete, but the first token takes 43-82 s
-# against the vLLM daily's 1.76 s on the same arm (r345, r353). `sysmem_kv_cache` is the last config knob that
-# could plausibly change that without engine work — it puts a second-tier KV cache in host RAM — and it has been 0
-# in every measurement so far.
+# (r345). `sysmem_kv_cache` is the last config knob that could plausibly change that without engine work — it puts
+# a second-tier KV cache in host RAM — and it has been 0 in every measurement so far.
 #
-# HONEST EXPECTATION, STATED BEFORE THE RUN: a host tier cannot make more than 262,144 tokens of *active* context
-# fit, so it should not change admission. What it can change is recomputation and prefix reuse, so the
-# discriminating arms are the ones with repeated prefixes and re-prefill, not the unique-context one.
+# EXPECTATION, STATED BEFORE THE RUN: a host tier cannot make more than 262,144 tokens of *active* context fit, so
+# it should not change admission. What it can change is recomputation and prefix reuse, so the discriminating arms
+# are the ones with repeated prefixes and re-prefill, not the unique-context one.
 #
 # Arms: tier 0 (the served baseline) and tier 4096 MiB, each with
 #   a) 8 x unique deep contexts     — admission and TTFT, expected unchanged
-#   b) 1 x 131k context twice       — does a long prefix stay usable between requests?
+#   b) 1 x 131k context twice       — whether a long prefix stays usable between requests
 #   c) 4 x shared 78k prefix        — the realistic fan-out shape
 #
 # RUN: sudo systemd-run --unit=r358-hostkv --collect -p User=adrienbrault -p RuntimeMaxSec=14400 \

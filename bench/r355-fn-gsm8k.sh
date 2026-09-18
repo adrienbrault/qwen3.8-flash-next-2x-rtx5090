@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-# R355 — Flash-Next's GSM8K as TabbyAPI actually serves it, on the instrument the daily was measured with.
+# R355 — Flash-Next's GSM8K as TabbyAPI actually serves it: lm-eval, as served.
 #
-# WHY. R299b measured the daily on this task twice: 88.0 with thinking off, 98.5 as served (thinking on,
-# reasoning_effort medium, 8192-token budget). Every Flash-Next number on record is think-OFF and comes from the
-# llama.cpp board (95.0-95.5 at n=200). Two different invocations, so quoting them against each other would be the
-# category error R300's own header warns about. This runs the *as-served* arm against the live TabbyAPI instance on
-# :8022 — the configuration a user of this seat actually gets — with the daily's exact harness parameters.
+# WHY. Every earlier Flash-Next GSM8K figure on record is think-OFF and comes from a different engine, so it is not
+# a figure for this seat. This runs the *as-served* arm against the live TabbyAPI instance on :8022 — the
+# configuration a user of this seat actually gets.
 #
 # WHAT DIFFERS FROM R300, ON PURPOSE. R300 booted llama.cpp and removed its think-off flag. Here the engine is
 # already running and thinking is on by configuration (`reasoning: true`), so nothing about the route is being
-# changed for the measurement; the point is to measure the seat as served, not a variant of it.
+# changed for the measurement: the arm measures the seat as served rather than a variant of it.
 #
 # No restart, no reboot: it takes the GPU lock so nothing else disturbs the run, and leaves the server alone.
 #
@@ -37,7 +35,7 @@ curl -sf -m 8 "$U/v1/model" >/dev/null || { log "ABORT: no server on $U"; exit 3
 SERVED=$(curl -s -m 5 "$U/v1/model" | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
 log "served: $SERVED | image: $(sudo docker inspect flashnext --format '{{.Config.Image}}')"
 log "harness: gsm8k, 5-shot, apply_chat_template, temperature 0, max_gen_toks 8192, limit 200, num_concurrent 4"
-log "(the daily's as-served arm in R299b used exactly these parameters and read 98.5)"
+log "(these are the R355 parameters every later GSM8K arm in this repository reuses)"
 
 # Thinking-on costs generations that run to the 8192 budget, and c4 is what the harness asks for. A timeout here
 # is a measurement that did not finish, not a score.
@@ -51,7 +49,7 @@ log "lm_eval exit code: $rc"
 grep -arhoE '"exact_match[^"]*": *[0-9.]+' "$R/ev-gsm8k" 2>/dev/null | sort -u | sed 's/^/  [gsm8k] /' | tee -a "$R/audit.log"
 grep -aiE "error|exception|timeout" "$R/ev-gsm8k.log" 2>/dev/null | tail -5 | cut -c1-160 | tee -a "$R/audit.log"
 
-# Did thinking actually happen? A score from an arm that never thought is a different measurement.
+# Confirm thinking happened: a score from an arm that never thought is a different measurement.
 python3 - <<'PY' | tee -a "$R/audit.log"
 import json, glob, statistics
 samples = []

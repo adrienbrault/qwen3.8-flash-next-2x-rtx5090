@@ -12,7 +12,7 @@ The user requested a repository review, then this handoff and ideas for making t
 
 The review made no code fixes, contacted no GPU server, and performed no deployment, image build, or GPU benchmark. It used local source inspection, temporary fixtures, mocked HTTP responses and mocked shell commands. Eight Python files passed AST parsing and 39 shell scripts passed `bash -n` at the reviewed revision. ShellCheck was unavailable. Temporary reproduction fixtures were removed; the scenarios below describe how to turn them into maintained tests. This handoff is the only repository artifact created by this task.
 
-Read [CLAUDE.md](CLAUDE.md) first. In particular, this track is private, shares both GPUs with the 27B daily, and has a mirrored launcher in the private `kubernetes-home` repository. Carry forward the user's existing authorization in your session and follow that operating agreement for live work. Decide explicitly which service should be restored; an experiment must not silently change that decision.
+Read [CLAUDE.md](CLAUDE.md) first. In particular, this track is private, shares both GPUs with the box's other engine, and has a mirrored launcher in the private `kubernetes-home` repository. Carry forward the user's existing authorization in your session and follow that operating agreement for live work. Decide explicitly which service should be restored; an experiment must not silently change that decision.
 
 Existing background should be read in place rather than reconstructed from this handoff:
 
@@ -102,7 +102,7 @@ Location: [hotvocab-greedy-capture.py:44](bench/hotvocab/hotvocab-greedy-capture
 
 Location: [r366-ourkernel.sh:58](bench/r366-ourkernel.sh:58); analogous fixed-directory captures appear in other runners.
 
-The capture tool uses `mkdir(..., exist_ok=False)`, but the runner reuses fixed output paths and merely logs capture failures. A rerun therefore can compare old files against newly collected performance data. This is especially relevant to wrapper scripts explicitly intended to rerun experiments.
+The capture tool uses `mkdir(..., exist_ok=False)`, but the runner reuses fixed output paths and only logs capture failures. A rerun therefore can compare old files against newly collected performance data. This is especially relevant to wrapper scripts explicitly intended to rerun experiments.
 
 **Reproduced component behavior:** rerunning capture against an existing directory raised `FileExistsError` before making any HTTP request. The runner's source then continues into its comparison.
 
@@ -162,7 +162,7 @@ The recorded bottleneck is weak concurrency scaling with a two-GPU layer split. 
 
 **Experiment:** keep the current engine's eight slots and compare client-side active-request limits of 2, 4 and 8 under the same incoming workload. Queue excess work outside the engine. Include short tool turns mixed with long prefills and long generations; test cancellation and a fairness policy so long requests do not starve.
 
-**Measure:** latency from original client submission, including the external queue; p50/p95 TTFT and completion time; inter-token stalls; completed useful tasks/minute; throughput and errors. A lower server-side TTFT obtained merely by moving the queue is not a win.
+**Measure:** latency from original client submission, including the external queue; p50/p95 TTFT and completion time; inter-token stalls; completed useful tasks/minute; throughput and errors. A lower server-side TTFT obtained only by moving the queue is not an improvement.
 
 **Success:** equal or better completed-task throughput with better end-to-end latency/fairness. Do this before reducing `max_batch_size`, which changes allocations and introduces another variable.
 
@@ -209,7 +209,7 @@ Measure decode stalls and p95 time to useful output, not only total prefill thro
 
 ### 6. Let traces choose CPU, transfer or CUDA-graph work
 
-If the timeline shows CPU starvation, isolate model-serving CPU resources from builds/scoring jobs and examine sampling, logging, tokenization and synchronization costs. The repository already records a native build degrading a soak; enforce exclusion rather than merely printing that nothing else is running.
+If the timeline shows CPU starvation, isolate model-serving CPU resources from builds/scoring jobs and examine sampling, logging, tokenization and synchronization costs. The repository already records a native build degrading a soak; enforce exclusion rather than only printing that nothing else is running.
 
 If kernel-launch gaps dominate, examine additional graph coverage or fewer graph boundaries. If copies or synchronization dominate, improve that path first. CUDA graphs mainly address CPU launch overhead and can fail to help when the expensive work lies elsewhere. [NVIDIA's CUDA-graph performance guidance](https://docs.nvidia.com/dl-cuda-graph/troubleshooting/performance-issues.html).
 
@@ -219,7 +219,7 @@ For cross-GPU copies, measure actual topology, negotiated links, transfer direct
 
 Replay representative coding sessions and track successful tool turns, total task completion time, retries, output tokens, failures and cache reuse. Investigate avoidable repeated reasoning, oversized tool logs and repeated prompt reconstruction. Any trimming or budget change needs a quality check; reducing output length can improve completion time while reducing task success.
 
-For a quality comparison, add a held-out subset chosen independently of either model's observed outcomes and run matched harness settings. The existing outcome-stratified SWE subsets are useful diagnostics, but a simple fair-sign probability such as `2^-19` is not justified by symmetry after selecting on the incumbent's failures. Preserve their descriptive tallies and test broader claims on an independent selection. Likewise, zero changed outcomes on 19 repeated instances is limited evidence, not a general equivalence guarantee.
+For a quality comparison, add a held-out subset chosen independently of either model's observed outcomes and run matched harness settings. The existing outcome-stratified SWE subsets are useful diagnostics, but a simple fair-sign probability such as `2^-19` is not justified by symmetry after selecting on a prior run's failures. Preserve their descriptive tallies and test broader claims on an independent selection. Likewise, zero changed outcomes on 19 repeated instances is limited evidence, not a general equivalence guarantee.
 
 ### 8. Treat multi-GPU parallelism as an engineering project
 
@@ -227,7 +227,7 @@ Read [the EP status assessment](kubernetes-home/flan/patches/exllamav3/expert-pa
 
 A staged route is transport/state tests, a small trunk-only GPU correctness milestone, real memory/communication measurements, then MTP integration and quality/performance evaluation. Another research direction is overlapping independent microbatches across layer-split stages, if the engine can support safe cache/state ownership and asynchronous scheduling. Neither is a launcher switch or a promised twofold speedup. Communication over the actual PCIe topology may limit the result.
 
-The existing 27B daily can remain a workload-specific alternative, but both complete stacks require both GPUs. Immediate per-request routing between simultaneously resident full stacks is not available on the documented setup. A simultaneous router would require a separately proven fitting smaller model or other hardware.
+The box's other engine can remain a workload-specific alternative, but both complete stacks require both GPUs. Immediate per-request routing between simultaneously resident full stacks is not available on the documented setup. A simultaneous router would require a separately proven fitting smaller model or other hardware.
 
 ## Avoid repeating low-value experiments without new evidence
 

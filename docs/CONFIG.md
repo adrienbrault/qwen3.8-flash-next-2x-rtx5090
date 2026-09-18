@@ -17,22 +17,22 @@ it. Every value is either a measurement, an upstream default, or a fit constrain
 | `tensor_parallel` | `false` | `qwen4_exp` raises `NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration`. Layer split is the only mode |
 | `gpu_split` | `[30, 30]` | a YAML **list**, not the string `"30,30"` — a string fails pydantic with `type=list_type` |
 | `gpu_split_auto` | `false` | explicit rather than autosplit: TabbyAPI #405 applies `autosplit_reserve` to device 0 only |
-| `cpu_moe_offload_layers` / `cpu_moe_split_experts` | `0` / `0` | zero offload is the point: offloading experts costs decode rate. Both are set explicitly so a stale nonzero value elsewhere cannot silently move the baseline |
+| `cpu_moe_offload_layers` / `cpu_moe_split_experts` | `0` / `0` | zero offload is intended: offloading experts costs decode rate. Both are set explicitly so a stale nonzero value elsewhere cannot silently move the baseline |
 | `chunk_size` | 2048 | prefill chunk; also the requeue budget when `output_chunking` is on |
 | `output_chunking` | `true` | long outputs are reserved in rounds and requeued, bounding per-job cache growth |
-| `vision` | `true` | available in this checkpoint and **off by default in TabbyAPI**. The weight index carries 987 vision tensors plus `vision_config`, `image_token_id` and the token ids, and hidden inside the main shards rather than a separate `vision_*.safetensors` — so their absence from a file listing is not evidence that vision is missing. Used in anger: a DSH session read back its own Chrome screenshots through this path on 2026-09-16 |
+| `vision` | `true` | available in this checkpoint and **off by default in TabbyAPI**. The weight index carries 987 vision tensors plus `vision_config`, `image_token_id` and the token ids, and hidden inside the main shards rather than a separate `vision_*.safetensors` — so their absence from a file listing is not evidence that vision is missing. Used in a live agent session: a DSH session read back its own Chrome screenshots through this path on 2026-09-16 |
 
 ## Reasoning and tools
 
 | setting | value | why |
 | --- | --- | --- |
 | `reasoning` | `true` | without it the model's thinking arrives inline in `content` and `reasoning_content` is null; harnesses render the two fields separately and the reasoning leaks into the visible answer |
-| `reasoning_budget_tokens` | 32768 | a bound on a spiral, not a quality knob. **Provenance corrected:** it did *not* come from the vLLM daily — vLLM has no server-side reasoning budget. The only 32768 in that stack is the mini-swe overlay's client-side `max_tokens`, a different mechanism (it ends the request instead of injecting an end-of-thinking tag). The 2026-09-16 DSH breakage was **not** this budget: the request produced ~17k reasoning tokens against a 32768 cap, so it never fired |
+| `reasoning_budget_tokens` | 32768 | a bound on runaway thinking, not a quality knob. A budget hit injects the end-of-thinking tokens; a client-side `max_tokens` cap is a different mechanism, because it ends the request instead. The 2026-09-16 DSH breakage was **not** this budget: the request produced ~17k reasoning tokens against a 32768 cap, so it never fired |
 | `tool_format` | `qwen3_coder` | without a tool format the model's calls are not parsed into `tool_calls`: they arrive as raw text in `content` and the response finishes `stop` instead of `tool_calls`. `qwen3_coder` matches this checkpoint's template byte for byte |
 
 No `reasoning_budget_message` is set. A budget hit therefore injects the end-of-thinking tokens with no instruction
-to wrap up; measured at a 150-token budget, the model still produces a clean, correct answer in `content`, so this
-is a nicety rather than a defect — but a cut becomes reachable as thinking lengthens.
+to wrap up. Measured at a 150-token budget, the model still produces a correct answer in `content`; a cut becomes
+reachable as thinking lengthens.
 
 ## Drafting (MTP)
 
@@ -44,7 +44,7 @@ is a nicety rather than a defect — but a cut becomes reachable as thinking len
 | `dynamic_draft` | `false` | measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4 |
 
 Drafts are sampled **greedily**; the target is not. Acceptance therefore tracks how predictable the continuation
-is, which is why decode rate is content-dependent (see `GOTCHAS.md` #7).
+is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 
 ## Launcher knobs (not config keys)
 
@@ -67,13 +67,12 @@ top_p:       {override: 0.95, force: false}
 
 **Why it exists:** TabbyAPI has no sampling fallbacks unless a preset is named, and it warns at boot that requests
 omitting samplers run "untruncated: temperature 1.0, top_k 0, top_p 1.0, min_p 0". DSH sends only `max_tokens`, so
-every DSH request was sampled at raw T=1.0 and the reasoning spiralled into multilingual word salad, emitting an
-end-of-thinking tag inside the debris and delivering the rest of the spiral as the visible answer (R338).
+every DSH request was sampled at raw T=1.0. The reasoning degenerated into multilingual text, emitted an
+end-of-thinking tag inside it, and the remainder was delivered as the visible answer (R338).
 
-**Why these values:** truncation is what stops the spiral (T=1.0 with top_p/top_k added was also coherent), and
-0.6/0.95/20 is the model's thinking-mode recommendation *and* the triple the 27B vLLM daily already applies via
-`--override-generation-config`. Keeping the two dailies on the same sampling is worth more than any small
-difference a fresh sweep might find.
+**Why these values:** truncation is what stops the runaway thinking (T=1.0 with top_p/top_k added was also
+coherent), and 0.6/0.95/20 is the model's thinking-mode recommendation. No sweep of these three values is recorded
+in this repository.
 
 **`force: false` matters:** the preset supplies fallbacks only, so a client that samples deliberately keeps its own
 values. Verified in the log: a greedy probe still reads `temperature: 0, greedy (req)`, while DSH's requests read
