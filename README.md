@@ -28,8 +28,8 @@ Every decode rate in this repository names its kind, code or prose, because the 
 
 | | ExLlamaV3, served now (2026-09-17) | ExLlamaV3, 2026-09-16 | vLLM, same checkpoint (2026-09-18) |
 | --- | --- | --- | --- |
-| decode c1, code | **207–214 t/s** | 207.0 | 131.6 (BF16 KV, MTP depth 3); 121.7 (depth 2); 117.0 (fp8 KV, MTP depth 1) |
-| decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 475.4 (BF16 KV, MTP depth 3); 421.4 (depth 2); 339.2 (fp8 KV, MTP depth 1) |
+| decode c1, code | **207–214 t/s** | 207.0 | 131.6 (BF16 KV, MTP depth 3); 121.7 (depth 2); 118.1 (fp8 KV, MTP depth 2) |
+| decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 475.4 (BF16 KV, MTP depth 3); 421.4 (depth 2); 406.0 (fp8 KV, MTP depth 2) |
 | decode c8 aggregate, code | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | not measured (the route serves 4 sequences until its next image) |
 | decode c1, prose | **163.9–171.6 t/s** ([r477][r477], 2026-09-18) | 160.6–165.3 aggregate ([r339][r339]) | not measured |
 | decode c4 aggregate, prose | **417.6–433.2 t/s** (104.9–108.8 per stream) | — | not measured |
@@ -38,7 +38,7 @@ Every decode rate in this repository names its kind, code or prose, because the 
 | prefill, 110,081-token prompt | **8,380–8,390 t/s** (13.12–13.14 s) | 4,920–4,940 t/s (22.29–22.36 s) | not measured |
 | TTFT, 152,761-token prompt, repeat | 0.43 s (prefix cache; cold 24 s = 6,365 t/s) | same | not measured |
 | long-context retrieval | 5/5 at every planted position, 26.5k / 105.7k / 158.5k prompt tokens | same | not measured |
-| pool | 262,144 tokens, 8-bit KV (327,680 and 393,216 do not boot) | same | 95,183 (BF16 KV, MTP depth 3); 108,651 (depth 2); 159,744 (fp8 KV, MTP depth 1); 309,657 (fp8 KV, no MTP) |
+| pool | 262,144 tokens, 8-bit KV (327,680 and 393,216 do not boot) | same | 95,183 (BF16 KV, MTP depth 3); 108,651 (depth 2); 131,072 (fp8 KV, MTP depth 2); 309,657 (fp8 KV, no MTP) |
 | boot to serving | 11.2–11.5 s load + 0.3 s warmup, warm caches | same | 390 s, warm caches (in-image preflight 100 s, weights 55 s, warmup 90 s) |
 | VRAM resident | 31.9 GB / 30.1 GB of 32.6 GB per card | same | both cards, TP2 |
 
@@ -69,7 +69,7 @@ Measured on this stack as served with [lm-eval][lm-eval], [tool-eval-bench][tool
 | gate | ExLlamaV3 (this stack), as served | vLLM, same checkpoint | results |
 | --- | --- | --- | --- |
 | GSM8K 5-shot ([lm-eval][lm-eval]), thinking on, n=1319 | **0.9158** (±0.0077) | — | [`2026-09-16-r368-gsm8k-1319`][r368] |
-| GSM8K, n=200, on the final image | 0.935 | 0.945 (BF16 KV, MTP depth 3); 0.92 (depth 2); 0.93 (full CUDA graphs, depth 2) | [`r461-gates-moecoopv2`][r461], [`2026-09-18-vllm-exl3-route`][vllm-route] |
+| GSM8K, n=200, on the final image | 0.935 | 0.945 (BF16 KV, MTP depth 3); 0.94 (fp8 KV, depth 2); 0.92 (BF16, depth 2) | [`r461-gates-moecoopv2`][r461], [`2026-09-18-vllm-exl3-route`][vllm-route] |
 | [tool-eval-bench][tool-eval] 69×4 | **85.8 ± 3.1** (baseline 85.0 ± 2.9) | — | [`2026-09-16-r357-tooleval`][r357] |
 | SWE-bench Verified, 49 matched instances, [mini-SWE-agent][mini-swe] bash-only, official scorer | **46 / 49** resolved | — | [`2026-09-16-r359-swebench`][r359] |
 | structured output ([llguidance][llguidance] `json_schema`, `response_format`, `regex_pattern`), thinking on and off, c4 | PASS | — | [`2026-09-17-r453-exl3-structured`][r453] |
