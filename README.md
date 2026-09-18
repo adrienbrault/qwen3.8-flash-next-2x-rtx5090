@@ -24,13 +24,15 @@ Verified as served, not asserted: the c1 and 30k-prompt greedy fingerprints are 
 
 ## The numbers
 
-Decode is `fn_bench` ([`bench/probe.py`][probe]) on code, 2,048 forced tokens per request, greedy, steady-state, aggregate over the streams. The vLLM 27B column is the head-to-head of 2026-09-16 on the same instrument and prompts ([`2026-09-16-r342-headtohead`][r342]); that incumbent has not been re-measured since.
+Every decode rate in this repository names its kind, code or prose, because the two are not interchangeable on this checkpoint: draft acceptance tracks how predictable the text is, and on 2026-09-16 code decoded at 208 t/s against 161–165 t/s for prose at c1 ([r339 gates][r339]). Unless a row says prose, a decode rate here is **code**: `fn_bench` ([`bench/probe.py`][probe]) with `--kind code`, 2,048 forced tokens per request, greedy, steady-state, aggregate over the streams. The vLLM 27B column is the head-to-head of 2026-09-16 on the same instrument and prompts ([`2026-09-16-r342-headtohead`][r342]); that incumbent has not been re-measured since.
 
 | | Flash-Next, served now (2026-09-17) | Flash-Next, 2026-09-16 | vLLM 27B daily, 2026-09-16 |
 | --- | --- | --- | --- |
-| decode c1 | **207–214 t/s** | 207.0 | 253.9 |
-| decode c4, aggregate | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 868.3 |
-| decode c8, aggregate | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | 1,574.5 |
+| decode c1, code | **207–214 t/s** | 207.0 | 253.9 |
+| decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 868.3 |
+| decode c8 aggregate, code | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | 1,574.5 |
+| decode c1, prose | not yet measured on this configuration (queued 2026-09-18, `r477-daily-prose-code`) | 160.6–165.3 ([r339][r339]), 163.1 ([r342][r342]) | 285.3 |
+| decode c4 aggregate, prose | not yet measured on this configuration (same run) | — | 779.7 (238.5 per stream) |
 | prefill, 30k-token prompt | **3.5 s** | 5.5 s | — |
 | prefill, 120k-token prompt | **13.1 s** | 22.3 s | — |
 | TTFT, 152,761-token prompt, repeat | 0.43 s (prefix cache; 24 s cold) | same | — |
@@ -41,13 +43,13 @@ Decode is `fn_bench` ([`bench/probe.py`][probe]) on code, 2,048 forced tokens pe
 
 Sources: the served-now column is the promotion ladder in [`docs/MEASUREMENTS.md`][measurements] ([`2026-09-17-r428-hcmix2-stack-ab`][r428], [`2026-09-17-r442-ppipe-memfix-ab`][r442], [`2026-09-17-r460-moecoop-v2-ab`][r460]); the pool ceiling is [`2026-09-17-r452-exl3-cache-bits`][r452]; retrieval and prefix-cache TTFT are [`2026-09-16-r339-gates`][r339-gates] and [`2026-09-16-r343-depth`][r343]; boot and footprint are from the launcher log.
 
-What changed in a day: single-stream is flat (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill fell by a third. Against the incumbent on the same instrument the gap went from 3.5× to about 2× at c4 and from 5× to about 2.7× at c8. Decode rate on this checkpoint is content-dependent by about 2× (code against prose: draft acceptance tracks predictability), so a rate without its kind is not comparable to another one.
+What changed in a day: single-stream is flat (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill fell by a third. Against the incumbent on the same instrument the gap went from 3.5× to about 2× at c4 and from 5× to about 2.7× at c8. Decode rate on this checkpoint depends on what is being generated (code decoded 1.3× faster than prose at c1 on 2026-09-16, [r339][r339]; draft acceptance tracks predictability), so a rate without its kind is not comparable to another one.
 
 ## How it got here: the promotion ladder
 
 Every layer is one patch on the previous image, each admitted by its own gate, most of them with byte-identical greedy output at c1 and on a 30k prompt. The patches are in [`docker/`][docker-readme]; provenance and licences in [`THIRD_PARTY.md`][third-party].
 
-| promoted (CEST) | layer | what it does | gate | c1 / c4 / c8 | results |
+| promoted (CEST) | layer | what it does | gate | c1 / c4 / c8, code | results |
 | --- | --- | --- | --- | --- | --- |
 | 2026-09-16 | QSA multi-job + concurrency-indexed draft depth | multi-job sparse attention above the QSA threshold; draft depth by batch size | byte-identical; +27 %/+40 % at deep-context c2/c4, +35 % at c4 | 207 / 250 / 313 | [`r341-qsa`][r341], [`r340-ci-depth`][r340], [`r354-combined`][r354] |
 | 2026-09-16 | [exllamav3#337][pr337] (creslinux) | keeps the current CUDA device on the module's device during a layer-split forward | byte-identical, flat except at 152k prompts (207.5 vs 181.7) | — | [`r362-pr337`][r362] |
@@ -57,7 +59,7 @@ Every layer is one patch on the previous image, each admitted by its own gate, m
 | 07:35 | [`prefill-pipeline.patch`][ppipe] + [`prefill-nosync`][nosync] + [`prefill-pipeline-mtp`][mtpfix] overlays | two-card prefill pipeline for the layer split, without blocking host syncs, with the MTP eligibility and free-VRAM guard fixes | c1 and 30k fingerprints identical | 213 / 430 / 540; prefill 30k 5.5 → 3.5 s | [`r442-ppipe-memfix-ab`][r442], gates [`r446-gates-ppipe`][r446] |
 | 12:45 | [`moe-coop-v2`][moecoop] overlay | bit-exact V2 of the fused MoE decode kernel: bounded work loops, batched completions | bit-exact at R = 1..16 in the kernel test, fingerprints identical, five gates | 207–214 / 425–450 / 550–604 | [`r460-moecoop-v2-ab`][r460], [`r461-gates-moecoopv2`][r461] |
 
-Measured and not promoted: MoE coop mode 3 (bit-identical, 2–3 % slower, [`r462-moecoop-v3-ab`][r462]); [exllamav3#303][pr303] MTP hot vocabulary (inapplicable on a two-card layer split by construction, [`r377-hotvocab-on`][r377]); [exllamav3#246][pr246] (changes numerics for a prefill gain within noise) and [exllamav3#290][pr290] (output-neutral, no gain), both in [`r365-kernels`][r365]; the host KV tier (flat, [`r358-hostkv`][r358]); our own 32-row MoE decode envelope (correct, no effect, [`r366-ourkernel`][r366]); dynamic draft (184 vs 191 t/s at c1). Each verdict is in [`docs/MEASUREMENTS.md`][measurements] with its arms.
+Measured and not promoted: MoE coop mode 3 (bit-identical, 2–3 % slower, [`r462-moecoop-v3-ab`][r462]); [exllamav3#303][pr303] MTP hot vocabulary (inapplicable on a two-card layer split by construction, [`r377-hotvocab-on`][r377]); [exllamav3#246][pr246] (changes numerics for a prefill gain within noise) and [exllamav3#290][pr290] (output-neutral, no gain), both in [`r365-kernels`][r365]; the host KV tier (flat, [`r358-hostkv`][r358]); our own 32-row MoE decode envelope (correct, no effect, [`r366-ourkernel`][r366]); dynamic draft (184 vs 191 t/s at c1, code). Each verdict is in [`docs/MEASUREMENTS.md`][measurements] with its arms.
 
 ## Quality
 
@@ -75,7 +77,7 @@ Measured against the vLLM 27B daily on the daily's own instruments. The two serv
 
 The SWE-bench tally is descriptive, not inferential: the subsets were selected on the daily's outcomes (one repository, the daily's failures, stratified by its outcome), so no p-value applies and 46/49 must not be read against the daily's published 387/500. The 19 instances that ran both before and after the enablement scored identically, which is the control for the promotion. Full account in [`docs/MEASUREMENTS.md`][measurements]; the daily-worthiness verdict, gate by gate, in [`docs/PROMOTION.md`][promotion].
 
-The [2.05 bpw checkpoint][ckpt] from the same converter decodes at about the 3.05's speed and loses 17 GSM8K points on this box (0.765 against 0.935, n=200; `2026-09-16-r395-baseline-205`, `2026-09-16-r396-gsm8k-305-control`). It is not served.
+The [2.05 bpw checkpoint][ckpt] from the same converter decodes at about the 3.05's speed (code, c1: 187.4 t/s) and loses 17 GSM8K points on this box (0.765 against 0.935, n=200; `2026-09-16-r395-baseline-205`, `2026-09-16-r396-gsm8k-305-control`). It is not served.
 
 ## The ceiling, and what has been tried against it
 
@@ -83,8 +85,8 @@ The [2.05 bpw checkpoint][ckpt] from the same converter decodes at about the 3.0
 
 - **Expert parallelism** was built and served on the 2.05 bpw checkpoint, all four prerequisites patched (QSA indexer transport, PLE module transport, MTP adapters, replica/output policy). It recovers nothing: −9.5 % at c1, −4.5 % at c4, +2.5 % at c8 against the layer split at the same settings (`2026-09-16-r408-ep-served`); deterministic and at GSM8K parity, but not bit-identical to the layer split (`2026-09-16-r410-ep-correctness`). Parked.
 - **Upstream topology PRs**: [exllamav3#299][pr299] (per-layer split or fused-uniform QKV topology) does not distribute decode across the cards and needs a fresh conversion from BF16 weights; [exllamav3#284][pr284] (fused additive kernels) has no production caller. Both closed with reasons in [`docs/PROMOTION.md`][promotion].
-- **The remaining lever on the served engine is host/device overlap.** A `torch.profiler` capture of the served stack puts the launch gap between decode steps at 2.5 ms of a 10 ms c1 step, of which 1.6 ms is untraced host work and 0.7 ms an explicit 8-byte device-to-host sync. The next kernel decision is made on that trace, not on dispatch-logic arithmetic.
-- **A second route** loads the same EXL3 checkpoint into vLLM through [vcruz305/vllm-exl3][vllm-exl3] with TP2 and CUDA graphs; fp8 KV gives it a 309,657-token pool on the 3.05 and MTP works, but its c1 decode is half of this stack's. It is not served and its patch series is not in this repository.
+- **The remaining lever on the served engine is host/device overlap.** A `torch.profiler` capture of the served stack puts the launch gap between decode steps at 2.5 ms of a 10 ms c1 step (the harness's own fixed prompt, not the code or prose probe), of which 1.6 ms is untraced host work and 0.7 ms an explicit 8-byte device-to-host sync. The next kernel decision is made on that trace, not on dispatch-logic arithmetic.
+- **A second route** loads the same EXL3 checkpoint into vLLM through [vcruz305/vllm-exl3][vllm-exl3] with TP2 and CUDA graphs; fp8 KV gives it a 309,657-token pool on the 3.05 and MTP works; on vLLM main (2026-09-18) its code decode is 121.7 t/s at c1 and 421.4 aggregate at c4 against this stack's 207–214 and 425–450, so c4 is at parity and c1 is 57 %. It is not served and its patch series is not in this repository.
 
 ## Two defects this stack had, and what they cost
 
@@ -178,6 +180,7 @@ The original work here (documentation, instruments, launcher, overlay installers
 [r339-gates]: bench/results/2026-09-16-r339-longgen.jsonl
 [r340]: bench/results/2026-09-16-r340-ci-depth
 [r341]: bench/results/2026-09-16-r341-qsa
+[r339]: docs/MEASUREMENTS.md#decode-at-the-requeue-boundary--2048-forced-tokens-results-2026-09-16-r339-gates
 [r342]: bench/results/2026-09-16-r342-headtohead
 [r343]: docs/MEASUREMENTS.md
 [r347]: bench/results/2026-09-16-r347-soak
