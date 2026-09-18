@@ -52,7 +52,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-262144}
+CACHE=${CACHE:-360448}
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -92,6 +92,12 @@ DRAFT=${DRAFT:-3}
 # ladder OFF 207-216 / 403-434 / 526-557 vs ON 207-214 / 425-450 / 550-604 (c4 +4 %, c8 +8 %), GSM8K c8 n=200 0.935 (= served config).
 # ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2
 # EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1' (= flan/launch-flashnext-r442-ppipe.sh).
+# PROMOTED 2026-09-18 (R480/R481): 4 slots
+# (MAXBS 4) and a 360,448-token pool at 8,8 (+37.5 %; 393,216 does not boot). Four slots free ~1.7 GiB of fp32 GDN recurrent
+# state. R480 paired against the previous served config (8 slots, 262,144): c1 greedy and 30k greedy byte-identical (1474eee2f5945248 / 4a255910dee2d9c5),
+# code c1/c4 214-217 / 429-444 vs 214-217 / 435-442, prose 167-172 / 422-436 vs 168-172 / 428-436, cold prefill 22.6k 3.12 s
+# vs 3.06 s and 90.1k 8.19 vs 8.13 s, needle 5/5 at 131k and 240k, GSM8K n=200 c4 0.925 = 0.925. c5..c8 now queue.
+# ROLLBACK: MAXBS=8 CACHE=262144 (the 2026-09-17 R460 configuration).
 IMG=${IMG:-tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -129,10 +135,19 @@ fi
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
 SYS_KV=${SYS_KV:-0}
+# R480 (2026-09-18): three knobs whose defaults are the R460 served values, so an unset environment boots the R460 configuration byte for byte.
+#   CACHE_MODE   exllamav3 K,V bits ("8,8" served; "8,4" = K8V4). TabbyAPI accepts ^[2-8],[2-8]$ (backends/exllamav3/model.py:619).
+#   MOE_OFFLOAD  routed experts of the FIRST N MoE layers run on the CPU (exllamav3 moe_cpu_offload; frees VRAM on cuda:0).
+#   GPU_SPLIT    the manual split in GB, a YAML list body ("30, 30" served).
+CACHE_MODE=${CACHE_MODE:-8,8}
+MOE_OFFLOAD=${MOE_OFFLOAD:-0}
+GPU_SPLIT=${GPU_SPLIT:-30, 30}
+case "$CACHE_MODE" in [2-8],[2-8]) ;; *) echo "ABORT: CACHE_MODE must be K,V bits 2-8 (got $CACHE_MODE)"; exit 3;; esac
+case "$MOE_OFFLOAD" in [0-9]|[0-9][0-9]) ;; *) echo "ABORT: MOE_OFFLOAD must be a layer count (got $MOE_OFFLOAD)"; exit 3;; esac
 # DECODE SLOTS (R367). TabbyAPI derives 4 for a recurrent model and 128 otherwise; 8 is what has been served. More
 # slots means more concurrent jobs inside the fast decode path, at the cost of recurrent-state VRAM. This is the last
 # untested *config* lever on the box's weakest axis (aggregate throughput at c4/c8).
-MAXBS=${MAXBS:-8}
+MAXBS=${MAXBS:-4}
 # MTP HOT VOCABULARY (upstream PR #303, ported to this checkpoint's qwen4_exp_mtp). Empty means the feature is off,
 # which is also the control arm: the patched engine's disabled path must be byte-identical to the unpatched one.
 # Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.
@@ -197,7 +212,7 @@ model:
   backend: exllamav3
   max_seq_len: $MAXLEN
   cache_size: $CACHE
-  cache_mode: 8,8
+  cache_mode: $CACHE_MODE
   # 8 slots. exllamav3 clamps the generator's max_batch_size to cache.num_slots, and TABBY DERIVES 4 FOR A
   # RECURRENT MODEL (128 otherwise). This checkpoint carries GDN recurrent state, so it takes the 4 path and a
   # c8 test would silently measure c4 without this line. (backends/exllamav3/model.py:400)
@@ -207,9 +222,9 @@ model:
   # Layer split is the only mode, and it SERIALIZES the two cards: measured alternating 100%/0% utilisation,
   # so only one GPU computes at a time. That is the ceiling on aggregate throughput here.
   tensor_parallel: false
-  gpu_split: [30, 30]        # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type
+  gpu_split: [$GPU_SPLIT]        # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type
   gpu_split_auto: false      # explicit rather than autosplit: TabbyAPI #405 applies autosplit_reserve to device 0 only
-  cpu_moe_offload_layers: 0  # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)
+  cpu_moe_offload_layers: $MOE_OFFLOAD  # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)
   cpu_moe_split_experts: 0   # set explicitly: a stale nonzero elsewhere would silently change the baseline
   chunk_size: 2048
   output_chunking: true
@@ -290,7 +305,7 @@ if sudo docker ps --format '{{.Names}}' | grep -qx vllm-27b; then
 fi
 sudo docker rm -f "$NAME" >/dev/null 2>&1
 for i in $(seq 24); do busy=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | awk '$1>1024{c++} END{print c+0}'); [ "$busy" = 0 ] && break; sleep 5; done
-log "starting on 0.0.0.0:$PORT, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
+log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
 # Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
 # the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
 HV=()

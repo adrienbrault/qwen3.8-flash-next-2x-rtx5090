@@ -1,0 +1,90 @@
+2026-09-18T09:25:04+00:00 [r480] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw; VRAM free 947/2511/
+2026-09-18T09:25:04+00:00 [r480] === measure ctl:  cache_size: 262144  cache_mode: 8,8  max_batch_size: 8  cpu_moe_offload_layers: 0 # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)  vision: true  VRAM free 947/2511/ ===
+ctl c1 greedy sha 1474eee2f5945248 (8,8 canonical 1474eee2f5945248)
+ctl 30k greedy sha 4a255910dee2d9c5 (8,8 canonical 4a255910dee2d9c5)
+[ctl code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.2, "per_stream_wall_tps": 214.2, "decode_tps": 217.5, "ttft_s": 0.147}
+[ctl code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 217.2, "per_stream_wall_tps": 217.2, "decode_tps": 220.4, "ttft_s": 0.143}
+[ctl code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 435.0, "per_stream_wall_tps": 114.9, "decode_tps": 117.9, "ttft_s": 0.469}
+[ctl code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 442.0, "per_stream_wall_tps": 116.6, "decode_tps": 119.6, "ttft_s": 0.46}
+[ctl prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 168.4, "per_stream_wall_tps": 168.4, "decode_tps": 170.8, "ttft_s": 0.175}
+[ctl prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.3, "per_stream_wall_tps": 172.3, "decode_tps": 174.2, "ttft_s": 0.137}
+[ctl prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 428.4, "per_stream_wall_tps": 107.6, "decode_tps": 110.1, "ttft_s": 0.437}
+[ctl prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 435.6, "per_stream_wall_tps": 109.4, "decode_tps": 111.9, "ttft_s": 0.433}
+[ctl prefill] ctx 30000: 22,625 prompt tokens, TTFT median 0.19 s (n=3) = 120,989 tok/s
+[ctl prefill] ctx 120000: 90,135 prompt tokens, TTFT median 0.25 s (n=3) = 354,862 tok/s
+[ctl needle]  ctl-needle ctx~131072: 5/5 retrieved
+[ctl needle]  ctl-needle ctx~240000: 5/5 retrieved
+[ctl] GSM8K n=200 c4: flexible 0.925 (SE 0.0187) strict 0.925   [daily c8 0.935]
+2026-09-18T09:33:15+00:00 [r480] boot s4: slots 4 cache 393216 mode 8,8 moe_offload 0
+2026-09-18T09:35:04+00:00 [r480] NO BOOT s4 @ 393216 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T09:35:04+00:00 [r480] boot s4: slots 4 cache 360448 mode 8,8 moe_offload 0
+2026-09-18T09:35:20+00:00 [r480] UP s4 @ 360448: VRAM free MiB 895/2581/
+2026-09-18T09:35:20+00:00 [r480] s4 (4 slots, 8,8): largest pool that serves = 360448
+2026-09-18T09:35:20+00:00 [r480] === measure s4:  cache_size: 360448  cache_mode: 8,8  max_batch_size: 4  cpu_moe_offload_layers: 0 # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)  vision: true  VRAM free 895/2581/ ===
+s4 c1 greedy sha 1474eee2f5945248 (8,8 canonical 1474eee2f5945248)
+s4 30k greedy sha 4a255910dee2d9c5 (8,8 canonical 4a255910dee2d9c5)
+[s4 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.5, "per_stream_wall_tps": 213.5, "decode_tps": 216.7, "ttft_s": 0.146}
+[s4 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.6, "per_stream_wall_tps": 216.6, "decode_tps": 219.9, "ttft_s": 0.145}
+[s4 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 428.8, "per_stream_wall_tps": 113.3, "decode_tps": 116.2, "ttft_s": 0.47}
+[s4 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 443.8, "per_stream_wall_tps": 117.2, "decode_tps": 120.2, "ttft_s": 0.467}
+[s4 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 167.0, "per_stream_wall_tps": 167.0, "decode_tps": 169.3, "ttft_s": 0.174}
+[s4 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.1, "per_stream_wall_tps": 172.1, "decode_tps": 174.1, "ttft_s": 0.139}
+[s4 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 421.6, "per_stream_wall_tps": 105.9, "decode_tps": 108.3, "ttft_s": 0.436}
+[s4 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 436.1, "per_stream_wall_tps": 109.6, "decode_tps": 112.1, "ttft_s": 0.435}
+[s4 prefill] ctx 30000: 22,625 prompt tokens, TTFT median 0.19 s (n=3) = 119,709 tok/s
+[s4 prefill] ctx 120000: 90,135 prompt tokens, TTFT median 0.25 s (n=3) = 359,104 tok/s
+[s4 needle]  s4-needle ctx~131072: 5/5 retrieved
+[s4 needle]  s4-needle ctx~240000: 5/5 retrieved
+[s4] GSM8K n=200 c4: flexible 0.925 (SE 0.0187) strict 0.925   [daily c8 0.935]
+2026-09-18T09:43:36+00:00 [r480] boot s4k84: slots 4 cache 524288 mode 8,4 moe_offload 0
+2026-09-18T09:44:11+00:00 [r480] NO BOOT s4k84 @ 524288 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T09:44:11+00:00 [r480] boot s4k84: slots 4 cache 491520 mode 8,4 moe_offload 0
+2026-09-18T09:44:27+00:00 [r480] NO BOOT s4k84 @ 491520 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T09:44:27+00:00 [r480] boot s4k84: slots 4 cache 458752 mode 8,4 moe_offload 0
+2026-09-18T09:45:26+00:00 [r480] NO BOOT s4k84 @ 458752 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T09:45:26+00:00 [r480] boot s4k84: slots 4 cache 425984 mode 8,4 moe_offload 0
+2026-09-18T09:45:43+00:00 [r480] UP s4k84 @ 425984: VRAM free MiB 893/2681/
+2026-09-18T09:45:43+00:00 [r480] s4k84 (4 slots, 8,4): largest pool that serves = 425984
+2026-09-18T09:45:43+00:00 [r480] === measure s4k84:  cache_size: 425984  cache_mode: 8,4  max_batch_size: 4  cpu_moe_offload_layers: 0 # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)  vision: true  VRAM free 893/2681/ ===
+s4k84 c1 greedy sha bbfff08e0a89b8e0 (8,8 canonical 1474eee2f5945248)
+s4k84 30k greedy sha 4a255910dee2d9c5 (8,8 canonical 4a255910dee2d9c5)
+[s4k84 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 188.4, "per_stream_wall_tps": 188.4, "decode_tps": 190.9, "ttft_s": 0.148}
+[s4k84 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 194.0, "per_stream_wall_tps": 194.0, "decode_tps": 196.6, "ttft_s": 0.146}
+[s4k84 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 446.9, "per_stream_wall_tps": 111.7, "decode_tps": 114.9, "ttft_s": 0.512}
+[s4k84 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 461.7, "per_stream_wall_tps": 115.4, "decode_tps": 118.5, "ttft_s": 0.465}
+[s4k84 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 158.8, "per_stream_wall_tps": 158.8, "decode_tps": 160.9, "ttft_s": 0.177}
+[s4k84 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 164.8, "per_stream_wall_tps": 164.8, "decode_tps": 166.5, "ttft_s": 0.138}
+[s4k84 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 408.9, "per_stream_wall_tps": 102.4, "decode_tps": 104.7, "ttft_s": 0.438}
+[s4k84 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 422.3, "per_stream_wall_tps": 105.8, "decode_tps": 108.3, "ttft_s": 0.438}
+[s4k84 prefill] ctx 30000: 22,625 prompt tokens, TTFT median 0.19 s (n=3) = 120,346 tok/s
+[s4k84 prefill] ctx 120000: 90,135 prompt tokens, TTFT median 0.25 s (n=3) = 360,540 tok/s
+[s4k84 needle]  s4k84-needle ctx~131072: 5/5 retrieved
+[s4k84 needle]  s4k84-needle ctx~240000: 5/5 retrieved
+[s4k84] GSM8K n=200 c4: flexible 0.920 (SE 0.0192) strict 0.920   [daily c8 0.935]
+2026-09-18T09:53:56+00:00 [r480] boot s4off1: slots 4 cache 491520 mode 8,8 moe_offload 1
+2026-09-18T09:55:05+00:00 [r480] NO BOOT s4off1 @ 491520 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T09:55:05+00:00 [r480] boot s4off1: slots 4 cache 425984 mode 8,8 moe_offload 1
+2026-09-18T09:55:26+00:00 [r480] UP s4off1 @ 425984: VRAM free MiB 975/2061/
+2026-09-18T09:55:26+00:00 [r480] s4off1 (4 slots, 8,8, first MoE layer's experts on CPU): largest pool that serves = 425984
+2026-09-18T09:55:26+00:00 [r480] === measure s4off1:  cache_size: 425984  cache_mode: 8,8  max_batch_size: 4  cpu_moe_offload_layers: 1 # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)  vision: true  VRAM free 975/2061/ ===
+s4off1 c1 greedy sha 1ba2649945ddda29 (8,8 canonical 1474eee2f5945248)
+s4off1 30k greedy sha 4a255910dee2d9c5 (8,8 canonical 4a255910dee2d9c5)
+[s4off1 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 166.1, "per_stream_wall_tps": 166.1, "decode_tps": 168.5, "ttft_s": 0.181}
+[s4off1 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 156.9, "per_stream_wall_tps": 156.9, "decode_tps": 158.9, "ttft_s": 0.171}
+[s4off1 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 350.7, "per_stream_wall_tps": 89.9, "decode_tps": 92.1, "ttft_s": 0.562}
+[s4off1 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 341.2, "per_stream_wall_tps": 92.1, "decode_tps": 94.5, "ttft_s": 0.552}
+[s4off1 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 147.7, "per_stream_wall_tps": 147.7, "decode_tps": 149.4, "ttft_s": 0.158}
+[s4off1 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 149.4, "per_stream_wall_tps": 149.4, "decode_tps": 151.1, "ttft_s": 0.161}
+[s4off1 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 322.8, "per_stream_wall_tps": 84.9, "decode_tps": 86.8, "ttft_s": 0.529}
+[s4off1 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 325.1, "per_stream_wall_tps": 81.8, "decode_tps": 83.6, "ttft_s": 0.525}
+[s4off1 prefill] ctx 30000: 22,625 prompt tokens, TTFT median 0.22 s (n=3) = 103,784 tok/s
+[s4off1 prefill] ctx 120000: 90,135 prompt tokens, TTFT median 0.27 s (n=3) = 330,165 tok/s
+[s4off1 needle]  s4off1-needle ctx~131072: 5/5 retrieved
+[s4off1 needle]  s4off1-needle ctx~240000: 5/5 retrieved
+[s4off1] GSM8K n=200 c4: flexible 0.935 (SE 0.0175) strict 0.935   [daily c8 0.935]
+2026-09-18T10:06:16+00:00 [r480] restoring the daily (unchanged R460 launcher)
+2026-09-18T10:06:17+00:00 [flashnext] starting on 0.0.0.0:8022, draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T10:06:33+00:00 [flashnext] UP on 8022 | warmup 0.320507s | VRAM free MiB 947/2511/
+2026-09-18T10:06:33+00:00 [flashnext] OpenAI-compatible base URL: http://flan:8022/v1
+2026-09-18T10:06:33+00:00 [r480] daily: qwen3.8-flash-next-exl3-3.05bpw, config:  cache_size: 262144  cache_mode: 8,8  max_batch_size: 8  cpu_moe_offload_layers: 0 # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md) 
+2026-09-18T10:06:33+00:00 [r480] === R480 DONE ===
