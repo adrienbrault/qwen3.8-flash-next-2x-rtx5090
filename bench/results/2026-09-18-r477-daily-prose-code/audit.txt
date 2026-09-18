@@ -1,0 +1,37 @@
+2026-09-18T00:22:15+00:00 [r477] queued behind: 2026-09-18-r475-fp8-mtp-305(pid 2588937)
+2026-09-18-r476-mtp-depths-r25(pid 2822944)
+2026-09-18T01:09:08+00:00 [r477] lock held
+2026-09-18T01:09:08+00:00 [r477] server: qwen3.8-flash-next-exl3-3.05bpw on image tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2
+0, 31204 MiB, 0 %, 85.08 W
+1, 29640 MiB, 0 %, 57.04 W
+2026-09-18T01:09:08+00:00 [r477] === code, 2,048 forced tokens, c1 c4 c8, 2 runs ===
+tag=daily-code-2048 url=http://127.0.0.1:8022/v1 conc=[1, 4, 8] forced_tokens=2048 ctx~[0] kind=code endpoint=chat runs=2
+  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 209.8, "per_stream_wall_tps": 209.8, "decode_tps": 213.2, "ttft_s": 0.162}
+  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 215.0, "per_stream_wall_tps": 215.1, "decode_tps": 218.2, "ttft_s": 0.143}
+  warmup c=1 ctx~0: 1/1 ok
+  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 422.7, "per_stream_wall_tps": 111.6, "decode_tps": 114.4, "ttft_s": 0.475}
+  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 442.1, "per_stream_wall_tps": 116.7, "decode_tps": 119.7, "ttft_s": 0.46}
+  warmup c=4 ctx~0: 4/4 ok
+  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 540.6, "per_stream_wall_tps": 68.7, "decode_tps": 70.2, "ttft_s": 0.833}
+  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 573.4, "per_stream_wall_tps": 72.9, "decode_tps": 74.4, "ttft_s": 0.736}
+  warmup c=8 ctx~0: 8/8 ok
+2026-09-18T01:11:06+00:00 [r477] === prose, 2,048 forced tokens, c1 c4 c8, 2 runs ===
+tag=daily-prose-2048 url=http://127.0.0.1:8022/v1 conc=[1, 4, 8] forced_tokens=2048 ctx~[0] kind=prose endpoint=chat runs=2
+  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 163.9, "per_stream_wall_tps": 163.9, "decode_tps": 165.8, "ttft_s": 0.145}
+  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 171.6, "per_stream_wall_tps": 171.6, "decode_tps": 173.6, "ttft_s": 0.138}
+  warmup c=1 ctx~0: 1/1 ok
+  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 417.6, "per_stream_wall_tps": 104.9, "decode_tps": 107.2, "ttft_s": 0.433}
+  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 433.2, "per_stream_wall_tps": 108.8, "decode_tps": 111.3, "ttft_s": 0.436}
+  warmup c=4 ctx~0: 4/4 ok
+  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 539.0, "per_stream_wall_tps": 67.7, "decode_tps": 69.3, "ttft_s": 0.707}
+  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 558.4, "per_stream_wall_tps": 70.1, "decode_tps": 71.8, "ttft_s": 0.71}
+  warmup c=8 ctx~0: 8/8 ok
+2026-09-18T01:13:10+00:00 [r477] === code again (drift bracket), c1 c4, 1 run ===
+tag=daily-code-2048-tail url=http://127.0.0.1:8022/v1 conc=[1, 4] forced_tokens=2048 ctx~[0] kind=code endpoint=chat runs=1
+  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 215.7, "per_stream_wall_tps": 215.7, "decode_tps": 218.9, "ttft_s": 0.144}
+  warmup c=1 ctx~0: 1/1 ok
+  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 441.7, "per_stream_wall_tps": 116.7, "decode_tps": 119.7, "ttft_s": 0.467}
+  warmup c=4 ctx~0: 4/4 ok
+0, 31310 MiB, 46 %, 218.75 W
+1, 29742 MiB, 43 %, 213.55 W
+2026-09-18T01:13:38+00:00 [r477] === R477 DONE ===

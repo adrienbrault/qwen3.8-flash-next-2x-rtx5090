@@ -31,8 +31,9 @@ Every decode rate in this repository names its kind, code or prose, because the 
 | decode c1, code | **207–214 t/s** | 207.0 | 131.6 (BF16 KV, MTP depth 3); 121.7 (depth 2); 117.0 (fp8 KV, MTP depth 1) |
 | decode c4 aggregate, code | **425–450 t/s** (106–113 per stream) | 250.2 (63.8) | 475.4 (BF16 KV, MTP depth 3); 421.4 (depth 2); 339.2 (fp8 KV, MTP depth 1) |
 | decode c8 aggregate, code | **550–604 t/s** (69–76 per stream) | 313.2 (40.5) | not measured (the route serves 4 sequences until its next image) |
-| decode c1, prose | not yet measured on this configuration (queued 2026-09-18, `r477-daily-prose-code`) | 160.6–165.3 aggregate ([r339][r339]) | not measured |
-| decode c4 aggregate, prose | not yet measured on this configuration (same run) | — | not measured |
+| decode c1, prose | **163.9–171.6 t/s** ([r477][r477], 2026-09-18) | 160.6–165.3 aggregate ([r339][r339]) | not measured |
+| decode c4 aggregate, prose | **417.6–433.2 t/s** (104.9–108.8 per stream) | — | not measured |
+| decode c8 aggregate, prose | **539.0–558.4 t/s** (67.7–70.1 per stream) | — | not measured |
 | prefill, 27,501-token prompt | **7,700–7,820 t/s** (3.52–3.57 s) | 4,880–4,990 t/s (5.51–5.64 s) | not measured |
 | prefill, 110,081-token prompt | **8,380–8,390 t/s** (13.12–13.14 s) | 4,920–4,940 t/s (22.29–22.36 s) | not measured |
 | TTFT, 152,761-token prompt, repeat | 0.43 s (prefix cache; cold 24 s = 6,365 t/s) | same | not measured |
@@ -43,7 +44,7 @@ Every decode rate in this repository names its kind, code or prose, because the 
 
 Sources: the served-now column is the promotion ladder in [`docs/MEASUREMENTS.md`][measurements] ([`2026-09-17-r428-hcmix2-stack-ab`][r428], [`2026-09-17-r442-ppipe-memfix-ab`][r442], [`2026-09-17-r460-moecoop-v2-ab`][r460]); the pool ceiling is [`2026-09-17-r452-exl3-cache-bits`][r452]; retrieval and prefix-cache TTFT are [`2026-09-16-r339-gates`][r339-gates] and [`2026-09-16-r343-depth`][r343]; the prefill token counts are the probe's fixed prompts tokenized with the checkpoint's tokenizer (23,000 and 92,000 words); boot and footprint are from the launcher log; the vLLM column is [`2026-09-18-vllm-exl3-route`][vllm-route].
 
-Between 2026-09-16 and 2026-09-17 the c1 rate did not move (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill rose 1.6–1.7×. Against vLLM on the same checkpoint, the vLLM route's best profile reads 1.06–1.12× this stack's c4 aggregate and 0.62–0.64× its c1; the route's pool with fp8 KV is 1.2× this stack's. Decode rate on this checkpoint depends on what is being generated (code decoded 1.3× faster than prose at c1 on 2026-09-16, [r339][r339]; draft acceptance tracks predictability), so a rate without its kind is not comparable to another one.
+Between 2026-09-16 and 2026-09-17 the c1 rate did not move (the c1 step is bounded by the layer split and the host launch gap, see below), c4 aggregate rose 1.7×, c8 rose 1.8×, and prefill rose 1.6–1.7×. Against vLLM on the same checkpoint, the vLLM route's best profile reads 1.06–1.12× this stack's c4 aggregate and 0.62–0.64× its c1; the route's pool with fp8 KV is 1.2× this stack's. Decode rate on this checkpoint depends on what is being generated at c1 (code 209.8–215.7 against prose 163.9–171.6 on 2026-09-18, [r477][r477]; draft acceptance tracks predictability) and converges under concurrency (c4 422.7–442.1 against 417.6–433.2, c8 540.6–573.4 against 539.0–558.4, same run, where the draft depth drops to 1), so a rate without its kind and concurrency is not comparable to another one.
 
 ## How it got here: the promotion ladder
 
@@ -184,6 +185,7 @@ The original work here (documentation, instruments, launcher, overlay installers
 [r341]: bench/results/2026-09-16-r341-qsa
 [r339]: docs/MEASUREMENTS.md#decode-at-the-requeue-boundary--2048-forced-tokens-results-2026-09-16-r339-gates
 [vllm-route]: bench/results/2026-09-18-vllm-exl3-route
+[r477]: bench/results/2026-09-18-r477-daily-prose-code
 [r343]: docs/MEASUREMENTS.md
 [r347]: bench/results/2026-09-16-r347-soak
 [r348]: bench/results/2026-09-16-r348-capabilities
