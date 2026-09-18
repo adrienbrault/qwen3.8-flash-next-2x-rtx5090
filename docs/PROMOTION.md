@@ -42,7 +42,7 @@ of the engine rather than of the configuration.
 **Against vLLM on the same checkpoint.** The vllm-exl3 route serves the same Flash-Next checkpoint through vLLM
 main, TP2 on both cards. On 2026-09-18 its best profile (BF16 KV, MTP depth 3) read 131.6 t/s at c1 and 475.4 t/s aggregate at c4 on code,
 against this stack's 207–214 and 425–450: 1.06–1.12× this stack at c4, 62–64 % of this stack's rate at c1. GSM8K on that route is
-0.92 at n=200 against this stack's 0.9158 at n=1319. c8, prose, prefill and long-context are not measured on the
+0.945 at n=200 on the depth-3 profile (0.92 at depth 2) against this stack's 0.9158 at n=1319. c8, prose, prefill and long-context are not measured on the
 vLLM route. The full table is in `docs/MEASUREMENTS.md`, records in
 `bench/results/2026-09-18-vllm-exl3-route/`.
 

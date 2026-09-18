@@ -68,7 +68,7 @@ Measured on this stack as served with [lm-eval][lm-eval], [tool-eval-bench][tool
 | gate | ExLlamaV3 (this stack), as served | vLLM, same checkpoint | results |
 | --- | --- | --- | --- |
 | GSM8K 5-shot ([lm-eval][lm-eval]), thinking on, n=1319 | **0.9158** (±0.0077) | — | [`2026-09-16-r368-gsm8k-1319`][r368] |
-| GSM8K, n=200, on the final image | 0.935 | 0.92 (BF16 KV, MTP depth 2); 0.93 (full CUDA graphs, MTP depth 2) | [`r461-gates-moecoopv2`][r461], [`2026-09-18-vllm-exl3-route`][vllm-route] |
+| GSM8K, n=200, on the final image | 0.935 | 0.945 (BF16 KV, MTP depth 3); 0.92 (depth 2); 0.93 (full CUDA graphs, depth 2) | [`r461-gates-moecoopv2`][r461], [`2026-09-18-vllm-exl3-route`][vllm-route] |
 | [tool-eval-bench][tool-eval] 69×4 | **85.8 ± 3.1** (baseline 85.0 ± 2.9) | — | [`2026-09-16-r357-tooleval`][r357] |
 | SWE-bench Verified, 49 matched instances, [mini-SWE-agent][mini-swe] bash-only, official scorer | **46 / 49** resolved | — | [`2026-09-16-r359-swebench`][r359] |
 | structured output ([llguidance][llguidance] `json_schema`, `response_format`, `regex_pattern`), thinking on and off, c4 | PASS | — | [`2026-09-17-r453-exl3-structured`][r453] |

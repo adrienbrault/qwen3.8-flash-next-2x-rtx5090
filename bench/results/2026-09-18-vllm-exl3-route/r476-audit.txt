@@ -1,0 +1,48 @@
+2026-09-17T23:56:22+00:00 [r430] impl snapshot: /srv/qwen5090/results/2026-09-18-r476-mtp-depths-r25/impl-snapshot from /srv/qwen5090/vllm-exl3-spike/out/impl (254 files; launch-tp2.sh sha256 82b6ef2cadcb3b0b)
+2026-09-17T23:56:22+00:00 [r430] served model name: qwen38-exl3-tp2-305; checkpoint: /srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw
+2026-09-17T23:56:22+00:00 [r430] image vllm-qwen38-exl3:tp2-r25 = 930c639abd69
+2026-09-17T23:56:22+00:00 [r430] queued behind: 2026-09-18-r467b-mtp2-trace-r25(pid 2588945)
+2026-09-18-r470c-pp2-a4-305(pid 2623184)
+2026-09-18-r472-draft-fast-305(pid 2588921)
+2026-09-18-r472-ple-populate-305(pid 2588928)
+2026-09-18-r475-fp8-mtp-305(pid 2588937)
+2026-09-18T00:34:39+00:00 [r430] lock held; daily at entry: qwen3.8-flash-next-exl3-3.05bpw; profiles: d-mtp3 d-mtp1 d-mtp4
+2026-09-18T00:34:44+00:00 [r430] boot profile d-mtp3
+2026-09-18T00:41:30+00:00 [r430] d-mtp3 BENCH_READY after 406 s
+2026-09-18T00:41:30+00:00 [r430] d-mtp3 markers: arena=196 moe_contract=98 cudagraph=14 custom_ar=2 staging_warn=1 fails=0
+d-mtp3 c1 greedy sha 0a8dbd3a22b38338 usage {'prompt_tokens': 78, 'total_tokens': 334, 'completion_tokens': 256, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 256}}
+[d-mtp3#1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 131.6, "per_stream_wall_tps": 131.6, "decode_tps": 132.9, "ttft_s": 0.159}
+[d-mtp3#1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 475.4, "per_stream_wall_tps": 119.6, "decode_tps": 120.7, "ttft_s": 0.157}
+d-mtp3 gpu0 util avg 80 % (n=67) power avg 225 W
+d-mtp3 gpu1 util avg 85 % (n=67) power avg 206 W
+2026-09-18T00:42:12+00:00 [r430] boot profile d-mtp1
+2026-09-18T00:49:28+00:00 [r430] d-mtp1 BENCH_READY after 436 s
+2026-09-18T00:49:28+00:00 [r430] d-mtp1 markers: arena=196 moe_contract=98 cudagraph=14 custom_ar=2 staging_warn=1 fails=0
+d-mtp1 c1 greedy sha c0c2e9134052eeee usage {'prompt_tokens': 78, 'total_tokens': 334, 'completion_tokens': 256, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 256}}
+[d-mtp1#1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 113.8, "per_stream_wall_tps": 113.8, "decode_tps": 114.8, "ttft_s": 0.168}
+[d-mtp1#1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 344.8, "per_stream_wall_tps": 86.3, "decode_tps": 87.2, "ttft_s": 0.24}
+d-mtp1 gpu0 util avg 82 % (n=86) power avg 225 W
+d-mtp1 gpu1 util avg 84 % (n=86) power avg 203 W
+2026-09-18T00:50:20+00:00 [r430] boot profile d-mtp4
+2026-09-18T00:57:36+00:00 [r430] d-mtp4 BENCH_READY after 436 s
+2026-09-18T00:57:36+00:00 [r430] d-mtp4 markers: arena=196 moe_contract=98 cudagraph=14 custom_ar=2 staging_warn=1 fails=0
+d-mtp4 c1 greedy sha 056d51e96aafd870 usage {'prompt_tokens': 78, 'total_tokens': 334, 'completion_tokens': 256, 'prompt_tokens_details': None, 'completion_tokens_details': {'reasoning_tokens': 256}}
+[d-mtp4#1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 139.3, "per_stream_wall_tps": 139.3, "decode_tps": 141.2, "ttft_s": 0.199}
+[d-mtp4#1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 426.1, "per_stream_wall_tps": 106.5, "decode_tps": 107.3, "ttft_s": 0.155}
+d-mtp4 gpu0 util avg 80 % (n=70) power avg 265 W
+d-mtp4 gpu1 util avg 80 % (n=70) power avg 238 W
+d-mtp3 {"c1": {"n_ok": 1, "agg": 131.6, "decode_med": 132.89, "ttft": 0.159}, "c4": {"n_ok": 4, "agg": 475.4, "decode_med": 120.77, "ttft": 0.157}}
+d-mtp1 {"c1": {"n_ok": 1, "agg": 113.8, "decode_med": 114.79, "ttft": 0.168}, "c4": {"n_ok": 4, "agg": 344.8, "decode_med": 87.16, "ttft": 0.097}}
+d-mtp4 {"c1": {"n_ok": 1, "agg": 139.3, "decode_med": 141.17, "ttft": 0.199}, "c4": {"n_ok": 4, "agg": 426.0, "decode_med": 107.33, "ttft": 0.155}}
+WINNER d-mtp3
+2026-09-18T00:58:19+00:00 [r430] boot profile d-mtp3
+2026-09-18T01:05:05+00:00 [r430] d-mtp3 BENCH_READY after 406 s
+2026-09-18T01:05:05+00:00 [r430] === GSM8K n=200 (R355 parameters) num_concurrent=4 on profile d-mtp3 ===
+2026-09-18T01:08:35+00:00 [r430] lm_eval exit=0
+GSM8K d-mtp3: n=200 strict=0.945 flexible=0.945  (r4 baseline 0.930; exllamav3 daily c8 = 0.935)
+2026-09-18T01:08:46+00:00 [r430] restoring the daily
+2026-09-18T01:08:47+00:00 [flashnext] starting on 0.0.0.0:8022, draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T01:09:08+00:00 [flashnext] UP on 8022 | warmup 0.312243s | VRAM free MiB 947/2511/
+2026-09-18T01:09:08+00:00 [flashnext] OpenAI-compatible base URL: http://flan:8022/v1
+2026-09-18T01:09:08+00:00 [r430] daily: qwen3.8-flash-next-exl3-3.05bpw on tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2
+2026-09-18T01:09:08+00:00 [r430] === R430 DONE ===
