@@ -14,13 +14,13 @@ Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetc
 | page pool | 966,656 tokens, 15,236 B per token: 1.52 GB per 100k, 14.7 GB total | [R561][r561] |
 | free VRAM after boot | 2,085 / 867 MiB; 1,299 / 353 under a cold 120k prefill plus 8 streams | [R561][r561], [R558][r558] |
 | decode, 1 stream | code 202.2, prose 200.9 t/s (24 prompts each, 512 tokens) | [R575][r575] |
-| decode, 4 streams | code 511, prose 510 t/s aggregate | [R570][r570] |
-| decode, 5 streams | code 470–480, prose 475 t/s aggregate | [R570][r570], [R571][r571] |
-| decode, 6 streams | code 514, prose 524–534 t/s aggregate | [R570][r570], [R571][r571] |
-| decode, 7 streams | code 612, prose 593 t/s aggregate | [R571][r571] |
-| decode, 8 streams | code 649, prose 629 t/s aggregate | [R570][r570] |
+| decode, 4 streams | code 511, prose 510 t/s aggregate; 131 / 128 t/s per stream | [R570][r570] |
+| decode, 5 streams | code 470–480, prose 475 t/s aggregate; 96–97 / 95 t/s per stream | [R570][r570], [R571][r571] |
+| decode, 6 streams | code 514, prose 524–534 t/s aggregate; 86 / 88–90 t/s per stream | [R570][r570], [R571][r571] |
+| decode, 7 streams | code 612, prose 593 t/s aggregate; 88 / 86 t/s per stream | [R571][r571] |
+| decode, 8 streams | code 649, prose 629 t/s aggregate; 82 / 80 t/s per stream | [R570][r570] |
 | decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
-| decode, agent-shaped edit | 223.7 t/s at 1 stream; 502.2 aggregate at 4 | [R525][r525] |
+| decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 t/s per stream | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | cold prefill, 1 request | 9,409 / 9,814 / 10,027 t/s at 30k / 60k / 120k targets | [R574][r574] |
 | TTFT, short prompt | 0.13 / 0.22 / 0.31 / 0.39 s at 1 / 2 / 3 / 4 at once; 0.26 s while 3 slots decode ~112k contexts | [R549][r549] |
