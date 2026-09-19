@@ -9,7 +9,7 @@ Promoted 2026-09-18 23:26 UTC. Decode round 4 and E3 round 2 were both written a
 | G0 sampler fallbacks | byte-identical to the served image |
 | G1 fingerprints | c1 `ae890c45d1000582` (canonical); 30k `4a255910dee2d9c5`, E3's prefill-order hash, now the served 30k fingerprint |
 | G1b cold prefill, salted | 60k: 9,543 t/s (floor 9,200); 120k: 10,015 t/s (floor 9,500) |
-| G2 agentic-edit | 6/6 in four modes; greedy c1 211.9, greedy c4 437.1, sampled c1 231.1, sampled c4 423.1 t/s |
+| G2 agentic-edit | 6/6 in four modes; greedy c1 211.9, greedy c4 437.1, sampled c1 231.1, sampled c4 423.1 t/s. The c4 figures are whole-run: `agentic-edit.py` sends the 6 files in waves of 4 then 2. The first wave alone (4 streams): greedy 511.8 aggregate / 141.5 per stream, sampled 470.6 / 129.5 (from `agentic-edit.jsonl`) |
 | G3 needles 131k / 240k | 5/5 / 5/5 |
 | G4 tool-eval 69×4 | 85.8 ± 2.1 (trials 116 / 116 / 121 / 120) |
 

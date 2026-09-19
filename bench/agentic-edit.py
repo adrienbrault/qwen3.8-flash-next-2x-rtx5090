@@ -64,3 +64,10 @@ with open(a.out, "a") as out:
             print(f"[{a.tag}] agentic-edit {mode} c{c}: {len(ok)}/{len(recs)} ok, {toks} tokens, per-request decode median {med:.1f} t/s "
                   f"(min {min((r['decode_tps'] for r in ok), default=float('nan')):.1f}, max {max((r['decode_tps'] for r in ok), default=float('nan')):.1f}), "
                   f"aggregate {toks / wall:.1f} t/s", flush=True)
+            # the whole-run aggregate mixes waves: with 6 files at c4 the second wave runs only 2 streams. Report the first
+            # full wave on its own (all c streams busy): aggregate over its slowest request, and the per-stream mean.
+            w = [r for r in recs[:c] if r.get("ok") and r.get("wall_s")]
+            if len(prompts) >= c and len(w) == c:
+                print(f"[{a.tag}] agentic-edit {mode} c{c} first full wave: aggregate "
+                      f"{sum(r['completion_tokens'] for r in w) / max(r['wall_s'] for r in w):.1f} t/s, per stream "
+                      f"{statistics.mean(r['completion_tokens'] / r['wall_s'] for r in w):.1f} t/s", flush=True)

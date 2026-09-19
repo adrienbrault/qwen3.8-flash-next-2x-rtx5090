@@ -14,7 +14,7 @@ Served configuration since 2026-09-19 01:26 CEST ([R517][r517]): image `tabbyapi
 | page pool | 786,432 tokens at 8-bit KV, shared by 4 slots | 2026-09-18, [R495b][r495b], [R511][r511]; 819,200 and above do not boot |
 | decode, 1 stream | • code 217.7 t/s<br>• prose 190.7 t/s | 2026-09-18, [R499][r499], mean of two boots; the prefill change served after it leaves decode unchanged, [R513][r513] |
 | decode, 4 streams | • code 510.5 t/s aggregate, 132.3 per stream<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
-| decode, agent-shaped edit | 211.9 t/s at 1 stream; at 4 streams 437.1 aggregate, 153.6 per stream (six real files rewritten with a small edit, greedy) | 2026-09-19, [R517][r517], [`bench/agentic-edit.py`][agentic-edit] |
+| decode, agent-shaped edit | 211.9 t/s at 1 stream; at 4 streams 511.8 aggregate, 141.5 per stream (first wave of 4 requests; the tool's whole-run figure, 437.1, includes a second wave of only 2) (six real files rewritten with a small edit, greedy) | 2026-09-19, [R517][r517], [`bench/agentic-edit.py`][agentic-edit] |
 | decode at depth | prose 172.7 / 152.8 / 169.2 t/s at 0 / 99,919 / 199,457 prompt tokens | 2026-09-18 on the 3.05 bpw pack, [R492][r492] |
 | cold prefill, 1 request | • 30k tokens: 8,740 t/s<br>• 60k: 9,543–9,814 t/s<br>• 120k: 10,015–10,163 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517]; salted prompts, one invocation per length |
 | long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517] |
