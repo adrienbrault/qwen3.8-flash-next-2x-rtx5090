@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R520b: with 8 counterbalanced boots, switching off the int8-activation GEMV is −0.3 % at c1 (95 % CI −1.5 to +0.9); no effect](results/r520b-int8gemv-precise.md)
 - [R520: switching off the int8-activation GEMV changes no output; its decode effect is below what this design resolves](results/r520-int8gemv.md)
 - [R519: the 2.50 bpw decode step is 81–82 % kernel time; MoE kernels are the largest share at every shape](results/r519-profile-2p50.md)
 - [R518: 6 decode slots are not served; c6 gains 17 % on a synthetic load but an 8-agent replay runs 9 % slower](results/r518-slots6.md)

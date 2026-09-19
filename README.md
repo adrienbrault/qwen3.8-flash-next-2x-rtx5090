@@ -12,8 +12,8 @@ Served configuration since 2026-09-19 01:26 CEST ([R517][r517]): image `tabbyapi
 | --- | --- | --- |
 | context window | 262,144 tokens | the checkpoint's native length |
 | page pool | 786,432 tokens at 8-bit KV, shared by 4 slots: **1.41 GB of VRAM per 100k tokens**, 11.1 GB for the whole pool ([derivation][config-memory]) | 2026-09-18, [R495b][r495b], [R511][r511]; 819,200 and above do not boot |
-| decode, 1 stream | • code 217.7 t/s<br>• prose 190.7 t/s | 2026-09-18, [R499][r499], mean of two boots; the prefill change served after it leaves decode unchanged, [R513][r513] |
-| decode, 4 streams | • code 510.5 t/s aggregate, 132.3 per stream<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
+| decode, 1 stream | • code 220.2 t/s<br>• prose 190.7 t/s | code: 2026-09-19, [R520b][r520b], 4 boots × 3 runs after a warm-up round (boot means 219.2–221.4); prose: 2026-09-18, [R499][r499], two boots |
+| decode, 4 streams | • code 522.4 t/s aggregate, 134.6 per stream (4 boots × 2 runs after a warm-up round, [R520b][r520b])<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
 | decode, 6 streams (4 slots: 2 requests queue) | • code 448.8 t/s aggregate, 112.9 per stream<br>• prose 423.1 t/s aggregate, 104.8 per stream<br>• 6 slots would give 526.9 / 498.2 aggregate but run an 8-agent replay 9 % slower, so they are not served | 2026-09-19, [R518][r518] |
 | decode, agent-shaped edit | 211.9 t/s at 1 stream; at 4 streams 511.8 aggregate, 141.5 per stream (first wave of 4 requests; the tool's whole-run figure, 437.1, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R517][r517], [`bench/agentic-edit.py`][agentic-edit] |
 | decode at depth | prose 172.7 / 152.8 / 169.2 t/s at 0 / 99,919 / 199,457 prompt tokens | 2026-09-18 on the 3.05 bpw pack, [R492][r492] |
@@ -49,14 +49,13 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 - How much of the shared expert's time is still on the critical path after [R490][r490] moved it to a side stream, per layer and row count: [`scripts/r521-shared-bound.sh`][r521-driver]. A fused shared-expert kernel cannot be bit-identical, so it is built only if this number is large.
 - The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver].
-- `EXL3_INT8_GEMV=0` again, with 8 counterbalanced boots and warm-up rounds, because the first measurement ([R520][r520]) could not resolve 0.5 %: [`scripts/r520b-int8gemv-precise.sh`][r520b-driver].
 - `tool_choice: "required"` and named tool choice enforced by a grammar that switches on when reasoning ends; today tool-eval's TC-45 fails 12/12: [`scripts/r523-tool-choice.sh`][r523-driver].
 - Recurrent-state checkpoints at the end of each answer, so an agent's next call resumes after its previous answer instead of re-reading it, with an eviction order that keeps each conversation's newest checkpoint: [`scripts/r524-recurrent-tip.sh`][r524-driver], measured with the agent replay in echo mode ([`bench/agent_replay.py`][agent-replay] `--echo`).
 - int8 mixer weights as a pool lever: 819,200 tokens (+4 %) at equal GSM8K, needles and tool-eval, decode 0 to −2 % ([R516][r516]).
 
 ## Measured and not served
 
-6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
+`EXL3_INT8_GEMV=0`, −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
 
 ## Reproducing a boot
 
@@ -133,7 +132,6 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [launcher]: scripts/launch-flashnext.sh
 [launchers]: scripts/launchers/
 [scripts]: scripts/
-[r520b-driver]: scripts/r520b-int8gemv-precise.sh
 [r521-driver]: scripts/r521-shared-bound.sh
 [r522-driver]: scripts/r522-mtp-pruned.sh
 [r523-driver]: scripts/r523-tool-choice.sh
@@ -200,3 +198,4 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r518]: bench/results/r518-slots6.md
 [r519]: bench/results/r519-profile-2p50.md
 [r520]: bench/results/r520-int8gemv.md
+[r520b]: bench/results/r520b-int8gemv-precise.md
