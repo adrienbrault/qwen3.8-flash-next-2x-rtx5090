@@ -6,7 +6,7 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetch-r1-gdnbf16`, 8 slots, 966,656-token page pool at 8-bit KV, layer split `[30, 30]`, MTP depth 3 up to 4 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
+Served since 2026-09-19 23:46 CEST ([R576][r576]): image `tabbyapi:ngram-prefetch-r1-gdnbf16`, 8 slots, 966,656-token page pool at 8-bit KV, layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
 
 | | value | source |
 | --- | --- | --- |
@@ -14,11 +14,11 @@ Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetc
 | page pool | 966,656 tokens, 15,236 B per token: 1.52 GB per 100k, 14.7 GB total | [R561][r561] |
 | free VRAM after boot | 2,085 / 867 MiB; 1,299 / 353 under a cold 120k prefill plus 8 streams | [R561][r561], [R558][r558] |
 | decode, 1 stream | code 202.2, prose 200.9 t/s (24 prompts each, 512 tokens) | [R575][r575] |
-| decode, 4 streams | code 511, prose 510 t/s aggregate; 131 / 128 t/s per stream | [R570][r570] |
-| decode, 5 streams | code 470–480, prose 475 t/s aggregate; 96–97 / 95 t/s per stream | [R570][r570], [R571][r571] |
-| decode, 6 streams | code 514, prose 524–534 t/s aggregate; 86 / 88–90 t/s per stream | [R570][r570], [R571][r571] |
-| decode, 7 streams | code 612, prose 593 t/s aggregate; 88 / 86 t/s per stream | [R571][r571] |
-| decode, 8 streams | code 649, prose 629 t/s aggregate; 82 / 80 t/s per stream | [R570][r570] |
+| decode, 4 streams | code 511, prose 508 t/s aggregate; 131 / 127 t/s per stream | [R570][r570] |
+| decode, 5 streams | code 561–563, prose 541–545 t/s aggregate; 113 / 110 t/s per stream | [R570][r570], [R571][r571], [R576][r576] |
+| decode, 6 streams | code 514, prose 510–514 t/s aggregate; 86 / 86 t/s per stream | [R570][r570], [R571][r571] |
+| decode, 7 streams | code 611, prose 608 t/s aggregate; 88 / 88 t/s per stream | [R571][r571] |
+| decode, 8 streams | code 644, prose 637 t/s aggregate; 83 / 81 t/s per stream | [R570][r570] |
 | decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 t/s per stream | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
@@ -46,7 +46,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 Insights behind these numbers:
 
-- 5 streams decode slower than 4: the policy drops to 1 draft token there, and a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams instead is +17 % ([R570][r570]).
+- 5 streams used to decode slower than 4: the policy dropped to 1 draft token there, because a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams is +11 to +20 % and has been served since R576, for −2 to −3 % on 6-stream prose ([R570][r570], [R571][r571], [R576][r576]).
 - Code decodes faster than prose at 1 stream because draft acceptance tracks how predictable the text is ([R572][r572]).
 - 8 slots beat 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
@@ -276,6 +276,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r573]: bench/results/r573-mtp-kv-window-screen.md
 [r574]: bench/results/r574-chunk4096.md
 [r575]: bench/results/r575-promote-mtp-kv-window.md
+[r576]: bench/results/r576-promote-c5-policy.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md

@@ -99,9 +99,10 @@ def figure_decode_scaling():
         per = {k: [p[f"c{c}-{k}"] for c in conc] for k in ("code", "prose")}
         src = "R580"
     else:
+        # The B arm is the policy served since R576, so it is the one that describes the daily.
         conc = CONC
-        a570, p570 = fn_bench_rates(R570, "A")
-        a571, p571 = fn_bench_rates(R571, "A")
+        a570, p570 = fn_bench_rates(R570, "B")
+        a571, p571 = fn_bench_rates(R571, "B")
         agg = {k: [merged([a570, a571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
         per = {k: [merged([p570, p571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
         src = "R570+R571"

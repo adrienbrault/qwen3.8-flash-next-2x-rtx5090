@@ -139,7 +139,7 @@ IMG=${IMG:-tabbyapi:ngram-prefetch-r1-gdnbf16}
 # and the policy act as the ceiling); the confidence target comes from EXL3_DRAFT_CONFIDENCE in EXTRA_ENV (image tabbyapi:draftconf).
 DYN=${DYN:-false}
 case "$DYN" in true|false) ;; *) echo "DYN must be true|false"; exit 3;; esac
-DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [8, 1]]}
+DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [5, 2], [8, 1]]}
 # DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
 # the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
 # ABOVE the last ceiling (8). That branch is unreachable here because the generator clamps max_batch_size to

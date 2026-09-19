@@ -41,7 +41,7 @@ reachable as thinking lengthens.
 | `draft_mode` | `mtp` | the checkpoint's own MTP head |
 | `draft_num_tokens` | 3 (`DRAFT=` env) | **the schema field is `draft_num_tokens`**; `num_draft_tokens` is not a schema field and is silently ignored, which runs the default depth while the config appears to say otherwise |
 | `draft_cache_mode` | `Q8` | the draft schema accepts only FP16/Q8/Q6/Q4 — a pair like `"8,8"` is rejected |
-| `draft_num_tokens_by_batch` | `[[4, 3], [8, 1]]` (`DRAFT_POLICY=`) | depth 3 up to 4 decode-ready jobs, depth 1 above; 5 to 8 jobs draft 1 token, so a verify step stays at 16 rows or fewer, the limit of the cooperative MoE decode kernels; depth 2 above 4 jobs costs 32–39 % ([R414](../bench/results/r414-bszn16.md), [R560](../bench/results/r560-c8-policy.md), [R562](../bench/results/r562-profile-c8.md)) |
+| `draft_num_tokens_by_batch` | `[[4, 3], [5, 2], [8, 1]]` (`DRAFT_POLICY=`) | depth 3 up to 4 decode-ready jobs, depth 2 at 5, depth 1 from 6 on; a verify step stays at 16 rows or fewer, the limit of the cooperative MoE decode kernels (5 jobs × depth 2 = 15 rows). Depth 2 from 6 jobs on costs 32–39 % ([R414](../bench/results/r414-bszn16.md), [R560](../bench/results/r560-c8-policy.md), [R562](../bench/results/r562-profile-c8.md)); depth 2 at 5 jobs is +11 to +20 % and served since 2026-09-19 ([R576](../bench/results/r576-promote-c5-policy.md)) |
 | `dynamic_draft` | `false` | measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4; crashes at c4 with a CUDA-graph out-of-memory ([R497](../bench/results/r497-draft-confidence.md)) |
 
 Drafts are sampled **greedily**; the target is not. Acceptance therefore tracks how predictable the continuation
