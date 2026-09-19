@@ -16,4 +16,4 @@ Promoted 2026-09-19 03:16 UTC. The candidate is the [R525](r525-promote-int8mix.
 | G4 tool-eval 69×4 | 84.8 ± 1.5 (trials 114 / 118 / 119 / 116) |
 | G5 GSM8K 5-shot n=500, no stop strings | 0.970 (R525 0.974 with byte-identical greedy decode; the difference is E3 prefill run-to-run variation on long prompts and concurrency, 2 of 500 questions) |
 
-cuda:1 keeps 225 MiB free with the whole pool in flight, the least headroom of any served configuration so far.
+cuda:1 keeps 225 MiB free under whole-pool load, the least headroom of any served configuration so far.

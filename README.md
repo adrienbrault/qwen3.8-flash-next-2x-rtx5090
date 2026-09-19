@@ -24,7 +24,7 @@ Served configuration since 2026-09-19 05:16 CEST ([R528][r528]): image `tabbyapi
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6, official scorer | 46 of 49 instances resolved | 2026-09-16 on the 3.05 bpw pack, [R359][r359]; the instances were selected on earlier outcomes, so this is a tally, not a full-set score. Cost per instance: [agent runs][agent-cost] |
 | structured output ([llguidance][llguidance]) | `json_schema`, `response_format`, `regex_pattern` pass, thinking on and off, c4 | 2026-09-17, [R453][r453] |
 | boot to serving | about 20 s with warm kernel caches | 2026-09-19, [R525][r525], [R528][r528] promotion boots |
-| free VRAM after boot | 1,973 MiB on cuda:0, 737 MiB on cuda:1; 1,173 / 225 MiB with the whole pool in flight | 2026-09-19, [R528][r528] |
+| free VRAM after boot | 1,973 MiB on cuda:0, 737 MiB on cuda:1; 1,173 / 225 MiB under whole-pool load | 2026-09-19, [R528][r528] |
 
 GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) were measured with lm-eval's stop strings, which cut the model's reasoning when it restates the problem as "Question: …"; they undercount by 7 to 18 % of questions ([R509][r509]).
 
