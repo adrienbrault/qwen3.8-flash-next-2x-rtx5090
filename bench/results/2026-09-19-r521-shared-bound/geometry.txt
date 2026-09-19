@@ -1,0 +1,21 @@
+/srv/qwen5090/results/2026-09-19-r521-shared-bound/tunecache/coop_autotune_v1.bin: 137 records
+cuda:0 rows  1  gate+up mgemm key 640058331a3ca2f6: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=20 z=2; tiles 80x5; k-segments per column [4]
+cuda:0 rows  1  down gemm     key 382e7e204356df75: int8-sq (exl3_gemv_int8.cu:254; plain int8 activations in mode 2)
+cuda:0 rows  2  gate+up mgemm key 6713b090ab8adb49: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=24 z=2; tiles 80x5; k-segments per column [5, 6]
+cuda:0 rows  2  down gemm     key 382e7e204356df75: int8-sq (exl3_gemv_int8.cu:254; plain int8 activations in mode 2)
+cuda:0 rows  4  gate+up mgemm key d8d3526fc0e41ebb: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=30 z=2; tiles 80x5; k-segments per column [6]
+cuda:0 rows  4  down gemm     key afdd614b02a1f193: qtip-gemv candidate (exl3_gemv.cu heuristic) else autotuned
+cuda:0 rows  8  gate+up mgemm key d20993a465d3faf7: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=24 z=2; tiles 80x5; k-segments per column [5, 6]
+cuda:0 rows  8  down gemm     key 6897b069134debdf: qtip-gemv candidate (exl3_gemv.cu heuristic) else autotuned
+cuda:0 rows 16  gate+up mgemm key e823c9e66bec8a6f: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=28 z=2; tiles 80x5; k-segments per column [6, 7]
+cuda:0 rows 16  down gemm     key 229bc3f0bade2497: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=40 z=1; tiles 20x20; k-segments per column [2]
+cuda:1 rows  1  gate+up mgemm key d6862058e25a519d: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=30 z=2; tiles 80x5; k-segments per column [6]
+cuda:1 rows  1  down gemm     key 04f5a13a14465d5a: int8-sq (exl3_gemv_int8.cu:254; plain int8 activations in mode 2)
+cuda:1 rows  2  gate+up mgemm key 5d29a3a243a5b8d2: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=34 z=2; tiles 80x5; k-segments per column [7, 8]
+cuda:1 rows  2  down gemm     key 04f5a13a14465d5a: int8-sq (exl3_gemv_int8.cu:254; plain int8 activations in mode 2)
+cuda:1 rows  4  gate+up mgemm key 1f5760ff62b5267c: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=36 z=2; tiles 80x5; k-segments per column [8]
+cuda:1 rows  4  down gemm     key 52553420e7ccc6e8: qtip-gemv candidate (exl3_gemv.cu heuristic) else autotuned
+cuda:1 rows  8  gate+up mgemm key 34989a5e8d312ab8: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=24 z=2; tiles 80x5; k-segments per column [5, 6]
+cuda:1 rows  8  down gemm     key 938a73cc06527574: qtip-gemv candidate (exl3_gemv.cu heuristic) else autotuned
+cuda:1 rows 16  gate+up mgemm key 4ab2d0a09349ba30: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=20 z=2; tiles 80x5; k-segments per column [4]
+cuda:1 rows 16  down gemm     key 0e006751d6e32e0c: shape 2 (k-tile 32, n-tile 128, 512 thr) grid x=40 z=1; tiles 20x20; k-segments per column [2]

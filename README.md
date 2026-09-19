@@ -6,25 +6,25 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served configuration since 2026-09-19 01:26 CEST ([R517][r517]): image `tabbyapi:stack-r4-e3r2`, 4 slots, a 786,432-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
+Served configuration since 2026-09-19 04:15 CEST ([R525][r525]): image `tabbyapi:stack-r4-e3r2` with int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`), 4 slots, a 819,200-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
 
 | | value | measured |
 | --- | --- | --- |
 | context window | 262,144 tokens | the checkpoint's native length |
-| page pool | 786,432 tokens at 8-bit KV, shared by 4 slots: **1.41 GB of VRAM per 100k tokens**, 11.1 GB for the whole pool ([derivation][config-memory]) | 2026-09-18, [R495b][r495b], [R511][r511]; 819,200 and above do not boot |
-| decode, 1 stream | • code 220.2 t/s<br>• prose 190.7 t/s | code: 2026-09-19, [R520b][r520b], 4 boots × 3 runs after a warm-up round (boot means 219.2–221.4); prose: 2026-09-18, [R499][r499], two boots |
-| decode, 4 streams | • code 522.4 t/s aggregate, 134.6 per stream (4 boots × 2 runs after a warm-up round, [R520b][r520b])<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
+| page pool | 819,200 tokens at 8-bit KV, shared by 4 slots: **1.41 GB of VRAM per 100k tokens**, 11.6 GB for the whole pool ([derivation][config-memory]) | 2026-09-19, [R516][r516], [R525][r525]; the int8 mixer weights free the VRAM for it, and 835,584 does not boot |
+| decode, 1 stream | • code 220.2 t/s<br>• prose 190.7 t/s | code: 2026-09-19, [R520b][r520b], 4 boots × 3 runs after a warm-up round (boot means 219.2–221.4); prose: 2026-09-18, [R499][r499], two boots. Both on the configuration before R525; the R525 promotion boot read code 224.4 (one boot) |
+| decode, 4 streams | • code 522.4 t/s aggregate, 134.6 per stream (4 boots × 2 runs after a warm-up round, [R520b][r520b])<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt]. The R525 promotion boot read code 503.2 aggregate (one boot) |
 | decode, 6 streams (4 slots: 2 requests queue) | • code 448.8 t/s aggregate, 112.9 per stream<br>• prose 423.1 t/s aggregate, 104.8 per stream<br>• 6 slots would give 526.9 / 498.2 aggregate but run an 8-agent replay 9 % slower, so they are not served | 2026-09-19, [R518][r518] |
-| decode, agent-shaped edit | 211.9 t/s at 1 stream; at 4 streams 511.8 aggregate, 141.5 per stream (first wave of 4 requests; the tool's whole-run figure, 437.1, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R517][r517], [`bench/agentic-edit.py`][agentic-edit] |
+| decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 per stream (first wave of 4 requests; the tool's whole-run figure, 421.3, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R525][r525], [`bench/agentic-edit.py`][agentic-edit] |
 | decode at depth | prose 172.7 / 152.8 / 169.2 t/s at 0 / 99,919 / 199,457 prompt tokens | 2026-09-18 on the 3.05 bpw pack, [R492][r492] |
-| cold prefill, 1 request | • 30k tokens: 8,740 t/s<br>• 60k: 9,543–9,814 t/s<br>• 120k: 10,015–10,163 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517]; salted prompts, one invocation per length |
-| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517] |
-| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.978 and 0.980 on two runs | 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
-| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 85.8 ± 2.1 | 2026-09-19, [R517][r517]; 84.5 ± 1.9 and 86.0 ± 2.6 on the two configurations before it |
+| cold prefill, 1 request | • requested 30k: 8,740 t/s<br>• requested 60k (45,073 prompt tokens): 9,543–9,814 t/s<br>• requested 120k (90,092 prompt tokens): 10,015–10,163 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517]; sizes are `fn_bench --ctx` targets, and the prompts carry about three quarters of that in tokens; one invocation per length |
+| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517], [R525][r525] |
+| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.974 on the served configuration; 0.978 and 0.980 before it | 2026-09-19, [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
+| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 85.0 ± 1.4 | 2026-09-19, [R525][r525]; 85.8 ± 2.1, 84.5 ± 1.9 and 86.0 ± 2.6 on the three configurations before it |
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6, official scorer | 46 of 49 instances resolved | 2026-09-16 on the 3.05 bpw pack, [R359][r359]; the instances were selected on earlier outcomes, so this is a tally, not a full-set score. Cost per instance: [agent runs][agent-cost] |
 | structured output ([llguidance][llguidance]) | `json_schema`, `response_format`, `regex_pattern` pass, thinking on and off, c4 | 2026-09-17, [R453][r453] |
-| boot to serving | 21 s with warm kernel caches | 2026-09-19, [R517][r517] promotion boot |
-| free VRAM after boot | 2,015 MiB on cuda:0, 1,099 MiB on cuda:1 | 2026-09-19, [R517][r517] |
+| boot to serving | 21 s with warm kernel caches | 2026-09-19, [R525][r525] promotion boot |
+| free VRAM after boot | 1,973 MiB on cuda:0, 1,057 MiB on cuda:1 | 2026-09-19, [R525][r525] |
 
 GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) were measured with lm-eval's stop strings, which cut the model's reasoning when it restates the problem as "Question: …"; they undercount by 7 to 18 % of questions ([R509][r509]).
 
@@ -47,15 +47,14 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 ## In progress (queued on the box 2026-09-19)
 
-- How much of the shared expert's time is still on the critical path after [R490][r490] moved it to a side stream, per layer and row count: [`scripts/r521-shared-bound.sh`][r521-driver]. A fused shared-expert kernel cannot be bit-identical, so it is built only if this number is large.
-- The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver].
+- The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver]. Its output is byte-identical and one boot per arm read code c1 +1.4 %, inside the between-boot spread, so an 8-boot counterbalanced A/B decides: [`scripts/r522b-mtp-pruned-precise.sh`][r522b-driver].
 - `tool_choice: "required"` and named tool choice enforced by a grammar that switches on when reasoning ends; today tool-eval's TC-45 fails 12/12: [`scripts/r523-tool-choice.sh`][r523-driver].
 - Recurrent-state checkpoints at the end of each answer, so an agent's next call resumes after its previous answer instead of re-reading it, with an eviction order that keeps each conversation's newest checkpoint: [`scripts/r524-recurrent-tip.sh`][r524-driver], measured with the agent replay in echo mode ([`bench/agent_replay.py`][agent-replay] `--echo`).
-- int8 mixer weights as a pool lever: 819,200 tokens (+4 %) at equal GSM8K, needles and tool-eval, decode 0 to −2 % ([R516][r516]).
+- A persistent prefix tier on NVMe: KV pages and recurrent checkpoints written to disk in the background, restored after a restart, under a byte cap: [`scripts/r526-nvme-tier.sh`][r526-driver].
 
 ## Measured and not served
 
-`EXL3_INT8_GEMV=0`, −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
+A fused shared-expert kernel: after the side-stream overlap the shared expert's residual is 1.9 µs per layer at 4 rows, at most 0.6 % of a 1-stream step and 1.2 % at 4 streams ([R521][r521]); `EXL3_INT8_GEMV=0`, −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
 
 ## Reproducing a boot
 
@@ -195,6 +194,10 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r513]: bench/results/r513-prefill-e3-r2.md
 [r516]: bench/results/r516-int8-mixer-pool.md
 [r517]: bench/results/r517-promote-stack.md
+[r525]: bench/results/r525-promote-int8mix.md
+[r521]: bench/results/r521-shared-bound.md
+[r522b-driver]: scripts/r522b-mtp-pruned-precise.sh
+[r526-driver]: scripts/r526-nvme-tier.sh
 [r518]: bench/results/r518-slots6.md
 [r519]: bench/results/r519-profile-2p50.md
 [r520]: bench/results/r520-int8gemv.md

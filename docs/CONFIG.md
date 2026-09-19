@@ -11,7 +11,7 @@ it. Every value is either a measurement, an upstream default, or a fit constrain
 | `model_name` | `qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab` | [r0b0tlab's 2.50 bpw EXL3 pack](https://huggingface.co/r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw) of `Qwen3.8-Flash-Next`, routed experts at mixed K = 2 / 3 / 4. Served since 2026-09-18 21:21 UTC ([R511](../bench/results/r511-promote-2p50.md)); the 3.05 bpw pack before it, measured equal on GSM8K without stop strings ([R509](../bench/results/r509-gsm8k-nostop.md)) |
 | `backend` | `exllamav3` | TabbyAPI's ExLlamaV3 backend; v1.5.0, pinned into the image |
 | `max_seq_len` | 262,144 | the checkpoint's `max_position_embeddings` — 262,144 is native, not a limit we chose |
-| `cache_size` | 786,432 | the shared page pool, in tokens: the largest that boots with the 2.50 bpw pack at 4 slots and 8-bit KV (819,200 and above fail with `RuntimeError: Insufficient VRAM in split for model and cache`, [R495b](../bench/results/r495b-2p50-audition.md)). 2,015 / 1,099 MiB stay free on cuda:0 / cuda:1 after boot. On the 3.05 bpw pack the ceiling was 360,448 at 4 slots ([R480](../bench/results/r480-exl3-pool.md)) and 262,144 at 8 ([R452](../bench/results/r452-exl3-cache-bits.md)). Free VRAM is not allocatable VRAM: arithmetic from free VRAM overestimated the pool |
+| `cache_size` | 819,200 | the shared page pool, in tokens, served since [R525](../bench/results/r525-promote-int8mix.md): the int8 mixer weights free 218 / 258 MiB, and 819,200 is then the largest that boots at 4 slots and 8-bit KV (835,584 fails with `RuntimeError: Insufficient VRAM in split for model and cache`, [R516](../bench/results/r516-int8-mixer-pool.md); without the int8 weights the ceiling is 786,432, [R495b](../bench/results/r495b-2p50-audition.md)). 1,973 / 1,057 MiB stay free on cuda:0 / cuda:1 after boot. On the 3.05 bpw pack the ceiling was 360,448 at 4 slots ([R480](../bench/results/r480-exl3-pool.md)) and 262,144 at 8 ([R452](../bench/results/r452-exl3-cache-bits.md)). Free VRAM is not allocatable VRAM: arithmetic from free VRAM overestimated the pool |
 | `cache_mode` | `8,8` | 8-bit KV, the operator's call (no q4) |
 | `max_batch_size` | 4 | Four slots since 2026-09-18 ([R480](../bench/results/r480-exl3-pool.md)): each slot carries the GDN recurrent state in fp32, one copy per draft position plus one, so four slots instead of eight release ~1.7 GiB that the page pool takes. A fifth to eighth request queues. **Set explicitly in any case.** exllamav3 clamps the generator's batch size to `cache.num_slots`, and TabbyAPI derives **4** for a recurrent model (128 otherwise). This checkpoint carries GDN recurrent state, so without this line a c8 test silently measures c4 |
 | `tensor_parallel` | `false` | `qwen4_exp` raises `NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration`. Layer split is the only mode |
@@ -52,8 +52,8 @@ is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 | knob | default | what it does |
 | --- | --- | --- |
 | `IMG=` | `tabbyapi:stack-r4-e3r2` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
-| `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each |
-| `CACHE=`, `MAXBS=`, `CACHE_MODE=`, `GPU_SPLIT=`, `CKPT_NAME=` | 786432, 4, `8,8`, `[30, 30]`, the 2.50 bpw pack | pool, slots, KV bits, split and checkpoint for experiments; the defaults are the served values |
+| `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each |
+| `CACHE=`, `MAXBS=`, `CACHE_MODE=`, `GPU_SPLIT=`, `CKPT_NAME=` | 819200, 4, `8,8`, `[30, 30]`, the 2.50 bpw pack | pool, slots, KV bits, split and checkpoint for experiments; the defaults are the served values |
 | `DRAFT_POLICY=` | empty | expands into `draft_model.draft_num_tokens_by_batch` only when set, so the unpatched path stays byte-identical |
 | `SYS_KV=` | 0 | the host KV tier: flat at 8 slots ([R358](../bench/results/r358-hostkv.md)); turns a 12.7 s re-prefill of an evicted 105k session into 0.5–0.7 s for 16 GiB of host RAM ([R493](../bench/results/r493-host-kv-tier.md)); not served |
 
@@ -83,7 +83,7 @@ values. Verified in the log: a greedy probe still reads `temperature: 0, greedy 
 
 ## Memory
 
-KV page pool cost: 14,144 B per token, so 1.41 GB of VRAM per 100k tokens and 11.1 GB for the 786,432-token pool. Per token that is 13 attention layers (the checkpoint's 12 full-attention layers plus the MTP block's 1, whose draft cache is `Q8` at the same size), each with 2 KV heads × 256 dims for K and for V at 8 bits (1,024 B) plus fp16 scales per 32 values (64 B). Layout from `exllamav3/cache/quant.py`.
+KV page pool cost: 14,144 B per token, so 1.41 GB of VRAM per 100k tokens and 11.6 GB for the 819,200-token pool. Per token that is 13 attention layers (the checkpoint's 12 full-attention layers plus the MTP block's 1, whose draft cache is `Q8` at the same size), each with 2 KV heads × 256 dims for K and for V at 8 bits (1,024 B) plus fp16 scales per 32 values (64 B). Layout from `exllamav3/cache/quant.py`.
 
 | setting | value | why |
 | --- | --- | --- |
@@ -101,6 +101,7 @@ KV page pool cost: 14,144 B per token, so 1.41 GB of VRAM per 100k tokens and 11
 | `EXL3_SHARED_EXPERT_OVERLAP=1` | the shared expert on a side CUDA stream | [R490](../bench/results/r490-shared-overlap.md) |
 | `EXL3_DRAFT_PINNED_STAGING=1`, `EXL3_BATCH_VERIFY=1`, `EXL3_MTP_HEAD_N=65536` | pinned draft staging, one readback for the verify step, a 65,536-token draft head | [R499](../bench/results/r499-decode-r4.md), [R514](../bench/results/r514-promote-r4i.md) |
 | `EXL3_MOE_PREFILL_E3=1` | grouped MoE prefill for every K | [R513](../bench/results/r513-prefill-e3-r2.md), [R517](../bench/results/r517-promote-stack.md) |
+| `EXL3_HC_MIX_V2_INT8=1` | int8 hyper-connection mixer weights: frees 218 / 258 MiB for the page pool; changes the c1 greedy output (fingerprint `e7fb377c987d685c`) at unchanged GSM8K and tool-eval | [R516](../bench/results/r516-int8-mixer-pool.md), [R525](../bench/results/r525-promote-int8mix.md) |
 
 ## Image
 

@@ -68,7 +68,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-786432}   # R511: 2.50bpw daily (3.05bpw: 360448)
+CACHE=${CACHE:-819200}   # R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -203,7 +203,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1}
 EV=()
 [ -n "$AUTOSPLIT_MARGIN_MB" ] && EXTRA_ENV="$EXTRA_ENV EXL3_AUTOSPLIT_MARGIN_MB=$AUTOSPLIT_MARGIN_MB"
 for kv in $EXTRA_ENV; do

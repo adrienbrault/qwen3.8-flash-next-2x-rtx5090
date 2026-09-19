@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R525: int8 mixer weights and a 819,200-token pool are served; every gate passes](results/r525-promote-int8mix.md)
+- [R521: after the side-stream overlap, the shared expert costs 1.9 µs per layer at 4 rows; a fused kernel could save at most about 1 %](results/r521-shared-bound.md)
 - [R520b: with 8 counterbalanced boots, switching off the int8-activation GEMV is −0.3 % at c1 (95 % CI −1.5 to +0.9); no effect](results/r520b-int8gemv-precise.md)
 - [R520: switching off the int8-activation GEMV changes no output; its decode effect is below what this design resolves](results/r520-int8gemv.md)
 - [R519: the 2.50 bpw decode step is 81–82 % kernel time; MoE kernels are the largest share at every shape](results/r519-profile-2p50.md)
