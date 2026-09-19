@@ -1,0 +1,23 @@
+2026-09-19T12:04:16+00:00 [r549] lock held; live image tabbyapi:nvme-tier-r4-e3det-r6
+2026-09-19T12:04:39+00:00 [r549] UP: cache_size: 819200 cache_mode: 8,8 max_batch_size: 4 ; VRAM free 1973/737/
+2026-09-19T12:10:17+00:00 [r549] probe exit 0; 17 phase records
+A c1 run0: TTFT ['0.23'] s, per-stream decode [217.3], aggregate 207.3 t/s 
+A c1 run1: TTFT ['0.13'] s, per-stream decode [227.4], aggregate 221.4 t/s 
+A c2 run0: TTFT ['0.23', '0.23'] s, per-stream decode [173.9, 173.4], aggregate 334.2 t/s 
+A c2 run1: TTFT ['0.22', '0.22'] s, per-stream decode [181.0, 175.9], aggregate 339.0 t/s 
+A c3 run0: TTFT ['0.32', '0.32', '0.34'] s, per-stream decode [147.6, 147.4, 144.4], aggregate 413.9 t/s 
+A c3 run1: TTFT ['0.31', '0.31', '0.33'] s, per-stream decode [146.8, 142.1, 143.0], aggregate 409.0 t/s 
+A c4 run0: TTFT ['0.40', '0.40', '0.43', '0.45'] s, per-stream decode [145.2, 150.5, 145.7, 141.1], aggregate 531.9 t/s 
+A c4 run1: TTFT ['0.39', '0.39', '0.39', '0.41'] s, per-stream decode [144.3, 143.4, 144.7, 143.0], aggregate 541.2 t/s 
+B c1 x ~30k ([22682]): TTFT sorted ['2.65'] s 
+B c2 x ~30k ([22556, 22531]): TTFT sorted ['5.89', '5.90'] s 
+B c3 x ~30k ([22564, 22682, 22561]): TTFT sorted ['5.90', '8.35', '8.36'] s 
+B c4 x ~30k ([22539, 22581, 22501, 22477]): TTFT sorted ['12.00', '12.01', '12.14', '12.14'] s 
+C 0 hot x 150,000: new short TTFT 0.16 s, decode 234.4; new 30k TTFT 2.47 s 
+C 1 hot x 150,000: new short TTFT 0.20 s, decode 161.1; new 30k TTFT 3.08 s; hot frames/s before [73.8] during-30k-prefill [4.22], max gap before [0.022] during [0.532] s 
+C 2 hot x 150,000: new short TTFT 0.24 s, decode 133.5; new 30k TTFT 3.25 s; hot frames/s before [54.8, 54.8] during-30k-prefill [4.31, 4.31], max gap before [0.046, 0.046] during [0.536, 0.536] s 
+C 3 hot x 150,000: new short TTFT 0.26 s, decode 128.1; new 30k TTFT 3.24 s; hot frames/s before [46.0, 46.0, 46.0] during-30k-prefill [4.32, 4.32, 4.32], max gap before [0.05, 0.05, 0.05] during [0.546, 0.546, 0.546] s 
+D 4 x 190,000 ([142654, 142616, 142692, 142579]): TTFT sorted ['24.00', '70.01', '70.05', '70.09'] s; all-hot window 7.93 s, per-stream decode [116.8, 104.3, 114.0, 108.3], max gap [0.051, 0.051, 0.051, 0.051]; finish ['length', 'length', 'length', 'length'] 
+2026-09-19T12:10:17+00:00 [r549] server alive after the probe
+2026-09-19T12:10:17+00:00 [r549] not restoring: GPU queue continues (r515-queue-chain(pid 843755))
+2026-09-19T12:10:18+00:00 [r549] === R549 DONE ===

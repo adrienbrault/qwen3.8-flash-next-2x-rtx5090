@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R549: TTFT and decode with 1 to 4 slots in use, up to 570k tokens resident; the pool does not stall](results/r549-hot-slots.md)
 - [R540: decode kernels round 6 are served; every gate passes](results/r540-promote-r6.md)
 - [R538: decode kernels round 6 are bit-exact and +1.0 % code / +1.1 % prose at 1 stream; c4 unchanged (8 boots)](results/r538-decode-r6.md)
 - [R537: a deeper MTP draft at 1 stream is +5 % on code and −5 to −8 % on prose; not served](results/r537-draft-depth.md)
