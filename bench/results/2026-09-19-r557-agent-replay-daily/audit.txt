@@ -1,0 +1,9 @@
+2026-09-19T16:12:16+00:00 [r557] lock held; live image tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16
+2026-09-19T16:12:39+00:00 [r557] UP: cache_size: 1032192 cache_mode: 8,8 max_batch_size: 4 ; VRAM free 2013/737/
+[replay D1] {"tag": "D1", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 413.2, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 53.1, "lat_p50": 4.229, "lat_p90": 10.869, "lat_mean": 5.67}
+[tabby D1] /srv/qwen5090/results/2026-09-19-r557-agent-replay-daily/replay-D1.tabby.log: requests 282 · generated 90,128 · prompt 4,503,464, cached 4,130,560 (91.7 %), new 372,904 · prefill 118 s · cold (<10 % cached, >4k prompt) 0 · queued p50/p90 1.39/3.28 s · ttft p50/p90 1.81/3.80 s · total mean 5.46 s · draft accept 68.9 %
+[replay D2] {"tag": "D2", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 395.1, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 55.6, "lat_p50": 4.114, "lat_p90": 10.948, "lat_mean": 5.54}
+[tabby D2] /srv/qwen5090/results/2026-09-19-r557-agent-replay-daily/replay-D2.tabby.log: requests 273 · generated 94,163 · prompt 4,334,086, cached 3,973,888 (91.7 %), new 360,198 · prefill 103 s · cold (<10 % cached, >4k prompt) 0 · queued p50/p90 1.52/3.43 s · ttft p50/p90 1.87/3.97 s · total mean 5.60 s · draft accept 69.6 %
+2026-09-19T16:26:08+00:00 [r557] server alive after the replay
+2026-09-19T16:26:08+00:00 [r557] not restoring: GPU queue continues (r515-queue-chain(pid 3513108))
+2026-09-19T16:26:09+00:00 [r557] === R557 DONE ===

@@ -1,0 +1,64 @@
+2026-09-19T16:47:05+00:00 [r560] lock held; live pool 1032192; disk  80%
+2026-09-19T16:47:05+00:00 [r560] 8-slot pool from R558: 966656
+2026-09-19T16:47:28+00:00 [r560] UP P1: draft_num_tokens_by_batch: [[4, 3], [8, 1]]; VRAM free 2079/859/; c1 f4add302e176d78e
+[P1-c6 code]  c=6 warm-up round ctx~0: 12.4 s (not recorded)
+[P1-c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 512.4, "per_stream_wall_tps": 85.4, "decode_tps": 90.0, "ttft_s": 0.609}
+[P1-c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.7, "per_stream_wall_tps": 85.8, "decode_tps": 90.4, "ttft_s": 0.604}
+[P1-c6 prose]  c=6 warm-up round ctx~0: 12.6 s (not recorded)
+[P1-c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 511.7, "per_stream_wall_tps": 86.3, "decode_tps": 91.2, "ttft_s": 0.57}
+[P1-c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.6, "per_stream_wall_tps": 86.6, "decode_tps": 91.6, "ttft_s": 0.573}
+[P1-c8 code]  c=8 warm-up round ctx~0: 13.1 s (not recorded)
+[P1-c8 code]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 640.5, "per_stream_wall_tps": 80.2, "decode_tps": 85.3, "ttft_s": 0.726}
+[P1-c8 code]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 639.9, "per_stream_wall_tps": 80.1, "decode_tps": 85.3, "ttft_s": 0.736}
+[P1-c8 prose]  c=8 warm-up round ctx~0: 13.5 s (not recorded)
+[P1-c8 prose]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 629.6, "per_stream_wall_tps": 79.6, "decode_tps": 84.5, "ttft_s": 0.688}
+[P1-c8 prose]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 626.9, "per_stream_wall_tps": 79.3, "decode_tps": 84.2, "ttft_s": 0.689}
+2026-09-19T16:50:02+00:00 [r560] P1 done: alive; min free during c8 2009 787; new verify shapes 0
+2026-09-19T16:50:23+00:00 [r560] UP P2: draft_num_tokens_by_batch: [[4, 3], [6, 2], [8, 1]]; VRAM free 2079/859/; c1 f4add302e176d78e
+[P2-c6 code]  c=6 warm-up round ctx~0: 18.6 s (not recorded)
+[P2-c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 348.2, "per_stream_wall_tps": 58.7, "decode_tps": 60.7, "ttft_s": 0.6}
+[P2-c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 352.3, "per_stream_wall_tps": 59.3, "decode_tps": 61.4, "ttft_s": 0.597}
+[P2-c6 prose]  c=6 warm-up round ctx~0: 19.1 s (not recorded)
+[P2-c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 328.3, "per_stream_wall_tps": 54.9, "decode_tps": 56.7, "ttft_s": 0.583}
+[P2-c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 326.1, "per_stream_wall_tps": 54.5, "decode_tps": 56.3, "ttft_s": 0.581}
+[P2-c8 code]  c=8 warm-up round ctx~0: 13.2 s (not recorded)
+[P2-c8 code]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 637.3, "per_stream_wall_tps": 81.3, "decode_tps": 86.0, "ttft_s": 0.756}
+[P2-c8 code]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 632.6, "per_stream_wall_tps": 80.7, "decode_tps": 85.2, "ttft_s": 0.745}
+[P2-c8 prose]  c=8 warm-up round ctx~0: 13.4 s (not recorded)
+[P2-c8 prose]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 621.7, "per_stream_wall_tps": 78.1, "decode_tps": 83.3, "ttft_s": 0.701}
+[P2-c8 prose]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 630.4, "per_stream_wall_tps": 79.2, "decode_tps": 84.6, "ttft_s": 0.706}
+2026-09-19T16:53:35+00:00 [r560] P2 done: alive; min free during c8 2005 783; new verify shapes 0
+2026-09-19T16:53:53+00:00 [r560] UP P3: draft_num_tokens_by_batch: [[4, 3], [8, 2]]; VRAM free 2079/859/; c1 f4add302e176d78e
+[P3-c6 code]  c=6 warm-up round ctx~0: 18.6 s (not recorded)
+[P3-c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 353.8, "per_stream_wall_tps": 59.6, "decode_tps": 61.7, "ttft_s": 0.599}
+[P3-c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 337.8, "per_stream_wall_tps": 56.6, "decode_tps": 58.5, "ttft_s": 0.616}
+[P3-c6 prose]  c=6 warm-up round ctx~0: 18.9 s (not recorded)
+[P3-c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 325.0, "per_stream_wall_tps": 54.4, "decode_tps": 56.1, "ttft_s": 0.585}
+[P3-c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 327.2, "per_stream_wall_tps": 54.7, "decode_tps": 56.5, "ttft_s": 0.587}
+[P3-c8 code]  c=8 warm-up round ctx~0: 21.6 s (not recorded)
+[P3-c8 code]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 381.8, "per_stream_wall_tps": 48.2, "decode_tps": 50.0, "ttft_s": 0.756}
+[P3-c8 code]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 428.3, "per_stream_wall_tps": 55.8, "decode_tps": 58.1, "ttft_s": 0.736}
+[P3-c8 prose]  c=8 warm-up round ctx~0: 21.9 s (not recorded)
+[P3-c8 prose]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 381.1, "per_stream_wall_tps": 47.7, "decode_tps": 49.8, "ttft_s": 0.718}
+[P3-c8 prose]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 381.4, "per_stream_wall_tps": 47.8, "decode_tps": 49.8, "ttft_s": 0.712}
+2026-09-19T16:57:54+00:00 [r560] P3 done: alive; min free during c8 1999 779; new verify shapes 0
+P1-c6-code: aggregate 513.5 t/s (runs 2: 512.4, 514.7)
+P1-c6-prose: aggregate 512.7 t/s (runs 2: 511.7, 513.6)
+P1-c8-code: aggregate 640.2 t/s (runs 2: 640.5, 639.9)
+P1-c8-prose: aggregate 628.2 t/s (runs 2: 629.6, 626.9)
+P2-c6-code: aggregate 350.2 t/s (runs 2: 348.2, 352.3)
+P2-c6-prose: aggregate 327.2 t/s (runs 2: 328.3, 326.1)
+P2-c8-code: aggregate 635.0 t/s (runs 2: 637.4, 632.6)
+P2-c8-prose: aggregate 626.1 t/s (runs 2: 621.7, 630.4)
+P3-c6-code: aggregate 345.8 t/s (runs 2: 353.8, 337.8)
+P3-c6-prose: aggregate 326.1 t/s (runs 2: 325.0, 327.2)
+P3-c8-code: aggregate 405.0 t/s (runs 2: 381.8, 428.3)
+P3-c8-prose: aggregate 381.3 t/s (runs 2: 381.1, 381.4)
+P1 code: c8/c6 = 1.247
+P2 code: c8/c6 = 1.813
+P3 code: c8/c6 = 1.171
+P1 prose: c8/c6 = 1.225
+P2 prose: c8/c6 = 1.913
+P3 prose: c8/c6 = 1.169
+2026-09-19T16:57:54+00:00 [r560] not restoring: GPU queue continues (r515-queue-chain(pid 3513108))
+2026-09-19T16:57:55+00:00 [r560] === R560 DONE ===

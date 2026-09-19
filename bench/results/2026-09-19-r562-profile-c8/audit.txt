@@ -1,0 +1,147 @@
+2026-09-19T16:57:55+00:00 [r562] lock held; timebox ends 2026-09-19T17:17:55+00:00; image tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; env: EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1
+2026-09-19T16:57:58+00:00 [r562] shape set c8d1-wall: --contexts 1024 --batch 8 --draft 1 --capture-mode wall (timeout 1197s)
+2026-09-19T16:58:34+00:00 [r562] shape set c8d1-wall exit 0
+2026-09-19T16:58:34+00:00 [r562] shape set c8d2-wall: --contexts 1024 --batch 8 --draft 2 --capture-mode wall (timeout 1161s)
+2026-09-19T16:59:13+00:00 [r562] shape set c8d2-wall exit 0
+2026-09-19T16:59:13+00:00 [r562] shape set c6d2-wall: --contexts 1024 --batch 6 --draft 2 --capture-mode wall (timeout 1122s)
+2026-09-19T16:59:48+00:00 [r562] shape set c6d2-wall exit 0
+2026-09-19T16:59:48+00:00 [r562] shape set c6d1-wall: --contexts 1024 --batch 6 --draft 1 --capture-mode wall (timeout 1087s)
+2026-09-19T17:00:19+00:00 [r562] shape set c6d1-wall exit 0
+2026-09-19T17:00:19+00:00 [r562] shape set c4d3-wall: --contexts 1024 --batch 4 --draft 3 --capture-mode wall (timeout 1056s)
+2026-09-19T17:00:49+00:00 [r562] shape set c4d3-wall exit 0
+2026-09-19T17:00:49+00:00 [r562] shape set c8d3-wall: --contexts 1024 --batch 8 --draft 3 --capture-mode wall (timeout 1026s)
+2026-09-19T17:01:26+00:00 [r562] shape set c8d3-wall exit 0
+2026-09-19T17:01:26+00:00 [r562] shape set c8d1-profiler: --contexts 1024 --batch 8 --draft 1 --capture-mode profiler (timeout 989s)
+2026-09-19T17:02:05+00:00 [r562] shape set c8d1-profiler exit 0
+2026-09-19T17:02:05+00:00 [r562] shape set c8d2-profiler: --contexts 1024 --batch 8 --draft 2 --capture-mode profiler (timeout 950s)
+2026-09-19T17:02:51+00:00 [r562] shape set c8d2-profiler exit 0
+2026-09-19T17:02:51+00:00 [r562] shape set c6d2-profiler: --contexts 1024 --batch 6 --draft 2 --capture-mode profiler (timeout 904s)
+2026-09-19T17:03:34+00:00 [r562] shape set c6d2-profiler exit 0
+2026-09-19T17:03:34+00:00 [r562] shape set c6d1-profiler: --contexts 1024 --batch 6 --draft 1 --capture-mode profiler (timeout 861s)
+2026-09-19T17:04:12+00:00 [r562] shape set c6d1-profiler exit 0
+2026-09-19T17:04:12+00:00 [r562] shape set c4d3-profiler: --contexts 1024 --batch 4 --draft 3 --capture-mode profiler (timeout 823s)
+2026-09-19T17:04:47+00:00 [r562] shape set c4d3-profiler exit 0
+2026-09-19T17:04:47+00:00 [r562] shape set c8d3-profiler: --contexts 1024 --batch 8 --draft 3 --capture-mode profiler (timeout 788s)
+2026-09-19T17:05:34+00:00 [r562] shape set c8d3-profiler exit 0
+== c4d3 [ctx1024_b4_d3]: wall 19.5 ms/step (profiler 21.16), tokens/step 11.91, t/s 611; kernel 18.10 ms/step (cuda:0 12.95 / cuda:1 5.14), non-kernel 3.06
+   moe_coop 7.37 | exl3_gemm 4.50 | hc_mixer 2.73 | gdn 1.46 | attention 0.94 | elementwise_other 0.53 | cublas_cutlass 0.33 | routing 0.16 | sampling_argmax 0.05 | int8_gemv 0.03
+      2.138 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.842 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.444 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      1.433 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, true>(MoeCoopParams)
+      1.354 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      1.283 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)
+      0.962 ms x  36  void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false, __nv_bfloat16>(__nv_bfloat
+      0.953 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+== c4d3 [ctx1024_b4_d0]: wall 10.94 ms/step (profiler 11.06), tokens/step 4.00, t/s 366; kernel 10.39 ms/step (cuda:0 7.62 / cuda:1 2.77), non-kernel 0.66
+   moe_coop 3.70 | exl3_gemm 2.14 | cublas_cutlass 1.69 | hc_mixer 1.42 | gdn 0.55 | attention 0.48 | elementwise_other 0.26 | routing 0.15 | sampling_argmax 0.01
+      1.265 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      0.980 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      0.900 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const*
+      0.892 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      0.838 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      0.817 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      0.680 ms x  97  void gr_v2_dots_i8_kernel<4>(float const*, signed char const*, float const*, float*, int, 
+      0.661 ms x  48  void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const
+== c6d1 [ctx1024_b6_d1]: wall 19.05 ms/step (profiler 21.39), tokens/step 10.92, t/s 573; kernel 17.45 ms/step (cuda:0 12.51 / cuda:1 4.94), non-kernel 3.93
+   moe_coop 7.85 | exl3_gemm 4.04 | hc_mixer 2.53 | gdn 1.02 | attention 0.93 | elementwise_other 0.50 | cublas_cutlass 0.32 | routing 0.15 | int8_gemv 0.08 | sampling_argmax 0.03
+      2.092 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.907 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      1.835 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.596 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.353 ms x 100  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      1.296 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      0.941 ms x 100  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.931 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+== c6d1 [ctx1024_b6_d0]: wall 12.52 ms/step (profiler 13.29), tokens/step 6.00, t/s 479; kernel 12.53 ms/step (cuda:0 8.99 / cuda:1 3.53), non-kernel 0.76
+   moe_coop 5.25 | exl3_gemm 2.16 | hc_mixer 1.82 | cublas_cutlass 1.70 | gdn 0.65 | attention 0.51 | elementwise_other 0.28 | routing 0.15 | sampling_argmax 0.02
+      1.355 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.317 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.276 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      1.193 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      1.192 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      0.907 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      0.718 ms x  97  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.669 ms x  48  void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const
+== c6d2 [ctx1024_b6_d0]: wall 12.56 ms/step (profiler 13.20), tokens/step 6.00, t/s 478; kernel 12.54 ms/step (cuda:0 9.00 / cuda:1 3.54), non-kernel 0.67
+   moe_coop 5.26 | exl3_gemm 2.16 | hc_mixer 1.82 | cublas_cutlass 1.70 | gdn 0.65 | attention 0.52 | elementwise_other 0.28 | routing 0.15 | sampling_argmax 0.02
+      1.354 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.317 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.278 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      1.196 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.194 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      0.907 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      0.718 ms x  97  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.671 ms x  48  void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const
+== c6d2 [ctx1024_b6_d2]: wall 39.96 ms/step (profiler 43.99), tokens/step 14.61, t/s 366; kernel 33.56 ms/step (cuda:0 23.29 / cuda:1 10.27), non-kernel 10.44
+   elementwise_other 19.99 | exl3_gemm 6.69 | hc_mixer 3.43 | gdn 1.36 | attention 1.19 | cublas_cutlass 0.34 | moe_coop 0.26 | routing 0.15 | int8_gemv 0.10 | sampling_argmax 0.05
+      8.916 ms x  23  void exl3_moe_kernel<3, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+      8.233 ms x  25  void exl3_moe_kernel<2, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+      2.170 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      1.819 ms x 103  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      1.545 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+      1.310 ms x 103  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      1.108 ms x  48  void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const
+      0.959 ms x  18  _paged_attn_decode_split_kernel
+== c8d1 [ctx1024_b8_d0]: wall 14.26 ms/step (profiler 15.09), tokens/step 8.00, t/s 561; kernel 14.10 ms/step (cuda:0 10.14 / cuda:1 3.96), non-kernel 0.99
+   moe_coop 6.34 | exl3_gemm 2.19 | hc_mixer 1.99 | cublas_cutlass 1.68 | gdn 0.84 | attention 0.59 | elementwise_other 0.31 | routing 0.15 | sampling_argmax 0.03
+      1.653 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.564 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.508 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      1.384 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.293 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      1.095 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      0.702 ms x  97  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.675 ms x  27  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+== c8d1 [ctx1024_b8_d1]: wall 20.05 ms/step (profiler 22.41), tokens/step 14.59, t/s 728; kernel 17.89 ms/step (cuda:0 12.86 / cuda:1 5.02), non-kernel 4.52
+   moe_coop 7.25 | exl3_gemm 4.18 | hc_mixer 2.76 | gdn 1.36 | attention 1.13 | elementwise_other 0.57 | cublas_cutlass 0.33 | routing 0.15 | int8_gemv 0.11 | sampling_argmax 0.04
+      2.140 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.842 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.535 ms x 100  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      1.449 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, true>(MoeCoopParams)
+      1.351 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      1.288 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)
+      0.958 ms x 100  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.949 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+== c8d2 [ctx1024_b8_d2]: wall 44.68 ms/step (profiler 49.34), tokens/step 19.25, t/s 431; kernel 37.90 ms/step (cuda:0 26.48 / cuda:1 11.42), non-kernel 11.44
+   elementwise_other 22.72 | exl3_gemm 6.85 | hc_mixer 4.14 | gdn 1.74 | attention 1.45 | cublas_cutlass 0.34 | moe_coop 0.32 | routing 0.15 | int8_gemv 0.13 | sampling_argmax 0.05
+     10.262 ms x  23  void exl3_moe_kernel<3, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+      9.514 ms x  25  void exl3_moe_kernel<2, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+      2.477 ms x 103  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      2.213 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      1.575 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+      1.329 ms x 103  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      1.203 ms x  20  _paged_attn_decode_split_kernel
+      1.135 ms x  48  void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const
+== c8d2 [ctx1024_b8_d0]: wall 14.24 ms/step (profiler 15.12), tokens/step 8.00, t/s 562; kernel 14.09 ms/step (cuda:0 10.13 / cuda:1 3.96), non-kernel 1.03
+   moe_coop 6.33 | exl3_gemm 2.19 | hc_mixer 1.99 | cublas_cutlass 1.67 | gdn 0.84 | attention 0.59 | elementwise_other 0.31 | routing 0.15 | sampling_argmax 0.03
+      1.651 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.561 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.506 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      1.384 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.292 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      1.095 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      0.702 ms x  97  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.675 ms x  27  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+== c8d3 [ctx1024_b8_d3]: wall 53.24 ms/step (profiler 57.44), tokens/step 23.69, t/s 445; kernel 43.34 ms/step (cuda:0 30.37 / cuda:1 12.97), non-kernel 14.10
+   elementwise_other 26.13 | exl3_gemm 7.42 | hc_mixer 5.01 | gdn 2.19 | attention 1.49 | moe_coop 0.46 | cublas_cutlass 0.36 | routing 0.16 | sampling_argmax 0.07 | int8_gemv 0.05
+     10.951 ms x  23  void exl3_moe_kernel<3, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+     10.145 ms x  25  void exl3_moe_kernel<2, 128, 2, 16>(__half const*, __half*, __half*, __half*, __half*, flo
+      2.924 ms x 106  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      2.324 ms x  96  void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*,
+      1.694 ms x 106  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      1.628 ms x  36  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+      1.419 ms x  36  void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false, __nv_bfloat16>(__nv_bfloat
+      1.234 ms x  21  _paged_attn_decode_split_kernel
+== c8d3 [ctx1024_b8_d0]: wall 14.3 ms/step (profiler 15.01), tokens/step 8.00, t/s 559; kernel 14.08 ms/step (cuda:0 10.12 / cuda:1 3.96), non-kernel 0.93
+   moe_coop 6.33 | exl3_gemm 2.18 | hc_mixer 1.99 | cublas_cutlass 1.67 | gdn 0.85 | attention 0.59 | elementwise_other 0.31 | routing 0.15 | sampling_argmax 0.03
+      1.652 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)
+      1.562 ms x  23  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)
+      1.506 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)
+      1.379 ms x  25  void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)
+      1.291 ms x  96  void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*
+      1.094 ms x  97  void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, 
+      0.702 ms x  97  void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float con
+      0.675 ms x  27  void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*
+2026-09-19T17:05:34+00:00 [r562] not restoring: GPU queue continues (r515-queue-chain(pid 3513108))
+2026-09-19T17:05:34+00:00 [r562] === R562 DONE ===

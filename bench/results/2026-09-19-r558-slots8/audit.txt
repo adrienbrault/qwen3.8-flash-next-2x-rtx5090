@@ -1,0 +1,45 @@
+2026-09-19T16:26:09+00:00 [r558] lock held; live pool 1032192; disk  80%
+2026-09-19T16:26:09+00:00 [r558] === S0 REF: live launcher (4 slots), tier off ===
+2026-09-19T16:26:58+00:00 [r558] REF @ 1032192 x 4: boot free 2013/737, c1 f4add302e176d78e, min under 120k + c8 1243/195
+2026-09-19T16:26:58+00:00 [r558] === S3 (first, same boot) REF c8: 4 slots queue the other 4 ===
+[REF-s4 code]  c=8 warm-up round ctx~0: 29.2 s (not recorded)
+[REF-s4 code]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 574.3, "per_stream_wall_tps": 103.3, "decode_tps": 150.3, "ttft_s": 7.285}
+[REF-s4 code]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 524.5, "per_stream_wall_tps": 96.5, "decode_tps": 137.0, "ttft_s": 7.981}
+[REF-s4 prose]  c=8 warm-up round ctx~0: 31.6 s (not recorded)
+[REF-s4 prose]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 564.6, "per_stream_wall_tps": 103.0, "decode_tps": 146.4, "ttft_s": 7.025}
+[REF-s4 prose]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 534.1, "per_stream_wall_tps": 97.0, "decode_tps": 135.5, "ttft_s": 7.359}
+2026-09-19T16:30:00+00:00 [r558] === S1 descending ladder at MAXBS=8 ===
+2026-09-19T16:30:19+00:00 [r558] NO BOOT L8-1015808 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T16:30:39+00:00 [r558] NO BOOT L8-999424 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T16:31:25+00:00 [r558] [L8] 983040: min under load 1175/229 < floors 1211/163
+2026-09-19T16:32:07+00:00 [r558] [L8] 966656: PASS (boot free 2085/867/, c1 = REF, min under load 1299/353)
+2026-09-19T16:32:07+00:00 [r558] === S2 8 slots @ 966656: fn_bench c1 / c4 / c8, then the 8-agent replay ===
+[S8-c1 code]  c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[S8-c1 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 200.9, "per_stream_wall_tps": 200.9, "decode_tps": 203.5, "ttft_s": 0.136}
+[S8-c1 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 200.9, "per_stream_wall_tps": 200.9, "decode_tps": 203.5, "ttft_s": 0.135}
+[S8-c1 prose]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[S8-c1 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.6, "per_stream_wall_tps": 199.6, "decode_tps": 202.1, "ttft_s": 0.13}
+[S8-c1 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.5, "per_stream_wall_tps": 199.5, "decode_tps": 201.9, "ttft_s": 0.129}
+[S8-c4 code]  c=4 warm-up round ctx~0: 15.1 s (not recorded)
+[S8-c4 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 566.5, "per_stream_wall_tps": 149.7, "decode_tps": 154.6, "ttft_s": 0.443}
+[S8-c4 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 566.1, "per_stream_wall_tps": 149.6, "decode_tps": 154.5, "ttft_s": 0.445}
+[S8-c4 prose]  c=4 warm-up round ctx~0: 16.4 s (not recorded)
+[S8-c4 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 523.0, "per_stream_wall_tps": 131.7, "decode_tps": 135.3, "ttft_s": 0.42}
+[S8-c4 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 522.5, "per_stream_wall_tps": 131.6, "decode_tps": 135.2, "ttft_s": 0.418}
+[S8-c6 code]  c=6 warm-up round ctx~0: 23.5 s (not recorded)
+[S8-c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 537.6, "per_stream_wall_tps": 89.8, "decode_tps": 92.1, "ttft_s": 0.588}
+[S8-c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 550.8, "per_stream_wall_tps": 92.0, "decode_tps": 94.4, "ttft_s": 0.591}
+[S8-c6 prose]  c=6 warm-up round ctx~0: 24.2 s (not recorded)
+[S8-c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 522.6, "per_stream_wall_tps": 87.5, "decode_tps": 89.9, "ttft_s": 0.576}
+[S8-c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 522.6, "per_stream_wall_tps": 87.5, "decode_tps": 89.9, "ttft_s": 0.578}
+[S8-c8 code]  c=8 warm-up round ctx~0: 24.6 s (not recorded)
+[S8-c8 code]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 670.4, "per_stream_wall_tps": 84.8, "decode_tps": 87.0, "ttft_s": 0.705}
+[S8-c8 code]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 677.9, "per_stream_wall_tps": 85.8, "decode_tps": 88.0, "ttft_s": 0.71}
+[S8-c8 prose]  c=8 warm-up round ctx~0: 25.7 s (not recorded)
+[S8-c8 prose]  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 627.4, "per_stream_wall_tps": 78.8, "decode_tps": 81.2, "ttft_s": 0.7}
+[S8-c8 prose]  c=8 run1 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 651.4, "per_stream_wall_tps": 82.3, "decode_tps": 84.8, "ttft_s": 0.73}
+[replay S8] {"tag": "S8", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 408.6, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 53.7, "lat_p50": 3.763, "lat_p90": 11.042, "lat_mean": 5.57}
+[tabby S8] /srv/qwen5090/results/2026-09-19-r558-slots8/replay-S8.tabby.log: requests 67 · generated 20,404 · prompt 883,365, cached 783,360 (88.7 %), new 100,005 · prefill 39 s · cold (<10 % cached, >4k prompt) 0 · queued p50/p90 0.12/0.27 s · ttft p50/p90 0.64/1.19 s · total mean 5.36 s · draft accept 80.3 %
+2026-09-19T16:46:24+00:00 [r558] server alive after the replay
+2026-09-19T16:46:24+00:00 [r558] not restoring: GPU queue continues (r515-queue-chain(pid 3513108))
+2026-09-19T16:46:25+00:00 [r558] === R558 DONE ===

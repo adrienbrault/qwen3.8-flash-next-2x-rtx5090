@@ -1,0 +1,45 @@
+2026-09-19T15:20:00+00:00 [r553] lock held; live image tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16
+2026-09-19T15:20:18+00:00 [r553] UP chunk 2048: cache_size: 1032192 chunk_size: 2048 ; VRAM free 2013/737/
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+2026-09-19T15:23:28+00:00 [r553] chunk 2048 phase C exit 0
+chunk 2048 C 0 hot: new short TTFT 0.19 s, decode 196.8; new ~22.5k TTFT 2.42 s 
+chunk 2048 C 1 hot: new short TTFT 0.21 s, decode 153.5; new ~22.5k TTFT 3.15 s; hot frames/s before [72.6] during [4.12], max gap before [0.018] during [0.526] s 
+chunk 2048 C 2 hot: new short TTFT 0.24 s, decode 111.7; new ~22.5k TTFT 3.39 s; hot frames/s before [55.6, 55.6] during [4.72, 4.43], max gap before [0.035, 0.035] during [0.521, 0.521] s 
+chunk 2048 C 3 hot: new short TTFT 0.27 s, decode 112.8; new ~22.5k TTFT 3.21 s; hot frames/s before [46.2, 46.2, 46.2] during [4.05, 4.05, 4.05], max gap before [0.036, 0.036, 0.036] during [0.532, 0.532, 0.532] s 
+2026-09-19T15:23:48+00:00 [r553] UP chunk 1024: cache_size: 1032192 chunk_size: 1024 ; VRAM free 2013/717/
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+2026-09-19T15:28:04+00:00 [r553] chunk 1024 phase C exit 0
+chunk 1024 C 0 hot: new short TTFT 0.18 s, decode 204.7; new ~22.5k TTFT 4.22 s 
+chunk 1024 C 1 hot: new short TTFT 0.21 s, decode 139.8; new ~22.5k TTFT 4.46 s; hot frames/s before [73.4] during [6.94], max gap before [0.015] during [0.204] s 
+chunk 1024 C 2 hot: new short TTFT 0.25 s, decode 133.7; new ~22.5k TTFT 4.58 s; hot frames/s before [54.8, 54.8] during [6.34, 6.34], max gap before [0.034, 0.034] during [0.208, 0.208] s 
+chunk 1024 C 3 hot: new short TTFT 0.26 s, decode 127.9; new ~22.5k TTFT 4.64 s; hot frames/s before [46.2, 46.2, 46.2] during [6.24, 6.46, 6.46], max gap before [0.036, 0.036, 0.036] during [0.247, 0.247, 0.247] s 
+2026-09-19T15:28:23+00:00 [r553] UP chunk 512: cache_size: 1032192 chunk_size: 512 ; VRAM free 189/2701/
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+  File "<string>", line 1
+    import json,sys; r=[x for x in map(json.loads, open(sys.argv[1])) if x.get("tag")==sys.argv[2]][-1]; print(f"cold prefill {sys.argv[2]}: {r[\"prompt_tokens\"]} tokens, {r[\"prompt_tokens\"]/r[\"ttft_s\"]:,.0f} tok/s")
+                                                                                                                                                 ^
+SyntaxError: unexpected character after line continuation character
+2026-09-19T15:33:41+00:00 [r553] chunk 512 phase C exit 0
+chunk 512 C 0 hot: new short TTFT 0.18 s, decode 227.5; new ~22.5k TTFT 5.54 s 
+chunk 512 C 1 hot: new short TTFT 0.22 s, decode 163.4; new ~22.5k TTFT 6.14 s; hot frames/s before [72.8] during [8.47], max gap before [0.018] during [0.422] s 
+chunk 512 C 2 hot: new short TTFT 0.25 s, decode 112.8; new ~22.5k TTFT 6.28 s; hot frames/s before [55.4, 55.4] during [8.28, 8.44], max gap before [0.031, 0.031] during [0.456, 0.158] s 
+chunk 512 C 3 hot: new short TTFT 0.26 s, decode 108.1; new ~22.5k TTFT 6.50 s; hot frames/s before [46.2, 46.2, 46.2] during [8.0, 8.0, 8.0], max gap before [0.042, 0.042, 0.042] during [0.182, 0.49, 0.182] s 
+2026-09-19T15:33:41+00:00 [r553] not restoring: GPU queue continues (r515-queue-chain(pid 1146247))
+2026-09-19T15:33:42+00:00 [r553] === R553 DONE ===

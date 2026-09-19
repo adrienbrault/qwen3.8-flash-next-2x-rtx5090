@@ -1,0 +1,25 @@
+2026-09-19T15:34:55+00:00 [r554] lock held; live image tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16
+2026-09-19T15:35:14+00:00 [r554] UP: cache_size: 1032192 max_batch_size: 4 chunk_size: 2048 ; VRAM free 2013/737/
+c1-code-0 run0: prompt 101 tokens, n_ok None, tokens None, ttft 0.141 s, per-stream decode 197.65, aggregate None t/s
+c1-code-0 run1: prompt 101 tokens, n_ok None, tokens None, ttft 0.139 s, per-stream decode 197.77, aggregate None t/s
+c1-code-133000 run0: prompt 179575 tokens, n_ok None, tokens None, ttft 18.251 s, per-stream decode 210.16, aggregate None t/s
+c1-code-133000 run1: prompt 179575 tokens, n_ok None, tokens None, ttft 0.459 s, per-stream decode 211.96, aggregate None t/s
+c1-code-266000 run0: prompt None tokens, n_ok None, tokens None, ttft None s, per-stream decode None, aggregate None t/s
+c1-code-266000 run1: prompt None tokens, n_ok None, tokens None, ttft None s, per-stream decode None, aggregate None t/s
+c1-prose-0 run0: prompt 89 tokens, n_ok None, tokens None, ttft 0.131 s, per-stream decode 191.93, aggregate None t/s
+c1-prose-0 run1: prompt 89 tokens, n_ok None, tokens None, ttft 0.132 s, per-stream decode 196.94, aggregate None t/s
+c1-prose-133000 run0: prompt 99839 tokens, n_ok None, tokens None, ttft 9.855 s, per-stream decode 194.13, aggregate None t/s
+c1-prose-133000 run1: prompt 99839 tokens, n_ok None, tokens None, ttft 0.325 s, per-stream decode 195.58, aggregate None t/s
+c1-prose-266000 run0: prompt 199451 tokens, n_ok None, tokens None, ttft 19.516 s, per-stream decode 189.87, aggregate None t/s
+c1-prose-266000 run1: prompt 199451 tokens, n_ok None, tokens None, ttft 0.443 s, per-stream decode 193.26, aggregate None t/s
+c4-prose-133000 run0: prompt 99998 tokens, n_ok None, tokens None, ttft 51.978 s, per-stream decode 167.32, aggregate None t/s
+c4-prose-133000 run0: prompt 99917 tokens, n_ok None, tokens None, ttft 51.974 s, per-stream decode 127.82, aggregate None t/s
+c4-prose-133000 run0: prompt 99711 tokens, n_ok None, tokens None, ttft 51.978 s, per-stream decode 124.13, aggregate None t/s
+c4-prose-133000 run0: prompt 99902 tokens, n_ok None, tokens None, ttft 51.969 s, per-stream decode 119.5, aggregate None t/s
+c4-prose-133000 run1: prompt 99998 tokens, n_ok None, tokens None, ttft 1.068 s, per-stream decode 169.25, aggregate None t/s
+c4-prose-133000 run1: prompt 99917 tokens, n_ok None, tokens None, ttft 1.07 s, per-stream decode 127.2, aggregate None t/s
+c4-prose-133000 run1: prompt 99711 tokens, n_ok None, tokens None, ttft 1.083 s, per-stream decode 124.73, aggregate None t/s
+c4-prose-133000 run1: prompt 99902 tokens, n_ok None, tokens None, ttft 1.077 s, per-stream decode 122.36, aggregate None t/s
+2026-09-19T15:39:16+00:00 [r554] server alive after the probe
+2026-09-19T15:39:16+00:00 [r554] not restoring: GPU queue continues (r515-queue-chain(pid 1146247))
+2026-09-19T15:39:17+00:00 [r554] === R554 DONE ===

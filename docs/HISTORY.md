@@ -63,3 +63,20 @@ Not promoted, 2026-09-17 14:20 CEST: MoE coop mode 3 (`EXL3_MOE_COOP_V2=3`, V1 p
 
 Measured and not promoted in the same period: chunk 1024 for pool ([R483](../bench/results/r483-exl3-pool-chunk.md), [R485](../bench/results/r485-pool-frontier.md)), split [30, 31] at 393,216 ([R487](../bench/results/r487-pool-393k.md)), the n-gram table in RAM ([R484](../bench/results/r484-ngram-ram.md)), the host KV tier ([R493](../bench/results/r493-host-kv-tier.md)), GDN state replay ([R496](../bench/results/r496-gdn-state-r3.md)), dynamic draft ([R497](../bench/results/r497-draft-confidence.md)), a 4-bit MTP graft ([R498](../bench/results/r498-mtp4-graft.md)), prompt lookup ([R501](../bench/results/r501-prompt-lookup.md), a stack candidate), int8 mixer weights as a speed lever ([R499](../bench/results/r499-decode-r4.md)).
 
+
+## 2026-09-19: pool growth, the NVMe tier, and 8 slots
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 04:15 | int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`) | tool-eval 85.0 ± 1.4, GSM8K 0.974 | 819,200 | [R525](../bench/results/r525-promote-int8mix.md) |
+| 05:16 | MTP draft chain on the GPU, 65,536-row draft embedding copy | byte-identical; tool-eval 84.8 ± 1.5, GSM8K 0.970 | 819,200 | [R528](../bench/results/r528-promote-mtp-pruned.md) |
+| 05:43 | `tool_choice` enforcement in TabbyAPI | tool-eval 88.0 ± 1.6 (TC-45 0 → 2 points), GSM8K 0.978 | 819,200 | [R529](../bench/results/r529-promote-tool-choice.md) |
+| 06:18 | fix for ExLlamaV3's PLE checkpoint aliasing | tool-eval 84.8 ± 1.3, GSM8K 0.974 | 819,200 | [R530](../bench/results/r530-promote-plefix.md) |
+| 08:22 | persistent NVMe prefix tier | restart restore identical to cold; tool-eval 87.0 ± 1.2, GSM8K 0.976 | 819,200 | [R534](../bench/results/r534-promote-nvme-tier.md) |
+| 09:23 | deterministic E3 prefill | prefill identical run to run; tool-eval 85.0 ± 0.8, GSM8K 0.972 | 819,200 | [R535](../bench/results/r535-promote-e3det.md) |
+| 11:11 | decode kernels round 6 | byte-identical, +1.0 % code / +1.1 % prose at 1 stream; tool-eval 87.2 ± 1.5, GSM8K 0.974 | 819,200 | [R540](../bench/results/r540-promote-r6.md) |
+| 16:30 | QSA raw-key ring | byte-identical; tool-eval 86.5 ± 2.4, GSM8K 0.976 | 983,040 | [R546](../bench/results/r546-promote-rawk.md) |
+| 17:18 | bf16 GDN recurrent state | new c1 fingerprint, decode +0.3 to +2.1 % on 48 paired prompts; tool-eval 86.8 ± 2.6, GSM8K 0.974 | 1,032,192 | [R548](../bench/results/r548-promote-gdnbf16-ring.md) |
+| 19:07 | 8 slots | fingerprints unchanged, prefill 1.00–1.02×; tool-eval 88.2 ± 1.0, GSM8K 0.974 | 966,656 | [R561](../bench/results/r561-promote-slots8.md) |
+
+Measured and not promoted in the same period: a deeper single-job draft ([R537](../bench/results/r537-draft-depth.md)), the K=3 MoE kernel without spills ([R536](../bench/results/r536-nospill.md)), the draft embedding copy on cuda:0 ([R555](../bench/results/r555-headdev-mirror.md)), adaptive draft depth ([R556](../bench/results/r556-adaptive-draft-r2.md)), prefill chunk 1,024 / 512 ([R553](../bench/results/r553-chunk-hot-stall.md)), draft depth 2 above 4 jobs ([R560](../bench/results/r560-c8-policy.md)).

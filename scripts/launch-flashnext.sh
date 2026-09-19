@@ -68,7 +68,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-1032192}   # R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+CACHE=${CACHE:-966656}   # R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -189,7 +189,7 @@ case "$MOE_OFFLOAD" in [0-9]|[0-9][0-9]) ;; *) echo "ABORT: MOE_OFFLOAD must be 
 # DECODE SLOTS (R367). TabbyAPI derives 4 for a recurrent model and 128 otherwise; 8 is what has been served. More
 # slots means more concurrent jobs inside the fast decode path, at the cost of recurrent-state VRAM. This is the last
 # untested *config* lever on the box's weakest axis (aggregate throughput at c4/c8).
-MAXBS=${MAXBS:-4}
+MAXBS=${MAXBS:-8}
 # MTP HOT VOCABULARY (upstream PR #303, ported to this checkpoint's qwen4_exp_mtp). Empty means the feature is off,
 # which is also the control arm: the patched engine's disabled path must be byte-identical to the unpatched one.
 # Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.

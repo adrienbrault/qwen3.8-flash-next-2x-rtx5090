@@ -1,0 +1,13 @@
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.4T  354G  80% /
+2026-09-19T16:00:44+00:00 [r556] S1 building tabbyapi:adaptive-draft-r2-gdnbf16 on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (before the lock)
+2026-09-19T16:01:25+00:00 [r556] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-19T16:01:49+00:00 [r556] UP S: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; draft_num_tokens_by_batch: [[4, 3], [8, 1]]; VRAM free 2109/829/; c1 f4add302e176d78e; no adaptive line
+2026-09-19T16:05:00+00:00 [r556] S done; VRAM free 2075/797/; new verify shapes: 0
+2026-09-19T16:05:23+00:00 [r556] UP A3: tabbyapi:adaptive-draft-r2-gdnbf16; draft_num_tokens_by_batch: [[4, 3], [8, 1]]; VRAM free 2097/817/; c1 ae890c45d1000582; EXL3_ADAPTIVE_DRAFT2=1: alpha 0.3, time_alpha 0.2, min_observations 4, max_batch 1, min_depth 1, max_depth 3, explore every 24, sweep on x3, log on
+2026-09-19T16:08:38+00:00 [r556] A3 done; VRAM free 2061/783/; new verify shapes: 6
+2026-09-19T16:09:02+00:00 [r556] UP A4: tabbyapi:adaptive-draft-r2-gdnbf16; draft_num_tokens_by_batch: [[1, 4], [4, 3], [8, 1]]; VRAM free 2029/749/; c1 5e4c25989ceaa4fb; EXL3_ADAPTIVE_DRAFT2=1: alpha 0.3, time_alpha 0.2, min_observations 4, max_batch 1, min_depth 1, max_depth 4, explore every 24, sweep on x3, log on
+2026-09-19T16:12:15+00:00 [r556] A4 done; VRAM free 1997/713/; new verify shapes: 7
+[A3] per-request mean depth: n 62, mean 2.15, min 1.42, max 3.00
+[A4] per-request mean depth: n 63, mean 2.40, min 1.03, max 4.00
+2026-09-19T16:12:16+00:00 [r556] not restoring: GPU queue continues (r515-queue-chain(pid 3513108))
+2026-09-19T16:12:16+00:00 [r556] === R556 DONE ===

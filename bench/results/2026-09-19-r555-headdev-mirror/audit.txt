@@ -1,0 +1,41 @@
+2026-09-19T15:39:17+00:00 [r555] S1 building tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (live pool 1032192, before the lock)
+2026-09-19T15:39:40+00:00 [r555] ABORT: build: 
+2026-09-19T15:40:27+00:00 [r555] S1 building tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (live pool 1032192, before the lock)
+2026-09-19T15:43:33+00:00 [r555] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 1032192 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T15:43:37+00:00 [r555] === S0 reference: live launcher, tier off ===
+2026-09-19T15:43:58+00:00 [r555] REF free at boot 2013/737 MiB (headroom floors 1981/705)
+2026-09-19T15:44:03+00:00 [r555] REF @ 1032192: VRAM free 1277/229/; fingerprints c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+2026-09-19T15:44:28+00:00 [r555] REF min free under 120k + c4: 1243/197 MiB
+2026-09-19T15:44:28+00:00 [r555] === S2 mirror on cuda:0, ladder from 1032192 ===
+2026-09-19T15:45:21+00:00 [r555] [L] 1048576: fingerprints = REF, boot free 1593/897/, min under 120k + c4 843/377, survives
+2026-09-19T15:45:41+00:00 [r555] NO BOOT L-1064960 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T15:45:41+00:00 [r555] POOL_ON = 1048576 (live 1032192)
+71c71
+< CACHE=${CACHE:-1032192}   # R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+---
+> CACHE=${CACHE:-1048576}   # R555: embedding mirror on cuda:0 (ladder top 1048576, fingerprints = REF); was 1032192; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+124c124
+< IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16}
+---
+> IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_EMBED_MIRROR_DEVICE=0}
+215c215
+<   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T15:45:41+00:00 [r555] === AB: mp_decode 4 boots, A = live @ 1032192, B = candidate @ 1048576, tier off ===
+2026-09-19T15:46:03+00:00 [r555] UP A1: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; VRAM free at boot 2013/737/
+2026-09-19T15:49:37+00:00 [r555] UP B2: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev; VRAM free at boot 1593/897/
+2026-09-19T15:53:10+00:00 [r555] UP B3: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-headdev; VRAM free at boot 1593/897/
+2026-09-19T15:56:39+00:00 [r555] UP A4: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; VRAM free at boot 2013/737/
+code c1: 24 prompts, per-request decode_tps A 200.9 / B 197.2; paired geo-mean B/A -1.83 %, 95 % CI [-2.21, -1.48] %; per-prompt range -3.9 .. -0.5 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 124.8 / B 125.0; paired geo-mean B/A +0.01 %, 95 % CI [-1.24, +1.31] %; per-prompt range -7.3 .. +9.0 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 199.2 / B 195.2; paired geo-mean B/A -2.04 %, 95 % CI [-2.28, -1.79] %; per-prompt range -3.2 .. -0.5 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 119.1 / B 117.3; paired geo-mean B/A -1.41 %, 95 % CI [-2.86, +0.23] %; per-prompt range -6.4 .. +12.6 %; short A 0 / B 0
+AB STOP [-1.83, 0.01, -2.04, -1.41]
+2026-09-19T15:59:44+00:00 [r555] AB: the mirror move is slower than -1.5 % on a shape (or missing shapes); not promoting
+2026-09-19T15:59:44+00:00 [r555] not restoring: GPU queue continues (r515-queue-chain(pid 2339510))
+2026-09-19T15:59:45+00:00 [r555] === R555 DONE ===

@@ -4,6 +4,16 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R561: the daily serves 8 slots with a 966,656-token page pool](results/r561-promote-slots8.md)
+- [R562: decode profile at 4 to 8 streams; above 16 verify rows the MoE layers run a generic kernel at 2.4–2.9× the time](results/r562-profile-c8.md)
+- [R560: drafting 2 tokens above 4 jobs costs 32–39 % at 6 and 8 streams; the served policy stays](results/r560-c8-policy.md)
+- [R558: 8 slots fit 966,656 tokens; c8 674 / 639 t/s, +23 % / +16 % over 4 slots; same replay wall](results/r558-slots8.md)
+- [R557: 8-agent SWE-bench replay on the R548 configuration, 413 / 395 s](results/r557-agent-replay-daily.md)
+- [R556: adaptive MTP draft depth (round 2): −2.4 to −3.5 % on prose at 1 stream and gains nothing on code; not served](results/r556-adaptive-draft-r2.md)
+- [R555: the MTP draft's embedding copy on cuda:0 is bit-exact, +16,384 pool tokens, −1.8 % / −2.0 % decode at 1 stream; not served](results/r555-headdev-mirror.md)
+- [R554: decode at 0, 100k and 200k prompt tokens on the 2.50 bpw configuration](results/r554-depth-decode.md)
+- [R553: prefill chunk 2,048 / 1,024 / 512 against the decode stalls of running streams; 2,048 stays](results/r553-chunk-hot-stall.md)
+- [R552b: the 4-stream code requests reach the forced 2,048 tokens when streamed through the probe](results/r552b-c4-stream-count.md)
 - [R548: bf16 GDN recurrent state is served on top of the raw-key ring; the page pool grows to 1,032,192 tokens](results/r548-promote-gdnbf16-ring.md)
 - [R546: the QSA raw-key ring is served; the page pool grows from 819,200 to 983,040 tokens with the same output and speed](results/r546-promote-rawk.md)
 - [R549: TTFT and decode with 1 to 4 slots in use, up to 570k tokens resident; the pool does not stall](results/r549-hot-slots.md)
