@@ -8,12 +8,12 @@ it. Every value is either a measurement, an upstream default, or a fit constrain
 
 | setting | value | why |
 | --- | --- | --- |
-| `model_name` | `qwen3.8-flash-next-exl3-3.05bpw` | EXL3 3.05 bpw quant of `Qwen3.8-Flash-Next`; the checkpoint shipped for this box |
+| `model_name` | `qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab` | [r0b0tlab's 2.50 bpw EXL3 pack](https://huggingface.co/r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw) of `Qwen3.8-Flash-Next`, routed experts at mixed K = 2 / 3 / 4. Served since 2026-09-18 21:21 UTC ([R511](../bench/results/r511-promote-2p50.md)); the 3.05 bpw pack before it, measured equal on GSM8K without stop strings ([R509](../bench/results/r509-gsm8k-nostop.md)) |
 | `backend` | `exllamav3` | TabbyAPI's ExLlamaV3 backend; v1.5.0, pinned into the image |
 | `max_seq_len` | 262,144 | the checkpoint's `max_position_embeddings` — 262,144 is native, not a limit we chose |
-| `cache_size` | 360,448 | the shared page pool, in tokens. **Measured with 4 slots (2026-09-18, R480):** 360,448 boots, 393,216 fails with the same error; K8V4 (`cache_mode 8,4`) boots 425,984. **With 8 slots:** 262,144 boots; 393,216 fails with `RuntimeError: Insufficient VRAM in split for model and cache` (R337). Earlier arithmetic from *free* VRAM suggested ~444k and was wrong — free VRAM is not allocatable VRAM |
+| `cache_size` | 786,432 | the shared page pool, in tokens: the largest that boots with the 2.50 bpw pack at 4 slots and 8-bit KV (819,200 and above fail with `RuntimeError: Insufficient VRAM in split for model and cache`, [R495b](../bench/results/r495b-2p50-audition.md)). 2,015 / 1,099 MiB stay free on cuda:0 / cuda:1 after boot. On the 3.05 bpw pack the ceiling was 360,448 at 4 slots ([R480](../bench/results/r480-exl3-pool.md)) and 262,144 at 8 ([R452](../bench/results/r452-exl3-cache-bits.md)). Free VRAM is not allocatable VRAM: arithmetic from free VRAM overestimated the pool |
 | `cache_mode` | `8,8` | 8-bit KV, the operator's call (no q4) |
-| `max_batch_size` | 4 | Four slots since 2026-09-18 (R481): each slot carries the GDN recurrent state in fp32, one copy per draft position plus one, so four slots instead of eight release ~1.7 GiB that the page pool takes. A fifth to eighth request queues. **Set explicitly in any case.** exllamav3 clamps the generator's batch size to `cache.num_slots`, and TabbyAPI derives **4** for a recurrent model (128 otherwise). This checkpoint carries GDN recurrent state, so without this line a c8 test silently measures c4 |
+| `max_batch_size` | 4 | Four slots since 2026-09-18 ([R480](../bench/results/r480-exl3-pool.md)): each slot carries the GDN recurrent state in fp32, one copy per draft position plus one, so four slots instead of eight release ~1.7 GiB that the page pool takes. A fifth to eighth request queues. **Set explicitly in any case.** exllamav3 clamps the generator's batch size to `cache.num_slots`, and TabbyAPI derives **4** for a recurrent model (128 otherwise). This checkpoint carries GDN recurrent state, so without this line a c8 test silently measures c4 |
 | `tensor_parallel` | `false` | `qwen4_exp` raises `NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration`. Layer split is the only mode |
 | `gpu_split` | `[30, 30]` | a YAML **list**, not the string `"30,30"` — a string fails pydantic with `type=list_type` |
 | `gpu_split_auto` | `false` | explicit rather than autosplit: TabbyAPI #405 applies `autosplit_reserve` to device 0 only |
@@ -41,7 +41,8 @@ reachable as thinking lengthens.
 | `draft_mode` | `mtp` | the checkpoint's own MTP head |
 | `draft_num_tokens` | 3 (`DRAFT=` env) | **the schema field is `draft_num_tokens`**; `num_draft_tokens` is not a schema field and is silently ignored, which runs the default depth while the config appears to say otherwise |
 | `draft_cache_mode` | `Q8` | the draft schema accepts only FP16/Q8/Q6/Q4 — a pair like `"8,8"` is rejected |
-| `dynamic_draft` | `false` | measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4 |
+| `draft_num_tokens_by_batch` | `[[4, 3], [8, 1]]` (`DRAFT_POLICY=`) | depth 3 up to 4 decode-ready jobs, depth 1 above; with 4 slots the depth-1 tier is reached only if the slot count rises ([R414](../bench/results/r414-bszn16.md)) |
+| `dynamic_draft` | `false` | measured loss: 184 vs 191 t/s at c1, 229 vs 258 at c4; crashes at c4 with a CUDA-graph out-of-memory ([R497](../bench/results/r497-draft-confidence.md)) |
 
 Drafts are sampled **greedily**; the target is not. Acceptance therefore tracks how predictable the continuation
 is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
@@ -50,9 +51,11 @@ is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 
 | knob | default | what it does |
 | --- | --- | --- |
-| `IMG=` | `tabbyapi:53da7919-rqcount` | which image to serve; a patch variant is A/B'd without editing the launcher |
+| `IMG=` | `tabbyapi:stack-r4-e3r2` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
+| `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each |
+| `CACHE=`, `MAXBS=`, `CACHE_MODE=`, `GPU_SPLIT=`, `CKPT_NAME=` | 786432, 4, `8,8`, `[30, 30]`, the 2.50 bpw pack | pool, slots, KV bits, split and checkpoint for experiments; the defaults are the served values |
 | `DRAFT_POLICY=` | empty | expands into `draft_model.draft_num_tokens_by_batch` only when set, so the unpatched path stays byte-identical |
-| `SYS_KV=` | 0 | the host KV tier (measured flat, above) |
+| `SYS_KV=` | 0 | the host KV tier: flat at 8 slots ([R358](../bench/results/r358-hostkv.md)); turns a 12.7 s re-prefill of an evicted 105k session into 0.5–0.7 s for 16 GiB of host RAM ([R493](../bench/results/r493-host-kv-tier.md)); not served |
 
 ## Sampling — the preset, not the config
 
@@ -83,10 +86,20 @@ values. Verified in the log: a greedy probe still reads `temperature: 0, greedy 
 | setting | value | why |
 | --- | --- | --- |
 | `sysmem_recurrent_cache` | 4096 (MiB) | host-tier cache for GDN recurrent checkpoints; hybrid prefix reuse needs both the KV pages and a matching stashed checkpoint |
-| `sysmem_kv_cache` | `$SYS_KV`, default 0 | the host KV tier. Set to 4096 MiB and **measured**: nothing moves — same 8/8 and 48.4 t/s aggregate on eight unique ~40k-prompt jobs, same 0.43 s repeat TTFT on a 152,761-token prompt. The pool is never spilled to host at these shapes (`2026-09-16-r358-hostkv`) |
+| `sysmem_kv_cache` | `$SYS_KV`, default 0 | the host KV tier. Set to 4096 MiB and **measured**: nothing moves — same 8/8 and 48.4 t/s aggregate on eight unique ~40k-prompt jobs, same 0.43 s repeat TTFT on a 152,761-token prompt. The pool is never spilled to host at these shapes ([R358](../bench/results/r358-hostkv.md)) |
+
+## Engine flags
+
+| flag | what it does | admitted by |
+| --- | --- | --- |
+| `EXL3_HOST_GAP_REWIND=1` | removes host-side gaps from the GDN decode path | [R428](../bench/results/r428-hcmix2-stack-ab.md) |
+| `EXL3_HC_MIX_V2=1`, `EXL3_HC_MIX_V2_MIN_R=1` | bit-exact V2 of the hyper-connection mixer kernels | [R428](../bench/results/r428-hcmix2-stack-ab.md) |
+| `EXL3_LS_PREFILL_PIPELINE=1` | pipelines prefill chunks across the two cards | [R442](../bench/results/r442-ppipe.md) |
+| `EXL3_MOE_COOP_V2=1` | bit-exact V2 of the fused MoE decode kernel | [R460](../bench/results/r460-moecoop-v2-ab.md) |
+| `EXL3_SHARED_EXPERT_OVERLAP=1` | the shared expert on a side CUDA stream | [R490](../bench/results/r490-shared-overlap.md) |
+| `EXL3_DRAFT_PINNED_STAGING=1`, `EXL3_BATCH_VERIFY=1`, `EXL3_MTP_HEAD_N=65536` | pinned draft staging, one readback for the verify step, a 65,536-token draft head | [R499](../bench/results/r499-decode-r4.md), [R514](../bench/results/r514-promote-r4i.md) |
+| `EXL3_MOE_PREFILL_E3=1` | grouped MoE prefill for every K | [R513](../bench/results/r513-prefill-e3-r2.md), [R517](../bench/results/r517-promote-stack.md) |
 
 ## Image
 
-`tabbyapi:53da7919-rqcount` — TabbyAPI pinned at `53da7919` with ExLlamaV3 v1.5.0, plus the R338 requeue
-token-count patch. Recipe: `flan/docker/Dockerfile.tabbyapi` in the sibling `kubernetes-home` repo, which asserts
-at build time both that the exllamav3 version is the expected one and that the patch applied.
+`tabbyapi:stack-r4-e3r2`: TabbyAPI pinned at `53da7919`, ExLlamaV3 v1.5.0, the R338 requeue token-count fix, and every layer in [`docker/README.md`](../docker/README.md). Each Dockerfile asserts the versions it builds on and each overlay installer checks the SHA-256 of every file it replaces.

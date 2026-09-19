@@ -1,0 +1,79 @@
+2026-09-18T15:51:14+00:00 [r496] queued behind: r491b-tooleval-paired(pid 3282014)
+r494-nospill(pid 306112)
+r495b-2p50-audition(pid 478992)
+2026-09-18T16:47:02+00:00 [r496] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T16:47:02+00:00 [r496] === build tabbyapi:gdn-state-r3 (daily keeps serving) ===
+2026-09-18T16:50:10+00:00 [r496] built tabbyapi:gdn-state-r3 6d2ac5a05e66; [0m/opt/moe-coop-v2/torch-extensions/exllamav3_ext/exllamav3_ext.so
+2026-09-18T16:50:11+00:00 [r496] === gate A: kernel identity (r1), compact-batch shapes (r2), placement lock (r3) ===
+PASS bsz=4 rows=1
+PASS bsz=4 rows=2
+PASS bsz=4 rows=3
+PASS bsz=4 rows=4
+PASS: 56 additional torch.equal checks
+PASS placement lock: exact OFF footprint, one-shot release, placement record
+2026-09-18T16:50:16+00:00 [r496] === gate B: harness determinism OFF vs OFF with a frozen tune cache ===
+2026-09-18T16:52:07+00:00 [r496] frozen tune cache 6579a111b342bab4492d085f22d58d5a955f4f0dd0c317760f91dca388a2ffa3
+2026-09-18T16:53:39+00:00 [r496] compare OFF-vs-OFF: rc 0 PASS OFF-vs-OFF: placement + 512 token IDs (9e0905434d482d08610a3c1c3d07013914db54d37d1165555eaafdd06601b7ba); tune-cache 6579a111b342bab4492d085f22d58d5a955f4f0dd0c317760f91dca388a2ffa3 
+2026-09-18T16:53:39+00:00 [r496] === gate C: harness OFF vs locked ON ===
+2026-09-18T16:54:22+00:00 [r496] compare OFF-vs-ON-locked: rc 0 PASS OFF-vs-ON-locked: placement + 512 token IDs (9e0905434d482d08610a3c1c3d07013914db54d37d1165555eaafdd06601b7ba); tune-cache 6579a111b342bab4492d085f22d58d5a955f4f0dd0c317760f91dca388a2ffa3 
+2026-09-18T16:54:22+00:00 [r496] === gate D: serving at 360,448, OFF then ON with the placement lock ===
+2026-09-18T16:54:22+00:00 [r496] boot OFF: replay 0 lock 0 cache 360448
+2026-09-18T16:54:38+00:00 [r496] UP OFF @ 360448: VRAM free MiB 895/2581/
+2026-09-18T16:54:38+00:00 [r496] [OFF] placement: 53 modules {'cpu': 1, 'cuda:0': 26, 'cuda:1': 26}
+2026-09-18T16:54:44+00:00 [r496] [OFF] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+2026-09-18T16:54:44+00:00 [r496] boot ON360L: replay 1 lock 1 cache 360448
+2026-09-18T16:55:07+00:00 [r496] UP ON360L @ 360448: VRAM free MiB 1147/2813/
+2026-09-18T16:55:07+00:00 [r496] [ON360L] placement: 53 modules {'cpu': 1, 'cuda:0': 26, 'cuda:1': 26}
+EXL3 GDN replay placement lock released: {"cuda:0":669874176,"cuda:1":669874176}
+2026-09-18T16:55:12+00:00 [r496] [ON360L] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+2026-09-18T16:55:12+00:00 [r496] === ladder ===
+2026-09-18T16:55:12+00:00 [r496] boot ON: replay 1 lock 0 cache 458752
+2026-09-18T16:55:29+00:00 [r496] NO BOOT ON @ 458752 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T16:55:29+00:00 [r496] boot ON: replay 1 lock 0 cache 425984
+2026-09-18T16:55:45+00:00 [r496] UP ON @ 425984: VRAM free MiB 907/2693/
+2026-09-18T16:55:45+00:00 [r496] replay ON: largest pool that serves = 425984
+2026-09-18T16:55:45+00:00 [r496] [ON425984] placement: 53 modules {'cpu': 1, 'cuda:0': 26, 'cuda:1': 26}
+2026-09-18T16:55:51+00:00 [r496] [ON425984] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+2026-09-18T16:55:51+00:00 [r496] === measure ON@425984: VRAM free 169/2245/ ===
+[ON425984 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.7, "per_stream_wall_tps": 214.7, "decode_tps": 217.8, "ttft_s": 0.143}
+[ON425984 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 218.7, "per_stream_wall_tps": 218.7, "decode_tps": 222.0, "ttft_s": 0.144}
+[ON425984 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 442.1, "per_stream_wall_tps": 117.1, "decode_tps": 120.2, "ttft_s": 0.473}
+[ON425984 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 427.7, "per_stream_wall_tps": 113.3, "decode_tps": 116.2, "ttft_s": 0.468}
+[ON425984 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 153.5, "per_stream_wall_tps": 153.5, "decode_tps": 155.2, "ttft_s": 0.153}
+[ON425984 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 156.6, "per_stream_wall_tps": 156.6, "decode_tps": 158.4, "ttft_s": 0.156}
+[ON425984 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 388.8, "per_stream_wall_tps": 97.6, "decode_tps": 99.8, "ttft_s": 0.47}
+[ON425984 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 403.6, "per_stream_wall_tps": 101.4, "decode_tps": 103.7, "ttft_s": 0.452}
+[ON425984] code c1: 12 prompts, aggregate 155.2 t/s, per-request decode median 158.9 (min 138.9, max 188.5)
+[ON425984] code c4: 12 prompts, aggregate 388.5 t/s, per-request decode median 107.3 (min 95.0, max 132.8)
+[ON425984] prose c1: 12 prompts, aggregate 163.5 t/s, per-request decode median 163.3 (min 141.3, max 214.2)
+[ON425984] prose c4: 12 prompts, aggregate 357.4 t/s, per-request decode median 98.8 (min 89.1, max 133.7)
+[ON425984 prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 2.98 s = 7,580 tok/s
+[ON425984 prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.14 s = 11,070 tok/s
+  c=4 run0 ctx~60000: {"conc": 4, "ctx_requested": 60000, "n_ok": 4, "tokens_median": 256.0, "prompt_tokens": 80566, "aggregate_tps": 19.6, "per_stream_wall_tps": 4.9, "decode_tps": 127.7, "ttft_s": 50.073}
+2026-09-18T17:02:41+00:00 [r496] c4x60k: 4/4; engine qwen3.8-flash-next-exl3-3.05bpw; VRAM free 121/2195/
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+GSM8K n=200 c4: flexible 0.925 (SE 0.0187)   [served 0.925]
+2026-09-18T17:08:25+00:00 [r496] === measure OFF@360,448 (paired control) ===
+2026-09-18T17:08:25+00:00 [r496] boot OFF2: replay 0 lock 0 cache 360448
+2026-09-18T17:08:47+00:00 [r496] UP OFF2 @ 360448: VRAM free MiB 895/2581/
+[OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 211.0, "per_stream_wall_tps": 211.0, "decode_tps": 214.2, "ttft_s": 0.151}
+[OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 215.8, "per_stream_wall_tps": 215.8, "decode_tps": 219.0, "ttft_s": 0.144}
+[OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 426.0, "per_stream_wall_tps": 112.6, "decode_tps": 115.5, "ttft_s": 0.474}
+[OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 441.3, "per_stream_wall_tps": 116.5, "decode_tps": 119.5, "ttft_s": 0.468}
+[OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 165.2, "per_stream_wall_tps": 165.2, "decode_tps": 167.0, "ttft_s": 0.139}
+[OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 171.6, "per_stream_wall_tps": 171.6, "decode_tps": 173.5, "ttft_s": 0.137}
+[OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 419.4, "per_stream_wall_tps": 105.3, "decode_tps": 107.7, "ttft_s": 0.441}
+[OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 435.2, "per_stream_wall_tps": 109.3, "decode_tps": 111.9, "ttft_s": 0.435}
+[OFF2] code c1: 12 prompts, aggregate 165.4 t/s, per-request decode median 164.6 (min 152.8, max 222.0)
+[OFF2] code c4: 12 prompts, aggregate 365.4 t/s, per-request decode median 102.1 (min 88.7, max 126.1)
+[OFF2] prose c1: 12 prompts, aggregate 163.1 t/s, per-request decode median 160.7 (min 139.8, max 217.4)
+[OFF2] prose c4: 12 prompts, aggregate 342.1 t/s, per-request decode median 96.0 (min 85.4, max 105.9)
+[OFF2 prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.03 s = 7,460 tok/s
+[OFF2 prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.19 s = 11,008 tok/s
+2026-09-18T17:14:39+00:00 [r496] restoring the daily (unchanged live launcher)
+2026-09-18T17:14:40+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T17:15:01+00:00 [flashnext] UP on 8022 | warmup 0.389436s | VRAM free MiB 833/2523/
+2026-09-18T17:15:01+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T17:15:01+00:00 [r496] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 833/2523/
+2026-09-18T17:15:01+00:00 [r496] === R496 DONE ===

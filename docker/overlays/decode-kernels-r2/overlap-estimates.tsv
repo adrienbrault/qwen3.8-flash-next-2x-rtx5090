@@ -1,0 +1,4 @@
+shape	rows_into_target_moe	shared_launches_per_step	shared_us_per_step	shared_us_per_layer	routed_rot_plus_a_us_per_step	routed_rot_plus_a_us_per_layer	ideal_hidden_us_per_step	unprofiled_wall_us	ideal_wall_pct	no_cooperative_gemm_coresidency_hidden_ceiling_us	no_cooperative_gemm_coresidency_wall_pct	k5_trellis_payload_MB	observed_payload_GB_s	at_431GB_s_floor_us	current_minus_floor_us	current_minus_floor_wall_pct
+c1_d0	1	144	1009.463	21.030	1213.301	25.277	1009.463	8907	11.333	343.595	3.858	147.456	146.07	342.125	667.338	7.493
+c1_d3	4	144	1138.162	23.712	2010.298	41.881	1138.162	14809	7.685	36.992	0.250	147.456	129.55	342.125	796.037	5.375
+c4_d3	16	144	1222.213	25.463	4563.610	95.075	1222.213	23495	5.202	38.349	0.163	147.456	120.65	342.125	880.088	3.746

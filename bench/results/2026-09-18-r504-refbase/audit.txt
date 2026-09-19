@@ -1,0 +1,77 @@
+2026-09-18T16:55:55+00:00 [r504] queued behind: r494-nospill(pid 1843524)
+r496-gdn-state-r3(pid 645506)
+r497-draft-confidence(pid 1964204)
+r498-mtp4-graft(pid 2513438)
+r500-draft-ceiling(pid 2906750)
+r503-gsm8k-2p50(pid 3897802)
+2026-09-18T16:59:20+00:00 [build-refbase] built ae98547c3be2
+2026-09-18T18:21:28+00:00 [r504] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T18:21:28+00:00 [r504] === build tabbyapi:decode-kernels-r2-refbase (daily keeps serving) ===
+2026-09-18T18:24:20+00:00 [r504] built tabbyapi:decode-kernels-r2-refbase b7343b10708b
+2026-09-18T18:24:22+00:00 [r504] boot DAILY: image tabbyapi:decode-kernels-r2
+2026-09-18T18:24:43+00:00 [r504] UP DAILY @ 360448: VRAM free MiB 833/2523/
+2026-09-18T18:24:49+00:00 [r504] [DAILY] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+[DAILY code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 212.5, "per_stream_wall_tps": 212.5, "decode_tps": 215.8, "ttft_s": 0.149}
+[DAILY code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.1, "per_stream_wall_tps": 221.1, "decode_tps": 224.6, "ttft_s": 0.146}
+[DAILY code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 445.2, "per_stream_wall_tps": 117.5, "decode_tps": 120.6, "ttft_s": 0.469}
+[DAILY code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 458.1, "per_stream_wall_tps": 121.0, "decode_tps": 124.2, "ttft_s": 0.461}
+[DAILY prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 173.1, "per_stream_wall_tps": 173.1, "decode_tps": 175.1, "ttft_s": 0.14}
+[DAILY prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 180.4, "per_stream_wall_tps": 180.4, "decode_tps": 182.5, "ttft_s": 0.135}
+[DAILY prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 436.8, "per_stream_wall_tps": 109.7, "decode_tps": 112.2, "ttft_s": 0.432}
+[DAILY prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 453.4, "per_stream_wall_tps": 113.9, "decode_tps": 116.7, "ttft_s": 0.435}
+[DAILY] code c1: 12 prompts, aggregate 179.9 t/s, per-request decode median 177.8 (min 168.4, max 203.9)
+[DAILY] code c4: 12 prompts, aggregate 404.4 t/s, per-request decode median 112.2 (min 97.6, max 135.7)
+[DAILY] prose c1: 12 prompts, aggregate 180.8 t/s, per-request decode median 187.6 (min 152.2, max 242.5)
+[DAILY] prose c4: 12 prompts, aggregate 354.1 t/s, per-request decode median 104.2 (min 93.9, max 138.2)
+2026-09-18T18:33:10+00:00 [r504] boot REF: image tabbyapi:decode-kernels-r2-refbase
+2026-09-18T18:33:33+00:00 [r504] UP REF @ 360448: VRAM free MiB 833/2523/
+2026-09-18T18:33:38+00:00 [r504] [REF] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+[REF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 218.6, "per_stream_wall_tps": 218.6, "decode_tps": 221.9, "ttft_s": 0.143}
+[REF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 218.2, "per_stream_wall_tps": 218.2, "decode_tps": 221.6, "ttft_s": 0.145}
+[REF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 447.4, "per_stream_wall_tps": 118.1, "decode_tps": 121.3, "ttft_s": 0.476}
+[REF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 460.6, "per_stream_wall_tps": 121.5, "decode_tps": 124.8, "ttft_s": 0.46}
+[REF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 175.0, "per_stream_wall_tps": 175.0, "decode_tps": 176.9, "ttft_s": 0.135}
+[REF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 178.5, "per_stream_wall_tps": 178.5, "decode_tps": 180.6, "ttft_s": 0.135}
+[REF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 437.7, "per_stream_wall_tps": 109.9, "decode_tps": 112.5, "ttft_s": 0.432}
+[REF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 452.4, "per_stream_wall_tps": 113.7, "decode_tps": 116.4, "ttft_s": 0.436}
+[REF] code c1: 12 prompts, aggregate 178.3 t/s, per-request decode median 178.2 (min 162.4, max 207.0)
+[REF] code c4: 12 prompts, aggregate 400.0 t/s, per-request decode median 108.4 (min 100.1, max 127.5)
+[REF] prose c1: 12 prompts, aggregate 174.5 t/s, per-request decode median 181.2 (min 142.5, max 231.7)
+[REF] prose c4: 12 prompts, aggregate 363.1 t/s, per-request decode median 104.6 (min 94.3, max 130.4)
+2026-09-18T18:42:05+00:00 [r504] boot DAILY2: image tabbyapi:decode-kernels-r2
+2026-09-18T18:42:27+00:00 [r504] UP DAILY2 @ 360448: VRAM free MiB 833/2523/
+2026-09-18T18:42:33+00:00 [r504] [DAILY2] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+[DAILY2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.9, "per_stream_wall_tps": 216.9, "decode_tps": 220.3, "ttft_s": 0.151}
+[DAILY2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.6, "per_stream_wall_tps": 220.6, "decode_tps": 224.0, "ttft_s": 0.144}
+[DAILY2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 443.3, "per_stream_wall_tps": 117.0, "decode_tps": 120.1, "ttft_s": 0.474}
+[DAILY2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 461.7, "per_stream_wall_tps": 121.8, "decode_tps": 125.1, "ttft_s": 0.46}
+[DAILY2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 173.4, "per_stream_wall_tps": 173.4, "decode_tps": 175.9, "ttft_s": 0.177}
+[DAILY2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 180.3, "per_stream_wall_tps": 180.3, "decode_tps": 182.4, "ttft_s": 0.137}
+[DAILY2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 434.2, "per_stream_wall_tps": 109.1, "decode_tps": 111.6, "ttft_s": 0.435}
+[DAILY2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 453.2, "per_stream_wall_tps": 113.8, "decode_tps": 116.6, "ttft_s": 0.433}
+[DAILY2] code c1: 12 prompts, aggregate 182.2 t/s, per-request decode median 183.2 (min 166.0, max 219.7)
+[DAILY2] code c4: 12 prompts, aggregate 392.6 t/s, per-request decode median 105.0 (min 98.0, max 138.9)
+[DAILY2] prose c1: 12 prompts, aggregate 177.1 t/s, per-request decode median 172.5 (min 149.2, max 249.3)
+[DAILY2] prose c4: 12 prompts, aggregate 342.9 t/s, per-request decode median 107.8 (min 92.9, max 127.7)
+2026-09-18T18:50:59+00:00 [r504] boot REF2: image tabbyapi:decode-kernels-r2-refbase
+2026-09-18T18:51:21+00:00 [r504] UP REF2 @ 360448: VRAM free MiB 833/2523/
+2026-09-18T18:51:26+00:00 [r504] [REF2] fingerprints c1 1474eee2f5945248 / 30k 4a255910dee2d9c5 (canonical 1474eee2f5945248 / 4a255910dee2d9c5)
+[REF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.4, "per_stream_wall_tps": 221.4, "decode_tps": 224.8, "ttft_s": 0.144}
+[REF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.8, "per_stream_wall_tps": 221.8, "decode_tps": 225.2, "ttft_s": 0.144}
+[REF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 459.6, "per_stream_wall_tps": 121.4, "decode_tps": 124.7, "ttft_s": 0.471}
+[REF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 463.1, "per_stream_wall_tps": 122.2, "decode_tps": 125.5, "ttft_s": 0.463}
+[REF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 180.5, "per_stream_wall_tps": 180.5, "decode_tps": 182.6, "ttft_s": 0.134}
+[REF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 180.9, "per_stream_wall_tps": 180.9, "decode_tps": 183.0, "ttft_s": 0.137}
+[REF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 449.6, "per_stream_wall_tps": 112.9, "decode_tps": 115.6, "ttft_s": 0.433}
+[REF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 455.1, "per_stream_wall_tps": 114.3, "decode_tps": 117.1, "ttft_s": 0.435}
+[REF2] code c1: 12 prompts, aggregate 185.8 t/s, per-request decode median 191.8 (min 159.8, max 244.4)
+[REF2] code c4: 12 prompts, aggregate 404.1 t/s, per-request decode median 111.3 (min 98.8, max 134.5)
+[REF2] prose c1: 12 prompts, aggregate 179.1 t/s, per-request decode median 184.7 (min 152.1, max 241.5)
+[REF2] prose c4: 12 prompts, aggregate 365.8 t/s, per-request decode median 117.1 (min 92.0, max 134.2)
+2026-09-18T18:59:34+00:00 [r504] R504 PASS on identity (all four arms canonical); read the speed lines for the regression check
+2026-09-18T18:59:34+00:00 [r504] restoring the daily (unchanged live launcher)
+2026-09-18T18:59:35+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T18:59:51+00:00 [flashnext] UP on 8022 | warmup 0.353780s | VRAM free MiB 833/2523/
+2026-09-18T18:59:51+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T18:59:51+00:00 [r504] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 833/2523/
+2026-09-18T18:59:51+00:00 [r504] === R504 DONE ===

@@ -1,0 +1,17 @@
+2026-09-18T15:23:20+00:00 [r491b] queued behind: r492-depth(pid 2874948)
+r493-host-kv-tier(pid 2983450)
+2026-09-18T15:29:30+00:00 [r491b] up: tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 overlap=0
+CTL tool-eval 69x4: 83.2 +- 1.7 CI [81.8, 84.5] points [116, 117, 112, 115] ['B:4/6', 'G:5/6', 'H:8/10', 'I:15/20', 'J:4/6', 'K:21/26', 'L:6/8', 'M:5/6', 'N:5/6', 'O:10/12']
+2026-09-18T15:38:58+00:00 [r491b] CTL tool-eval: 83.2
+2026-09-18T15:39:15+00:00 [r491b] up: tabbyapi:decode-kernels-r2 overlap=1
+CAND tool-eval 69x4: 84.8 +- 2.6 CI [82.5, 87.0] points [120, 115, 113, 120] ['A:4/6', 'B:4/6', 'H:8/10', 'I:16/20', 'K:19/26', 'N:5/6']
+2026-09-18T15:48:52+00:00 [r491b] CAND tool-eval: 84.8
+2026-09-18T15:49:15+00:00 [r491b] up: tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 overlap=0
+CTL2 tool-eval 69x4: 85 +- 0.8 CI [84.2, 85.8] points [117, 116, 118, 117] ['A:4/6', 'G:5/6', 'H:8/10', 'I:15/20', 'K:19/26', 'M:5/6', 'N:5/6', 'O:10/12']
+2026-09-18T15:58:54+00:00 [r491b] CTL2 tool-eval: none
+2026-09-18T15:59:16+00:00 [r491b] up: tabbyapi:decode-kernels-r2 overlap=1
+CAND2 tool-eval 69x4: 82.2 +- 2.5 CI [80.0, 84.2] points [115, 117, 109, 113] ['A:4/6', 'C:6/8', 'H:6/10', 'I:14/20', 'K:17/26', 'M:5/6', 'N:5/6']
+2026-09-18T16:08:28+00:00 [r491b] CAND2 tool-eval: 82.2
+2026-09-18T16:08:28+00:00 [r491b] verdict: PROMOTE ctl [83.2, 0.0] mean 41.6 cand [84.8, 82.2] mean 83.5
+2026-09-18T16:08:28+00:00 [r491b] PROMOTED: /srv/qwen5090/launch-flashnext.sh = /srv/qwen5090/launch-flashnext-r491.sh (serving since the CAND2 boot: tabbyapi:decode-kernels-r2)
+2026-09-18T16:08:28+00:00 [r491b] === R491b DONE ===

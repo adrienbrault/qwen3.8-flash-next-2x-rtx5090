@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "analytical only; these are not measurements",
+  "geometry": {
+    "hidden": 2560,
+    "intermediate": 640,
+    "experts": 512,
+    "top_k": 10,
+    "expert_tensor_equivalent_moe_layers": 49,
+    "expert_tensor_layer_counts_by_bits": {
+      "2": 25,
+      "3": 23,
+      "4": 1
+    },
+    "routed_bits": [2, 3, 4],
+    "routed_codebook": "mul1/cb2"
+  },
+  "cases": {
+    "512": {
+      "assignments": 5120,
+      "uniform_mean_rows_per_expert": 10.0,
+      "routed_flop_per_layer": 50331648000,
+      "routed_flop_all_49_tensor_equivalent_layers": 2466250752000,
+      "e3_workspace_bytes_upper_bound": 59061192,
+      "e3_workspace_mib_upper_bound": 56.32514190673828
+    },
+    "2048": {
+      "assignments": 20480,
+      "uniform_mean_rows_per_expert": 40.0,
+      "routed_flop_per_layer": 201326592000,
+      "routed_flop_all_49_tensor_equivalent_layers": 9865003008000,
+      "e3_workspace_bytes_upper_bound": 236226312,
+      "e3_workspace_mib_upper_bound": 225.28296661376953
+    }
+  },
+  "formulae": {
+    "assignments": "tokens * top_k",
+    "routed_flop_per_layer": "assignments * 6 * hidden * intermediate (gate, up, down; multiply-add counted as 2 FLOP)",
+    "segment_capacity": "ceil(assignments / 64) + experts",
+    "e3_workspace_bytes_upper_bound": "2*A*hidden*2 + A*intermediate*2 + A*(8+2+4) + segment_capacity*3*4 + 2*4"
+  },
+  "dynamic_shared_memory_bytes_per_cta": {
+    "gate_up_K2_K2": 40960,
+    "gate_up_K3_K3": 45056,
+    "gate_up_K4_K4": 49152,
+    "down_K2": 24576,
+    "down_K3": 28672,
+    "down_K4": 32768,
+    "mixed_gate_up_formula": "4 * (8192 + 512 * (gate_K + up_K))"
+  },
+  "exclusions": [
+    "PyTorch allocator rounding and metadata",
+    "served output, sort, histogram, and existing fused-kernel buffers",
+    "shared expert",
+    "attention and non-MoE layers"
+  ]
+}

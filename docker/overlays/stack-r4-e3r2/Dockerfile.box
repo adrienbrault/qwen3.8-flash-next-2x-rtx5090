@@ -1,0 +1,17 @@
+# Stack: decode round 4 (tabbyapi:decode-kernels-r4, R499/R514) + E3 grouped MoE prefill round 2 (R513). Both overlays were built
+# on decode-kernels-r2-refbase and share one file, exllamav3_ext/bindings.cpp; the merged copy here is pristine + r4 patch + E3 r2
+# patch applied in sequence with --fuzz=0. install.py checks the base holds r4's exact bindings.cpp and the served
+# block_sparse_mlp.py, then installs. All selectors stay default-off (EXL3_MOE_PREFILL_E3=0, r4 flags unset).
+# No heredocs (flan builds with the legacy builder). Build context = this directory.
+ARG BASE=tabbyapi:decode-kernels-r4
+FROM ${BASE}
+COPY manifest.json install.py build_extension.py /opt/stack-r4-e3r2/
+COPY overlay /opt/stack-r4-e3r2/overlay
+RUN python3 /opt/stack-r4-e3r2/install.py
+ENV TORCH_EXTENSIONS_DIR=/opt/stack-r4-e3r2/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf /opt/stack-r4-e3r2/torch-extensions && mkdir -p /opt/stack-r4-e3r2/torch-extensions && \
+    MAX_JOBS=8 python3 /opt/stack-r4-e3r2/build_extension.py && \
+    python3 -c "from exllamav3.ext import exllamav3_ext as e; assert e.exl3_moe_prefill_e3_tile_rows() == 64; assert hasattr(e, 'gr_mix_v2_int8'); assert '/site-packages/' in e.__file__, e.__file__; print(e.__file__)"
+ENV EXL3_MOE_PREFILL_E3=0

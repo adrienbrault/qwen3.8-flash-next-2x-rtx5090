@@ -1,0 +1,82 @@
+2026-09-18T23:26:32+00:00 [r516] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T23:26:32+00:00 [r516] image tabbyapi:decode-kernels-r4 b875b864bd24
+2026-09-18T23:26:33+00:00 [r516] === ladder: largest int8 pool above 786,432 that boots and survives c4 stress ===
+2026-09-18T23:26:33+00:00 [r516] boot PROBE835584: int8 mixer 1 cache 835584
+2026-09-18T23:26:52+00:00 [r516] NO BOOT PROBE835584 @ 835584 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T23:26:52+00:00 [r516] boot PROBE819200: int8 mixer 1 cache 819200
+2026-09-18T23:27:13+00:00 [r516] UP PROBE819200 @ 819200: VRAM free MiB 1973/1177/
+[stress P819200 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 465.9, "per_stream_wall_tps": 131.2, "decode_tps": 135
+[stress P819200 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 493.0, "per_stream_wall_tps": 137.6, "decode_tps": 142
+[stress P819200 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 440.1, "per_stream_wall_tps": 112.8, "decode_tps": 115
+[stress P819200 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 467.3, "per_stream_wall_tps": 119.9, "decode_tps": 122
+2026-09-18T23:28:23+00:00 [r516] int8 pool 819200 boots and survives c4 stress (VRAM free MiB 1927/1135/)
+2026-09-18T23:28:23+00:00 [r516] int8 pool: 819200 (daily 786,432, +4 %)
+2026-09-18T23:28:23+00:00 [r516] boot OFF: int8 mixer 0 cache 786432
+2026-09-18T23:28:42+00:00 [r516] UP OFF @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T23:28:48+00:00 [r516] [OFF] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+[OFF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.6, "per_stream_wall_tps": 208.6, "decode_tps": 211.5, "ttft_s": 0.139}
+[OFF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.9, "per_stream_wall_tps": 213.9, "decode_tps": 217.0, "ttft_s": 0.141}
+[OFF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 492.9, "per_stream_wall_tps": 128.6, "decode_tps": 132.4, "ttft_s": 0.455}
+[OFF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 507.7, "per_stream_wall_tps": 132.3, "decode_tps": 136.2, "ttft_s": 0.447}
+[OFF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 185.9, "per_stream_wall_tps": 185.9, "decode_tps": 188.1, "ttft_s": 0.131}
+[OFF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 189.1, "per_stream_wall_tps": 189.1, "decode_tps": 191.3, "ttft_s": 0.132}
+[OFF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 460.6, "per_stream_wall_tps": 121.6, "decode_tps": 124.7, "ttft_s": 0.419}
+[OFF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 474.2, "per_stream_wall_tps": 125.0, "decode_tps": 128.3, "ttft_s": 0.421}
+[OFF] code c4: 12 prompts, aggregate 421.4 t/s, per-request decode median 120.0 (min 102.1, max 142.8)
+[OFF] prose c4: 12 prompts, aggregate 390.2 t/s, per-request decode median 116.5 (min 100.1, max 139.2)
+[OFF] GSM8K n=500: flexible 0.980 (SE 0.0063)   [R509 no-stop: 2.50 0.978]
+2026-09-18T23:41:11+00:00 [r516] boot ONBIG: int8 mixer 1 cache 819200
+2026-09-18T23:41:32+00:00 [r516] UP ONBIG @ 819200: VRAM free MiB 1973/1177/
+2026-09-18T23:41:38+00:00 [r516] [ONBIG] fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+2026-09-18T23:41:38+00:00 [r516] [ONBIG] fingerprint change expected (int8; R499 e7fb377c987d685c / 4a255910dee2d9c5)
+[ONBIG code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 210.4, "per_stream_wall_tps": 210.4, "decode_tps": 213.3, "ttft_s": 0.138}
+[ONBIG code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 212.0, "per_stream_wall_tps": 212.0, "decode_tps": 215.0, "ttft_s": 0.14}
+[ONBIG code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 485.2, "per_stream_wall_tps": 135.8, "decode_tps": 140.2, "ttft_s": 0.46}
+[ONBIG code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 497.4, "per_stream_wall_tps": 138.8, "decode_tps": 143.3, "ttft_s": 0.446}
+[ONBIG prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 183.4, "per_stream_wall_tps": 183.4, "decode_tps": 185.5, "ttft_s": 0.13}
+[ONBIG prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.4, "per_stream_wall_tps": 188.4, "decode_tps": 190.6, "ttft_s": 0.131}
+[ONBIG prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 457.1, "per_stream_wall_tps": 117.2, "decode_tps": 120.0, "ttft_s": 0.418}
+[ONBIG prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 449.9, "per_stream_wall_tps": 114.5, "decode_tps": 117.4, "ttft_s": 0.436}
+[ONBIG] code c4: 12 prompts, aggregate 434.3 t/s, per-request decode median 118.1 (min 103.6, max 146.0)
+[ONBIG] prose c4: 12 prompts, aggregate 404.8 t/s, per-request decode median 115.6 (min 100.9, max 132.4)
+[ONBIG] GSM8K n=500: flexible 0.978 (SE 0.0066)   [R509 no-stop: 2.50 0.978]
+GSM8K paired n=500: OFF 490 vs ONBIG 489; only-OFF 3, only-ONBIG 2, z 0.45
+2026-09-18T23:53:56+00:00 [r516] === needles 131k / 240k on ONBIG ===
+  needle-ONBIG ctx~131072: 5/5 retrieved
+  needle-ONBIG ctx~240000: 5/5 retrieved
+2026-09-18T23:56:16+00:00 [r516] boot OFF2: int8 mixer 0 cache 786432
+2026-09-18T23:56:38+00:00 [r516] UP OFF2 @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T23:56:44+00:00 [r516] [OFF2] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+[OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.4, "per_stream_wall_tps": 208.4, "decode_tps": 211.4, "ttft_s": 0.145}
+[OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 212.0, "per_stream_wall_tps": 212.0, "decode_tps": 215.0, "ttft_s": 0.141}
+[OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 490.5, "per_stream_wall_tps": 128.0, "decode_tps": 131.8, "ttft_s": 0.461}
+[OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 506.9, "per_stream_wall_tps": 132.1, "decode_tps": 136.0, "ttft_s": 0.445}
+[OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 183.5, "per_stream_wall_tps": 183.5, "decode_tps": 186.3, "ttft_s": 0.173}
+[OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.6, "per_stream_wall_tps": 188.6, "decode_tps": 190.8, "ttft_s": 0.133}
+[OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 455.7, "per_stream_wall_tps": 120.3, "decode_tps": 123.3, "ttft_s": 0.421}
+[OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 473.9, "per_stream_wall_tps": 125.0, "decode_tps": 128.2, "ttft_s": 0.421}
+[OFF2] code c4: 12 prompts, aggregate 433.9 t/s, per-request decode median 115.4 (min 108.4, max 136.5)
+[OFF2] prose c4: 12 prompts, aggregate 398.0 t/s, per-request decode median 116.0 (min 101.0, max 144.6)
+2026-09-19T00:00:30+00:00 [r516] boot ONBIG2: int8 mixer 1 cache 819200
+2026-09-19T00:00:52+00:00 [r516] UP ONBIG2 @ 819200: VRAM free MiB 1973/1177/
+2026-09-19T00:00:58+00:00 [r516] [ONBIG2] fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+2026-09-19T00:00:58+00:00 [r516] [ONBIG2] fingerprint change expected (int8; R499 e7fb377c987d685c / 4a255910dee2d9c5)
+[ONBIG2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 210.1, "per_stream_wall_tps": 210.1, "decode_tps": 213.2, "ttft_s": 0.144}
+[ONBIG2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.2, "per_stream_wall_tps": 214.2, "decode_tps": 217.3, "ttft_s": 0.139}
+[ONBIG2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 478.5, "per_stream_wall_tps": 133.8, "decode_tps": 138.1, "ttft_s": 0.458}
+[ONBIG2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 496.4, "per_stream_wall_tps": 138.5, "decode_tps": 143.0, "ttft_s": 0.447}
+[ONBIG2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 180.9, "per_stream_wall_tps": 180.9, "decode_tps": 183.6, "ttft_s": 0.173}
+[ONBIG2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.1, "per_stream_wall_tps": 188.1, "decode_tps": 190.3, "ttft_s": 0.131}
+[ONBIG2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 452.4, "per_stream_wall_tps": 116.0, "decode_tps": 118.7, "ttft_s": 0.418}
+[ONBIG2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 485.1, "per_stream_wall_tps": 121.3, "decode_tps": 124.2, "ttft_s": 0.41}
+[ONBIG2] code c4: 12 prompts, aggregate 437.0 t/s, per-request decode median 115.4 (min 109.8, max 132.5)
+[ONBIG2] prose c4: 12 prompts, aggregate 380.5 t/s, per-request decode median 112.7 (min 98.2, max 150.9)
+2026-09-19T00:04:43+00:00 [r516] === tool-eval 69 x 4 on ONBIG2 ===
+ONBIG2 tool-eval 69x4: 85.5 +- 1.3 CI [84.5, 86.5] points [116, 117, 120, 119] ['G:5/6', 'H:8/10', 'I:15/20', 'K:18/26', 'N:5/6', 'O:10/12']
+2026-09-19T00:13:32+00:00 [r516] tool-eval mean: 85.5 (gate 82; R511 86.0)
+2026-09-19T00:13:32+00:00 [r516] restoring the daily (unchanged live launcher)
+2026-09-19T00:13:32+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-19T00:13:54+00:00 [flashnext] UP on 8022 | warmup 0.410275s | VRAM free MiB 2015/1099/
+2026-09-19T00:13:54+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-19T00:13:54+00:00 [r516] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 2015/1099/
+2026-09-19T00:13:54+00:00 [r516] === R516 DONE ===

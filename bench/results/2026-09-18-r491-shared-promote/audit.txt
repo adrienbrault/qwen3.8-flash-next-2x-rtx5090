@@ -1,0 +1,22 @@
+2026-09-18T15:10:45+00:00 [r491] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size:360448 cache_mode:8,8 max_batch_size:4 cpu_moe_offload_layers:0 vision:true 
+2026-09-18T15:10:46+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T15:11:02+00:00 [flashnext] UP on 8022 | warmup 0.341959s | VRAM free MiB 833/2523/
+2026-09-18T15:11:02+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T15:11:02+00:00 [r491] candidate up: cache_size:360448 cache_mode:8,8 max_batch_size:4 cpu_moe_offload_layers:0 vision:true  VRAM free 833/2523/
+2026-09-18T15:11:02+00:00 [r491] === gate 1: c1 greedy fingerprint (canonical 1474eee2f5945248) ===
+2026-09-18T15:11:04+00:00 [r491] GATE 1 PASS: 1474eee2f5945248
+2026-09-18T15:11:04+00:00 [r491] === gate 2: the original failing agent request (R356 replay) ===
+2026-09-18T15:13:26+00:00 [r491] GATE 2 PASS: reasoning 41763 chars, content 174 chars, finish_reason=tool_calls, tools=['skill', 'write']
+2026-09-18T15:13:26+00:00 [r491] === gate 3: c8 on four slots (all eight must complete; four queue) ===
+  c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 456.8, "per_stream_wall_tps": 81.0, "decode_tps": 121.9, "ttft_s": 4.816}
+2026-09-18T15:13:45+00:00 [r491] GATE 3 PASS: 8/8 completed at 1,024 tokens
+2026-09-18T15:13:45+00:00 [r491] === gate 4: tool-eval 69x4, sampler 0.6/0.95/20, parallel 8 (served band 83.5-86.5) ===
+s4 tool-eval 69x4: 79.5 +- 6.4 CI [73.2, 83.0] points [115, 115, 113, 96] ['A:4/6', 'B:4/6', 'C:6/8', 'H:8/10', 'I:13/20', 'K:18/26', 'M:3/6', 'N:2/6', 'O:0/12']
+2026-09-18T15:22:17+00:00 [r491] GATE 4 FAIL: '79.5'
+2026-09-18T15:22:17+00:00 [r491] NOT PROMOTED: 1 gate(s) failed
+2026-09-18T15:22:17+00:00 [r491] restoring the R481 daily unchanged
+2026-09-18T15:22:17+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T15:22:33+00:00 [flashnext] UP on 8022 | warmup 0.302492s | VRAM free MiB 895/2581/
+2026-09-18T15:22:33+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T15:22:33+00:00 [r491] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size:360448 cache_mode:8,8 max_batch_size:4 cpu_moe_offload_layers:0 vision:true 
+2026-09-18T15:22:33+00:00 [r491] === R491 DONE ===

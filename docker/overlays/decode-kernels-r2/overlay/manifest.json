@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "files": {
+    "exllamav3_ext/libtorch/blocksparse_mlp.cpp": {
+      "baseline_sha256": "0a78133fc6313c4f748252a0972111266d0819f789510437b3bc90e7bae6f3e1",
+      "payload_sha256": "6aad01d70d20e82971f986adecbac1f6b53fe132c4daf276afe4da77b5d1327d"
+    },
+    "exllamav3_ext/libtorch/blocksparse_mlp.h": {
+      "baseline_sha256": "7eefe3a61ae688f773eb89b363a31054a2734680ccf64bd7fcbe0b4856892a34",
+      "payload_sha256": "b829f77cbf6c5215b930cbcafc7558ef6cd7754a75bf9a8d6cd741ae2822f1e7"
+    },
+    "exllamav3_ext/quant/exl3_moe_coop.cu": {
+      "baseline_sha256": "e7d7eea5feee8c4ce687274f2b851af219219d5f2c1b9ab6b835fe0bef0456e0",
+      "payload_sha256": "a4a9d2d8499a100511c6df240baad0a15887c8f51151c605cce1930f545a291e"
+    },
+    "exllamav3_ext/quant/exl3_moe_coop.cuh": {
+      "baseline_sha256": "0d0c62687f039d0589648cc56ab64538a07c4a075b123749c6fef6cb17b63a34",
+      "payload_sha256": "d39c4188c56a4395c685e4269b57367aadfed9f309686e41fffb2a33da789d56"
+    }
+  }
+}

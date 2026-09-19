@@ -1,0 +1,34 @@
+2026-09-18T23:10:13+00:00 [r517] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T23:10:13+00:00 [r517] === G0 reference: sampler-fallback probes on the live daily ===
+fallback {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-18T23:10:18+00:00 [r517] fallback reference: {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-18T23:10:18+00:00 [r517] === G1: boot the candidate launcher with no env (= the full daily config) ===
+2026-09-18T23:10:40+00:00 [r517] G1 PASS: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; image tabbyapi:stack-r4-e3r2; VRAM free MiB 2015/1099/
+2026-09-18T23:10:40+00:00 [r517] candidate launch-flashnext-r517.sh; required env: EXL3_MOE_PREFILL_E3=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536
+2026-09-18T23:10:45+00:00 [r517] fingerprints c1 ae890c45d1000582 / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+2026-09-18T23:10:45+00:00 [r517] === G1b: salted cold prefill 60k / 120k ===
+2026-09-18T23:10:50+00:00 [r517] cold prefill ctx 60000: 9543 tok/s (floor 9200)
+2026-09-18T23:11:00+00:00 [r517] cold prefill ctx 120000: 10015 tok/s (floor 9500)
+2026-09-18T23:11:00+00:00 [r517] === G0: sampler-fallback probes on the candidate vs the live reference ===
+fallback {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-18T23:11:04+00:00 [r517] G0 PASS: {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-18T23:11:04+00:00 [r517] === G2: agentic-edit greedy + sampled, c1 + c4 ===
+[STK] agentic-edit greedy c1: 6/6 ok, 16523 tokens, per-request decode median 224.3 t/s (min 211.5, max 251.7), aggregate 211.9 t/s
+[STK] agentic-edit greedy c4: 6/6 ok, 17071 tokens, per-request decode median 152.5 t/s (min 137.2, max 191.3), aggregate 437.1 t/s
+[STK] agentic-edit sampled c1: 6/6 ok, 17378 tokens, per-request decode median 234.9 t/s (min 210.4, max 271.7), aggregate 231.1 t/s
+[STK] agentic-edit sampled c4: 6/6 ok, 18429 tokens, per-request decode median 141.4 t/s (min 120.2, max 183.9), aggregate 423.1 t/s
+2026-09-18T23:15:00+00:00 [r517] G2 PASS (4/4 modes 6/6 ok, server alive)
+2026-09-18T23:15:00+00:00 [r517] === G3: needles 131k / 240k ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-18T23:16:59+00:00 [r517] G3 PASS
+2026-09-18T23:16:59+00:00 [r517] === G4: tool-eval 69 x 4, parallel 8 ===
+STK tool-eval 69x4: 85.8 +- 2.1 CI [84.0, 87.5] points [116, 116, 121, 120] ['G:5/6', 'H:8/10', 'I:15/20', 'K:19/26', 'N:5/6', 'O:10/12']
+2026-09-18T23:26:09+00:00 [r517] tool-eval mean: 85.8
+2026-09-18T23:26:09+00:00 [r517] G4 PASS
+2026-09-18T23:26:09+00:00 [r517] === PROMOTE: launch-flashnext.sh := launch-flashnext-r517.sh ===
+2026-09-18T23:26:10+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T23:26:31+00:00 [flashnext] UP on 8022 | warmup 0.422768s | VRAM free MiB 2015/1099/
+2026-09-18T23:26:31+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T23:26:32+00:00 [r517] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; c1 fingerprint ae890c45d1000582 (promotion-boot canonical ae890c45d1000582)
+2026-09-18T23:26:32+00:00 [r517] === R517 PROMOTED ===

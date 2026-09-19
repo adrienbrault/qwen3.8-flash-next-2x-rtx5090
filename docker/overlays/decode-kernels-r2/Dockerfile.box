@@ -1,0 +1,13 @@
+# Shared-expert side-stream overlap (codex decode-kernels r2, EXL3_SHARED_EXPERT_OVERLAP) over the served moecoopv2 image.
+# Same pattern as gdnstate/r1/Dockerfile.box: copy the changed files into the installed package, clear the JIT cache in
+# TORCH_EXTENSIONS_DIR, import once to rebuild. Build context = this r2/ directory. Default off = served path.
+ARG BASE=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2
+FROM ${BASE}
+COPY overlay /opt/decode-kernels-r2/overlay
+COPY tests /opt/decode-kernels-r2/tests
+RUN set -eux; \
+    EXL3_DIR=/opt/venv/lib/python3.12/site-packages/exllamav3; \
+    cp -a /opt/decode-kernels-r2/overlay/payload/exllamav3_ext/. "${EXL3_DIR}/exllamav3_ext/"; \
+    rm -rf "${TORCH_EXTENSIONS_DIR}"/*; \
+    TORCH_CUDA_ARCH_LIST=12.0 MAX_JOBS=8 python3 -c 'from exllamav3.ext import exllamav3_ext as e; print(e.__file__)'
+ENV EXL3_SHARED_EXPERT_OVERLAP=0

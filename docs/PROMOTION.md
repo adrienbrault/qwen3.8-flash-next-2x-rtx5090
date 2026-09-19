@@ -1,12 +1,25 @@
-# PROMOTION — the gates for serving this stack
+# PROMOTION — the gates a candidate passes before it is served
 
-Serving a model all day on the `flan` box means: one published configuration, with the launcher, the measurements
-and the failure modes written down, and a rebuild reproducible from the repositories alone.
+A candidate is a launcher: image, environment flags, pool, slots and checkpoint. The promotion unit boots it on the serving port with no environment overrides, runs the gates below, and only then replaces `launch-flashnext.sh`, keeping the previous launcher for rollback. Examples: [`scripts/r514-promote-r4i.sh`](../scripts/r514-promote-r4i.sh), [`scripts/r517-promote-stack.sh`](../scripts/r517-promote-stack.sh), [`scripts/r518-slots6.sh`](../scripts/r518-slots6.sh).
 
-This document records the gates `qwen3.8-flash-next-exl3-3.05bpw` on TabbyAPI + ExLlamaV3 has to pass to be served
-that way, and where it stands on each.
+## The gates since 2026-09-18
 
-## The gates, and where this stack stands
+| gate | what it checks | pass |
+| --- | --- | --- |
+| G0 sampler fallbacks | presence penalty, repetition penalty and stop strings on greedy requests, hashed | byte-identical to the served image |
+| G1 boot and fingerprints | image, environment and config as intended; greedy 256-token reply at c1 and 128-token reply to a 30k prompt, hashed | canonical hashes, or a stated change for patches that change numerics |
+| G1b cold prefill (prefill changes only) | salted 60k and 120k prompts, one invocation per length | a floor set from the evidence run |
+| G2 agentic-edit | six real files rewritten with a small edit, greedy and sampled, c1 and c4 ([`bench/agentic-edit.py`](../bench/agentic-edit.py)) | 6/6 in all four modes, server alive |
+| G3 needles | five planted passphrases at 131k and 240k prompt tokens ([`bench/needle.py`](../bench/needle.py)) | 5/5 at both |
+| G4 tool-eval | [tool-eval-bench](https://github.com/SeraphimSerapis/tool-eval-bench) 69 scenarios × 4 | mean ≥ 82 |
+
+A patch that changes numerics also passes GSM8K n=500 through [`bench/nostop_proxy.py`](../bench/nostop_proxy.py), paired per question against the served configuration ([R509](../bench/results/r509-gsm8k-nostop.md) explains why the proxy), before it reaches the promotion unit. Speed is judged on two boots per arm (OFF / ON / OFF2 / ON2) and on the multi-prompt probe when output changes ([R487](../bench/results/r487-pool-393k.md)).
+
+## 2026-09-16: the first promotion of this stack
+
+The rest of this document records the gates the 3.05 bpw pack on TabbyAPI + ExLlamaV3 passed when it was first served, and where it stood on each.
+
+### The gates, and where this stack stood
 
 | # | gate | status | evidence |
 | --- | --- | --- | --- |
@@ -24,9 +37,9 @@ that way, and where it stands on each.
 | 12 | GSM8K, lm-eval, as served | **0.9158** flexible-extract | 5-shot, `--apply_chat_template`, temperature 0, `max_gen_toks 8192`, `num_concurrent 4`, thinking on; n=1319 ±0.0077 (`2026-09-16-r368-gsm8k-1319`). The earlier n=200 reading, 0.925 ±0.019, contains this one in its interval |
 | 13 | tool-eval 69×4 | **85.0 ± 2.9** | same CLI, same sampler, `--trials 4 --parallel 8` (`2026-09-16-r357-tooleval`). Not measured on the vLLM route |
 | 14 | the promoted levers preserve quality | **PASS** | tool-eval 85.8 ± 3.1 (CI [83.5, 88.5]) against the baseline's 85.0 ± 2.9, overlapping intervals, while measuring +35 %/+78 % (`2026-09-16-r357-tooleval`) |
-| 15 | agentic coding | **10/10 resolved on the first subset** | SWE-bench Verified, mini-SWE-agent 2.4.6 with the builtin `benchmarks/swebench.yaml`, scored by the official harness: 10 of the dataset's first ten instances resolved. n=10 and one repository (astropy), so the subset cannot resolve a few points; the stratified runs are in `docs/MEASUREMENTS.md` (`2026-09-16-r359-swebench-10`, `r360`) |
+| 15 | agentic coding | **10/10 resolved on the first subset** | SWE-bench Verified, mini-SWE-agent 2.4.6 with the builtin `benchmarks/swebench.yaml`, scored by the official harness: 10 of the dataset's first ten instances resolved. n=10 and one repository (astropy), so the subset cannot resolve a few points; the stratified runs are in [R359](../bench/results/r359-swebench.md) (`2026-09-16-r359-swebench-10`, `r360`) |
 
-## What the numbers say
+### What the numbers say
 
 **Single-stream.** 207–214 t/s on 2,048 forced code tokens at c1, greedy, on the served configuration of
 2026-09-17. Prose at c1 reads 160.6–165.3 t/s on the 2026-09-16 configuration: decode rate on this checkpoint is
@@ -43,10 +56,10 @@ of the engine rather than of the configuration.
 main, TP2 on both cards. On 2026-09-18 its best profile (BF16 KV, MTP depth 3) read 131.6 t/s at c1 and 475.4 t/s aggregate at c4 on code,
 against this stack's 207–214 and 425–450: 1.06–1.12× this stack at c4, 62–64 % of this stack's rate at c1. GSM8K on that route is
 0.945 at n=200 on the depth-3 profile (0.92 at depth 2) against this stack's 0.9158 at n=1319. c8, prose, prefill and long-context are not measured on the
-vLLM route. The full table is in `docs/MEASUREMENTS.md`, records in
+vLLM route. The results are indexed in [`bench/RESULTS.md`](../bench/RESULTS.md), records in
 `bench/results/2026-09-18-vllm-exl3-route/`.
 
-## Levers on concurrent aggregate
+### Levers on concurrent aggregate
 
 | lever | state | expected effect |
 | --- | --- | --- |
@@ -56,13 +69,13 @@ vLLM route. The full table is in `docs/MEASUREMENTS.md`, records in
 | more slots | `max_batch_size: 8` already raised from TabbyAPI's recurrent default of 4 | more slots cost recurrent VRAM; the page pool, not the slot count, binds at deep context. 12 and 16 fail to boot |
 | host KV tier | `sysmem_kv_cache: 0` | helps only after VRAM eviction; the deep-context admission test shows the pool is the constraint. Measured flat (`2026-09-16-r358-hostkv`) |
 
-## Recommendation
+### Recommendation
 
 Serve this stack with both measured levers enabled. The configuration is validated and verified
 (`IMG=tabbyapi:qsa-cid DRAFT_POLICY='[[2, 3], [8, 1]]'`: +35 % at short-context c4, +78 % at deep-context c4,
 byte-identical output, tool-eval unchanged, the original agent request returning parsed tool calls, needle 5/5), and
 it is the launcher's default as of 2026-09-16. The 2026-09-17 layers on top of it are listed with their gates at the
-end of `docs/MEASUREMENTS.md`.
+[`docs/HISTORY.md`](HISTORY.md).
 
 What the measurements do not cover: prose, c8, prefill and long-context on the vLLM route, and deep-context
 fan-out, which is measured on this stack only (eight concurrent 38,283-token requests, `2026-09-16-r345-pool`) and

@@ -1,0 +1,236 @@
+--- a/exllamav3_ext/libtorch/blocksparse_mlp.h
++++ b/exllamav3_ext/libtorch/blocksparse_mlp.h
+@@ -85,6 +85,14 @@
+     MoeCoopParams coop_p;
+     int coop_K_gu, coop_K_d, coop_cb;
+ 
++    // Optional shared-expert stream overlap. Created only when the literal opt-in is present
++    // while the bound class is constructed; the default path allocates no CUDA resources.
++    bool shared_overlap;
++    int shared_overlap_device;
++    cudaStream_t shared_stream;
++    cudaEvent_t shared_input_ready;
++    cudaEvent_t shared_done;
++
+     int max_experts_per_token;
+     int max_tokens_per_expert;
+     std::vector<at::Tensor> interm_g_single;
+@@ -151,6 +159,8 @@
+         bool _act_relu2 = false
+     );
+ 
++    ~BC_BlockSparseMLP();
++
+     void run_bszN
+     (
+         const at::Tensor& y,
+@@ -180,4 +190,4 @@
+         at::Tensor& interm_a,
+         at::Tensor& out
+     );
+-};
+\ No newline at end of file
++};
+--- a/exllamav3_ext/libtorch/blocksparse_mlp.cpp
++++ b/exllamav3_ext/libtorch/blocksparse_mlp.cpp
+@@ -12,6 +12,17 @@
+ #include "../activation.cuh"
+ #include "../add.cuh"
+ 
++#include <cstdlib>
++#include <cstring>
++
++static bool shared_expert_overlap_enabled()
++{
++    const char* env = std::getenv("EXL3_SHARED_EXPERT_OVERLAP");
++    if (!env || !std::strcmp(env, "0")) return false;
++    TORCH_CHECK(!std::strcmp(env, "1"), "EXL3_SHARED_EXPERT_OVERLAP must be 0 or 1");
++    return true;
++}
++
+ std::tuple<at::Tensor, at::Tensor> blocksparse_mlp_routing(
+     int bsz,
+     const py::object& cfg,
+@@ -82,17 +93,37 @@
+ 
+     c10::cuda::CUDAGuard device_guard(y.device());
+ 
+-    // Shared experts run through their own multi-row graph first (same stream); the kernel adds
+-    // the result into the routed sum, through the sigmoid gate when there is one
++    // Shared experts normally run through their own multi-row graph first on the current stream;
++    // the kernel adds the result into the routed sum, through the sigmoid gate when there is one.
++    // With the opt-in, the unchanged graph runs on a nonblocking side stream while routed stage A
++    // runs on the current stream. An event immediately before stage B preserves the served data
++    // dependency and leaves the arithmetic and every device kernel unchanged.
+     c10::optional<at::Tensor> sh_o;
+     if (shared_experts)
+     {
+         at::Tensor x_dense = y.unsqueeze(0);
+         at::Tensor out_d_sh_n = out_d_sh.value().slice(1, 0, num_tokens);
+-        shared_experts->run_bszN(x_dense, out_d_sh_n);
++        if (shared_overlap)
++        {
++            cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
++            cuda_check(cudaEventRecord(shared_input_ready, stream));
++            cuda_check(cudaStreamWaitEvent(shared_stream, shared_input_ready, 0));
++            {
++                c10::cuda::CUDAStreamGuard stream_guard(
++                    c10::cuda::getStreamFromExternal(shared_stream, shared_overlap_device));
++                shared_experts->run_bszN(x_dense, out_d_sh_n);
++            }
++            cuda_check(cudaEventRecord(shared_done, shared_stream));
++        }
++        else
++            shared_experts->run_bszN(x_dense, out_d_sh_n);
+         sh_o = out_d_sh_n;
+     }
+-    exl3_moe_coop_run(coop_p, coop_K_gu, coop_K_d, coop_cb, y, selected_experts, routing_weights, sh_o);
++    exl3_moe_coop_run
++    (
++        coop_p, coop_K_gu, coop_K_d, coop_cb, y, selected_experts, routing_weights, sh_o,
++        shared_overlap ? shared_done : nullptr
++    );
+ }
+ 
+ BC_BlockSparseMLP::BC_BlockSparseMLP
+@@ -199,7 +230,12 @@
+         gate_bias_ptrs      (std::move(_gate_bias_ptrs)),
+         up_bias_ptrs        (std::move(_up_bias_ptrs)),
+         down_bias_ptrs      (std::move(_down_bias_ptrs)),
+-        out_bszn            (std::move(_out_bszn))
++        out_bszn            (std::move(_out_bszn)),
++        shared_overlap      (false),
++        shared_overlap_device(-1),
++        shared_stream       (nullptr),
++        shared_input_ready  (nullptr),
++        shared_done         (nullptr)
+ {
+     // Non-gated experts (NemotronH): python passes an empty gates vector (the gate pointer
+     // tables are unused placeholders) and act_relu2; the gate GEMMs are skipped throughout
+@@ -262,8 +298,31 @@
+     TORCH_CHECK(max_expert <= MAX_EXPERTS, "BC_BlockSparseMLP: Too many experts");
+ 
+     use_mgemm = gate_K == up_K;
++
++    shared_overlap = shared_experts && shared_expert_overlap_enabled();
++    if (shared_overlap)
++    {
++        shared_overlap_device = out_bszn.device().index();
++        c10::cuda::CUDAGuard overlap_device_guard(out_bszn.device());
++        cuda_check(cudaStreamCreateWithFlags(&shared_stream, cudaStreamNonBlocking));
++        cuda_check(cudaEventCreateWithFlags(&shared_input_ready, cudaEventDisableTiming));
++        cuda_check(cudaEventCreateWithFlags(&shared_done, cudaEventDisableTiming));
++    }
+ }
+ 
++BC_BlockSparseMLP::~BC_BlockSparseMLP()
++{
++    if (!shared_overlap) return;
++    int previous_device = -1;
++    cudaGetDevice(&previous_device);
++    cudaSetDevice(shared_overlap_device);
++    cudaEventDestroy(shared_done);
++    cudaEventDestroy(shared_input_ready);
++    cudaStreamDestroy(shared_stream);
++    if (previous_device >= 0 && previous_device != shared_overlap_device)
++        cudaSetDevice(previous_device);
++}
++
+ void BC_BlockSparseMLP::run_single_expert_gr
+ (
+     const at::Tensor& y,
+--- a/exllamav3_ext/quant/exl3_moe_coop.cuh
++++ b/exllamav3_ext/quant/exl3_moe_coop.cuh
+@@ -80,7 +80,11 @@
+ // Launch with plain device pointers (called from BC_BlockSparseMLP). K: gate/up and down bit
+ // widths (gate and up always share one, the converter allocates them as one group); cb: 0 default,
+ // 1 mcg, 2 mul1 codebook, uniform across the three projections
+-void exl3_moe_coop_launch(const MoeCoopParams& p, int K_gu, int K_d, int cb, int device, cudaStream_t stream);
++void exl3_moe_coop_launch
++(
++    const MoeCoopParams& p, int K_gu, int K_d, int cb, int device, cudaStream_t stream,
++    cudaEvent_t wait_before_b = nullptr
++);
+ 
+ // Static part of the parameter block, validated once from the module's tensors (BC construction);
+ // K_gu / K_d / cb come back through the out-params. Gate tables/scratch are ignored when
+@@ -116,7 +120,8 @@
+ (
+     MoeCoopParams p, int K_gu, int K_d, int cb,
+     const at::Tensor& x, const at::Tensor& sel, const at::Tensor& rw,
+-    const c10::optional<at::Tensor>& sh_out
++    const c10::optional<at::Tensor>& sh_out,
++    cudaEvent_t wait_before_b = nullptr
+ );
+ 
+ // Tensor front end (prepare + run; the test entry point)
+--- a/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -140,7 +140,11 @@
+     return std::min(base, it->second * waves);
+ }
+ 
+-static void moe_coop_v2_launch(MoeCoopParams p, int K_gu, int K_d, int cb, int device, cudaStream_t stream, int mode)
++static void moe_coop_v2_launch
++(
++    MoeCoopParams p, int K_gu, int K_d, int cb, int device, cudaStream_t stream, int mode,
++    cudaEvent_t wait_before_b
++)
+ {
+     using namespace exl3_moe_coop_v2_ns;
+     const int slots = p.bsz * p.topk;
+@@ -167,11 +171,16 @@
+         exl3_moe_coop_ns::exl3_moe_coop_rot_kernel<<<rot_grid, MOE_COOP_THREADS, 0, stream>>>(p);
+     }
+     cuda_check(cudaLaunchKernel(ka.kernel, dim3(grid_a), dim3(MOE_COOP_THREADS), args, ka.smem, stream));
++    if (wait_before_b) cuda_check(cudaStreamWaitEvent(stream, wait_before_b, 0));
+     cuda_check(cudaLaunchKernel(kb.kernel, dim3(grid_b), dim3(MOE_COOP_THREADS), args, kb.smem, stream));
+     cuda_check(cudaPeekAtLastError());
+ }
+ 
+-void exl3_moe_coop_launch(const MoeCoopParams& p_in, int K_gu, int K_d, int cb, int device, cudaStream_t stream)
++void exl3_moe_coop_launch
++(
++    const MoeCoopParams& p_in, int K_gu, int K_d, int cb, int device, cudaStream_t stream,
++    cudaEvent_t wait_before_b
++)
+ {
+     const int v2 = moe_coop_v2_mode();
+     // Preserve the served fallback, including diagnostics and unsupported architectures.
+@@ -179,7 +188,7 @@
+         at::cuda::getDeviceProperties(device)->major == 12 &&
+         at::cuda::getDeviceProperties(device)->minor == 0 && !std::getenv("EXL3_MOE_COOP_DBG"))
+     {
+-        moe_coop_v2_launch(p_in, K_gu, K_d, cb, device, stream, v2);
++        moe_coop_v2_launch(p_in, K_gu, K_d, cb, device, stream, v2, wait_before_b);
+         return;
+     }
+     MoeCoopParams p = p_in;
+@@ -211,6 +220,7 @@
+         exl3_moe_coop_ns::exl3_moe_coop_rot_kernel<<<rot_grid, MOE_COOP_THREADS, 0, stream>>>(p);
+     }
+     cuda_check(cudaLaunchKernel(ka.kernel, dim3(grid_a), dim3(MOE_COOP_THREADS), args, ka.smem, stream));
++    if (wait_before_b) cuda_check(cudaStreamWaitEvent(stream, wait_before_b, 0));
+     cuda_check(cudaLaunchKernel(kb.kernel, dim3(grid_b), dim3(MOE_COOP_THREADS), args, kb.smem, stream));
+     cuda_check(cudaPeekAtLastError());
+ }
+@@ -338,7 +348,8 @@
+ (
+     MoeCoopParams p, int K_gu, int K_d, int cb,
+     const at::Tensor& x, const at::Tensor& sel, const at::Tensor& rw,
+-    const c10::optional<at::Tensor>& sh_out
++    const c10::optional<at::Tensor>& sh_out,
++    cudaEvent_t wait_before_b
+ )
+ {
+     const at::cuda::OptionalCUDAGuard device_guard(x.device());
+@@ -366,7 +377,7 @@
+     }
+     else
+         p.sh_gate_w = nullptr;
+-    exl3_moe_coop_launch(p, K_gu, K_d, cb, device, stream);
++    exl3_moe_coop_launch(p, K_gu, K_d, cb, device, stream, wait_before_b);
+ }
+ 
+ void exl3_moe_coop
+

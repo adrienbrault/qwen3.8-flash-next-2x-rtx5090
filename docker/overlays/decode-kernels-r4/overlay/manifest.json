@@ -1,0 +1,42 @@
+{
+  "base": "ref/served-src/exllamav3",
+  "files": {
+    "architecture/qwen4_exp_mtp.py": {
+      "baseline_sha256": "929ebd725bc4daa635dfff5f2d5c4dad69b498648a93e565b5cc569b19066bd6",
+      "overlay_sha256": "b1526a9e31c35b0f512d33c7ac7e312222784e55e4381c278541c45996e65097"
+    },
+    "exllamav3_ext/bindings.cpp": {
+      "baseline_sha256": "4f099e82c2610f596d22e308cce7f8249bd3a3cfa15fd280c913ce18153b197b",
+      "overlay_sha256": "4f8a37b2c58e39f7304878f355ac21b6f3121bea04b7c3d55f4853fb8fe1e5f5"
+    },
+    "exllamav3_ext/hc_mix.cu": {
+      "baseline_sha256": "5bf8ed9963afb59c3af4928ab739a4cfb850c092342ab70b9c451e9e5408c302",
+      "overlay_sha256": "912db071240fbfe02a46ebf7629c0433d625533c83744c8e703407c50312b4d3"
+    },
+    "exllamav3_ext/hc_mix.cuh": {
+      "baseline_sha256": "946375c7b0ded952a2c2bd1c02f9a21220c84b57d721403b60d7b5673466334e",
+      "overlay_sha256": "33ef3437812bce78e8d9e02718f13470d1aa00636280ec8cac21019845fff3e1"
+    },
+    "generator/draft_overlap.py": {
+      "baseline_sha256": "0b747e1d116dc8be0a1640bb7ce4ddb880fd39c80ab15a17108b81aeb17fa4f1",
+      "overlay_sha256": "119a170c0facefb0deb663731ba33e0e74a5ae6d968126bdd407927777af359b"
+    },
+    "generator/generator.py": {
+      "baseline_sha256": "5c7c73d1d6c8f3c165a49b7e5314b9123732d5afcb66bae35c84eeb5dbabe8f2",
+      "overlay_sha256": "c8692d99859dc726d68bd2cf8a6a48e006cc41b7bbf66ab468a8d628b87c0477"
+    },
+    "generator/sampler/custom.py": {
+      "baseline_sha256": "6ce2ee877e390bfc5c33f8cd6a217c0145f6f658d76ad113c22b726902b77fbb",
+      "overlay_sha256": "e6eeefa8f7c8e11318f7ef8e94bbb99062268eef247fc6e907618cf3848d8b50"
+    },
+    "modules/embedding.py": {
+      "baseline_sha256": "11e0075c96988503ef19b46b91e072d281b44fb53385d38d275c7ff00bcecd89",
+      "overlay_sha256": "5a33555735ceaee5c27af5c7da1e315d91a57ac9f2b465fc81cb1306ddc5167d"
+    },
+    "modules/hyperconnections.py": {
+      "baseline_sha256": "979f3eddf476eecf721df0bc35df510ce2a617eeee2884d7566ad1d79479ed71",
+      "overlay_sha256": "a17978dc7aab71d50ac84681d34906173bdb068732926ba2584dffe579d24e46"
+    }
+  },
+  "patch_sha256": "c5fe84572e8733d44a7178904c166176f3746974bb0d8b05dbb382ccfaf15c2b"
+}

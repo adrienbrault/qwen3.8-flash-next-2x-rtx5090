@@ -1,0 +1,40 @@
+2026-09-18T13:48:25+00:00 [r487] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/
+2026-09-18T13:48:25+00:00 [r487] === measure ctl (served, no reboot): cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/ ===
+ctl c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+[ctl code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 211.8, "per_stream_wall_tps": 211.8, "decode_tps": 215.7, "ttft_s": 0.179}
+[ctl code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.8, "per_stream_wall_tps": 214.8, "decode_tps": 218.0, "ttft_s": 0.144}
+[ctl code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 421.1, "per_stream_wall_tps": 111.1, "decode_tps": 113.9, "ttft_s": 0.476}
+[ctl code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 443.9, "per_stream_wall_tps": 117.2, "decode_tps": 120.3, "ttft_s": 0.465}
+[ctl prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 165.0, "per_stream_wall_tps": 165.0, "decode_tps": 167.3, "ttft_s": 0.177}
+[ctl prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 170.9, "per_stream_wall_tps": 170.9, "decode_tps": 172.8, "ttft_s": 0.138}
+[ctl prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 416.5, "per_stream_wall_tps": 104.6, "decode_tps": 106.9, "ttft_s": 0.436}
+[ctl prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 435.7, "per_stream_wall_tps": 109.5, "decode_tps": 112.0, "ttft_s": 0.438}
+[ctl prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.02 s = 7,482 tok/s
+[ctl prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.12 s = 11,106 tok/s
+2026-09-18T13:50:39+00:00 [r487] boot C: split [30, 31] chunk 2048 cache 393216
+2026-09-18T13:50:56+00:00 [r487] UP C @ 393216: VRAM free MiB 2075/721/
+2026-09-18T13:50:56+00:00 [r487] === measure C: cache_size: 393216 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 31] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 2075/721/ ===
+C c1 greedy sha 7812e069df67f255 (canonical 1474eee2f5945248)
+C 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[C code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 174.9, "per_stream_wall_tps": 174.9, "decode_tps": 177.0, "ttft_s": 0.144}
+[C code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 176.8, "per_stream_wall_tps": 176.8, "decode_tps": 179.0, "ttft_s": 0.146}
+[C code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 439.4, "per_stream_wall_tps": 115.8, "decode_tps": 119.0, "ttft_s": 0.474}
+[C code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 449.7, "per_stream_wall_tps": 118.2, "decode_tps": 121.5, "ttft_s": 0.467}
+[C prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 168.6, "per_stream_wall_tps": 168.6, "decode_tps": 170.9, "ttft_s": 0.172}
+[C prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.9, "per_stream_wall_tps": 172.9, "decode_tps": 174.8, "ttft_s": 0.137}
+[C prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 424.1, "per_stream_wall_tps": 110.3, "decode_tps": 113.0, "ttft_s": 0.437}
+[C prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 432.8, "per_stream_wall_tps": 112.5, "decode_tps": 115.3, "ttft_s": 0.437}
+[C prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.00 s = 7,532 tok/s
+[C prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.28 s = 10,882 tok/s
+2026-09-18T13:53:18+00:00 [r487] [C] four concurrent 60k prefills (runtime peak)
+[C c4x60k]  c=4 run0 ctx~60000: {"conc": 4, "ctx_requested": 60000, "n_ok": 4, "tokens_median": 256.0, "prompt_tokens": 81189, "aggregate_tps": 18.8, "per_stream_wall_tps": 4.7, "decode_tps": 121.3, "ttft_s": 52.294}
+2026-09-18T13:54:13+00:00 [r487] [C] c4x60k: 4/4 completed at 256 tokens; engine qwen3.8-flash-next-exl3-3.05bpw; VRAM free 1271/161/
+[C needle]  C-needle ctx~131072: 5/5 retrieved
+[C needle]  C-needle ctx~240000: 5/5 retrieved
+[C] GSM8K n=200 c4: flexible 0.925 (SE 0.0187) strict 0.925   [served R480 s4 0.925]
+2026-09-18T14:00:24+00:00 [r487] restoring the daily (unchanged live launcher)
+2026-09-18T14:00:24+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T14:00:40+00:00 [flashnext] UP on 8022 | warmup 0.312422s | VRAM free MiB 895/2581/
+2026-09-18T14:00:40+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T14:00:40+00:00 [r487] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/
+2026-09-18T14:00:40+00:00 [r487] === R487 DONE ===

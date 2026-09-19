@@ -1,0 +1,25 @@
+2026-09-18T21:05:13+00:00 [r511] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T21:05:13+00:00 [r511] === G1: boot the candidate launcher with no env (= the full daily config) ===
+2026-09-18T21:05:36+00:00 [r511] G1 PASS: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; image tabbyapi:decode-kernels-r2; VRAM free MiB 2015/1219/
+2026-09-18T21:05:42+00:00 [r511] NEW CANONICAL fingerprints (2.50bpw @786,432, daily image/flags): c1 ae890c45d1000582 / 30k 2aa8d1024daece5c
+2026-09-18T21:05:43+00:00 [r511] WARNING: 30k fingerprint not repeatable (2aa8d1024daece5c vs 648a12e6fc888c72)
+2026-09-18T21:05:43+00:00 [r511] === G2: agentic-edit greedy + sampled, c1 + c4 ===
+[P250] agentic-edit greedy c1: 6/6 ok, 18274 tokens, per-request decode median 230.8 t/s (min 199.7, max 260.6), aggregate 213.8 t/s
+[P250] agentic-edit greedy c4: 6/6 ok, 17190 tokens, per-request decode median 148.4 t/s (min 136.1, max 178.4), aggregate 419.9 t/s
+[P250] agentic-edit sampled c1: 6/6 ok, 17136 tokens, per-request decode median 235.8 t/s (min 200.1, max 262.6), aggregate 228.9 t/s
+[P250] agentic-edit sampled c4: 6/6 ok, 17948 tokens, per-request decode median 143.6 t/s (min 125.0, max 199.7), aggregate 440.1 t/s
+2026-09-18T21:09:45+00:00 [r511] G2 PASS (4/4 modes 6/6 ok, server alive)
+2026-09-18T21:09:45+00:00 [r511] === G3: needles 131k / 240k ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-18T21:12:07+00:00 [r511] G3 PASS
+2026-09-18T21:12:07+00:00 [r511] === G4: tool-eval 69 x 4, parallel 8 ===
+P250 tool-eval 69x4: 86 +- 2.6 CI [84.0, 88.0] points [120, 123, 117, 115] ['G:5/6', 'H:8/10', 'I:15/20', 'J:4/6', 'K:16/26', 'N:5/6', 'O:10/12']
+2026-09-18T21:21:20+00:00 [r511] tool-eval mean: 86
+2026-09-18T21:21:20+00:00 [r511] G4 PASS
+2026-09-18T21:21:20+00:00 [r511] === PROMOTE: launch-flashnext.sh := launch-flashnext-r511.sh ===
+2026-09-18T21:21:21+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T21:21:42+00:00 [flashnext] UP on 8022 | warmup 0.395020s | VRAM free MiB 2015/1219/
+2026-09-18T21:21:42+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T21:21:43+00:00 [r511] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; c1 fingerprint ae890c45d1000582 (promotion-boot canonical ae890c45d1000582)
+2026-09-18T21:21:43+00:00 [r511] === R511 PROMOTED ===

@@ -128,7 +128,7 @@ shares the holder's open file description and `flock` succeeds at once. r362 cal
 **a script that the lock-holder invokes must not take the lock itself** — inline `exec 9>` + `flock` is only safe at
 the top level, which is what every unit except this pair is.
 
-The queue was also rebuilt as a single chain (`bench/r370-chain.sh`) rather than eight units sharing one flock: the
+The queue was also rebuilt as a single chain ([`scripts/r370-chain.sh`](../scripts/r370-chain.sh)) rather than eight units sharing one flock: the
 order in which waiters acquire a flock is not defined, so "queued" never meant "ordered".
 
 ## 12. A validation that passes on an empty file (2026-09-16)
@@ -183,3 +183,28 @@ existing captures rather than assumed to survive — #290's paired re-capture is
 
 **The test of a check is whether it can fail**, and a check that cannot compute must refuse rather than return a
 plausible value.
+
+## 14. GSM8K measured lm-eval's stop strings, not arithmetic (2026-09-18)
+
+**What it looks like:** the 2.50 bpw pack scores 0.804 on GSM8K against 0.914 for the 3.05 bpw pack, and most wrong answers are empty.
+**What it is:** the model's reasoning restates the problem as "Question: …", and TabbyAPI applies lm-eval's request-level stop list (`Question:`, `</s>`, `<|im_end|>`) to the reasoning text. The reply ends mid-thought with empty content. Without the stop list both packs score 0.980 and 0.978. GSM8K runs go through [`bench/nostop_proxy.py`](../bench/nostop_proxy.py) ([R509](../bench/results/r509-gsm8k-nostop.md)).
+
+## 15. A `RUN` heredoc in a Dockerfile runs on empty input on the box (2026-09-18)
+
+**What it looks like:** an image that should patch `generator.py` builds cleanly, and every arm of the experiment behaves like the default.
+**What it is:** the box builds with Docker's legacy builder, which drops the body of a `RUN <<EOF` heredoc, so `python3 - <<'PY'` runs on empty stdin. Image recipes here copy scripts in and run them, and assert the change with `grep` or an import at build time ([R497](../bench/results/r497-draft-confidence.md)).
+
+## 16. A "cold" prefill that was a prefix-cache hit (2026-09-18)
+
+**What it looks like:** a second cold prefill run of the same length finishes in 0.19 s at 30k tokens, or a 120k prefill reads 11,070 t/s.
+**What it is:** `fn_bench --unique` seeded its filler text identically on every invocation, so later runs and longer contexts shared cached prefixes with earlier ones. `fn_bench` takes `--salt`; cold prefill is measured one invocation per length with a random salt ([R507](../bench/results/r507-prefill-e3.md)).
+
+## 17. One greedy prompt per kind is a content-sensitive number (2026-09-18)
+
+**What it looks like:** a change that moves one layer to the other card reads −17 % on code at c1.
+**What it is:** any change in rounding changes the greedy text, and the draft acceptance of that text with it. On 12 sampled prompts per kind the same change reads +1.4 % at c1. Changes that alter numerics are judged on [`bench/multiprompt.py`](../bench/multiprompt.py) ([R487 and R488](../bench/results/r487-pool-393k.md)).
+
+## 18. A second request with the same 30k prompt returns a different fingerprint (2026-09-18)
+
+**What it looks like:** the 30k greedy fingerprint differs between two requests in one boot.
+**What it is:** the second request reuses the first one's cached prefix, which changes the prefill shape. Gates take the first 30k request of a fresh boot only ([R511](../bench/results/r511-promote-2p50.md)).

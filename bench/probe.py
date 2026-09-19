@@ -44,6 +44,7 @@ ASK_CODE = ("\n\nNow write the complete source of a production-quality Python mo
 
 NOFORCE = [False]
 UNIQUE = [False]
+SALT = [0]
 
 
 def filler(ctx_tokens, kind, salt=None):
@@ -68,7 +69,7 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
         # REPLACE the shared filler, do not add to it: prepending the per-request passage to the shared one made a
         # "120k" request carry 315,253 tokens and the server rejected it with a 400 (R345, arm 3). The unique
         # passage goes where the shared one was, and the tail (the actual instruction) is kept.
-        prompt = filler(CTX[0], KIND[0], salt=1000 + idx) + prompt[len(PREFIX[0]):]
+        prompt = filler(CTX[0], KIND[0], salt=1000 + idx + SALT[0]) + prompt[len(PREFIX[0]):]
     if distinct:
         # Threads must not share a prefix: with the paged cache, identical prompts collapse onto the same pages
         # and an admission test then measures prefix reuse instead of concurrent context footprint.
@@ -111,7 +112,7 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
                     # THREE shapes exist in the wild and an instrument that knows only one of them reports a
                     # request with no text, which looks like an engine failure: SSE delta (the normal streaming
                     # case), a /completions-style `text`, and a COMPLETE chat completion wrapped in a single SSE
-                    # frame as `message` (vLLM does this when it stops streaming mid-request). an earlier probe against vLLM recorded
+                    # frame as `message` (vLLM does this when it stops streaming mid-request). R342/R349 recorded
                     # seven such responses as "usage, no text, no error" for exactly this reason.
                     d = ch.get("delta") or ch.get("message") or {}
                     # `reasoning_content` is TabbyAPI's name for the thinking channel; vLLM's OpenAI server here
@@ -194,10 +195,15 @@ def main():
     ap.add_argument("--distinct", action="store_true",
                     help="give every concurrent request a unique suffix so they cannot share cached pages")
     ap.add_argument("--timeout", type=float, default=3600)
+    ap.add_argument("--salt", type=int, default=0,
+                    help="offset for the --unique filler seed. The seed is otherwise 1000 + request index, identical on every run and"
+                         " invocation, so a repeated 'cold' prefill hits the prefix cache and a longer context shares the shorter"
+                         " one's opening (R507, 2026-09-18). Give each cold measurement its own salt.")
     ap.add_argument("--out", required=True, help="JSONL: one line per request, never a summary")
     a = ap.parse_args()
     NOFORCE[0] = a.no_force
     UNIQUE[0] = a.unique
+    SALT[0] = a.salt
 
     fill = filler(a.ctx[0], a.kind)
     ask = ASK_CODE if a.kind == "code" else ASK_PROSE

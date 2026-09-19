@@ -1,0 +1,14 @@
+{
+ "base_image": "tabbyapi:decode-kernels-r4",
+ "pre": {
+  "exllamav3_ext/bindings.cpp": "4f8a37b2c58e39f7304878f355ac21b6f3121bea04b7c3d55f4853fb8fe1e5f5",
+  "modules/block_sparse_mlp.py": "97461cdc2e14f156b9f9738ed45a60f952bb1ea2186b067c92d888c25bff7cec"
+ },
+ "post": {
+  "exllamav3_ext/bindings.cpp": "efe014ceeedd2b222381ba582bf702f61f251c1c394e193f5d307606911555a1",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cpp": "5a38f63e7801f354a3d2c216e4c20f75a3e514885398a806a4d040404ffa43fc",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cu": "84d83911c2249f1f7f26bbaa515f698c36496946ace23dd5f3186fdcac4f22de",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cuh": "406ad0a0e1ec47ed1021fa6f68ac083b9404a3610b968ab80ea26de3408c580a",
+  "modules/block_sparse_mlp.py": "9a4f4279e026320db5ff3e73cf878dfcc433e865637d13ef5599456cb383dada"
+ }
+}

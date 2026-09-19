@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "baseline_hashes": true,
+    "c10_cuda_check": true,
+    "cpu_unit_tests": true,
+    "cuda_binding_present": true,
+    "cuda_toolkit_available": false,
+    "flag_defaults_off": true,
+    "overlay_hashes": true,
+    "patch_applied_hashes": true,
+    "patch_dry_run": true,
+    "patch_hash": true,
+    "sampler_fallback_guards": true,
+    "tabbyapi_overlay_absent": true,
+    "torch_available": false
+  },
+  "note": "Required local checks passed. This Darwin environment has neither torch nor nvcc; the synthetic parity and CUDA extension tests remain box work."
+}

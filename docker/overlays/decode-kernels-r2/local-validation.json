@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "scope": "CPU-only",
+  "checks": [
+    "baseline and payload SHA-256 gates for all four native files",
+    "served-source.patch applies cleanly and reproduces every payload byte",
+    "opt-in, nonblocking stream, input event, completion event, and both V1/V2 pre-B waits are present",
+    "Python syntax for the GPU harness and overlay build/install scripts"
+  ],
+  "not_run": [
+    "native CUDA compilation",
+    "GPU torch.equal parity",
+    "GPU microbenchmark",
+    "serving A/B and fingerprints"
+  ]
+}

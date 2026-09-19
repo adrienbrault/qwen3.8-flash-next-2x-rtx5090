@@ -1,0 +1,118 @@
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -31,6 +31,7 @@
+ #include "quant/exl3_devctx.cuh"
+ #include "quant/exl3_moe.cuh"
+ #include "quant/exl3_moe_coop.cuh"
++#include "quant/exl3_moe_prefill_e3.cuh"
+ 
+ #include "generator/strings.h"
+ #include "generator/sampling_basic.cuh"
+@@ -259,6 +260,8 @@
+     m.def("exl3_moe_max_concurrency", &exl3_moe_max_concurrency, "exl3_moe_max_concurrency");
+     m.def("exl3_moe", &exl3_moe, "exl3_moe");
+     m.def("exl3_moe_gather", &exl3_moe_gather, "exl3_moe_gather");
++    m.def("exl3_moe_prefill_e3", &exl3_moe_prefill_e3, "exl3_moe_prefill_e3");
++    m.def("exl3_moe_prefill_e3_tile_rows", &exl3_moe_prefill_e3_tile_rows, "exl3_moe_prefill_e3_tile_rows");
+     m.def("exl3_moe_coop", &exl3_moe_coop, "exl3_moe_coop");
+ 
+     m.def("bighead_attn", &bighead_attn, "bighead_attn");
+--- a/modules/block_sparse_mlp.py
++++ b/modules/block_sparse_mlp.py
+@@ -42,6 +42,12 @@
+ # Deterministic (slot + gather) accumulation for the fused kernel's outputs; EXL3_MOE_FUSED_DET=0
+ # restores the atomic adds
+ FUSED_DET = os.environ.get("EXL3_MOE_FUSED_DET", "1") != "0"
++# Experimental grouped K={2,3,4}/mul1 prefill, adapted from MiaAI-Lab E3. Literal 1 only;
++# every other value leaves the served tier planner and arithmetic untouched. The >=512 row
++# default is also an explicit decode exclusion (served fused decode covers at most MAX_BSZN=16).
++MOE_PREFILL_E3 = os.environ.get("EXL3_MOE_PREFILL_E3", "0") == "1"
++MOE_PREFILL_E3_MIN_ROWS = max(512, int(os.environ.get("EXL3_MOE_PREFILL_E3_MIN_ROWS", "512")))
++MOE_PREFILL_E3_THIN_ROWS = min(256, max(1, int(os.environ.get("EXL3_MOE_PREFILL_E3_THIN_ROWS", "32"))))
+ MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/blocksparse_mlp.h
+ 
+ @dataclass
+@@ -1035,6 +1041,22 @@
+                 token_sorted = flat_token[order]
+                 weight_sorted = flat_weight[order]
+ 
++                # E3 is deliberately pinned to the served target geometry and full layer-local
++                # expert placement. Its fat path is atomic and uses different MMA tiling, so it
++                # is a quality-gated numerical experiment, not an identity-preserving fast path.
++                e3_active = (
++                    MOE_PREFILL_E3 and num_tokens >= MOE_PREFILL_E3_MIN_ROWS and
++                    self.fused_mode_buffers is not None and self.support_fused and self.gated and
++                    self.activation_fn == "silu" and self.interm_dtype == torch.half and
++                    self.num_experts == 512 and self.num_local_experts == self.num_experts and
++                    self.num_experts_per_tok == 10 and self.cpu_split_first is None and
++                    y.shape[1] == 2560 and self.intermediate_size_padded == 640 and
++                    all(k in (2, 3, 4) for k in
++                        (self.multi_gate.K, self.multi_up.K, self.multi_down.K)) and
++                    self.multi_gate.mul1 and self.multi_up.mul1 and self.multi_down.mul1 and
++                    torch.cuda.get_device_capability(y.device) == (12, 0)
++                )
++
+                 # Count how many assignments per expert. With few enough total assignments no
+                 # expert can exceed the fused kernel's row capacity, so the readback (a CPU sync
+                 # per layer, ~33% idle at MTP verify shapes) is skipped and everything is fused
+@@ -1041,8 +1063,8 @@
+-                if _prefill_nosync_enabled(params):
++                if e3_active or _prefill_nosync_enabled(params):
+                     from ..util.prefill_nosync import expert_histogram
+                     expert_count = expert_histogram(flat_expert_local, E)
+                 else:
+                     expert_count = torch.bincount(flat_expert_local, minlength = E + 1)
+-                if self.fused_mode_buffers is not None and num_tokens * top_k <= self.fused_rows:
++                if e3_active or (self.fused_mode_buffers is not None and num_tokens * top_k <= self.fused_rows):
+                     expert_count_list = None
+                 else:
+@@ -1082,7 +1104,7 @@
+                 # call. Its traffic (written once by the GEMMs, read once by the gather) matches
+                 # what the atomic index_add_ path moved
+                 scratch = tables = inv_order = None
+-                if FUSED_DET and (fused_total or groups):
++                if FUSED_DET and not e3_active and (fused_total or groups):
+                     A = flat_expert_local.shape[0]
+                     inv_order = torch.empty_like(order).scatter_(
+                         0, order, torch.arange(A, device = order.device))
+@@ -1158,7 +1180,39 @@
+ 
+                 # num_active -1 = unknown (all fused), kernel launches at max concurrency
+                 if self.fused_mode_buffers is not None:
+-                    if expert_count_list is None:
++                    if e3_active:
++                        # Thin experts stay on the served fused kernel. Two count windows retain
++                        # its 16/32-row tiling without a count readback; E3 consumes > thin_rows.
++                        thin = MOE_PREFILL_E3_THIN_ROWS
++                        run_fused(-1, 1, min(16, thin), 16)
++                        if thin > 16:
++                            run_fused(-1, 17, thin, 32)
++
++                        # Per-call scratch is intentionally shared across layers through the
++                        # caching allocator, not retained once per layer. Segment capacity follows
++                        # sum(ceil(count/64)) <= ceil(assignments/64) + experts.
++                        A = token_sorted.numel()
++                        seg_cap = (A + 63) // 64 + self.num_experts
++                        h13_g = torch.empty((A, 2560), dtype = torch.half, device = y.device)
++                        h13_u = torch.empty_like(h13_g)
++                        h2 = torch.empty((A, 640), dtype = torch.half, device = y.device)
++                        row_token = torch.empty((A,), dtype = torch.long, device = y.device)
++                        row_weight = torch.empty((A,), dtype = torch.half, device = y.device)
++                        row_expert = torch.empty((A,), dtype = torch.int, device = y.device)
++                        seg_expert = torch.empty((seg_cap,), dtype = torch.int, device = y.device)
++                        seg_row0 = torch.empty_like(seg_expert)
++                        seg_rows = torch.empty_like(seg_expert)
++                        live = torch.empty((2,), dtype = torch.int, device = y.device)
++                        ext.exl3_moe_prefill_e3(
++                            y, final_hidden_states, expert_count, token_sorted, weight_sorted,
++                            self.multi_gate.ptrs_trellis, self.multi_gate.ptrs_suh, self.multi_gate.ptrs_svh,
++                            self.multi_up.ptrs_trellis, self.multi_up.ptrs_suh, self.multi_up.ptrs_svh,
++                            self.multi_down.ptrs_trellis, self.multi_down.ptrs_suh, self.multi_down.ptrs_svh,
++                            h13_g, h13_u, h2, row_token, row_weight, row_expert,
++                            seg_expert, seg_row0, seg_rows, live[:1], live[1:],
++                            self.multi_gate.K, self.multi_up.K, self.multi_down.K,
++                            thin, self.act_limit)
++                    elif expert_count_list is None:
+                         run_fused(-1)
+                     else:
+                         counts = [c for c in expert_count_list[:num_ex] if 0 < c <= self.fused_rows]

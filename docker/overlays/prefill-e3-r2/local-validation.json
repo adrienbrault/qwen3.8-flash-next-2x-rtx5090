@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "scope": "local-only",
+  "checks": {
+    "refbase_image": true,
+    "patch_hash": true,
+    "added_hashes": true,
+    "baseline_hashes": true,
+    "patched_hashes": true,
+    "patched_python_compile": true,
+    "artifact_python_compile": true,
+    "host_c10_cuda_check": true,
+    "literal_default_off": true,
+    "decode_excluded": true,
+    "all_k_independent": true,
+    "mul1_only": true,
+    "tile_64x128x32": true,
+    "mixed_k_b_stage_mapping": true,
+    "round_root_build_context": true,
+    "legacy_builder_safe": true,
+    "image_test_is_worktree_independent": true,
+    "benchmark_per_card_per_k": true,
+    "cuda_unavailable": true,
+    "torch_unavailable": true,
+    "all_cpu_checks_pass": true
+  }
+}

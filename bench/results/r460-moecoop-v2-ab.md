@@ -1,0 +1,5 @@
+# R460 and R461: MoE coop V2 is byte-identical and +4 % at c4, +8 % at c8; five gates pass
+
+Results directory on the serving host: `results/2026-09-17-r460-moecoop-v2-ab`. Driver: [`scripts/r460-moecoop-v2-ab.sh`](../../scripts/r460-moecoop-v2-ab.sh). Date: 2026-09-17.
+
+The [moe-coop-v2 overlay](../../docker/overlays/moe-coop-v2-overlay/) is a bit-exact V2 of the fused MoE decode kernel: bounded work loops and batched completions (`EXL3_MOE_COOP_V2=1`). Kernel test (R460b, results `2026-09-17-r460b-moecoop-v2-gputest`): bit-exact at 1 to 16 rows for every routing pattern. Served, 3.05bpw pack, 8 slots: c1 and 30k fingerprints identical; code decode c1 / c4 / c8 aggregate OFF 207–216 / 403–434 / 526–557 against ON 207–214 / 425–450 / 550–604 t/s. R461 (results `2026-09-17-r461-gates-moecoopv2`), the five gates on the promoted image: GSM8K n=200 0.935 (measured with lm-eval's stop strings, see [R509](r509-gsm8k-nostop.md)), tool-eval 69×4 85.5 ± 1.7, needle 5/5, agent replay and greedy identity pass. Promoted 2026-09-17 12:45 CEST.

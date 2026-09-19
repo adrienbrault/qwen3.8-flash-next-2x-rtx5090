@@ -1,0 +1,72 @@
+2026-09-18T12:49:20+00:00 [r484] queued behind: r483-exl3-pool-chunk(pid 2863230)
+2026-09-18T13:06:14+00:00 [r484] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 chunk_size: 2048 vision: true  MemAvailable 49.3 GiB
+2026-09-18T13:06:14+00:00 [r484] boot OFF: NGRAM_RAM=0
+2026-09-18T13:06:31+00:00 [r484] UP OFF: VRAM free 895/2581/ MemAvailable 49.3 GiB; engine log: 
+2026-09-18T13:06:31+00:00 [r484] === measure OFF: cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 ngram_ram: false chunk_size: 2048 vision: true  VRAM free 895/2581/ MemAvailable 49.3 GiB ===
+OFF c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+OFF 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[OFF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.8, "per_stream_wall_tps": 213.8, "decode_tps": 217.1, "ttft_s": 0.146}
+[OFF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.7, "per_stream_wall_tps": 214.7, "decode_tps": 217.9, "ttft_s": 0.144}
+[OFF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 431.8, "per_stream_wall_tps": 114.0, "decode_tps": 117.0, "ttft_s": 0.476}
+[OFF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 455.4, "per_stream_wall_tps": 113.8, "decode_tps": 116.7, "ttft_s": 0.452}
+[OFF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 168.7, "per_stream_wall_tps": 168.7, "decode_tps": 170.5, "ttft_s": 0.139}
+[OFF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 170.0, "per_stream_wall_tps": 170.0, "decode_tps": 171.9, "ttft_s": 0.137}
+[OFF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 424.5, "per_stream_wall_tps": 106.6, "decode_tps": 109.0, "ttft_s": 0.436}
+[OFF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 435.5, "per_stream_wall_tps": 109.4, "decode_tps": 112.0, "ttft_s": 0.439}
+[OFF prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.11 s = 7,273 tok/s
+[OFF prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.13 s = 11,080 tok/s
+2026-09-18T13:08:48+00:00 [r484] [OFF] after measure: MemAvailable 47.2 GiB; engine qwen3.8-flash-next-exl3-3.05bpw
+2026-09-18T13:08:48+00:00 [r484] boot ON: NGRAM_RAM=1
+2026-09-18T13:09:20+00:00 [r484] UP ON: VRAM free 895/2581/ MemAvailable 18.9 GiB; engine log: 13:08:52.975 INFO:     Loading n-gram embeddings into system RAM (ngram_ram).
+2026-09-18T13:09:20+00:00 [r484] === measure ON: cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 ngram_ram: true chunk_size: 2048 vision: true  VRAM free 895/2581/ MemAvailable 18.9 GiB ===
+ON c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+ON 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[ON code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.5, "per_stream_wall_tps": 216.5, "decode_tps": 219.8, "ttft_s": 0.146}
+[ON code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.8, "per_stream_wall_tps": 216.8, "decode_tps": 220.1, "ttft_s": 0.144}
+[ON code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 440.7, "per_stream_wall_tps": 116.5, "decode_tps": 119.5, "ttft_s": 0.472}
+[ON code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 445.0, "per_stream_wall_tps": 117.5, "decode_tps": 120.5, "ttft_s": 0.465}
+[ON prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 171.8, "per_stream_wall_tps": 171.8, "decode_tps": 173.7, "ttft_s": 0.136}
+[ON prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.3, "per_stream_wall_tps": 172.3, "decode_tps": 174.2, "ttft_s": 0.138}
+[ON prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 432.8, "per_stream_wall_tps": 108.7, "decode_tps": 111.2, "ttft_s": 0.437}
+[ON prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 437.0, "per_stream_wall_tps": 109.8, "decode_tps": 112.4, "ttft_s": 0.437}
+[ON prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 2.92 s = 7,759 tok/s
+[ON prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.09 s = 11,137 tok/s
+2026-09-18T13:11:36+00:00 [r484] [ON] after measure: MemAvailable 16.9 GiB; engine qwen3.8-flash-next-exl3-3.05bpw
+2026-09-18T13:11:36+00:00 [r484] boot OFF2: NGRAM_RAM=0
+2026-09-18T13:11:59+00:00 [r484] UP OFF2: VRAM free 895/2581/ MemAvailable 49.4 GiB; engine log: 
+2026-09-18T13:11:59+00:00 [r484] === measure OFF2: cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 ngram_ram: false chunk_size: 2048 vision: true  VRAM free 895/2581/ MemAvailable 49.3 GiB ===
+OFF2 c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+OFF2 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 212.2, "per_stream_wall_tps": 212.2, "decode_tps": 215.4, "ttft_s": 0.149}
+[OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.8, "per_stream_wall_tps": 216.8, "decode_tps": 220.1, "ttft_s": 0.145}
+[OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 428.6, "per_stream_wall_tps": 113.2, "decode_tps": 116.1, "ttft_s": 0.476}
+[OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 442.0, "per_stream_wall_tps": 116.7, "decode_tps": 119.7, "ttft_s": 0.464}
+[OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 166.2, "per_stream_wall_tps": 166.2, "decode_tps": 168.5, "ttft_s": 0.177}
+[OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.2, "per_stream_wall_tps": 172.2, "decode_tps": 174.1, "ttft_s": 0.139}
+[OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 422.6, "per_stream_wall_tps": 106.2, "decode_tps": 108.6, "ttft_s": 0.437}
+[OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 434.2, "per_stream_wall_tps": 109.1, "decode_tps": 111.6, "ttft_s": 0.44}
+[OFF2 prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.12 s = 7,263 tok/s
+[OFF2 prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.12 s = 11,096 tok/s
+2026-09-18T13:14:18+00:00 [r484] [OFF2] after measure: MemAvailable 47.2 GiB; engine qwen3.8-flash-next-exl3-3.05bpw
+2026-09-18T13:14:18+00:00 [r484] boot ON2: NGRAM_RAM=1
+2026-09-18T13:14:50+00:00 [r484] UP ON2: VRAM free 895/2581/ MemAvailable 18.9 GiB; engine log: 13:14:22.637 INFO:     Loading n-gram embeddings into system RAM (ngram_ram).
+2026-09-18T13:14:50+00:00 [r484] === measure ON2: cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 ngram_ram: true chunk_size: 2048 vision: true  VRAM free 895/2581/ MemAvailable 18.9 GiB ===
+ON2 c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+ON2 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[ON2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.7, "per_stream_wall_tps": 216.7, "decode_tps": 219.9, "ttft_s": 0.145}
+[ON2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 217.0, "per_stream_wall_tps": 217.0, "decode_tps": 220.3, "ttft_s": 0.144}
+[ON2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 442.3, "per_stream_wall_tps": 116.9, "decode_tps": 120.0, "ttft_s": 0.474}
+[ON2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 444.6, "per_stream_wall_tps": 117.4, "decode_tps": 120.5, "ttft_s": 0.467}
+[ON2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 170.8, "per_stream_wall_tps": 170.8, "decode_tps": 172.7, "ttft_s": 0.136}
+[ON2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 172.3, "per_stream_wall_tps": 172.3, "decode_tps": 174.2, "ttft_s": 0.139}
+[ON2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 434.5, "per_stream_wall_tps": 109.2, "decode_tps": 111.7, "ttft_s": 0.437}
+[ON2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 436.4, "per_stream_wall_tps": 109.6, "decode_tps": 112.2, "ttft_s": 0.436}
+[ON2 prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 2.93 s = 7,719 tok/s
+[ON2 prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.09 s = 11,147 tok/s
+2026-09-18T13:17:06+00:00 [r484] [ON2] after measure: MemAvailable 16.9 GiB; engine qwen3.8-flash-next-exl3-3.05bpw
+2026-09-18T13:17:06+00:00 [r484] restoring the daily (unchanged live launcher)
+2026-09-18T13:17:07+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T13:17:28+00:00 [flashnext] UP on 8022 | warmup 0.328416s | VRAM free MiB 895/2581/
+2026-09-18T13:17:28+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T13:17:28+00:00 [r484] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 chunk_size: 2048 vision: true  VRAM free 895/2581/ MemAvailable 49.3 GiB
+2026-09-18T13:17:28+00:00 [r484] === R484 DONE ===

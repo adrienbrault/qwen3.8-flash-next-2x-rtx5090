@@ -1,0 +1,145 @@
+2026-09-18T21:51:55+00:00 [r499] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-18T21:51:55+00:00 [r499] === build tabbyapi:decode-kernels-r4 (daily keeps serving) ===
+2026-09-18T21:54:36+00:00 [r499] built tabbyapi:decode-kernels-r4 b875b864bd24
+2026-09-18T21:54:39+00:00 [r499] === gate 0: selectors, CPU tests, int8 mixer kernel vs reference on both cards ===
+binding ok
+    "sites": 96
+  }
+}
+      "rows": 16
+    }
+  ]
+}
+      "rows": 16
+    }
+  ]
+}
+2026-09-18T21:54:48+00:00 [r499] === group I: pinned staging + batched verify + pruned draft head (identity-preserving) ===
+2026-09-18T21:54:48+00:00 [r499] boot I-OFF: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0
+2026-09-18T21:55:09+00:00 [r499] UP I-OFF @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T21:55:15+00:00 [r499] [I-OFF] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+TypeError: 'NoneType' object is not subscriptable
+[I-OFF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.3, "per_stream_wall_tps": 208.3, "decode_tps": 211.3, "ttft_s": 0.146}
+[I-OFF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.7, "per_stream_wall_tps": 213.7, "decode_tps": 216.8, "ttft_s": 0.143}
+[I-OFF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 489.9, "per_stream_wall_tps": 127.8, "decode_tps": 131.5, "ttft_s": 0.452}
+[I-OFF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 503.7, "per_stream_wall_tps": 131.2, "decode_tps": 135.0, "ttft_s": 0.445}
+[I-OFF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 183.4, "per_stream_wall_tps": 183.4, "decode_tps": 186.2, "ttft_s": 0.174}
+[I-OFF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 190.3, "per_stream_wall_tps": 190.3, "decode_tps": 192.6, "ttft_s": 0.132}
+[I-OFF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 457.6, "per_stream_wall_tps": 120.8, "decode_tps": 123.8, "ttft_s": 0.422}
+[I-OFF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 471.0, "per_stream_wall_tps": 124.2, "decode_tps": 127.4, "ttft_s": 0.423}
+[I-OFF] code c4: 12 prompts, aggregate 424.6 t/s, per-request decode median 113.4 (min 104.2, max 132.0)
+[I-OFF] prose c4: 12 prompts, aggregate 365.0 t/s, per-request decode median 116.6 (min 101.6, max 145.3)
+2026-09-18T21:59:04+00:00 [r499] boot I-ON: r4 selectors: EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0 EXL3_MTP_HEAD_N=65536
+2026-09-18T21:59:26+00:00 [r499] UP I-ON @ 786432: VRAM free MiB 2015/1099/
+2026-09-18T21:59:32+00:00 [r499] [I-ON] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+TypeError: 'NoneType' object is not subscriptable
+[I-ON code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 214.5, "per_stream_wall_tps": 214.5, "decode_tps": 217.6, "ttft_s": 0.143}
+[I-ON code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 219.9, "per_stream_wall_tps": 219.9, "decode_tps": 223.1, "ttft_s": 0.138}
+[I-ON code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 493.1, "per_stream_wall_tps": 128.0, "decode_tps": 131.7, "ttft_s": 0.455}
+[I-ON code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 519.7, "per_stream_wall_tps": 134.7, "decode_tps": 138.8, "ttft_s": 0.446}
+[I-ON prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 186.8, "per_stream_wall_tps": 186.8, "decode_tps": 189.8, "ttft_s": 0.173}
+[I-ON prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 193.6, "per_stream_wall_tps": 193.7, "decode_tps": 196.0, "ttft_s": 0.131}
+[I-ON prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 458.7, "per_stream_wall_tps": 119.8, "decode_tps": 122.8, "ttft_s": 0.421}
+[I-ON prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 480.8, "per_stream_wall_tps": 125.6, "decode_tps": 128.8, "ttft_s": 0.417}
+[I-ON] code c4: 12 prompts, aggregate 444.7 t/s, per-request decode median 119.7 (min 106.6, max 141.1)
+[I-ON] prose c4: 12 prompts, aggregate 389.9 t/s, per-request decode median 113.1 (min 98.0, max 138.3)
+2026-09-18T22:03:17+00:00 [r499] boot I-OFF2: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0
+2026-09-18T22:03:39+00:00 [r499] UP I-OFF2 @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T22:03:45+00:00 [r499] [I-OFF2] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+TypeError: 'NoneType' object is not subscriptable
+[I-OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.0, "per_stream_wall_tps": 208.0, "decode_tps": 210.9, "ttft_s": 0.14}
+[I-OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.3, "per_stream_wall_tps": 213.3, "decode_tps": 216.4, "ttft_s": 0.14}
+[I-OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 490.8, "per_stream_wall_tps": 128.1, "decode_tps": 131.8, "ttft_s": 0.457}
+[I-OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 507.2, "per_stream_wall_tps": 132.2, "decode_tps": 136.1, "ttft_s": 0.448}
+[I-OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 185.0, "per_stream_wall_tps": 185.1, "decode_tps": 187.2, "ttft_s": 0.131}
+[I-OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.8, "per_stream_wall_tps": 188.8, "decode_tps": 191.0, "ttft_s": 0.132}
+[I-OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 456.9, "per_stream_wall_tps": 120.6, "decode_tps": 123.6, "ttft_s": 0.423}
+[I-OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 472.7, "per_stream_wall_tps": 124.7, "decode_tps": 127.9, "ttft_s": 0.422}
+[I-OFF2] code c4: 12 prompts, aggregate 432.0 t/s, per-request decode median 117.5 (min 105.9, max 133.4)
+[I-OFF2] prose c4: 12 prompts, aggregate 362.5 t/s, per-request decode median 114.1 (min 101.0, max 137.0)
+2026-09-18T22:07:34+00:00 [r499] boot I-ON2: r4 selectors: EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0 EXL3_MTP_HEAD_N=65536
+2026-09-18T22:07:56+00:00 [r499] UP I-ON2 @ 786432: VRAM free MiB 2015/1099/
+2026-09-18T22:08:02+00:00 [r499] [I-ON2] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+TypeError: 'NoneType' object is not subscriptable
+[I-ON2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 217.1, "per_stream_wall_tps": 217.1, "decode_tps": 220.2, "ttft_s": 0.138}
+[I-ON2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 219.4, "per_stream_wall_tps": 219.4, "decode_tps": 222.6, "ttft_s": 0.139}
+[I-ON2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 509.4, "per_stream_wall_tps": 132.3, "decode_tps": 136.3, "ttft_s": 0.458}
+[I-ON2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 519.7, "per_stream_wall_tps": 134.8, "decode_tps": 138.9, "ttft_s": 0.446}
+[I-ON2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 189.2, "per_stream_wall_tps": 189.2, "decode_tps": 191.7, "ttft_s": 0.142}
+[I-ON2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 193.3, "per_stream_wall_tps": 193.3, "decode_tps": 195.6, "ttft_s": 0.13}
+[I-ON2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 474.1, "per_stream_wall_tps": 124.0, "decode_tps": 127.1, "ttft_s": 0.417}
+[I-ON2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 480.9, "per_stream_wall_tps": 125.6, "decode_tps": 128.9, "ttft_s": 0.419}
+[I-ON2] code c4: 12 prompts, aggregate 435.7 t/s, per-request decode median 116.6 (min 105.8, max 137.1)
+[I-ON2] prose c4: 12 prompts, aggregate 345.2 t/s, per-request decode median 104.3 (min 94.4, max 135.0)
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/srv/qwen5090/results/2026-09-18-r499-decode-r4/fallback-I-OFF.json'
+2026-09-18T22:11:48+00:00 [r499] === group M: int8 V2 mixer weights (numerics change) ===
+2026-09-18T22:11:48+00:00 [r499] boot M-OFF: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0
+2026-09-18T22:12:10+00:00 [r499] UP M-OFF @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T22:12:15+00:00 [r499] [M-OFF] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+[M-OFF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 210.8, "per_stream_wall_tps": 210.8, "decode_tps": 213.8, "ttft_s": 0.14}
+[M-OFF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.0, "per_stream_wall_tps": 213.1, "decode_tps": 216.3, "ttft_s": 0.148}
+[M-OFF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 497.4, "per_stream_wall_tps": 129.8, "decode_tps": 133.7, "ttft_s": 0.459}
+[M-OFF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 502.9, "per_stream_wall_tps": 131.0, "decode_tps": 134.9, "ttft_s": 0.446}
+[M-OFF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 186.7, "per_stream_wall_tps": 186.7, "decode_tps": 188.9, "ttft_s": 0.131}
+[M-OFF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 190.3, "per_stream_wall_tps": 190.3, "decode_tps": 192.6, "ttft_s": 0.132}
+[M-OFF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 461.6, "per_stream_wall_tps": 121.9, "decode_tps": 124.9, "ttft_s": 0.419}
+[M-OFF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 467.7, "per_stream_wall_tps": 123.3, "decode_tps": 126.4, "ttft_s": 0.42}
+[M-OFF] code c4: 12 prompts, aggregate 418.9 t/s, per-request decode median 115.6 (min 103.3, max 141.9)
+[M-OFF] prose c4: 12 prompts, aggregate 388.4 t/s, per-request decode median 119.0 (min 100.6, max 140.1)
+2026-09-18T22:16:04+00:00 [r499] boot M-ON: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=1
+2026-09-18T22:16:26+00:00 [r499] UP M-ON @ 786432: VRAM free MiB 2233/1477/
+2026-09-18T22:16:31+00:00 [r499] [M-ON] fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+2026-09-18T22:16:31+00:00 [r499] [M-ON] fingerprint differs from canonical (expected for int8; recorded)
+[M-ON code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.9, "per_stream_wall_tps": 208.9, "decode_tps": 211.8, "ttft_s": 0.139}
+[M-ON code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.3, "per_stream_wall_tps": 213.3, "decode_tps": 216.5, "ttft_s": 0.147}
+[M-ON code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 472.5, "per_stream_wall_tps": 131.8, "decode_tps": 136.0, "ttft_s": 0.455}
+[M-ON code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 493.2, "per_stream_wall_tps": 137.5, "decode_tps": 142.0, "ttft_s": 0.451}
+[M-ON prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 182.9, "per_stream_wall_tps": 182.9, "decode_tps": 185.0, "ttft_s": 0.13}
+[M-ON prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.2, "per_stream_wall_tps": 188.2, "decode_tps": 190.4, "ttft_s": 0.131}
+[M-ON prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 446.5, "per_stream_wall_tps": 114.5, "decode_tps": 117.1, "ttft_s": 0.419}
+[M-ON prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 467.5, "per_stream_wall_tps": 119.9, "decode_tps": 122.8, "ttft_s": 0.419}
+[M-ON] code c4: 12 prompts, aggregate 419.4 t/s, per-request decode median 113.2 (min 102.2, max 136.8)
+[M-ON] prose c4: 12 prompts, aggregate 396.2 t/s, per-request decode median 117.0 (min 101.6, max 143.7)
+2026-09-18T22:20:19+00:00 [r499] boot M-OFF2: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=0
+2026-09-18T22:20:41+00:00 [r499] UP M-OFF2 @ 786432: VRAM free MiB 2015/1219/
+2026-09-18T22:20:47+00:00 [r499] [M-OFF2] fingerprints c1 ae890c45d1000582 / 30k 2aa8d1024daece5c (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+[M-OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.5, "per_stream_wall_tps": 208.5, "decode_tps": 211.4, "ttft_s": 0.139}
+[M-OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.6, "per_stream_wall_tps": 213.6, "decode_tps": 216.7, "ttft_s": 0.141}
+[M-OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 491.2, "per_stream_wall_tps": 128.1, "decode_tps": 131.9, "ttft_s": 0.457}
+[M-OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 497.2, "per_stream_wall_tps": 124.3, "decode_tps": 127.6, "ttft_s": 0.436}
+[M-OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 186.4, "per_stream_wall_tps": 186.4, "decode_tps": 188.5, "ttft_s": 0.132}
+[M-OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.3, "per_stream_wall_tps": 188.3, "decode_tps": 190.6, "ttft_s": 0.132}
+[M-OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 456.5, "per_stream_wall_tps": 120.4, "decode_tps": 123.5, "ttft_s": 0.425}
+[M-OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 473.4, "per_stream_wall_tps": 124.9, "decode_tps": 128.1, "ttft_s": 0.42}
+[M-OFF2] code c4: 12 prompts, aggregate 425.2 t/s, per-request decode median 117.5 (min 102.3, max 134.8)
+[M-OFF2] prose c4: 12 prompts, aggregate 394.1 t/s, per-request decode median 110.9 (min 99.6, max 152.4)
+2026-09-18T22:24:36+00:00 [r499] boot M-ON2: r4 selectors: EXL3_DRAFT_PINNED_STAGING=0 EXL3_BATCH_VERIFY=0 EXL3_MTP_DEVICE_DRAFT=0 EXL3_EMBED_GPU=0 EXL3_HC_MIX_V2_INT8=1
+2026-09-18T22:24:58+00:00 [r499] UP M-ON2 @ 786432: VRAM free MiB 2233/1477/
+2026-09-18T22:25:04+00:00 [r499] [M-ON2] fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 2aa8d1024daece5c)
+2026-09-18T22:25:04+00:00 [r499] [M-ON2] fingerprint differs from canonical (expected for int8; recorded)
+[M-ON2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 208.8, "per_stream_wall_tps": 208.8, "decode_tps": 211.9, "ttft_s": 0.149}
+[M-ON2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 213.7, "per_stream_wall_tps": 213.7, "decode_tps": 216.7, "ttft_s": 0.14}
+[M-ON2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 475.5, "per_stream_wall_tps": 132.9, "decode_tps": 137.1, "ttft_s": 0.458}
+[M-ON2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 489.8, "per_stream_wall_tps": 137.1, "decode_tps": 141.5, "ttft_s": 0.447}
+[M-ON2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 181.9, "per_stream_wall_tps": 181.9, "decode_tps": 184.7, "ttft_s": 0.176}
+[M-ON2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.0, "per_stream_wall_tps": 188.0, "decode_tps": 190.2, "ttft_s": 0.131}
+[M-ON2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 449.5, "per_stream_wall_tps": 115.3, "decode_tps": 118.0, "ttft_s": 0.422}
+[M-ON2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 467.4, "per_stream_wall_tps": 119.9, "decode_tps": 122.8, "ttft_s": 0.422}
+[M-ON2] code c4: 12 prompts, aggregate 428.2 t/s, per-request decode median 112.6 (min 106.2, max 131.7)
+[M-ON2] prose c4: 12 prompts, aggregate 380.3 t/s, per-request decode median 122.8 (min 102.6, max 139.2)
+2026-09-18T22:28:51+00:00 [r499] restoring the daily (unchanged live launcher)
+2026-09-18T22:28:52+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T22:29:13+00:00 [flashnext] UP on 8022 | warmup 0.411858s | VRAM free MiB 2015/1219/
+2026-09-18T22:29:13+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T22:29:13+00:00 [r499] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 2015/1219/
+2026-09-18T22:29:13+00:00 [r499] === R499 DONE ===

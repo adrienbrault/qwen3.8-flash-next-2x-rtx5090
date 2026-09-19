@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "base_image": "tabbyapi:decode-kernels-r2-refbase",
+  "patch_sha256": "3fe34e0f9fc008e8f1b6eaa5694cb457b97e8f0eb449470f4acfb35a9f629da6",
+  "patched_files": {
+    "exllamav3_ext/bindings.cpp": {
+      "baseline_sha256": "4f099e82c2610f596d22e308cce7f8249bd3a3cfa15fd280c913ce18153b197b",
+      "overlay_sha256": "e855634c456c9a980987d0fa9390d7347b8bf5a98e45197c022c610823b68ddd"
+    },
+    "modules/block_sparse_mlp.py": {
+      "baseline_sha256": "97461cdc2e14f156b9f9738ed45a60f952bb1ea2186b067c92d888c25bff7cec",
+      "overlay_sha256": "9a4f4279e026320db5ff3e73cf878dfcc433e865637d13ef5599456cb383dada"
+    }
+  },
+  "added_files": {
+    "exllamav3_ext/quant/exl3_moe_prefill_e3.cpp": "5a38f63e7801f354a3d2c216e4c20f75a3e514885398a806a4d040404ffa43fc",
+    "exllamav3_ext/quant/exl3_moe_prefill_e3.cu": "84d83911c2249f1f7f26bbaa515f698c36496946ace23dd5f3186fdcac4f22de",
+    "exllamav3_ext/quant/exl3_moe_prefill_e3.cuh": "406ad0a0e1ec47ed1021fa6f68ac083b9404a3610b968ab80ea26de3408c580a"
+  }
+}

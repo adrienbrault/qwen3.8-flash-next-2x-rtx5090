@@ -1,0 +1,15 @@
+# Decode round 4 (codex, ports of vcruz305/exllamav3 4e8133f / f34aac6 / d7d03b1 + upstream a3b249543) over the DAILY image
+# tabbyapi:decode-kernels-r2 (shared-expert overlap; r4 touches none of r2's files). verify_installed.py hash-checks the nine
+# installed files against the captured served tree, then the edited files are copied in, the JIT cache in the base
+# TORCH_EXTENSIONS_DIR is cleared and the extension rebuilt once (hc_mix.cu / bindings.cpp changed). All selectors default off.
+# Base = codex's reference tree image (R504 gate); was tabbyapi:decode-kernels-r2.
+ARG BASE=tabbyapi:decode-kernels-r2-refbase
+FROM ${BASE}
+COPY overlay/manifest.json overlay/verify_installed.py /opt/decode-kernels-r4/
+RUN python3 /opt/decode-kernels-r4/verify_installed.py
+COPY overlay/exllamav3 /tmp/r4/exllamav3
+COPY tests /opt/decode-kernels-r4/tests
+COPY mixer_int8_parity.py /opt/decode-kernels-r4/
+RUN set -eux; EXL3_DIR=/opt/venv/lib/python3.12/site-packages/exllamav3; cp -a /tmp/r4/exllamav3/. "${EXL3_DIR}/"; rm -rf /tmp/r4; \
+    rm -rf "${TORCH_EXTENSIONS_DIR}"/*; \
+    TORCH_CUDA_ARCH_LIST=12.0 MAX_JOBS=8 python3 -c 'from exllamav3.ext import exllamav3_ext as e; assert hasattr(e, "gr_mix_v2_int8"); print(e.__file__)'

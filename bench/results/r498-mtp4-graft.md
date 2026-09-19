@@ -1,0 +1,5 @@
+# R498: a 4-bit MTP layer grafted onto the 3.05 pack costs pool, gains nothing at c1 and fails at c4
+
+Results directory on the serving host: `results/2026-09-18-r498-mtp4-graft`. Raw records: [`2026-09-18-r498-mtp4-graft/`](2026-09-18-r498-mtp4-graft/). Driver: [`scripts/r498-mtp4-graft-build.sh`](../../scripts/r498-mtp4-graft-build.sh), [`scripts/r498-mtp4-graft.sh`](../../scripts/r498-mtp4-graft.sh). Date: 2026-09-18.
+
+The 2.50bpw pack from r0b0tlab ships a 4-bit MTP layer. R498 grafted it onto the 3.05bpw pack (304,108 tensors, no duplicates) and served it against the unmodified pack. The graft does not boot at 360,448 ("Insufficient VRAM in split for model and cache", twice) and boots at 344,064. Greedy fingerprints are canonical (fixed-depth speculative decoding is lossless). Code c1: 218.9 / 218.7 and 215.1 / 219.6 t/s against 217.2 / 221.8 and 220.5 / 220.8 on the unmodified pack, so no acceptance gain. Both graft arms then failed every c4 request; the container log was not kept, so the error is unknown. Rejected.

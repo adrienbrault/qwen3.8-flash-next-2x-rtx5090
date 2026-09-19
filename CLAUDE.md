@@ -12,15 +12,11 @@ the image recipe). The two must never disagree about the served configuration.
 
 ## Visibility — read this before pushing anywhere
 
-The **Flash-Next / llama.cpp / ExLlamaV3 track is NOT public** (user, 2026-09-12; recorded in the sibling
-`kubernetes-home/AGENTS.md`). Concretely:
+This repository is prepared for publication on GitHub as `qwen3.8-flash-next-2x-rtx5090` (the user calls it the new public repo, 2026-09-17 and 2026-09-19). It has not been pushed. Creating the GitHub repository and every push are the user's call: never push without an explicit request.
 
-- Do **not** push this repository anywhere public, and do not create a public repository for it.
-- Do **not** mirror any of it into the public `~/Developer/ai/qwen3.8-27b-rtx5090` repo. Only the 27B vLLM daily
-  belongs there.
-- The 27B vLLM daily's launcher (`qwen3.8-27b-rtx5090/scripts/serve-*.sh`) and this launcher are different
-  engines and different worlds. `launch-flashnext.sh` in `kubernetes-home/flan/` is the *llama.cpp* variant of
-  this model; it is not this script.
+- Treat every commit as public already: GitHub keeps serving a commit by its SHA after a history rewrite. Run `scripts/check-public-hygiene.sh` before every commit and `scripts/check-public-hygiene.sh --tree` before the first push.
+- Stage explicit paths; `git add -A` and `git add .` are forbidden.
+- Do **not** mirror any of it into the public `qwen3.8-27b-rtx5090` repo; only the 27B vLLM daily belongs there. The llama.cpp work on this model stays in the private infrastructure repo.
 
 ## Prose (README, THIRD_PARTY.md, docs/)
 
@@ -42,7 +38,7 @@ Enforced by `scripts/check-prose.sh`, which `scripts/check-public-hygiene.sh` ru
 - **Repo-first, then apply.** Change the launcher here, then apply it with
   `ssh flan 'bash -s' < scripts/launch-flashnext.sh`. No ad-hoc edits on the box: if it is not in this repo it
   did not happen.
-- A restart costs ~11 s of model load (warm kernel caches) plus a ~0.3 s warmup. The server is shared with the
+- A restart costs about 21 s from launch to serving with warm kernel caches (2.50 bpw pack, 2026-09-19). The server is shared with the
   user's DSH sessions — warn before restarting unless the box has been handed over.
 
 ## Measurement rules
@@ -71,9 +67,19 @@ These are not style preferences. Each one is a mistake that has already produced
 
 | path | what it is |
 | --- | --- |
-| `scripts/launch-flashnext.sh` | the launcher; writes the config and the sampler preset, then starts the container |
-| `bench/probe.py` | decode/concurrency/depth instrument: forced length, per-request records |
-| `bench/results/` | dated results, one file or directory per run, with the raw records next to the prose |
-| `docs/CONFIG.md` | every setting in the served config and why it has that value |
-| `docs/MEASUREMENTS.md` | the measured numbers, each dated and tied to a results directory |
+| `scripts/launch-flashnext.sh` | the served launcher; writes the config and the sampler preset, then starts the container |
+| `scripts/launchers/` | the launcher of each promotion and experiment |
+| `scripts/r*.sh` | one driver per experiment, named after its R number |
+| `docker/` | the image chain: Dockerfiles, patches, overlays with SHA-pinned installers |
+| `bench/*.py` | the instruments |
+| `bench/results/<rNNN-slug>.md` | one write-up per experiment: heading names the finding, first line names the results directory on the box, the driver and the raw records |
+| `bench/results/<date>-<rNNN-slug>/` | raw records copied from the box (audit log as `audit.txt`, records JSONL, greedy captures); no tool-eval JSON, no files over 2 MB |
+| `bench/RESULTS.md` | the index, newest first: one line per result file |
+| `docs/CONFIG.md` | every setting and flag in the served config and why it has that value |
+| `docs/HISTORY.md` | how the served configuration changed, one row per promotion |
+| `docs/PROMOTION.md` | the gates |
 | `docs/GOTCHAS.md` | the traps, in the form "what it looks like / what it is" |
+
+## Sync with the private repo
+
+The launcher here mirrors `flan/launch-flashnext-tabby.sh` in the private infrastructure repo (private addresses and home paths scrubbed); both change in the same session. A new result means a new file in `bench/results/`, its raw records next to it, one line in `bench/RESULTS.md`, and the README numbers table if it changes a served figure. Never append prose to the index.

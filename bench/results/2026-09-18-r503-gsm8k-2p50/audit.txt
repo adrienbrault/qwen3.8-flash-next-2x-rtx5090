@@ -1,0 +1,23 @@
+2026-09-18T16:49:01+00:00 [r503] queued behind: r494-nospill(pid 1843524)
+r496-gdn-state-r3(pid 645506)
+r497-draft-confidence(pid 1964204)
+r498-mtp4-graft(pid 2513438)
+r499-decode-r4(pid 2602917)
+r500-draft-ceiling(pid 2906750)
+r501-prompt-lookup(pid 3702076)
+r502-sched(pid 3840033)
+2026-09-18T18:05:01+00:00 [r503] boot qwen3.8-flash-next-exl3-3.05bpw @ 360448
+2026-09-18T18:05:20+00:00 [r503] UP qwen3.8-flash-next-exl3-3.05bpw @ 360448
+[C305] GSM8K n=500: flexible 0.914 (SE 0.0126) strict 0.912
+[C305] samples 1000, wrong 87: truncated-like (>20k chars) 0, empty 72, other 15; resp chars median all 197 / wrong 0
+2026-09-18T18:13:35+00:00 [r503] boot qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab @ 786432
+2026-09-18T18:14:00+00:00 [r503] UP qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab @ 786432
+[N250] GSM8K n=500: flexible 0.804 (SE 0.0178) strict 0.804
+[N250] samples 1000, wrong 196: truncated-like (>20k chars) 0, empty 178, other 18; resp chars median all 195 / wrong 0
+paired: wrong on both 26, only 3.05 18, only 2.50 72
+2026-09-18T18:21:06+00:00 [r503] restoring the daily
+2026-09-18T18:21:07+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T18:21:28+00:00 [flashnext] UP on 8022 | warmup 0.381882s | VRAM free MiB 833/2523/
+2026-09-18T18:21:28+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T18:21:28+00:00 [r503] daily: qwen3.8-flash-next-exl3-3.05bpw
+2026-09-18T18:21:28+00:00 [r503] === R503 DONE ===

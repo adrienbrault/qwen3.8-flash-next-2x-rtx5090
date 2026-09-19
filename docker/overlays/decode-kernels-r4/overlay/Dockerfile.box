@@ -1,0 +1,27 @@
+ARG BASE=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2
+FROM ${BASE}
+
+COPY out/decode-kernels-r4/overlay/manifest.json /opt/decode-kernels-r4/manifest.json
+COPY out/decode-kernels-r4/overlay/verify_installed.py /opt/decode-kernels-r4/verify_installed.py
+RUN python3 /opt/decode-kernels-r4/verify_installed.py
+
+COPY out/decode-kernels-r4/overlay/exllamav3/generator/generator.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/generator.py
+COPY out/decode-kernels-r4/overlay/exllamav3/generator/draft_overlap.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/draft_overlap.py
+COPY out/decode-kernels-r4/overlay/exllamav3/generator/sampler/custom.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/sampler/custom.py
+COPY out/decode-kernels-r4/overlay/exllamav3/modules/embedding.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/embedding.py
+COPY out/decode-kernels-r4/overlay/exllamav3/modules/hyperconnections.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/hyperconnections.py
+COPY out/decode-kernels-r4/overlay/exllamav3/architecture/qwen4_exp_mtp.py /opt/venv/lib/python3.12/site-packages/exllamav3/architecture/qwen4_exp_mtp.py
+COPY out/decode-kernels-r4/overlay/exllamav3/exllamav3_ext/hc_mix.cu /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/hc_mix.cu
+COPY out/decode-kernels-r4/overlay/exllamav3/exllamav3_ext/hc_mix.cuh /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/hc_mix.cuh
+COPY out/decode-kernels-r4/overlay/exllamav3/exllamav3_ext/bindings.cpp /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/bindings.cpp
+
+COPY out/decode-kernels-r4/overlay/build_extension.py /opt/decode-kernels-r4/build_extension.py
+COPY out/decode-kernels-r4/tests /opt/decode-kernels-r4/tests
+COPY out/decode-kernels-r4/mixer_int8_parity.py /opt/decode-kernels-r4/mixer_int8_parity.py
+
+# CUDA sources changed in this round, so force exactly one clean sm_120 rebuild.
+ENV TORCH_EXTENSIONS_DIR=/opt/decode-kernels-r4/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf ${TORCH_EXTENSIONS_DIR} && mkdir -p ${TORCH_EXTENSIONS_DIR} && \
+    python3 /opt/decode-kernels-r4/build_extension.py

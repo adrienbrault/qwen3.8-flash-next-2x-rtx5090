@@ -1,0 +1,19 @@
+2026-09-18T15:16:03+00:00 [r492] queued behind: r491-shared-promote(pid 2583105)
+2026-09-18T15:22:33+00:00 [r492] serving: image tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 env EXL3_MOE_COOP_V2=1 EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1   cache_size: 360448  max_batch_size: 4 
+[code-c1-0]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 187.4, "per_stream_wall_tps": 187.4, "decode_tps": 192.4, "ttft_s": 0.147}
+[code-c1-100k]  c=1 run0 ctx~133000: {"conc": 1, "ctx_requested": 133000, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 179258, "aggregate_tps": 36.8, "per_stream_wall_tps": 36.9, "decode_tps": 176.5, "ttft_s": 21.956}
+[code-c1-200k]  c=1 run0 ctx~266000: FAILED all 1 requests (HTTP Error 400: Bad Request)
+[code-c4-60k]  c=4 run0 ctx~80000: {"conc": 4, "ctx_requested": 80000, "n_ok": 4, "tokens_median": 1024.0, "prompt_tokens": 108369, "aggregate_tps": 58.8, "per_stream_wall_tps": 15.9, "decode_tps": 76.7, "ttft_s": 38.177}
+[prose-c1-0]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 169.0, "per_stream_wall_tps": 169.0, "decode_tps": 172.7, "ttft_s": 0.137}
+[prose-c1-100k]  c=1 run0 ctx~133000: {"conc": 1, "ctx_requested": 133000, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 99919, "aggregate_tps": 54.8, "per_stream_wall_tps": 54.9, "decode_tps": 152.8, "ttft_s": 11.953}
+[prose-c1-200k]  c=1 run0 ctx~266000: {"conc": 1, "ctx_requested": 266000, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 199457, "aggregate_tps": 54.7, "per_stream_wall_tps": 55.0, "decode_tps": 169.2, "ttft_s": 12.572}
+[prose-c4-60k]  c=4 run0 ctx~80000: {"conc": 4, "ctx_requested": 80000, "n_ok": 4, "tokens_median": 1024.0, "prompt_tokens": 60181, "aggregate_tps": 90.7, "per_stream_wall_tps": 23.1, "decode_tps": 100.4, "ttft_s": 34.703}
+arm               n prompt tok  TTFT s prefill tok/s  decode t/s per stream aggregate
+code-c1-0         1        101    0.15           687                  192.4     187.4
+code-c1-100k      1    179,258   21.96         8,164                  176.5      36.8
+code-c4-60k       4    108,254   38.18           nan                   76.7      58.8
+prose-c1-0        1         89    0.14           650                  172.7     168.9
+prose-c1-100k     1     99,919   11.95         8,359                  152.8      54.8
+prose-c1-200k     1    199,457   12.57        15,865                  169.2      54.7
+prose-c4-60k      4     60,110   34.70           nan                  100.4      90.7
+2026-09-18T15:25:47+00:00 [r492] === R492 DONE ===

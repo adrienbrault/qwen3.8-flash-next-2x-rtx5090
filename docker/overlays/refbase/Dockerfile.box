@@ -1,0 +1,13 @@
+# refbase = the daily image (tabbyapi:decode-kernels-r2) + the nine files of codex's reference tree (ref/served-src in the
+# exl3-wt-* worktrees) that differ from it. That tree is the served code PLUS two earlier default-off codex experiments:
+# the decode overlap / batched greedy verify (EXL3_DECODE_OVERLAP, generator/draft_overlap.py, R473: byte-identical, no gain)
+# and a fused V2 mixer launch (EXL3_DECODE_FUSE, gr_mix_v2_fused). Codex rounds r4 / r5 / prompt-lookup r1 / sched r1 were
+# written against that tree, so they build on this image; R504 gates it (canonical fingerprints, equal speed) first.
+ARG BASE=tabbyapi:decode-kernels-r2
+FROM ${BASE}
+COPY files/ /opt/venv/lib/python3.12/site-packages/exllamav3/
+RUN set -eux; rm -rf "${TORCH_EXTENSIONS_DIR}"/*; \
+    TORCH_CUDA_ARCH_LIST=12.0 MAX_JOBS=8 python3 -c 'from exllamav3.ext import exllamav3_ext as e; assert hasattr(e, "gr_mix_v2_fused"); print(e.__file__)'; \
+    python3 -c 'import exllamav3.generator.generator, exllamav3.generator.draft_overlap as d; assert not d.DECODE_OVERLAP'
+ENV EXL3_DECODE_OVERLAP=0
+ENV EXL3_DECODE_FUSE=0

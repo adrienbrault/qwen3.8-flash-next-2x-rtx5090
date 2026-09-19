@@ -1,0 +1,24 @@
+ARG BASE=tabbyapi:decode-kernels-r2-refbase
+FROM ${BASE}
+
+# Build context is out/prefill-e3-r2 itself.
+COPY served-source.patch /opt/prefill-e3-r2/served-source.patch
+COPY overlay/manifest.json /opt/prefill-e3-r2/overlay/manifest.json
+COPY overlay/install.py /opt/prefill-e3-r2/overlay/install.py
+COPY overlay/build_extension.py /opt/prefill-e3-r2/overlay/build_extension.py
+COPY overlay/exllamav3 /opt/prefill-e3-r2/overlay/exllamav3
+COPY tests /opt/prefill-e3-r2/tests
+
+RUN python3 /opt/prefill-e3-r2/overlay/install.py
+
+# CUDA sources changed. Build only sm_120 in a round-specific cache.
+ENV TORCH_EXTENSIONS_DIR=/opt/prefill-e3-r2/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf /opt/prefill-e3-r2/torch-extensions && \
+    mkdir -p /opt/prefill-e3-r2/torch-extensions && \
+    python3 /opt/prefill-e3-r2/overlay/build_extension.py && \
+    python3 /opt/prefill-e3-r2/tests/test_prefill_e3_installed.py && \
+    python3 -c "from exllamav3.ext import exllamav3_ext as e; assert e.exl3_moe_prefill_e3_tile_rows() == 64; assert '/site-packages/' in e.__file__, e.__file__; print(e.__file__)"
+# 2026-09-18 R513 try 1: a bare "import exllamav3_ext" (before torch) failed with libc10.so not found; exllamav3.ext imports torch first.
+ENV EXL3_MOE_PREFILL_E3=0

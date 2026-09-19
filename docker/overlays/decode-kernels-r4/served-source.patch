@@ -1,0 +1,1084 @@
+diff -ruN a/architecture/qwen4_exp_mtp.py b/architecture/qwen4_exp_mtp.py
+--- a/architecture/qwen4_exp_mtp.py	2026-09-18 18:19:12
++++ b/architecture/qwen4_exp_mtp.py	2026-09-18 18:19:12
+@@ -10,7 +10,13 @@
+ from ..modules.module import Module
+ from ..modules.arch_specific.qwen4_exp_mtp import Qwen4ExpMTPInputLayer
+ from ..modules.attn import prepare_for_attn
++from ..ext import exllamav3_ext as ext
++import os
+ 
++
++_mtp_head_n_env = os.environ.get("EXL3_MTP_HEAD_N")
++_MTP_HEAD_N = int(_mtp_head_n_env) if _mtp_head_n_env is not None else None
++
+ from typing import TYPE_CHECKING
+ if TYPE_CHECKING:
+     from .qwen4_exp import Qwen4ExpConfig
+@@ -175,11 +181,63 @@
+         state = mixer.forward(stack, params)
+         ll = self.attached_model().logit_layer_idx
+         lm = self.attached_model().modules[ll]
+-        logits = lm.prepare_for_device(state, params)
+-        logits = lm.forward(logits, params)
++        state = lm.prepare_for_device(state, params)
++        if _MTP_HEAD_N is not None and _MTP_HEAD_N > 0:
++            pruned = self._pruned_head(lm, state.device)
++            if pruned is not None:
++                trellis, svh, n_cols = pruned
++                inner = lm.inner
++                bsz, seq, dim = state.shape
++                x = state.reshape(bsz * seq, dim)
++                if x.dtype != torch.half:
++                    x = x.half()
++                x = x.contiguous()
++                x_had = torch.empty_like(x)
++                logits = torch.empty(
++                    (bsz * seq, n_cols), dtype = torch.half, device = x.device
++                )
++                ext.exl3_gemm(
++                    x, trellis, logits, inner.suh, x_had, svh,
++                    -1, inner.mcg, inner.mul1, 0,
++                )
++                logits = logits.view(bsz, seq, n_cols)
++                if params.get("export_draft_conf"):
++                    conf, ids = torch.max(logits, dim = -1)
++                    params["draft_conf"] = conf
++                    return ids
++                return torch.argmax(logits, dim = -1)
++        logits = lm.forward(state, params)
+         if params.get("export_draft_conf"):
+             logits = logits[..., :self.attached_model().config.vocab_size]
+             conf, ids = torch.max(logits, dim = -1)
+             params["draft_conf"] = conf
+             return ids
+         return torch.argmax(logits, dim = -1)
++
++    def _pruned_head(self, lm, device):
++        """Whole-tile prefix view/copy of an EXL3 output dimension.
++
++        EXL3 trellis columns represent 16 outputs, while the GEMM kernels require
++        N divisible by 128. Slicing dimension 1 at n_cols/16 therefore preserves
++        complete quantization tiles; no weights are reconstructed or requantized.
++        """
++        cached = getattr(self, "_pruned_head_cache", None)
++        if cached is not None:
++            return cached if cached is not False else None
++        inner = getattr(lm, "inner", None)
++        trellis = getattr(inner, "trellis", None)
++        if (
++            trellis is None or getattr(inner, "bias", None) is not None or
++            not hasattr(inner, "svh") or not hasattr(inner, "suh")
++        ):
++            self._pruned_head_cache = False
++            return None
++        n_full = trellis.shape[1] * 16
++        n_cols = min(_MTP_HEAD_N, n_full) // 128 * 128
++        if n_cols <= 0 or n_cols >= n_full:
++            self._pruned_head_cache = False
++            return None
++        trellis_prefix = trellis[:, :n_cols // 16, :].contiguous().to(device)
++        svh_prefix = inner.svh[:n_cols].contiguous().to(device)
++        self._pruned_head_cache = (trellis_prefix, svh_prefix, n_cols)
++        return self._pruned_head_cache
+diff -ruN a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp	2026-09-18 18:19:12
++++ b/exllamav3_ext/bindings.cpp	2026-09-18 18:19:12
+@@ -119,6 +119,7 @@
+     m.def("hc_apply", &hc_apply, "hc_apply");
+     m.def("gr_mix", &gr_mix, "gr_mix");
+     m.def("gr_mix_v2", &gr_mix_v2, "gr_mix_v2");
++    m.def("gr_mix_v2_int8", &gr_mix_v2_int8, "gr_mix_v2_int8");
+     m.def("gr_mix_v2_fused", &gr_mix_v2_fused, "gr_mix_v2_fused");
+     m.attr("hc_mix_v2_revision") = 2;
+     m.def("routing_std", &routing_std, "routing_std");
+diff -ruN a/exllamav3_ext/hc_mix.cu b/exllamav3_ext/hc_mix.cu
+--- a/exllamav3_ext/hc_mix.cu	2026-09-18 18:19:12
++++ b/exllamav3_ext/hc_mix.cu	2026-09-18 18:19:12
+@@ -1,9 +1,11 @@
+ #include <cuda_fp16.h>
+ #include <cooperative_groups.h>
++#include <cstdint>
+ #include <mutex>
+ #include "hc_mix.cuh"
+ #include <c10/cuda/CUDAGuard.h>
+ #include <ATen/cuda/CUDAContext.h>
++#include <c10/cuda/CUDAException.h>
+ #include "util.h"
+ #include "util.cuh"
+ #include "graph.cuh"
+@@ -944,7 +946,109 @@
+     }
+ }
+ 
++// V2 int8 dots. fn_s is constant across each contracted row, so the
++// integer-weight dot is reduced in the same lane/warp order as V2 and scaled
++// once after the reduction.
++template <int B>
+ __global__ __launch_bounds__(GR_THREADS_A)
++void gr_v2_dots_i8_kernel
++(
++    const float* __restrict__ streams, const int8_t* __restrict__ fn_q,
++    const float* __restrict__ fn_s, float* __restrict__ dots,
++    const int R, const int D, const int M
++)
++{
++    constexpr int H = GR_V2_H, J = GR_V2_J, V = GR_THREADS_A / GR_V2_WARP;
++    const int tid = threadIdx.x, lane = tid % 32, warp = tid / 32;
++    const int h = blockIdx.z, r0 = blockIdx.y * B;
++    const int j0 = blockIdx.x * J;
++    __shared__ float red[B][J][V];
++    if (blockIdx.x == (M + J - 1) / J)
++    {
++        float a[B] = {};
++        for (int c = tid; c < D / 4; c += GR_THREADS_A)
++        {
++            #pragma unroll
++            for (int b = 0; b < B; ++b)
++                if (r0 + b < R)
++                {
++                    float4 s = ((const float4*) streams)[((size_t) (r0 + b) * H + h) * (D / 4) + c];
++                    a[b] = fmaf(s.x, s.x, fmaf(s.y, s.y,
++                           fmaf(s.z, s.z, fmaf(s.w, s.w, a[b]))));
++                }
++        }
++        #pragma unroll
++        for (int b = 0; b < B; ++b)
++        {
++            for (int offset = 16; offset > 0; offset >>= 1)
++                a[b] += __shfl_down_sync(0xffffffffu, a[b], offset);
++            if (lane == 0) red[b][0][warp] = a[b];
++        }
++        __syncthreads();
++        if (tid < B && r0 + tid < R)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < V; ++v) sum += red[tid][0][v];
++            dots[((size_t) (r0 + tid) * (M + 1) + M) * H + h] = sum;
++        }
++        return;
++    }
++    float a[B][J] = {};
++    for (int c = tid; c < D / 8; c += GR_THREADS_A)
++    {
++        int2 packed[J];
++        #pragma unroll
++        for (int j = 0; j < J; ++j)
++            if (j0 + j < M)
++                packed[j] = ((const int2*) (fn_q + ((size_t) (j0 + j) * H + h) * D))[c];
++        #pragma unroll
++        for (int b = 0; b < B; ++b)
++            if (r0 + b < R)
++            {
++                const float4* s4 = (const float4*) (streams + ((size_t) (r0 + b) * H + h) * D);
++                float4 s0 = s4[2 * c], s1 = s4[2 * c + 1];
++                #pragma unroll
++                for (int j = 0; j < J; ++j)
++                    if (j0 + j < M)
++                    {
++                        const int8_t* q = (const int8_t*) &packed[j];
++                        a[b][j] = fmaf(s0.x, (float) q[0], a[b][j]);
++                        a[b][j] = fmaf(s0.y, (float) q[1], a[b][j]);
++                        a[b][j] = fmaf(s0.z, (float) q[2], a[b][j]);
++                        a[b][j] = fmaf(s0.w, (float) q[3], a[b][j]);
++                        a[b][j] = fmaf(s1.x, (float) q[4], a[b][j]);
++                        a[b][j] = fmaf(s1.y, (float) q[5], a[b][j]);
++                        a[b][j] = fmaf(s1.z, (float) q[6], a[b][j]);
++                        a[b][j] = fmaf(s1.w, (float) q[7], a[b][j]);
++                    }
++            }
++    }
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++        #pragma unroll
++        for (int j = 0; j < J; ++j)
++        {
++            for (int offset = 16; offset > 0; offset >>= 1)
++                a[b][j] += __shfl_down_sync(0xffffffffu, a[b][j], offset);
++            if (lane == 0) red[b][j][warp] = a[b][j];
++        }
++    __syncthreads();
++    if (tid < B * J)
++    {
++        const int b = tid / J, j = tid % J;
++        if (r0 + b < R && j0 + j < M)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < V; ++v) sum += red[b][j][v];
++            dots[((size_t) (r0 + b) * (M + 1) + j0 + j) * H + h] =
++                sum * fn_s[j0 + j];
++        }
++    }
++}
++
++__global__ __launch_bounds__(GR_THREADS_A)
+ void gr_v2_state_kernel
+ (
+     const float* __restrict__ dots, float* __restrict__ state,
+@@ -1052,6 +1156,88 @@
+     }
+ }
+ 
++template <int B, bool HALF_OUT>
++__global__ __launch_bounds__(GR_V2_UP_THREADS)
++void gr_v2_up_i8_kernel
++(
++    const float* __restrict__ streams, const float* __restrict__ state,
++    const int8_t* __restrict__ up_q, const float* __restrict__ up_s,
++    const half* __restrict__ w, void* __restrict__ mixed,
++    const int R, const int D, const int LR
++)
++{
++    constexpr int H = GR_V2_H, Q = GR_V2_QUADS;
++    const int lane = threadIdx.x % 32, warp = threadIdx.x / 32;
++    const int h = warp % H, cq = warp / H;
++    const int c = blockIdx.x * Q + cq, r0 = blockIdx.y * B;
++    extern __shared__ float head[];
++    __shared__ float gates[B][Q][H][4];
++    for (int k = threadIdx.x; k < B * (LR + H); k += GR_V2_UP_THREADS)
++    {
++        int b = k / (LR + H);
++        head[k] = r0 + b < R ? state[(size_t) r0 * (LR + H) + k] : 0.0f;
++    }
++    __syncthreads();
++    float4 g[B];
++    #pragma unroll
++    for (int b = 0; b < B; ++b) g[b] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++    if (c < D / 4)
++        for (int i = lane; i < LR; i += GR_V2_WARP)
++        {
++            int packed = *(const int*) (up_q + ((((size_t) h * (D / 4) + c) * LR + i) * 4));
++            const int8_t* q = (const int8_t*) &packed;
++            #pragma unroll
++            for (int b = 0; b < B; ++b)
++            {
++                float ti = head[b * (LR + H) + i];
++                g[b].x = fmaf(ti, (float) q[0], g[b].x);
++                g[b].y = fmaf(ti, (float) q[1], g[b].y);
++                g[b].z = fmaf(ti, (float) q[2], g[b].z);
++                g[b].w = fmaf(ti, (float) q[3], g[b].w);
++            }
++        }
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++    {
++        for (int offset = 16; offset > 0; offset >>= 1)
++        {
++            g[b].x += __shfl_xor_sync(0xffffffffu, g[b].x, offset);
++            g[b].y += __shfl_xor_sync(0xffffffffu, g[b].y, offset);
++            g[b].z += __shfl_xor_sync(0xffffffffu, g[b].z, offset);
++            g[b].w += __shfl_xor_sync(0xffffffffu, g[b].w, offset);
++        }
++        if (lane == 0)
++        {
++            const float4 scale = c < D / 4
++                ? *(const float4*) (up_s + (size_t) h * D + 4 * c)
++                : make_float4(1.0f, 1.0f, 1.0f, 1.0f);
++            gates[b][cq][h][0] = g[b].x * scale.x;
++            gates[b][cq][h][1] = g[b].y * scale.y;
++            gates[b][cq][h][2] = g[b].z * scale.z;
++            gates[b][cq][h][3] = g[b].w * scale.w;
++        }
++    }
++    __syncthreads();
++    if (threadIdx.x < B * Q * 4)
++    {
++        const int b = threadIdx.x / (Q * 4), q = (threadIdx.x / 4) % Q, k = threadIdx.x % 4;
++        const int d = (blockIdx.x * Q + q) * 4 + k;
++        if (r0 + b < R && d < D)
++        {
++            float o = 0.0f;
++            #pragma unroll
++            for (int hs = 0; hs < H; ++hs)
++            {
++                float s = streams[((size_t) (r0 + b) * H + hs) * D + d];
++                float coef = head[b * (LR + H) + LR + hs] * (1.0f / (float) H);
++                o = fmaf(sigmoidf_(gates[b][q][hs][k]) * coef * __half2float(w[hs * D + d]), s, o);
++            }
++            if (HALF_OUT) ((half*) mixed)[(size_t) (r0 + b) * D + d] = __float2half_rn(o);
++            else ((float*) mixed)[(size_t) (r0 + b) * D + d] = o;
++        }
++    }
++}
++
+ // Exact state phase followed by the served up phase in one cooperative launch. Only the
+ // x-block at column zero derives state for its B-row group; grid.sync() replaces the launch
+ // boundary before every column block reads that state. Each scalar keeps the served state
+@@ -1249,6 +1435,40 @@
+ }
+ 
+ template <int B>
++static void gr_v2_launch_i8
++(
++    const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
++    const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
++    float rms_eps, at::Tensor& dots, at::Tensor& state, float* post,
++    at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream
++)
++{
++    const int M = LR + (post ? GR_V2_H : 0);
++    dim3 grid_a((M + GR_V2_J - 1) / GR_V2_J + 1, (R + B - 1) / B, GR_V2_H);
++    gr_v2_dots_i8_kernel<B><<<grid_a, GR_THREADS_A, 0, stream>>>
++    (
++        (const float*) streams.data_ptr(), (const int8_t*) fn_q.data_ptr(),
++        (const float*) fn_s.data_ptr(), (float*) dots.data_ptr(), R, D, M
++    );
++    C10_CUDA_CHECK(cudaPeekAtLastError());
++    gr_v2_state_kernel<<<R, GR_THREADS_A, 0, stream>>>
++    ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
++    C10_CUDA_CHECK(cudaPeekAtLastError());
++    dim3 grid_b((D / 4 + GR_V2_QUADS - 1) / GR_V2_QUADS, (R + B - 1) / B);
++    const int smem = B * (LR + GR_V2_H) * sizeof(float);
++    #define GR_V2_I8_ARGS \
++        (const float*) streams.data_ptr(), (const float*) state.data_ptr(), \
++        (const int8_t*) up_q.data_ptr(), (const float*) up_s.data_ptr(), \
++        (const half*) w.data_ptr(), mixed.data_ptr(), R, D, LR
++    if (mixed.dtype() == at::kHalf)
++        gr_v2_up_i8_kernel<B, true><<<grid_b, GR_V2_UP_THREADS, smem, stream>>>(GR_V2_I8_ARGS);
++    else
++        gr_v2_up_i8_kernel<B, false><<<grid_b, GR_V2_UP_THREADS, smem, stream>>>(GR_V2_I8_ARGS);
++    #undef GR_V2_I8_ARGS
++    C10_CUDA_CHECK(cudaPeekAtLastError());
++}
++
++template <int B>
+ static bool gr_v2_launch_fused
+ (
+     const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
+@@ -1340,6 +1560,76 @@
+     else if (R <= 4) GR_V2_LAUNCH(4);
+     else GR_V2_LAUNCH(GR_V2_ROWS);
+     #undef GR_V2_LAUNCH
++}
++
++void gr_mix_v2_int8
++(
++    const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
++    const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
++    double rms_eps, at::Tensor dots, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    const at::cuda::OptionalCUDAGuard device_guard(streams.device());
++    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
++    TORCH_CHECK_DTYPE(streams, kFloat);
++    TORCH_CHECK(fn_q.dtype() == at::kChar && up_q.dtype() == at::kChar,
++                "gr_mix_v2_int8: int8 weights required");
++    TORCH_CHECK_DTYPE(fn_s, kFloat);
++    TORCH_CHECK_DTYPE(up_s, kFloat);
++    TORCH_CHECK_DTYPE(w, kHalf);
++    TORCH_CHECK_DTYPE(state, kFloat);
++    TORCH_CHECK_DTYPE(dots, kFloat);
++    TORCH_CHECK(streams.dim() == 3 && fn_q.dim() == 2 && state.dim() == 2,
++                "gr_mix_v2_int8: input/workspace rank");
++    TORCH_CHECK(streams.is_contiguous() && fn_q.is_contiguous() && fn_s.is_contiguous() &&
++                up_q.is_contiguous() && up_s.is_contiguous() && w.is_contiguous() &&
++                state.is_contiguous() && dots.is_contiguous(),
++                "gr_mix_v2_int8: contiguous inputs required");
++    const int R = streams.size(0), H = streams.size(1), D = streams.size(2), M = fn_q.size(0);
++    TORCH_CHECK(R >= 1 && R <= 32 && H == GR_V2_H && D > 0 && D % 8 == 0,
++                "gr_mix_v2_int8: dims");
++    TORCH_CHECK(up_q.dim() == 4 && up_q.size(0) == H && up_q.size(1) == D / 4 && up_q.size(3) == 4,
++                "gr_mix_v2_int8: up_q must be the (H, D / 4, LR, 4) repacked layout");
++    const int LR = up_q.size(2);
++    TORCH_CHECK(LR > 0 && M == LR + (post ? H : 0),
++                "gr_mix_v2_int8: fn rows must be LR (+ H with post)");
++    TORCH_CHECK(fn_q.size(1) == H * D && fn_s.numel() == M &&
++                up_s.numel() == H * D && w.numel() == H * D,
++                "gr_mix_v2_int8: weight/scale shapes");
++    TORCH_CHECK(dots.dim() == 3 && dots.size(0) == R && dots.size(1) == M + 1 && dots.size(2) == H,
++                "gr_mix_v2_int8: dots shape");
++    TORCH_CHECK(state.size(0) == R && state.size(1) == LR + H,
++                "gr_mix_v2_int8: state shape");
++    TORCH_CHECK(mixed.is_contiguous() && mixed.dim() == 2 && mixed.size(0) == R && mixed.size(1) == D &&
++                (mixed.dtype() == at::kHalf || mixed.dtype() == at::kFloat),
++                "gr_mix_v2_int8: mixed shape/dtype");
++    TORCH_CHECK(streams.is_cuda() && fn_q.device() == streams.device() &&
++                fn_s.device() == streams.device() && up_q.device() == streams.device() &&
++                up_s.device() == streams.device() && w.device() == streams.device() &&
++                state.device() == streams.device() && dots.device() == streams.device() &&
++                mixed.device() == streams.device(),
++                "gr_mix_v2_int8: tensors must share a CUDA device");
++    float* post_p = nullptr;
++    if (post)
++    {
++        const auto& p = post.value();
++        TORCH_CHECK_DTYPE(p, kFloat);
++        TORCH_CHECK(p.is_contiguous() && p.dim() == 2 && p.size(0) == R && p.size(1) == H &&
++                    p.device() == streams.device(), "gr_mix_v2_int8: post shape/device");
++        post_p = (float*) p.data_ptr();
++    }
++    TORCH_CHECK(GR_V2_ROWS * (LR + H) * sizeof(float) +
++                GR_V2_ROWS * GR_V2_QUADS * H * 4 * sizeof(float) <= 48 * 1024,
++                "gr_mix_v2_int8: rank exceeds shared-memory limit");
++    #define GR_V2_I8_LAUNCH(B) \
++        gr_v2_launch_i8<B>(streams, fn_q, fn_s, up_q, up_s, w, (float) rms_eps, \
++                           dots, state, post_p, mixed, R, D, LR, stream)
++    if (R == 1) GR_V2_I8_LAUNCH(1);
++    else if (R == 2) GR_V2_I8_LAUNCH(2);
++    else if (R <= 4) GR_V2_I8_LAUNCH(4);
++    else GR_V2_I8_LAUNCH(GR_V2_ROWS);
++    #undef GR_V2_I8_LAUNCH
+ }
+ 
+ bool gr_mix_v2_fused
+diff -ruN a/exllamav3_ext/hc_mix.cuh b/exllamav3_ext/hc_mix.cuh
+--- a/exllamav3_ext/hc_mix.cuh	2026-09-18 18:19:12
++++ b/exllamav3_ext/hc_mix.cuh	2026-09-18 18:19:12
+@@ -69,6 +69,22 @@
+     at::Tensor mixed
+ );
+ 
++// Decode V2 with int8 fn/up weights and fp32 contracted-dimension scales.
++void gr_mix_v2_int8
++(
++    const at::Tensor& streams,
++    const at::Tensor& fn_q,
++    const at::Tensor& fn_s,
++    const at::Tensor& up_q,
++    const at::Tensor& up_s,
++    const at::Tensor& w,
++    double rms_eps,
++    at::Tensor dots,
++    at::Tensor state,
++    c10::optional<at::Tensor> post,
++    at::Tensor mixed
++);
++
+ // Decode-only experimental variant. It preserves gr_mix_v2's dots/state arithmetic but
+ // combines the state and up phases in one cooperative launch. The caller gates this path;
+ // gr_mix_v2 itself remains the served implementation.
+diff -ruN a/generator/draft_overlap.py b/generator/draft_overlap.py
+--- a/generator/draft_overlap.py	2026-09-18 18:19:12
++++ b/generator/draft_overlap.py	2026-09-18 18:19:12
+@@ -43,6 +43,31 @@
+     return keys[0] if all(key == keys[0] for key in keys[1:]) else None
+ 
+ 
++def verification_batch_mode(job):
++    """Return ``greedy``/``sampled`` for the round-4 verifier, else ``None``.
++
++    Unlike the older all-jobs greedy path, round 4 launches one sampler call per
++    eligible job and batches that job's verification positions. This admits the
++    common stateless fused categorical sampler while still rejecting anything
++    whose next distribution depends on a previously accepted token.
++    """
++
++    mode = getattr(job.sampler, "batch_verify_mode", None)
++    if mode not in ("greedy", "sampled"):
++        return None
++    if job.new_tokens < 0 or job.forced_ids is not None:
++        return None
++    if job.filters or job.device_logit_mask is not None:
++        return None
++    if job.return_probs or job.return_top_tokens > 0:
++        return None
++    if len(job.sequences) != 1:
++        return None
++    if getattr(job.sampler, "reqs_past_ids", False):
++        return None
++    return mode
++
++
+ def draw_sampling_seed(job):
+     """Advance the per-job RNG exactly where the serial receive_logits path advances it."""
+ 
+diff -ruN a/generator/generator.py b/generator/generator.py
+--- a/generator/generator.py	2026-09-18 18:19:12
++++ b/generator/generator.py	2026-09-18 18:19:12
+@@ -14,7 +14,12 @@
+ from .pagetable import PageTable, is_content_hash
+ from .cpu_cache import CPUPageCache
+ from .draft_confidence import DraftConfidenceCalibrator
+-from .draft_overlap import DECODE_OVERLAP, common_verification_batch_key, draw_sampling_seed
++from .draft_overlap import (
++    DECODE_OVERLAP,
++    common_verification_batch_key,
++    draw_sampling_seed,
++    verification_batch_mode,
++)
+ from .job import Job
+ from .filter import Filter
+ from concurrent.futures import ThreadPoolExecutor
+@@ -25,6 +30,13 @@
+ from ..tokenizer import MMEmbedding
+ from ..util import profile_opt
+ 
++
++# Round-4 decode ports. All are literal opt-ins so an unset environment follows
++# the served branches and preserves served output bytes.
++_DRAFT_PINNED_STAGING = os.environ.get("EXL3_DRAFT_PINNED_STAGING", "0") == "1"
++_BATCH_VERIFY = os.environ.get("EXL3_BATCH_VERIFY", "0") == "1"
++_MTP_DEVICE_DRAFT = os.environ.get("EXL3_MTP_DEVICE_DRAFT", "0") == "1"
++
+ class Generator:
+ 
+     def __init__(
+@@ -243,12 +255,12 @@
+             self.draft_input_ids_pinned = torch.empty(
+                 (max_batch_size, 1),
+                 dtype = torch.long,
+-                pin_memory = False
++                pin_memory = _DRAFT_PINNED_STAGING
+             )
+             self.draft_ids_pinned = torch.empty(
+                 (max_batch_size, self.max_num_draft_tokens),
+                 dtype = torch.long,
+-                pin_memory = False
++                pin_memory = _DRAFT_PINNED_STAGING
+             )
+ 
+         # CPU page cache tier
+@@ -657,6 +669,41 @@
+         return self.num_draft_tokens
+ 
+ 
++    def _draft_tables(self, name: str, batch_size: int, max_pages_batch: int):
++        """Allocate draft metadata, optionally in reusable pinned staging.
++
++        Each drafter owns a distinct block-table buffer because target work may
++        still be queued when drafting starts. The served pageable allocation is
++        retained verbatim when the round-4 flag is off.
++        """
++        if not _DRAFT_PINNED_STAGING:
++            return (
++                torch.zeros((batch_size, max_pages_batch), dtype = torch.int32),
++                torch.zeros((batch_size,), dtype = torch.int32),
++            )
++        max_pages_batch = (max_pages_batch + 15) // 16 * 16
++        block_index = self._staging(f"{name}_block_index", batch_size, max_pages_batch)
++        block_index.zero_()
++        cache_seqlens = self._staging(f"{name}_cache_seqlens", batch_size)
++        return block_index, cache_seqlens
++
++
++    def _draft_step_seqlens(self, name: str, source: torch.Tensor, step: int):
++        """Give every in-flight async metadata upload immutable pinned storage."""
++        if not _DRAFT_PINNED_STAGING:
++            return source
++        staged = self._staging(f"{name}_cache_seqlens_step_{step}", source.shape[0])
++        staged.copy_(source)
++        return staged
++
++
++    @staticmethod
++    def _draft_params(params: dict):
++        if _DRAFT_PINNED_STAGING:
++            params["pinned_staging"] = True
++        return params
++
++
+     def iterate_draftmodel_gen(self, results: list):
+ 
+         self._draft_conf_round = None
+@@ -674,8 +721,9 @@
+ 
+         # Create block index table for batch
+         max_pages_batch = (max_seq_len + PAGE_SIZE - 1) // PAGE_SIZE
+-        block_index = torch.zeros((batch_size, max_pages_batch), dtype = torch.int32)
+-        cache_seqlens = torch.zeros((batch_size,), dtype = torch.int32)
++        block_index, cache_seqlens = self._draft_tables(
++            "draft", batch_size, max_pages_batch
++        )
+         batch = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+@@ -711,14 +759,15 @@
+         conf_cols = []
+         reach = None
+         for idx in range(window):
++            step_seqlens = self._draft_step_seqlens("draft", cache_seqlens, idx)
+             batch_logits = self.draft_model.forward(
+                 input_ids = batch_ids,
+-                params = {
++                params = self._draft_params({
+                     "attn_mode": "flash_attn",
+                     "block_table": block_index,
+                     "cache": self.draft_cache,
+-                    "cache_seqlens": cache_seqlens,
+-                }
++                    "cache_seqlens": step_seqlens,
++                })
+             )
+             if cal is not None:
+                 conf, new_ids = torch.max(batch_logits, dim = -1)
+@@ -736,14 +785,15 @@
+                     window = idx + 1
+                     break
+ 
++        tail_seqlens = self._draft_step_seqlens("draft", cache_seqlens, self.max_num_draft_tokens)
+         self.draft_model.prefill(
+             input_ids = batch_ids,
+-            params = {
++            params = self._draft_params({
+                 "attn_mode": "flash_attn",
+                 "block_table": block_index,
+                 "cache": self.draft_cache,
+-                "cache_seqlens": cache_seqlens
+-            }
++                "cache_seqlens": tail_seqlens
++            })
+         )
+ 
+         if conf_cols:
+@@ -773,8 +823,9 @@
+ 
+         # Create block index table for batch
+         max_pages_batch = (max_seq_len + PAGE_SIZE - 1) // PAGE_SIZE
+-        block_index = torch.zeros((batch_size, max_pages_batch), dtype = torch.int32)
+-        cache_seqlens = torch.zeros((batch_size,), dtype = torch.int32)
++        block_index, cache_seqlens = self._draft_tables(
++            "mtp", batch_size, max_pages_batch
++        )
+         batch = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+@@ -787,6 +838,7 @@
+         # Collect input IDs
+         input_ids_list = []
+         mtp_hidden_list = []
++        has_indexed_embeddings = False
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+             assert len(job.sequences) == 1, "Qwen3.5 MTP drafting does not currently support CFG/multi-sequence jobs"
+@@ -800,6 +852,7 @@
+             job_ids = job.get_input_ids_list()
+             input_ids_list += job_ids
+             mtp_hidden_list.append(job.mtp_last_hidden)
++            has_indexed_embeddings = has_indexed_embeddings or bool(job.embeddings)
+         batch_ids = self.draft_input_ids_pinned[:batch_size, :]
+         batch_ids.copy_(torch.cat(input_ids_list, dim = 0))
+         temp_hidden = torch.cat(mtp_hidden_list, dim = 0)
+@@ -811,24 +864,48 @@
+         # Existing confidence/match truncation may only reduce this ceiling
+         window = self._get_draft_depth(batch_size)
+         cal = self.draft_calibrator
++        target_embed_ref = getattr(self.draft_model, "target_embed", None)
++        target_embed = target_embed_ref() if target_embed_ref is not None else None
++        dev_draft = (
++            _MTP_DEVICE_DRAFT and cal is None and temp_hidden.is_cuda and
++            not has_indexed_embeddings and target_embed is not None and
++            target_embed.can_embed_device_ids(temp_hidden.device)
++        )
++        if dev_draft:
++            # One initial upload; subsequent argmax IDs remain on the device of
++            # the shared head until one whole-window readback below.
++            batch_ids = batch_ids.to(
++                temp_hidden.device,
++                non_blocking = batch_ids.is_pinned(),
++            )
++            dev_draft_ids = None
+         conf_cols = []
+         reach = None
+         for idx in range(window):
+-            params = {
++            step_seqlens = self._draft_step_seqlens("mtp", cache_seqlens, idx)
++            params = self._draft_params({
+                 "target_hidden": temp_hidden,
+                 "attn_mode": "flash_attn",
+                 "block_table": block_index,
+                 "cache": self.draft_cache,
+-                "cache_seqlens": cache_seqlens,
+-            }
++                "cache_seqlens": step_seqlens,
++            })
+             if cal is not None:
+                 params["export_draft_conf"] = True
+             batch_state = self.draft_model.forward(batch_ids, params)
+             lm_head = self.model.modules[self.model.logit_layer_idx]
+             batch_state = lm_head.prepare_for_device(batch_state, params)
+             new_ids = self.draft_model.sample_from_state(batch_state, params)
+-            self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
+-            batch_ids.copy_(new_ids)
++            if dev_draft:
++                if dev_draft_ids is None:
++                    dev_draft_ids = torch.empty(
++                        (batch_size, window), dtype = torch.long, device = new_ids.device
++                    )
++                dev_draft_ids[:, idx:idx+1].copy_(new_ids)
++                batch_ids = new_ids
++            else:
++                self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
++                batch_ids.copy_(new_ids)
+             cache_seqlens += 1
+             temp_hidden = batch_state
+             draft_conf = params.get("draft_conf")
+@@ -841,6 +918,12 @@
+                     window = idx + 1
+                     break
+ 
++        if dev_draft:
++            # This is the device chain's only DtoH synchronization. iterate_gen
++            # consumes CPU job tensors immediately, so the readback must be
++            # complete before returning even when the destination is pinned.
++            self.draft_ids_pinned[:batch_size, :window].copy_(dev_draft_ids[:, :window])
++
+         if conf_cols and len(conf_cols) == window:
+             self._draft_conf_round = {
+                 "ids": self.draft_ids_pinned[:batch_size, :window],
+@@ -878,8 +961,9 @@
+ 
+         # Create block index table for batch
+         max_pages_batch = (max_seq_len + PAGE_SIZE - 1) // PAGE_SIZE
+-        block_index = torch.zeros((batch_size, max_pages_batch), dtype = torch.int32)
+-        cache_seqlens = torch.zeros((batch_size,), dtype = torch.int32)
++        block_index, cache_seqlens = self._draft_tables(
++            "dflash", batch_size, max_pages_batch
++        )
+         batch = 0
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+@@ -902,12 +986,12 @@
+         batch_ids.copy_(torch.cat(input_ids_list, dim = 0))
+ 
+         # Run draft model
+-        params = {
++        params = self._draft_params({
+             "attn_mode": "flash_attn",
+             "block_table": block_index,
+             "cache": self.draft_cache,
+             "cache_seqlens": cache_seqlens,
+-        }
++        })
+         if self.draft_calibrator is not None:
+             params["export_draft_conf"] = True
+         out_state = self.draft_model.forward(
+@@ -1212,6 +1296,63 @@
+         # position n gates position n+1, and constrained-decoding masks and sampling past IDs
+         # must advance between positions.
+         else:
++            # Round 4: one sampler call per eligible job over all q verify
++            # positions, on-device draft comparison, then one stream readback
++            # for every eligible concurrent job. The serial receive_sample loop
++            # below remains the authority for EOS, stop strings, requeueing,
++            # cache rollback and host-gap recurrent rewinds.
++            round4_verify = {}
++            decoded_entries = []
++            draft_row = 0
++            for job, a, b in zip(self.active_jobs, logit_mapping[:-1], logit_mapping[1:]):
++                if a == b:
++                    continue
++                mode = verification_batch_mode(job) if (
++                    _BATCH_VERIFY and self.mtp_draft and draft_tokens is not None and
++                    batch_logits.shape[1] > 1
++                ) else None
++                if mode is not None:
++                    decoded_entries.append((job, a, b, draft_row, mode))
++                draft_row += 1
++
++            if decoded_entries:
++                q_verify = batch_logits.shape[1]
++                readback = self._staging(
++                    "mtp_batch_verify", len(decoded_entries), 2 * q_verify - 1, torch.long
++                )
++                sampled_device = None
++                for out_row, (job, a, b, row, mode) in enumerate(decoded_entries):
++                    job_logits = batch_logits[a:b, :, :]
++                    sampled = job.sampler.forward(
++                        job_logits,
++                        None,
++                        draw_sampling_seed(job),
++                        self.tokenizer,
++                        logit_mask = None,
++                    ).reshape(-1)
++                    draft_row_ids = draft_tokens[row, :q_verify - 1]
++                    draft_row_ids = draft_row_ids.to(
++                        sampled.device,
++                        non_blocking = (
++                            draft_row_ids.device.type == "cpu" and draft_row_ids.is_pinned()
++                        ),
++                    )
++                    matches = sampled[:q_verify - 1].eq(draft_row_ids.reshape(-1))
++                    packed = torch.cat((sampled, matches.to(torch.long)))
++                    readback[out_row].copy_(packed, non_blocking = True)
++                    sampled_device = sampled.device
++
++                stream = torch.cuda.current_stream(sampled_device)
++                device_key = sampled_device.index
++                ready = self.verify_readback_events.get(device_key)
++                if ready is None:
++                    ready = torch.cuda.Event()
++                    self.verify_readback_events[device_key] = ready
++                ready.record(stream)
++                ready.synchronize()
++                for out_row, (job, _, _, _, mode) in enumerate(decoded_entries):
++                    round4_verify[id(job)] = (readback[out_row], mode)
++
+             # Pure greedy MTP verification has no history-dependent sampler state. Under the
+             # opt-in flag, run the identical sampler implementation over all verification rows,
+             # enqueue one DtoH copy into pinned memory, and wait once for that stream. Acceptance,
+@@ -1223,6 +1364,7 @@
+                 if a != b
+             ]
+             batch_key = common_verification_batch_key(decoded_jobs) if (
++                not round4_verify and
+                 DECODE_OVERLAP and self.mtp_draft and draft_tokens is not None
+             ) else None
+             if batch_key is not None:
+@@ -1259,10 +1401,25 @@
+                 job_logits = batch_logits[a:b, :, :]
+                 accepted_length = 1
+                 rejected = 0
++                round4_row_mode = round4_verify.get(id(job))
++                round4_row = round4_row_mode[0] if round4_row_mode is not None else None
++                round4_mode = round4_row_mode[1] if round4_row_mode is not None else None
++                round4_matches = (
++                    round4_row[batch_logits.shape[1]:] if round4_row is not None else None
++                )
+ 
+                 for i in range(batch_logits.shape[1]):
+                     token_logits = job_logits[:, i:i + 1, :]
+-                    if batched_verify_tokens is not None:
++                    if round4_row is not None:
++                        # Greedy consumes no randomness, so advance its otherwise
++                        # ignored Python seeds at the historical positions. Sampled
++                        # batching intentionally uses one seed with independent
++                        # Philox row subsequences and therefore changes RNG order.
++                        if i and round4_mode == "greedy":
++                            draw_sampling_seed(job)
++                        next_token = round4_row[i:i + 1].view(1, 1)
++                        next_k_tokens, next_k_probs, next_prob = None, None, None
++                    elif batched_verify_tokens is not None:
+                         if i:
+                             draw_sampling_seed(job)
+                         next_token = batched_verify_tokens[j:j + 1, i:i + 1]
+@@ -1325,7 +1482,11 @@
+                     # draft acceptance so state can be stashed at an exact page boundary.
+                     if draft_tokens is not None and i < batch_logits.shape[1] - 1:
+                         cp_boundary = batch_states is not None and job.is_checkpoint_boundary()
+-                        if draft_tokens[j, i].item() != sampled_token.item() or cp_boundary:
++                        mismatch = (
++                            not bool(round4_matches[i].item()) if round4_matches is not None else
++                            draft_tokens[j, i].item() != sampled_token.item()
++                        )
++                        if mismatch or cp_boundary:
+                             rejected = reject_remainder(job, j, i, batch_states)
+                             break
+ 
+@@ -1422,15 +1583,26 @@
+                 # Position K was drafted from the last target state already. Replace accepted
+                 # speculative positions K+1..K+A-1 with the corresponding target-state inputs.
+                 if accepted_length > 1:
++                    if _DRAFT_PINNED_STAGING:
++                        accept_seqlens = self._staging(
++                            f"mtp_accept_cache_seqlens_{accepted_idx}", b_idx - a_idx
++                        )
++                        accept_seqlens.copy_(p_cache_seqlens[a_idx:b_idx])
++                        accept_seqlens.add_(1)
++                    else:
++                        accept_seqlens = p_cache_seqlens[a_idx:b_idx] + 1
++                    accept_params = {
++                        "attn_mode": "flash_attn",
++                        "block_table": block_index[a_idx:b_idx],
++                        "cache": self.draft_cache,
++                        "cache_seqlens": accept_seqlens,
++                        "target_hidden": target_hidden[a_idx:b_idx, :accepted_length - 1, :],
++                    }
++                    if _DRAFT_PINNED_STAGING:
++                        accept_params["pinned_staging_slot"] = f"mtp_accept_{accepted_idx}"
+                     self.draft_model.prefill(
+                         batch_ids[a_idx:b_idx, 1:accepted_length],
+-                        {
+-                            "attn_mode": "flash_attn",
+-                            "block_table": block_index[a_idx:b_idx],
+-                            "cache": self.draft_cache,
+-                            "cache_seqlens": p_cache_seqlens[a_idx:b_idx] + 1,
+-                            "target_hidden": target_hidden[a_idx:b_idx, :accepted_length - 1, :],
+-                        },
++                        self._draft_params(accept_params),
+                     )
+ 
+                 # The next unprocessed token is paired with the preceding target hidden state.
+diff -ruN a/generator/sampler/custom.py b/generator/sampler/custom.py
+--- a/generator/sampler/custom.py	2026-09-18 18:19:12
++++ b/generator/sampler/custom.py	2026-09-18 18:19:12
+@@ -1172,8 +1172,17 @@
+             step = self.steps[0]
+             if type(step) is SS_Argmax:
+                 self.batch_verify_key = "custom_argmax"
++                self.batch_verify_mode = "greedy"
+             elif type(step) is SS_Fused and step.mode == SS_Fused.MODE_GREEDY:
+                 self.batch_verify_key = "custom_fused_argmax"
++                self.batch_verify_mode = "greedy"
++            elif type(step) is SS_Fused:
++                # One fused categorical launch over q verification rows has the
++                # same per-row distribution as q serial launches. It deliberately
++                # uses Philox row subsequences from one Python RNG draw, so sampled
++                # trajectories are distribution-identical but not seed-stream-
++                # identical to the served serial loop.
++                self.batch_verify_mode = "sampled"
+ 
+ 
+     @override
+diff -ruN a/modules/embedding.py b/modules/embedding.py
+--- a/modules/embedding.py	2026-09-18 18:19:12
++++ b/modules/embedding.py	2026-09-18 18:19:12
+@@ -7,7 +7,12 @@
+ from . import Module
+ from ..tokenizer.mm_embedding import FIRST_MM_EMBEDDING_INDEX
+ from ..model.model_tp_alloc import TPAllocation
++import os
+ 
++
++_EMBED_GPU = os.environ.get("EXL3_EMBED_GPU", "0") == "1"
++_EMBED_GPU_MAX_MB = int(os.environ.get("EXL3_EMBED_GPU_MAX_MB", "4096"))
++
+ class Embedding(Module):
+ 
+     def __init__(
+@@ -30,6 +35,8 @@
+         self.hidden_size = hidden_size
+         self.out_dtype = out_dtype
+         self._pinned_staging = {}
++        self._gpu_mirror = None
++        self._gpu_mirror_device = None
+         self._numel = vocab_size * hidden_size
+         self.normalize = normalize
+         self.multiplier = multiplier
+@@ -58,7 +65,16 @@
+     def unload(self):
+         self.device = None
+         self.embedding = None
++        self._gpu_mirror = None
++        self._gpu_mirror_device = None
+ 
++    def can_embed_device_ids(self, device: torch.device | str) -> bool:
++        """Whether the opt-in mirror can serve IDs resident on ``device``."""
++        if not _EMBED_GPU or self.embedding is None:
++            return False
++        weight = self.embedding.weight
++        return weight.numel() * weight.element_size() <= _EMBED_GPU_MAX_MB << 20
++
+     @override
+     def get_tensors(self):
+         return {
+@@ -145,7 +161,21 @@
+ 
+         # No indexed embeddings, or none in current batch
+         else:
+-            x = self.embedding.forward(x)
++            weight = self.embedding.weight
++            if x.device.type == "cuda" and x.device != weight.device:
++                if self.can_embed_device_ids(x.device):
++                    if self._gpu_mirror is None or self._gpu_mirror_device != x.device:
++                        self._gpu_mirror = None
++                        self._gpu_mirror = weight.detach().to(x.device)
++                        self._gpu_mirror_device = x.device
++                    x = torch.nn.functional.embedding(x, self._gpu_mirror)
++                else:
++                    # Correct fallback for CUDA IDs with a host (or other-device)
++                    # table. MTP device drafting checks can_embed_device_ids(), so
++                    # the hot chain never takes this synchronous branch.
++                    x = self.embedding.forward(x.to(weight.device))
++            else:
++                x = self.embedding.forward(x)
+             if self.multiplier != 1.0:
+                 x *= self.multiplier
+             x = to2(x, out_dtype, self.out_dtype)
+@@ -154,9 +184,10 @@
+             # When the embedding resides on the CPU, its output is uploaded to the first
+             # device layer; staging it through a reused pinned buffer makes that upload
+             # asynchronous. Only callers that guarantee a sync point between forward passes
+-            # (the generator's decode loop) may set the pinned_staging flag.
++            # (the generator's decode loop) may set the pinned_staging flag. A slot separates
++            # accepted-MTP prefill calls that can be queued back-to-back for concurrent jobs.
+             if params.get("pinned_staging") and x.device.type == "cpu":
+-                key = (x.shape, x.dtype)
++                key = (params.get("pinned_staging_slot"), x.shape, x.dtype)
+                 buf = self._pinned_staging.get(key)
+                 if buf is None:
+                     if len(self._pinned_staging) > 8:
+@@ -201,4 +232,4 @@
+         )
+         emb = consumer.recv(exported["embedding.weight"], cuda = False)
+         module.embedding.weight = nn.Parameter(emb)
+-        return module
+\ No newline at end of file
++        return module
+diff -ruN a/modules/hyperconnections.py b/modules/hyperconnections.py
+--- a/modules/hyperconnections.py	2026-09-18 18:19:12
++++ b/modules/hyperconnections.py	2026-09-18 18:19:12
+@@ -244,6 +244,7 @@
+     MIX_V2 = os.environ.get("EXL3_HC_MIX_V2", "0") == "1"
+     MIX_V2_MIN_R = int(os.environ.get("EXL3_HC_MIX_V2_MIN_R", "8"))
+     DECODE_FUSE = os.environ.get("EXL3_DECODE_FUSE", "0") == "1"
++    MIX_V2_INT8 = os.environ.get("EXL3_HC_MIX_V2_INT8", "0") == "1"
+     if MIX_V2_MIN_R < 1:
+         raise ValueError("EXL3_HC_MIX_V2_MIN_R must be >= 1")
+ 
+@@ -272,6 +273,10 @@
+         self.inject_h = None        # (hc_mult, hc_mult * hidden) half (site form)
+         self.proj_h = None          # cat(down, inject) half, unfolded (GEMM path)
+         self.fn_h = None            # cat(down, inject) * w half, folded (fused path)
++        self.fn_q = None            # (rank [+ H], H * hidden) int8, decode V2
++        self.fn_s = None            # per fn_q row fp32 scale
++        self.upx_q = None           # (H, hidden / 4, rank, 4) int8, decode V2
++        self.upx_s = None           # (H, hidden) per-channel fp32 scale
+         self.rank = 0
+ 
+     @override
+@@ -314,12 +319,36 @@
+         # up repacked (H, D/4, rank, 4) so the fused kernel's rank loop reads lane-contiguous
+         self.upx_h = self.up_h.view(H, Dh // 4, 4, self.rank) \
+             .permute(0, 1, 3, 2).contiguous()
++        if self.MIX_V2_INT8 and self.MIX_V2:
++            self._quantize_v2_int8(H, Dh)
+ 
++    def _quantize_v2_int8(self, H: int, Dh: int):
++        """Symmetric decode-only quantization with contracted-dimension scales."""
++        qmax = 127.0
++        fn = self.fn_h.float()
++        self.fn_s = (fn.abs().amax(dim = 1).clamp_min(1e-8) / qmax).contiguous()
++        self.fn_q = torch.round(fn / self.fn_s[:, None]) \
++            .clamp_(-128, 127).to(torch.int8).contiguous()
++
++        upx = self.upx_h.float()
++        up_scale = (upx.abs().amax(dim = 2).clamp_min(1e-8) / qmax).contiguous()
++        self.upx_q = torch.round(upx / up_scale[:, :, None, :]) \
++            .clamp_(-128, 127).to(torch.int8).contiguous()
++        self.upx_s = up_scale.reshape(H, Dh).contiguous()
++
++        # With V2 selected for every decode-sized row count, these two fp16
++        # layout copies have no remaining consumer. proj_h/up_h stay resident:
++        # the R>32 prefill path uses their checkpoint orientations unchanged.
++        if self.MIX_V2_MIN_R <= 1:
++            self.fn_h = None
++            self.upx_h = None
++
+     @override
+     def unload(self):
+         super().unload()
+         self.norm_w_raw = self.norm_w = self.w_h = None
+         self.down_h = self.up_h = self.upx_h = self.inject_h = self.proj_h = self.fn_h = None
++        self.fn_q = self.fn_s = self.upx_q = self.upx_s = None
+ 
+     @override
+     def get_tensors(self):
+@@ -380,14 +409,21 @@
+                 return torch.empty((numel,), dtype = dtype, device = dev)
+             if self.MIX_V2 and R >= self.MIX_V2_MIN_R:
+                 # R2: exact dots/RMS, derive state once, then tiled up/mix.
+-                M = self.fn_h.shape[0] + 1
++                fn = self.fn_q if self.fn_q is not None else self.fn_h
++                M = fn.shape[0] + 1
+                 dots = ws(R * M * H, torch.float, "gr_mix_v2_dots").view(R, M, H)
+                 state = ws(R * (self.rank + H), torch.float, "gr_mix_v2_state").view(R, self.rank + H)
+                 post = ws(R * H, torch.float, "gr_mix_post").view(R, H) if self.use_combine else None
+                 mixed = ws(R * Dh, torch.half, "gr_mix_mixed").view(R, Dh)
+-                mix_fn = ext.gr_mix_v2_fused if self.DECODE_FUSE else ext.gr_mix_v2
+-                mix_fn(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps,
+-                       dots, state, post, mixed)
++                if self.fn_q is not None:
++                    ext.gr_mix_v2_int8(
++                        s3, self.fn_q, self.fn_s, self.upx_q, self.upx_s,
++                        self.w_h, self.rms_eps, dots, state, post, mixed,
++                    )
++                else:
++                    mix_fn = ext.gr_mix_v2_fused if self.DECODE_FUSE else ext.gr_mix_v2
++                    mix_fn(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps,
++                           dots, state, post, mixed)
+             else:
+                 M = self.fn_h.shape[0] + 1
+                 dots = ws(R * M * H, torch.float, "gr_mix_dots").view(R, M, H)

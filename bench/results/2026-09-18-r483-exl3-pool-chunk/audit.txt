@@ -1,0 +1,78 @@
+2026-09-18T12:47:07+00:00 [r483] lock held; served at entry: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/
+2026-09-18T12:47:07+00:00 [r483] === measure ctl (served, no reboot): cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/ ===
+ctl c1 greedy sha 1474eee2f5945248 (canonical 1474eee2f5945248)
+[ctl code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 211.9, "per_stream_wall_tps": 211.9, "decode_tps": 215.1, "ttft_s": 0.147}
+[ctl code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 215.6, "per_stream_wall_tps": 215.6, "decode_tps": 218.8, "ttft_s": 0.143}
+[ctl code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 427.5, "per_stream_wall_tps": 112.9, "decode_tps": 115.8, "ttft_s": 0.475}
+[ctl code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 441.7, "per_stream_wall_tps": 116.6, "decode_tps": 119.6, "ttft_s": 0.462}
+[ctl prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 165.8, "per_stream_wall_tps": 165.8, "decode_tps": 168.1, "ttft_s": 0.176}
+[ctl prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 171.4, "per_stream_wall_tps": 171.4, "decode_tps": 173.4, "ttft_s": 0.143}
+[ctl prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 418.0, "per_stream_wall_tps": 105.0, "decode_tps": 107.3, "ttft_s": 0.437}
+[ctl prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 435.2, "per_stream_wall_tps": 109.3, "decode_tps": 111.9, "ttft_s": 0.443}
+[ctl prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 3.13 s = 7,228 tok/s
+[ctl prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 8.10 s = 11,135 tok/s
+2026-09-18T12:49:22+00:00 [r483] boot C: split [30, 31] chunk 2048 cache 458752
+2026-09-18T12:49:41+00:00 [r483] NO BOOT C @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:49:41+00:00 [r483] boot C: split [30, 31] chunk 2048 cache 425984
+2026-09-18T12:50:00+00:00 [r483] NO BOOT C @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:50:00+00:00 [r483] boot C: split [30, 31] chunk 2048 cache 409600
+2026-09-18T12:50:16+00:00 [r483] NO BOOT C @ 409600 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:50:16+00:00 [r483] boot C: split [30, 31] chunk 2048 cache 393216
+2026-09-18T12:50:32+00:00 [r483] UP C @ 393216: VRAM free MiB 2075/721/
+2026-09-18T12:50:32+00:00 [r483] after combo C: best pool 393216 (C, split [30, 31], chunk 2048)
+2026-09-18T12:50:32+00:00 [r483] boot A: split [30, 30] chunk 1024 cache 458752
+2026-09-18T12:50:48+00:00 [r483] NO BOOT A @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:50:48+00:00 [r483] boot A: split [30, 30] chunk 1024 cache 425984
+2026-09-18T12:51:04+00:00 [r483] NO BOOT A @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:51:04+00:00 [r483] boot A: split [30, 30] chunk 1024 cache 409600
+2026-09-18T12:51:19+00:00 [r483] NO BOOT A @ 409600 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:51:20+00:00 [r483] after combo A: best pool 393216 (C, split [30, 31], chunk 2048)
+2026-09-18T12:51:20+00:00 [r483] boot D: split [30, 31] chunk 1024 cache 458752
+2026-09-18T12:51:35+00:00 [r483] NO BOOT D @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:51:36+00:00 [r483] boot D: split [30, 31] chunk 1024 cache 425984
+2026-09-18T12:51:51+00:00 [r483] NO BOOT D @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:51:51+00:00 [r483] boot D: split [30, 31] chunk 1024 cache 409600
+2026-09-18T12:52:07+00:00 [r483] UP D @ 409600: VRAM free MiB 1917/561/
+2026-09-18T12:52:07+00:00 [r483] after combo D: best pool 409600 (D, split [30, 31], chunk 1024)
+2026-09-18T12:52:07+00:00 [r483] boot F: split [30.5, 31] chunk 1024 cache 458752
+2026-09-18T12:52:23+00:00 [r483] NO BOOT F @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:52:24+00:00 [r483] boot F: split [30.5, 31] chunk 1024 cache 425984
+2026-09-18T12:52:39+00:00 [r483] NO BOOT F @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:52:39+00:00 [r483] after combo F: best pool 409600 (D, split [30, 31], chunk 1024)
+2026-09-18T12:52:39+00:00 [r483] boot B: split [30, 30] chunk 512 cache 458752
+2026-09-18T12:52:55+00:00 [r483] NO BOOT B @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:52:55+00:00 [r483] boot B: split [30, 30] chunk 512 cache 425984
+2026-09-18T12:53:11+00:00 [r483] NO BOOT B @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:53:11+00:00 [r483] after combo B: best pool 409600 (D, split [30, 31], chunk 1024)
+2026-09-18T12:53:11+00:00 [r483] boot E: split [30, 31] chunk 512 cache 458752
+2026-09-18T12:53:26+00:00 [r483] NO BOOT E @ 458752 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:53:27+00:00 [r483] boot E: split [30, 31] chunk 512 cache 425984
+2026-09-18T12:53:42+00:00 [r483] NO BOOT E @ 425984 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-18T12:53:42+00:00 [r483] after combo E: best pool 409600 (D, split [30, 31], chunk 1024)
+2026-09-18T12:53:43+00:00 [r483] boot D: split [30, 31] chunk 1024 cache 409600
+2026-09-18T12:53:58+00:00 [r483] UP D @ 409600: VRAM free MiB 1917/561/
+2026-09-18T12:53:58+00:00 [r483] === measure D: cache_size: 409600 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 31] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 1024 vision: true  VRAM free 1917/561/ ===
+D c1 greedy sha 7812e069df67f255 (canonical 1474eee2f5945248)
+D 30k greedy sha 4a255910dee2d9c5 (canonical 4a255910dee2d9c5)
+[D code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 166.3, "per_stream_wall_tps": 166.3, "decode_tps": 168.2, "ttft_s": 0.148}
+[D code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 175.6, "per_stream_wall_tps": 175.6, "decode_tps": 177.7, "ttft_s": 0.145}
+[D code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 391.2, "per_stream_wall_tps": 104.9, "decode_tps": 107.6, "ttft_s": 0.481}
+[D code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 435.9, "per_stream_wall_tps": 116.0, "decode_tps": 119.1, "ttft_s": 0.466}
+[D prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 159.7, "per_stream_wall_tps": 159.7, "decode_tps": 161.4, "ttft_s": 0.141}
+[D prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 169.5, "per_stream_wall_tps": 169.6, "decode_tps": 171.4, "ttft_s": 0.139}
+[D prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 376.2, "per_stream_wall_tps": 98.9, "decode_tps": 101.0, "ttft_s": 0.436}
+[D prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 420.3, "per_stream_wall_tps": 109.7, "decode_tps": 112.3, "ttft_s": 0.439}
+[D prefill] ctx 30000: 22,625 prompt tokens, cold TTFT 5.61 s = 4,033 tok/s
+[D prefill] ctx 120000: 90,135 prompt tokens, cold TTFT 16.81 s = 5,361 tok/s
+2026-09-18T12:56:42+00:00 [r483] [D] four concurrent 60k prefills (runtime peak)
+[D c4x60k]  c=4 run0 ctx~60000: {"conc": 4, "ctx_requested": 60000, "n_ok": 4, "tokens_median": 256.0, "prompt_tokens": 81342, "aggregate_tps": 12.5, "per_stream_wall_tps": 3.1, "decode_tps": 120.7, "ttft_s": 79.957}
+2026-09-18T12:58:04+00:00 [r483] [D] c4x60k: 4/4 completed at 256 tokens; engine qwen3.8-flash-next-exl3-3.05bpw; VRAM free 1579/223/
+[D needle]  D-needle ctx~131072: 5/5 retrieved
+[D needle]  D-needle ctx~240000: 5/5 retrieved
+[D] GSM8K n=200 c4: flexible 0.930 (SE 0.0181) strict 0.930   [served R480 s4 0.925]
+2026-09-18T13:05:57+00:00 [r483] restoring the daily (unchanged live launcher)
+2026-09-18T13:05:58+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T13:06:14+00:00 [flashnext] UP on 8022 | warmup 0.306024s | VRAM free MiB 895/2581/
+2026-09-18T13:06:14+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T13:06:14+00:00 [r483] daily: qwen3.8-flash-next-exl3-3.05bpw cache_size: 360448 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 895/2581/
+2026-09-18T13:06:14+00:00 [r483] === R483 DONE ===

@@ -1,0 +1,25 @@
+2026-09-18T15:17:58+00:00 [r493] queued behind: r491-shared-promote(pid 2583105)
+r492-depth(pid 2874948)
+2026-09-18T15:25:47+00:00 [r493] A: served as found: image tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2  cache_size: 360448  sysmem_recurrent_cache: 4096  sysmem_kv_cache: 0  MemAvailable 46.6 GiB
+[noTier] step 0 session 0: 105646 prompt tokens, TTFT 12.87 s
+[noTier] step 1 session 1: 105643 prompt tokens, TTFT 12.74 s
+[noTier] step 2 session 2: 105869 prompt tokens, TTFT 12.81 s
+[noTier] step 3 session 3: 105570 prompt tokens, TTFT 12.73 s
+[noTier] step 4 session 4: 105802 prompt tokens, TTFT 12.80 s
+[noTier] step 5 session 0 (revisit): 105646 prompt tokens, TTFT 12.74 s, output same as first: True
+[noTier] step 6 session 1 (revisit): 105643 prompt tokens, TTFT 12.74 s
+2026-09-18T15:27:41+00:00 [r493] B: tier 16 GiB:  cache_size: 360448  sysmem_kv_cache: 16384  MemAvailable 22.9 GiB
+[tier16G] step 0 session 0: 105681 prompt tokens, TTFT 13.23 s
+[tier16G] step 1 session 1: 105948 prompt tokens, TTFT 12.89 s
+[tier16G] step 2 session 2: 106045 prompt tokens, TTFT 12.82 s
+[tier16G] step 3 session 3: 105766 prompt tokens, TTFT 12.79 s
+[tier16G] step 4 session 4: 105832 prompt tokens, TTFT 12.97 s
+[tier16G] step 5 session 0 (revisit): 105681 prompt tokens, TTFT 0.51 s, output same as first: True
+[tier16G] step 6 session 1 (revisit): 105948 prompt tokens, TTFT 0.67 s
+2026-09-18T15:28:49+00:00 [r493] B after: MemAvailable 15.9 GiB; tier lines: 
+2026-09-18T15:28:49+00:00 [r493] restoring the daily (unchanged live launcher)
+2026-09-18T15:28:53+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 360448 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-18T15:29:14+00:00 [flashnext] UP on 8022 | warmup 0.336757s | VRAM free MiB 895/2581/
+2026-09-18T15:29:14+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-18T15:29:14+00:00 [r493] daily: qwen3.8-flash-next-exl3-3.05bpw   sysmem_kv_cache: 0
+2026-09-18T15:29:14+00:00 [r493] === R493 DONE ===
