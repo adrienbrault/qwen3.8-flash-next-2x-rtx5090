@@ -32,13 +32,11 @@ Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetc
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6 | 46 of 49 selected instances | [R359][r359], 3.05 bpw pack |
 | boot to serving | ~20 s, warm kernel caches | [R525][r525] |
 
-![Decode rate from 4 to 8 concurrent streams, aggregate and per stream](docs/img/decode-scaling.svg)
+![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
 Per-stream rate is nearly flat from 6 to 8 streams; the 5-stream dip is the draft policy, not contention.
 
 ![Aggregate decode under the served draft policy and the 5-stream policy](docs/img/c5-draft-policy.svg)
-
-![Share of MTP drafts accepted at each position, 8-bit against full-precision KV](docs/img/mtp-acceptance.svg)
 
 ![Cold prefill rate at three prompt lengths](docs/img/prefill.svg)
 

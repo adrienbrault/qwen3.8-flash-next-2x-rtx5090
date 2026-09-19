@@ -49,11 +49,13 @@ def save(fig, name, caption):
     plt.close(fig)
 
 
-def annotate(ax, xs, ys, color, fmt="{:.0f}"):
+def annotate(ax, xs, ys, color, fmt="{:.0f}", dy=7):
+    """dy places a series' labels above (positive) or below (negative) its markers, so two series that
+    read within a few tokens per second of each other do not print on top of one another."""
     for x, y in zip(xs, ys):
         if y is None:
             continue
-        ax.annotate(fmt.format(y), (x, y), textcoords="offset points", xytext=(0, 7),
+        ax.annotate(fmt.format(y), (x, y), textcoords="offset points", xytext=(0, dy),
                     ha="center", fontsize=8.5, color=color)
 
 
@@ -83,34 +85,52 @@ def merged(dicts, key):
 
 R570 = RESULTS / "2026-09-19-r570-promote-c5-policy" / "records.jsonl"
 R571 = RESULTS / "2026-09-19-r571-promote-c5-policy-2" / "records.jsonl"
+R580 = RESULTS / "2026-09-20-r580-decode-curve" / "records.jsonl"
 CONC = [4, 5, 6, 7, 8]
 
 
 def figure_decode_scaling():
-    a570, p570 = fn_bench_rates(R570, "A")
-    a571, p571 = fn_bench_rates(R571, "A")
-    agg = {k: [merged([a570, a571], f"c{c}-{k}") for c in CONC] for k in ("code", "prose")}
-    per = {k: [merged([p570, p571], f"c{c}-{k}") for c in CONC] for k in ("code", "prose")}
+    """R580 read 1 to 8 streams on one boot; before it existed the curve was stitched from R570 and R571,
+    which only ran 4 to 8, so the fallback below draws the shorter x range from those two rounds."""
+    if R580.exists():
+        a, p = fn_bench_rates(R580, "S")
+        conc = [c for c in range(1, 9) if f"c{c}-code" in a]
+        agg = {k: [a[f"c{c}-{k}"] for c in conc] for k in ("code", "prose")}
+        per = {k: [p[f"c{c}-{k}"] for c in conc] for k in ("code", "prose")}
+        src = "R580"
+    else:
+        conc = CONC
+        a570, p570 = fn_bench_rates(R570, "A")
+        a571, p571 = fn_bench_rates(R571, "A")
+        agg = {k: [merged([a570, a571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
+        per = {k: [merged([p570, p571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
+        src = "R570+R571"
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 3.9))
-    for ax, data, title, ylab, top in (
-        (ax1, agg, "Aggregate decode", "tokens per second, all streams", 800),
-        (ax2, per, "Per stream", "tokens per second, one stream", 160),
-    ):
-        for kind, color in (("code", CODE), ("prose", PROSE)):
-            ax.plot(CONC, data[kind], marker="o", color=color, label=kind, linewidth=2)
-            annotate(ax, CONC, data[kind], color)
-        ax.set_title(title)
-        ax.set_xlabel("concurrent streams")
-        ax.set_ylabel(ylab)
-        ax.set_ylim(0, top)
-        ax.set_xticks(CONC)
-        ax.grid(axis="y", color="#eaeef2")
-        ax.set_axisbelow(True)
-        ax.legend(frameon=False, loc="lower right" if ax is ax1 else "upper right")
-    print("decode scaling, aggregate:", {k: [round(v) for v in v2] for k, v2 in agg.items()})
-    print("decode scaling, per stream:", {k: [round(v) for v in v2] for k, v2 in per.items()})
-    save(fig, "decode-scaling.svg", "Decode rate from 4 to 8 concurrent streams, aggregate and per stream")
+    fig, ax = plt.subplots(figsize=(8.4, 4.4))
+    ax2 = ax.twinx()
+    ax2.spines["right"].set_visible(True)
+    ax2.spines["right"].set_color("#d8dee4")
+    handles = []
+    for kind, color, dy in (("code", CODE, 7), ("prose", PROSE, -14)):
+        handles += ax.plot(conc, agg[kind], marker="o", color=color, linewidth=2, label=f"{kind}, all streams")
+        handles += ax2.plot(conc, per[kind], marker="s", markersize=4, linestyle="--", color=color,
+                            linewidth=1.6, label=f"{kind}, one stream")
+        annotate(ax, conc, agg[kind], color, dy=dy)
+        annotate(ax2, conc, per[kind], color, dy=dy)
+    ax.set_title("Decode rate against concurrency")
+    ax.set_xlabel("concurrent streams")
+    ax.set_ylabel("tokens per second, all streams")
+    ax2.set_ylabel("tokens per second, one stream")
+    ax.set_ylim(0, max(max(v) for v in agg.values()) * 1.25)
+    ax2.set_ylim(0, max(max(v) for v in per.values()) * 1.25)
+    ax.set_xticks(conc)
+    ax.grid(axis="y", color="#eaeef2")
+    ax.set_axisbelow(True)
+    ax.legend(handles, [h.get_label() for h in handles], frameon=False, fontsize=9, ncol=2, loc="lower center")
+    print(f"decode scaling ({src}) at {conc}")
+    print("  aggregate:", {k: [round(v) for v in v2] for k, v2 in agg.items()})
+    print("  per stream:", {k: [round(v) for v in v2] for k, v2 in per.items()})
+    save(fig, "decode-scaling.svg", "Decode rate against concurrency, aggregate and per stream")
 
 
 def figure_c5_policy():
@@ -119,50 +139,21 @@ def figure_c5_policy():
     served = [st.mean([v for v in (merged(a, f"c{c}-code"), merged(a, f"c{c}-prose")) if v]) for c in CONC]
     cand = [st.mean([v for v in (merged(b, f"c{c}-code"), merged(b, f"c{c}-prose")) if v]) for c in CONC]
 
-    fig, ax = plt.subplots(figsize=(7.4, 3.9))
-    x = range(len(CONC))
-    ax.bar([i - 0.19 for i in x], served, width=0.36, color=SERVED, label="[[4, 3], [8, 1]] (was served)")
-    ax.bar([i + 0.19 for i in x], cand, width=0.36, color=CAND, label="[[4, 3], [5, 2], [8, 1]] (served since R576)")
-    annotate(ax, [i - 0.19 for i in x], served, SERVED)
-    annotate(ax, [i + 0.19 for i in x], cand, CAND)
+    fig, ax = plt.subplots(figsize=(7.4, 4.0))
+    ax.plot(CONC, served, marker="o", color=SERVED, linewidth=2, label="[[4, 3], [8, 1]] (served before R576)")
+    ax.plot(CONC, cand, marker="o", color=CAND, linewidth=2, label="[[4, 3], [5, 2], [8, 1]] (served since R576)")
+    annotate(ax, CONC, served, SERVED)
+    annotate(ax, CONC, cand, CAND, dy=-14)
     ax.set_title("Draft depth 2 at 5 streams: mean of code and prose")
     ax.set_xlabel("concurrent streams")
     ax.set_ylabel("tokens per second, all streams")
-    ax.set_xticks(list(x), [str(c) for c in CONC])
+    ax.set_xticks(CONC)
     ax.set_ylim(0, 800)
     ax.grid(axis="y", color="#eaeef2")
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=9)
+    ax.legend(frameon=False, fontsize=9, loc="lower right")
     print("c5 policy, served:", [round(v) for v in served], "candidate:", [round(v) for v in cand])
     save(fig, "c5-draft-policy.svg", "Aggregate decode under the served draft policy and the 5-stream policy")
-
-
-def figure_acceptance():
-    d = RESULTS / "2026-09-19-r572-mtp-accept-ablation"
-
-    def positions(tag, which=0):
-        reqs = [json.loads(x) for x in open(d / f"stats-{tag}.jsonl") if '"rec":"request"' in x.replace(" ", "")]
-        reqs = [r for r in reqs if r.get("tokens") == 2048]
-        r = reqs[which]
-        return [r["pos"][k][0] / r["rounds"] for k in sorted(r["pos"])]
-
-    served, fp16 = positions("S"), positions("K16")
-    fig, ax = plt.subplots(figsize=(7.4, 3.9))
-    x = range(3)
-    ax.bar([i - 0.19 for i in x], served, width=0.36, color=CODE, label="8-bit KV (served)")
-    ax.bar([i + 0.19 for i in x], fp16, width=0.36, color=CAND, label="full-precision KV (diagnostic)")
-    annotate(ax, [i - 0.19 for i in x], served, CODE, "{:.2f}")
-    annotate(ax, [i + 0.19 for i in x], fp16, CAND, "{:.2f}")
-    ax.set_title("MTP drafts accepted by position (code, greedy, 2,048 tokens)")
-    ax.set_xlabel("draft position")
-    ax.set_ylabel("share accepted")
-    ax.set_xticks(list(x), ["first", "second", "third"])
-    ax.set_ylim(0, 1)
-    ax.grid(axis="y", color="#eaeef2")
-    ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=9)
-    print("acceptance served:", [round(v, 3) for v in served], "full precision:", [round(v, 3) for v in fp16])
-    save(fig, "mtp-acceptance.svg", "Share of MTP drafts accepted at each position, 8-bit against full-precision KV")
 
 
 def figure_prefill():
@@ -192,6 +183,5 @@ def figure_prefill():
 if __name__ == "__main__":
     figure_decode_scaling()
     figure_c5_policy()
-    figure_acceptance()
     figure_prefill()
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.svg"))))
