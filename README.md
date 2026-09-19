@@ -32,6 +32,18 @@ Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetc
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6 | 46 of 49 selected instances | [R359][r359], 3.05 bpw pack |
 | boot to serving | ~20 s, warm kernel caches | [R525][r525] |
 
+![Decode rate from 4 to 8 concurrent streams, aggregate and per stream](docs/img/decode-scaling.svg)
+
+Per-stream rate is nearly flat from 6 to 8 streams; the 5-stream dip is the draft policy, not contention.
+
+![Aggregate decode under the served draft policy and the 5-stream policy](docs/img/c5-draft-policy.svg)
+
+![Share of MTP drafts accepted at each position, 8-bit against full-precision KV](docs/img/mtp-acceptance.svg)
+
+![Cold prefill rate at three prompt lengths](docs/img/prefill.svg)
+
+Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
+
 Also passing: structured output (`json_schema`, `response_format`, `regex_pattern`, thinking on and off, [R453][r453]); `tool_choice` `required` 48/48, named 4/4, 8/8 concurrent ([R529][r529]); a long prompt prefilled twice gives identical output ([R535][r535]).
 
 Insights behind these numbers:
