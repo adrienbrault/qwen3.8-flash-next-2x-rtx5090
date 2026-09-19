@@ -1,0 +1,22 @@
+# gdn-state-bf16 r1: bf16 storage for the Gated-DeltaNet recurrent state (EXL3_GDN_STATE_BF16=1, default off) on the
+# served chain (tabbyapi:nvme-tier-r4-e3det, R535). gdn.cu changes, so the extension is rebuilt for sm_120 into
+# site-packages (r3b pattern) and the served chain's bindings (E3 DET, int8 mixer) are asserted in the rebuilt .so.
+# No heredocs (legacy builder). Build context = this directory. The selector is deliberately NOT set with ENV here:
+# unset = off in code, and every EXL3_* variable present in the environment enters the NVMe tier namespace.
+ARG BASE=tabbyapi:nvme-tier-r4-e3det
+FROM ${BASE}
+# manifest.json pins the served R535 tree; on an image that already carries decode-kernels r6 (R540) build with
+# --build-arg MANIFEST=manifest-on-r6.json (same patch bytes, gdn.cu baseline = the r6 overlay hash)
+ARG MANIFEST=manifest.json
+COPY served-source.patch overlay/install.py overlay/manifest.json overlay/manifest-on-r6.json overlay/build_extension.py /opt/gdn-state-bf16-r1/
+COPY tests /opt/gdn-state-bf16-r1/tests
+RUN python3 /opt/gdn-state-bf16-r1/install.py --manifest ${MANIFEST}
+ENV TORCH_EXTENSIONS_DIR=/opt/gdn-state-bf16-r1/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf /opt/gdn-state-bf16-r1/torch-extensions && mkdir -p /opt/gdn-state-bf16-r1/torch-extensions && \
+    MAX_JOBS=8 python3 /opt/gdn-state-bf16-r1/build_extension.py && \
+    python3 -c "from exllamav3.ext import exllamav3_ext as e; assert hasattr(e, 'exl3_moe_prefill_e3_det'); assert hasattr(e, 'gr_mix_v2_int8'); assert hasattr(e, 'cuda_recurrent_gated_delta_rule'); assert hasattr(e, 'batched_state_rewind'); assert '/site-packages/' in e.__file__, e.__file__; print(e.__file__)" && \
+    grep -q EXL3_GDN_STATE_BF16 /opt/venv/lib/python3.12/site-packages/exllamav3/modules/gated_delta_net.py && \
+    grep -q "state_t = float" /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/gdn.cu && \
+    env -u EXL3_GDN_STATE_BF16 python3 -c "import exllamav3.modules.gated_delta_net as g; assert g._gdn_state_bf16 is False; print('GDN bf16 state default off')"

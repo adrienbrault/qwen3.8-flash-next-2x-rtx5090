@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R548: bf16 GDN recurrent state is served on top of the raw-key ring; the page pool grows to 1,032,192 tokens](results/r548-promote-gdnbf16-ring.md)
 - [R546: the QSA raw-key ring is served; the page pool grows from 819,200 to 983,040 tokens with the same output and speed](results/r546-promote-rawk.md)
 - [R549: TTFT and decode with 1 to 4 slots in use, up to 570k tokens resident; the pool does not stall](results/r549-hot-slots.md)
 - [R540: decode kernels round 6 are served; every gate passes](results/r540-promote-r6.md)

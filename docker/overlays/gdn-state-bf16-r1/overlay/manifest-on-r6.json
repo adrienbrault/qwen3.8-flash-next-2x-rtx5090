@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "round": "gdn-state-bf16-r1",
+  "patch_sha256": "cbdf6c2eda6ba59fd90b3d2474ff50200efe1dff17cbc9bfbb7ac5c7288bbf9e",
+  "selectors": {
+    "EXL3_GDN_STATE_BF16": "modules/gated_delta_net.py"
+  },
+  "base_image": "tabbyapi:nvme-tier-r4-e3det + decode-kernels r6 (e.g. tabbyapi:nvme-tier-r4-e3det-r6)",
+  "files": {
+    "exllamav3_ext/gdn.cu": {
+      "baseline_sha256": "b262455621e99732ea1ec2c4120a572b8723c1264e3d12b1c4228ad2f98a3dfa",
+      "overlay_sha256": "10562bddf36ea1bf27eea44b509c243ca8f6579f69a9365698b85dd7ece3e52a"
+    },
+    "modules/gated_delta_net.py": {
+      "baseline_sha256": "ec81c8ad219150dee59ba743f14f72d1c412524ee0993c5307c40756fa1a3df7",
+      "overlay_sha256": "43d7e301dc20ffd4733c421b018191609964e35de6685817c6f458aa6b14c1ff"
+    },
+    "modules/gated_delta_net_fn/gated_delta_rule.py": {
+      "baseline_sha256": "1cff6e3b4239111ce22b212f8501858228c644373e4549fc889c1d5453caea9f",
+      "overlay_sha256": "4223c1e770e3ea1d175030f63483d49a8b544daf901556468415ce57fc03b3b6"
+    }
+  }
+}

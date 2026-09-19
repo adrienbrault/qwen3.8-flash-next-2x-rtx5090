@@ -1,0 +1,73 @@
+2026-09-19T14:32:10+00:00 [r548] S1 building tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 on tabbyapi:nvme-tier-r4-e3det-r6-rawk (live pool 983040, before the lock)
+2026-09-19T14:35:23+00:00 [r548] lock held; served at entry: <no answer> cache_size: 983040 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T14:35:23+00:00 [r548] === S0 reference: live launcher, tier off ===
+2026-09-19T14:35:42+00:00 [r548] REF free at boot 1973/737 MiB (headroom floors 1941/705)
+2026-09-19T14:35:47+00:00 [r548] REF @ 983040: VRAM free 1257/289/; fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5
+2026-09-19T14:35:47+00:00 [r548] === S2 bf16 on, ladder from 983040 ===
+2026-09-19T14:36:39+00:00 [r548] [L] 999424: normal placement (boot 2213/957/), fingerprints f4add302e176d78e / 4a255910dee2d9c5, survives 120k + c4
+2026-09-19T14:37:31+00:00 [r548] [L] 1015808: normal placement (boot 2113/837/), fingerprints f4add302e176d78e / 4a255910dee2d9c5, survives 120k + c4
+2026-09-19T14:38:24+00:00 [r548] [L] 1032192: normal placement (boot 2013/737/), fingerprints f4add302e176d78e / 4a255910dee2d9c5, survives 120k + c4
+2026-09-19T14:38:47+00:00 [r548] [L] 1048576: normal placement but free at boot 1913/577 < headroom floors 1941/705: ladder stops
+2026-09-19T14:38:47+00:00 [r548] POOL_ON = 1032192 (live 983040); bf16 fingerprints f4add302e176d78e / 4a255910dee2d9c5 (REF e7fb377c987d685c / 4a255910dee2d9c5)
+71c71
+< CACHE=${CACHE:-983040}   # R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+---
+> CACHE=${CACHE:-1032192}   # R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+124c124
+< IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk}
+---
+> IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1}
+215c215
+<   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T14:38:47+00:00 [r548] === AB: mp_decode 4 boots, A = live @ 983040, B = candidate @ 1032192, tier off ===
+2026-09-19T14:39:10+00:00 [r548] UP A1: tabbyapi:nvme-tier-r4-e3det-r6-rawk; VRAM free at boot 1973/737/
+2026-09-19T14:42:46+00:00 [r548] UP B2: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; VRAM free at boot 2013/737/
+2026-09-19T14:46:19+00:00 [r548] UP B3: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; VRAM free at boot 2013/737/
+2026-09-19T14:49:52+00:00 [r548] UP A4: tabbyapi:nvme-tier-r4-e3det-r6-rawk; VRAM free at boot 1973/737/
+code c1: 24 prompts, per-request decode_tps A 193.6 / B 197.6; paired geo-mean B/A +1.88 %, 95 % CI [-1.33, +5.03] %; per-prompt range -12.4 .. +20.3 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 121.6 / B 124.2; paired geo-mean B/A +2.05 %, 95 % CI [-0.26, +4.38] %; per-prompt range -9.0 .. +14.9 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 195.3 / B 196.0; paired geo-mean B/A +0.34 %, 95 % CI [-1.35, +1.97] %; per-prompt range -7.4 .. +8.2 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 115.7 / B 117.3; paired geo-mean B/A +1.37 %, 95 % CI [-1.09, +3.49] %; per-prompt range -14.3 .. +10.0 %; short A 0 / B 0
+AB OK
+2026-09-19T14:53:05+00:00 [r548] === G1: candidate with the NVMe tier ON ===
+2026-09-19T14:53:32+00:00 [r548] G1: cache_size: 1032192 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; tier:  -- nvme tier: ON at /nvme-tier/ns-d8551703e7554a6aca6542a0bda92f638901c444e056175a11d9cc3cd60817fd (cap 64.0 GiB, on disk 0.00 GiB: 0 pages, 0 checkpoints, 0 torn, 0 stranded pruned, 1 stale namespac; VRAM free at boot 2013/737/; fingerprints c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+2026-09-19T14:53:37+00:00 [r548] cold prefill ctx 60000: 9422 tok/s (floor 9000)
+2026-09-19T14:53:47+00:00 [r548] cold prefill ctx 120000: 9954 tok/s (floor 9500)
+  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 532.3, "per_stream_wall_tps": 140.5, "decode_tps": 145.7, "ttft_s": 0.528}
+2026-09-19T14:54:03+00:00 [r548] G1b PASS
+2026-09-19T14:54:03+00:00 [r548] === GT: crash-restart restore ===
+fill 30000: prompt 30031 tok; cold 4b5106646a83ae97 cached 0 3.966 s; warm 4b5106646a83ae97 cached 29952 0.374 s
+drained 5.0 s after the marked request:  -- nvme tier: drained (753 pages, 14 ckpts, 3.52/64.0 GiB; wrote 753 pages + 14 ckpts (3.52 GiB); restored 0 pages + 0 ckpts; pending 0; skips queue 0 evict 0; refused mm 0 cap 0 free 0; evicted 0 pa
+ -- nvme tier: open scan: 14/14 checkpoints intact in 1.1 s
+verify 30000: after restart 4b5106646a83ae97 cached 29952 (0.575 s latency) | warm 4b5106646a83ae97 cached 29952 (0.374 s) | cold 4b5106646a83ae97 (3.966 s) -> PASS
+VERIFY PASS
+2026-09-19T14:54:27+00:00 [r548] GT PASS
+2026-09-19T14:54:27+00:00 [r548] === G2: agentic-edit ===
+[BR] agentic-edit greedy c1: 6/6 ok, 16985 tokens, per-request decode median 259.3 t/s (min 211.4, max 284.4), aggregate 232.3 t/s
+[BR] agentic-edit greedy c1 first full wave: aggregate 255.1 t/s, per stream 255.1 t/s
+[BR] agentic-edit greedy c4: 6/6 ok, 16167 tokens, per-request decode median 164.6 t/s (min 161.7, max 215.8), aggregate 435.9 t/s
+[BR] agentic-edit greedy c4 first full wave: aggregate 518.8 t/s, per stream 157.8 t/s
+[BR] agentic-edit sampled c1: 6/6 ok, 17418 tokens, per-request decode median 241.8 t/s (min 199.4, max 294.1), aggregate 233.2 t/s
+[BR] agentic-edit sampled c1 first full wave: aggregate 275.8 t/s, per stream 275.8 t/s
+[BR] agentic-edit sampled c4: 6/6 ok, 18183 tokens, per-request decode median 151.4 t/s (min 127.9, max 213.6), aggregate 416.2 t/s
+[BR] agentic-edit sampled c4 first full wave: aggregate 492.3 t/s, per stream 137.5 t/s
+2026-09-19T14:58:16+00:00 [r548] G2 PASS
+2026-09-19T14:58:16+00:00 [r548] === G3: needles ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-19T15:00:15+00:00 [r548] G3 PASS
+2026-09-19T15:00:15+00:00 [r548] === G4: tool-eval 69 x 4 ===
+BR tool-eval 69x4: 86.8 +- 2.6 CI [84.5, 89.0] points [116, 123, 117, 123] ['G:5/6', 'I:15/20', 'K:20/26', 'N:5/6', 'O:10/12']
+2026-09-19T15:09:44+00:00 [r548] G4 PASS (86.8)
+2026-09-19T15:09:44+00:00 [r548] === G5: GSM8K n=500 (nostop proxy) ===
+2026-09-19T15:18:09+00:00 [r548] GSM8K n=500 flexible: 0.974
+2026-09-19T15:18:09+00:00 [r548] G5 PASS
+2026-09-19T15:18:09+00:00 [r548] === PROMOTE: launch-flashnext.sh := launch-flashnext-r548.sh ===
+2026-09-19T15:18:32+00:00 [r548] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 1032192 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; c1 f4add302e176d78e (new canonical f4add302e176d78e / 4a255910dee2d9c5); VRAM free 2009/729/
+2026-09-19T15:18:32+00:00 [r548] === R548 PROMOTED ===

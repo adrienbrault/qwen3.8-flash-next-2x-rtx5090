@@ -1,0 +1,383 @@
+--- a/exllamav3_ext/gdn.cu
++++ b/exllamav3_ext/gdn.cu
+@@ -44,6 +44,18 @@
+     return x;
+ }
+ 
++// Recurrent-state store: fp32 state is written as is (served path); bf16 state (EXL3_GDN_STATE_BF16)
++// is rounded to nearest-even once per update. Loads widen through as_float(); all math stays fp32
++__device__ __forceinline__ void store_state(float* p, float x)
++{
++    *p = x;
++}
++
++__device__ __forceinline__ void store_state(bfloat16* p, float x)
++{
++    *p = __float2bfloat16_rn(x);
++}
++
+ __device__ __forceinline__ float softplus(float x)  // beta=1.0, linear threshold=20.0
+ {
+     if (x > 20.0f) return x;
+@@ -423,7 +435,7 @@
+ // delta-correction readback: no q/k L2 norm, v used raw (beta = dt scales it in the update),
+ // output y = q.S + D*v with no 1/sqrt(dk) scale. Input layout is the conv channel order
+ // [x (v_dim), B (k_dim), C (k_dim)] with x->v, B->k, C->q
+-template <int MAX_HEAD_DIM, bool save_history, int V_SPLIT, bool MAMBA2 = false>
++template <int MAX_HEAD_DIM, bool save_history, int V_SPLIT, bool MAMBA2 = false, typename state_t = float>
+ __global__ __launch_bounds__(MAX_HEAD_DIM * SUBK)
+ void cuda_recurrent_gated_delta_rule_kernel
+ (
+@@ -432,7 +444,7 @@
+     const bfloat16* __restrict__ mixed_qkv,     // [bsz, seqlen, (k_dim + k_dim + v_dim)]
+     const float* __restrict__ g,                // [bsz, seqlen, (group * num_k_heads)]
+     const bfloat16* __restrict__ beta,          // [bsz, seqlen, (group * num_k_heads)]
+-    float* __restrict__ recurrent_state,        // [num_slots, max_history + 1, (group * num_k_heads), k_head_dim, v_head_dim]
++    state_t* __restrict__ recurrent_state,      // [num_slots, max_history + 1, (group * num_k_heads), k_head_dim, v_head_dim]
+     bfloat16* __restrict__ core_attn_out,       // [bsz, seqlen, num_v_heads, v_head_dim]
+     const int bsz,
+     const int seqlen,
+@@ -456,8 +468,8 @@
+     g +=                bi * seqlen * (group * num_k_heads);
+     beta +=             bi * seqlen * (group * num_k_heads);
+     int state_slot = slots ? slots[bi] : bi;
+-    float* slot_state = recurrent_state + (size_t) state_slot * slot_size;
+-    float* final_state = slot_state;
++    state_t* slot_state = recurrent_state + (size_t) state_slot * slot_size;
++    state_t* final_state = slot_state;
+     core_attn_out +=    bi * seqlen * num_v_heads * v_head_dim;
+ 
+     // Indexing
+@@ -502,14 +514,14 @@
+         }
+         bfloat16* out = core_attn_out + head * v_head_dim + v_start;
+ 
+-        float* gl_rs_r;
+-        float* gl_rs_w;
++        state_t* gl_rs_r;
++        state_t* gl_rs_w;
+         if constexpr (save_history)
+         {
+             bool first = (s == 0);
+             bool last = (s == seqlen - 1);
+-            float* history_r = first ? nullptr : slot_state + (size_t) s * state_size;
+-            float* history_w = last  ? final_state : slot_state + (size_t) (s + 1) * state_size;
++            state_t* history_r = first ? nullptr : slot_state + (size_t) s * state_size;
++            state_t* history_w = last  ? final_state : slot_state + (size_t) (s + 1) * state_size;
+             gl_rs_r = first ? final_state + head * (k_head_dim * v_head_dim)
+                             : history_r   + head * (k_head_dim * v_head_dim);
+             gl_rs_w = history_w           + head * (k_head_dim * v_head_dim);
+@@ -583,13 +595,13 @@
+                 // Dot products with last state, one partial per k-slice
+                 float sum = 0.0f;
+                 float* sh_k_rd = sh_k + bt * bts;
+-                float* rs_rd = gl_rs_r + v_start + t + bt * bts * v_head_dim;
++                state_t* rs_rd = gl_rs_r + v_start + t + bt * bts * v_head_dim;
+ 
+                 for (int i = 0; i < k_head_dim / 8 / SUBK; ++i)
+                 {
+                     #pragma unroll
+                     for (int j = 0; j < 8; ++j, rs_rd += v_head_dim, sh_k_rd++)
+-                        sum = sum + *sh_k_rd * *rs_rd;
++                        sum = sum + *sh_k_rd * as_float(*rs_rd);
+                 }
+                 sh_dot1[bt][t] = sum;
+             }
+@@ -615,8 +627,8 @@
+             float v_out = 0.0f;
+             float* sh_k_rd = sh_k + bt * bts;
+             float* sh_q_rd = sh_q + bt * bts;
+-            float* rs_r = gl_rs_r + v_start + t + bt * bts * v_head_dim;
+-            float* rs_w = gl_rs_w + v_start + t + bt * bts * v_head_dim;
++            state_t* rs_r = gl_rs_r + v_start + t + bt * bts * v_head_dim;
++            state_t* rs_w = gl_rs_w + v_start + t + bt * bts * v_head_dim;
+ 
+             for (int i = 0; i < k_head_dim / 8 / SUBK; ++i)
+             {
+@@ -624,9 +636,9 @@
+                 for (int j = 0; j < 8; ++j, rs_r += v_head_dim, rs_w += v_head_dim, sh_k_rd++, sh_q_rd++)
+                 {
+                     // State update step, k x v
+-                    float state = *rs_r;
++                    float state = as_float(*rs_r);
+                     state = state * g_h + *sh_k_rd * v * beta_h;
+-                    *rs_w = state;
++                    store_state(rs_w, state);
+ 
+                     // Accumulate attn output
+                     v_out = v_out + *sh_q_rd * state;
+@@ -657,7 +669,7 @@
+     }
+ }
+ 
+-template <bool save_history, int V_SPLIT, bool CHANNELWISE = false>
++template <bool save_history, int V_SPLIT, bool CHANNELWISE = false, typename state_t = float>
+ __global__ __launch_bounds__(128 * SUBK)
+ void cuda_recurrent_gated_delta_rule_kernel_128
+ (
+@@ -667,7 +679,7 @@
+                                                 // [bsz, seqlen, heads, 128] log-decay per
+                                                 // k-channel when CHANNELWISE (KDA)
+     const bfloat16* __restrict__ beta,          // [bsz, seqlen, (group * num_k_heads)]
+-    float* __restrict__ recurrent_state,        // [num_slots, max_history + 1, (group * num_k_heads), 128, 128]
++    state_t* __restrict__ recurrent_state,      // [num_slots, max_history + 1, (group * num_k_heads), 128, 128]
+     bfloat16* __restrict__ core_attn_out,       // [bsz, seqlen, num_v_heads, 128]
+     const int bsz,
+     const int seqlen,
+@@ -695,8 +707,8 @@
+     g +=                (size_t) bi * seqlen * (group * num_k_heads) * (CHANNELWISE ? HEAD_DIM : 1);
+     beta +=             bi * seqlen * (group * num_k_heads);
+     int state_slot = slots ? slots[bi] : bi;
+-    float* slot_state = recurrent_state + (size_t) state_slot * slot_size;
+-    float* final_state = slot_state;
++    state_t* slot_state = recurrent_state + (size_t) state_slot * slot_size;
++    state_t* final_state = slot_state;
+     core_attn_out +=    bi * seqlen * num_v_heads * HEAD_DIM;
+ 
+     int t = threadIdx.x;
+@@ -723,14 +735,14 @@
+         const bfloat16* gl_v = mixed_qkv + (2 * num_k_heads * HEAD_DIM) + head * HEAD_DIM + v_start;
+         bfloat16* out = core_attn_out + head * HEAD_DIM + v_start;
+ 
+-        float* gl_rs_r;
+-        float* gl_rs_w;
++        state_t* gl_rs_r;
++        state_t* gl_rs_w;
+         if constexpr (save_history)
+         {
+             bool first = (s == 0);
+             bool last = (s == seqlen - 1);
+-            float* history_r = first ? nullptr : slot_state + (size_t) s * state_size;
+-            float* history_w = last  ? final_state : slot_state + (size_t) (s + 1) * state_size;
++            state_t* history_r = first ? nullptr : slot_state + (size_t) s * state_size;
++            state_t* history_w = last  ? final_state : slot_state + (size_t) (s + 1) * state_size;
+             gl_rs_r = first ? final_state + head * HEAD_STATE_SIZE
+                             : history_r   + head * HEAD_STATE_SIZE;
+             gl_rs_w = history_w           + head * HEAD_STATE_SIZE;
+@@ -782,7 +794,7 @@
+             float sum = 0.0f;
+             float* sh_k_rd = sh_k + bt * BTS;
+             float* sh_g_rd = sh_g + bt * BTS;
+-            float* rs_rd = gl_rs_r + v_start + t + bt * BTS * HEAD_DIM;
++            state_t* rs_rd = gl_rs_r + v_start + t + bt * BTS * HEAD_DIM;
+ 
+             #pragma unroll
+             for (int i = 0; i < HEAD_DIM / 8 / SUBK; ++i)
+@@ -792,9 +804,9 @@
+                 {
+                     if constexpr (CHANNELWISE)
+                         // Decay folded per k-channel: kv_mem reads the decayed state
+-                        sum = sum + *sh_k_rd * *sh_g_rd * *rs_rd;
++                        sum = sum + *sh_k_rd * *sh_g_rd * as_float(*rs_rd);
+                     else
+-                        sum = sum + *sh_k_rd * *rs_rd;
++                        sum = sum + *sh_k_rd * as_float(*rs_rd);
+                 }
+             }
+             sh_dot1[bt][t] = sum;
+@@ -814,8 +826,8 @@
+             float* sh_k_rd = sh_k + bt * BTS;
+             float* sh_g_rd = sh_g + bt * BTS;
+             float* sh_q_rd = sh_q + bt * BTS;
+-            float* rs_r = gl_rs_r + v_start + t + bt * BTS * HEAD_DIM;
+-            float* rs_w = gl_rs_w + v_start + t + bt * BTS * HEAD_DIM;
++            state_t* rs_r = gl_rs_r + v_start + t + bt * BTS * HEAD_DIM;
++            state_t* rs_w = gl_rs_w + v_start + t + bt * BTS * HEAD_DIM;
+ 
+             #pragma unroll
+             for (int i = 0; i < HEAD_DIM / 8 / SUBK; ++i)
+@@ -823,9 +835,9 @@
+                 #pragma unroll
+                 for (int j = 0; j < 8; ++j, rs_r += HEAD_DIM, rs_w += HEAD_DIM, sh_k_rd++, sh_g_rd++, sh_q_rd++)
+                 {
+-                    float state = *rs_r;
++                    float state = as_float(*rs_r);
+                     state = state * (CHANNELWISE ? *sh_g_rd : g_h) + *sh_k_rd * v * beta_h;
+-                    *rs_w = state;
++                    store_state(rs_w, state);
+                     v_out = v_out + *sh_q_rd * state;
+                 }
+             }
+@@ -911,7 +923,14 @@
+     TORCH_CHECK_DTYPE(mixed_qkv, kBFloat16);
+     TORCH_CHECK_DTYPE(g, kFloat);
+     TORCH_CHECK_DTYPE(beta, kBFloat16);
+-    TORCH_CHECK_DTYPE(recurrent_state, kFloat);
++    // fp32 state is the served layout; bf16 state is the EXL3_GDN_STATE_BF16 storage option
++    bool bf16_state = recurrent_state.dtype() == at::kBFloat16;
++    if (!bf16_state)
++    {
++        TORCH_CHECK_DTYPE(recurrent_state, kFloat);
++    }
++    TORCH_CHECK(!bf16_state || !channelwise,
++                "cuda_recurrent_gated_delta_rule: bf16 recurrent_state is not supported with channelwise (KDA) decay");
+     TORCH_CHECK_DTYPE(core_attn_out, kBFloat16);
+     TORCH_CHECK_DTYPE_OPT(slots, kInt);
+ 
+@@ -934,6 +953,78 @@
+ 
+     float scale = 1.0f / sqrtf(k_head_dim);
+ 
++    // bf16 state: the same kernels instantiated with state_t = bfloat16 (fp32 math, bf16 load/store).
++    // Handled here and returned from, so the fp32 dispatch below is the served one, unchanged
++    if (bf16_state)
++    {
++        #define KERNEL_ARGS_BF16                    \
++            (const bfloat16*) mixed_qkv.data_ptr(), \
++            (const float*) g.data_ptr(),            \
++            (const bfloat16*) beta.data_ptr(),      \
++            (bfloat16*) recurrent_state.data_ptr(), \
++            (bfloat16*) core_attn_out.data_ptr(),   \
++            bsz,                                    \
++            seqlen,                                 \
++            num_k_heads,                            \
++            num_v_heads,                            \
++            k_head_dim,                             \
++            v_head_dim,                             \
++            scale,                                  \
++            slots_ptr,                              \
++            history_stride,                         \
++            nullptr
++
++        // Same graph parameter slots as LAUNCH_RULE below (state = param 3, slots = param 12)
++        #define LAUNCH_RULE_BF16(...)                                                         \
++        {                                                                                     \
++            __VA_ARGS__<<<blocks, threads, 0, stream>>>(KERNEL_ARGS_BF16);                    \
++            if (graph)                                                                        \
++            {                                                                                 \
++                graph->record_param((void*) &__VA_ARGS__, GP_gdn_rule_state, 3);              \
++                graph->record_param((void*) &__VA_ARGS__, GP_gdn_rule_slots, 12);             \
++                graph->record_param((void*) &__VA_ARGS__, GP_end, 0);                         \
++            }                                                                                 \
++        }
++
++        if (!history)
++        {
++            if (k_head_dim == 128 && v_head_dim == 128)
++            {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<false, 4, false, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<false, 1, false, bfloat16>)
++            }
++            else if (threads.x <= 128)
++            {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<128, false, 4, false, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<128, false, 1, false, bfloat16>)
++            }
++            else if (threads.x <= 256)
++                                  LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<256, false, 1, false, bfloat16>)
++            else TORCH_CHECK(false, "Max head dim exceeded");
++        }
++        else
++        {
++            if (k_head_dim == 128 && v_head_dim == 128)
++            {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<true, 4, false, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false, bfloat16>)
++            }
++            else if (threads.x <= 128)
++            {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<128, true, 4, false, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<128, true, 1, false, bfloat16>)
++            }
++            else if (threads.x <= 256)
++                                  LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel<256, true, 1, false, bfloat16>)
++            else TORCH_CHECK(false, "Max head dim exceeded");
++        }
++        #undef LAUNCH_RULE_BF16
++        #undef KERNEL_ARGS_BF16
++
++        cuda_check(cudaPeekAtLastError());
++        return;
++    }
++
+     #define KERNEL_ARGS                         \
+         (const bfloat16*) mixed_qkv.data_ptr(), \
+         (const float*) g.data_ptr(),            \
+--- a/modules/gated_delta_net.py
++++ b/modules/gated_delta_net.py
+@@ -33,7 +33,19 @@
+ # No pointer cache: each call uses the live tensor, including its storage offset.
+ _host_gap_rewind = os.environ.get("EXL3_HOST_GAP_REWIND", "0") == "1"
+ 
++# EXL3_GDN_STATE_BF16=1 stores the Gated-DeltaNet recurrent state (live plane and MTP history planes)
++# as bf16 instead of fp32, halving its VRAM. The recurrence math stays fp32: kernels widen on load and
++# round to nearest-even on every store, so a verify window and the same tokens decoded one by one
++# give the same state. Not bit-exact vs fp32 by design. GDN layers only (not KDA, not Mamba2).
++# Default off: fp32 allocation and the served kernels
++_gdn_state_bf16 = os.environ.get("EXL3_GDN_STATE_BF16", "0") == "1"
+ 
++
++def _state_words(t: torch.Tensor, numel: int) -> int:
++    """batched_state_rewind copies 4-byte words (float4 vectors); convert an element count of the state tensor"""
++    return numel * t.element_size() // 4
++
++
+ def _rewind_index(value, size: int) -> int:
+     """Match integer tensor indexing, including negative indices and bounds checks."""
+     value = _index(value)
+@@ -200,7 +212,7 @@
+         )
+         self.recurrent_state = torch.empty(
+             (max_batch_size, max_history + 1, module.num_v_heads, module.k_head_dim, module.v_head_dim),
+-            dtype = torch.float,
++            dtype = getattr(module, "recurrent_state_dtype", torch.float),
+             device = "meta"
+         )
+         self.device = None
+@@ -212,7 +224,7 @@
+     def get_checkpoint_size(self):
+         return (
+             self.module.fdim_qkv * self.module.conv_kernel_size * 2 +
+-            self.module.num_v_heads * self.module.k_head_dim * self.module.v_head_dim * 4
++            self.module.num_v_heads * self.module.k_head_dim * self.module.v_head_dim * self.recurrent_state.element_size()
+         )
+ 
+ 
+@@ -305,12 +317,12 @@
+             dst = t.data_ptr() + row * strides[0] * size
+             return ext.StateRewindJob(
+                 dst + history * strides[1] * size, dst,
+-                t.numel() // shape[0] // shape[1],
++                _state_words(t, t.numel() // shape[0] // shape[1]),
+             )
+         return ext.StateRewindJob(
+             self.recurrent_state[slot, last_history + 1 - num_tokens].data_ptr(),
+             self.recurrent_state[slot, 0].data_ptr(),
+-            self.recurrent_state[slot, 0].numel(),
++            _state_words(self.recurrent_state, self.recurrent_state[slot, 0].numel()),
+         )
+ 
+ 
+@@ -325,6 +337,10 @@
+     def unstash(self, slot, stashed, position: int = 0):
+         cdim = self.module.conv_kernel_size
+         s, c = stashed
++        # A checkpoint is restored in the dtype it was taken in; never convert silently (the NVMe tier
++        # namespace already separates EXL3_GDN_STATE_BF16 on/off, so a mismatch is a bug)
++        if s.dtype != self.recurrent_state.dtype:
++            raise TypeError(f"GDN checkpoint state is {s.dtype}, live state is {self.recurrent_state.dtype}")
+         self.recurrent_state[slot, :1].copy_(s)
+         self.conv_state[slot, :, :cdim].copy_(c)
+ 
+@@ -592,6 +608,8 @@
+             "recurrent_cache": True
+         })
+         self.layer_state_cls = GDNLayerState
++        # Storage dtype of the recurrent state (read by GDNLayerState); KDA keeps fp32
++        self.recurrent_state_dtype = torch.bfloat16 if _gdn_state_bf16 and not self.kda else torch.float
+ 
+         self.bc = None
+         self.bc_split = False
+--- a/modules/gated_delta_net_fn/gated_delta_rule.py
++++ b/modules/gated_delta_net_fn/gated_delta_rule.py
+@@ -182,7 +182,9 @@
+                 q[i:i + 1], k[i:i + 1], v[i:i + 1],
+                 g = g[i:i + 1],
+                 beta = beta[i:i + 1],
+-                initial_state = state,
++                # bf16 state storage (EXL3_GDN_STATE_BF16): the chunk kernel runs from an fp32 copy and
++                # copy_ below rounds the fp32 final state to nearest-even once per forward
++                initial_state = state if state is None or state.dtype == torch.float else state.float(),
+                 output_final_state = save_state,
+                 use_qk_l2norm_in_kernel = True,
+             )
