@@ -1,0 +1,6 @@
+# ple-ckpt-clone r1: one-line fix of the PLE checkpoint aliasing (see fix_ple.py). Python only. Legacy builder: no heredocs.
+#   docker build -f Dockerfile.box --build-arg BASE=<live image> -t <live image>-plefix .
+ARG BASE=tabbyapi:stack-r4-e3r2
+FROM ${BASE}
+COPY fix_ple.py test_ple_stash.py /tmp/plefix/
+RUN python3 /tmp/plefix/fix_ple.py && python3 /tmp/plefix/test_ple_stash.py && rm -rf /tmp/plefix

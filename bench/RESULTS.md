@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R530: ExLlamaV3's PLE checkpoints no longer alias the live slot; every gate passes](results/r530-promote-plefix.md)
 - [R529: `tool_choice` "required" and named functions are enforced; tool-eval 88.0, TC-45 passes on every trial](results/r529-promote-tool-choice.md)
 - [R528: the MTP draft chain on the GPU with a pruned embedding copy is served; every gate passes](results/r528-promote-mtp-pruned.md)
 - [R522 and R522b: keeping the MTP draft chain on the GPU with a pruned embedding mirror is byte-identical and +2.0 % at 1 stream, +1.5 % at 4](results/r522-mtp-pruned.md)
