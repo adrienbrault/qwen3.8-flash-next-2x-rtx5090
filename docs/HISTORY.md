@@ -82,3 +82,11 @@ Measured and not promoted in the same period: chunk 1024 for pool ([R483](../ben
 | 23:46 | draft depth 2 at 5 concurrent jobs, policy `[[4, 3], [5, 2], [8, 1]]` | fingerprints unchanged, +10.7 % code / +14.1 % prose at 5 streams for −2.0 % at 6-stream prose; needles 5/5 and 5/5, tool-eval 86.0 ± 0.8, GSM8K 0.976 | 966,656 | [R576](../bench/results/r576-promote-c5-policy.md) |
 
 Measured and not promoted in the same period: a deeper single-job draft ([R537](../bench/results/r537-draft-depth.md)), the K=3 MoE kernel without spills ([R536](../bench/results/r536-nospill.md)), the draft embedding copy on cuda:0 ([R555](../bench/results/r555-headdev-mirror.md)), adaptive draft depth ([R556](../bench/results/r556-adaptive-draft-r2.md)), prefill chunk 1,024 / 512 ([R553](../bench/results/r553-chunk-hot-stall.md)), draft depth 2 above 5 jobs ([R560](../bench/results/r560-c8-policy.md)), the draft-cache window, which promoted and then rolled back on a CUDA-graph capture out-of-memory at 5 concurrent ([R575](../bench/results/r575-promote-mtp-kv-window.md)), and prefill chunk 4,096, which does not boot at 8 slots ([R574](../bench/results/r574-chunk4096.md)).
+
+## 2026-09-20: the windowed draft cache
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 00:29 | windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), image `tabbyapi:mtpwin-r2` | new c1 fingerprint (a layer moves cards), 30k unchanged; decode +0.3 to +2.0 % on 24 paired prompts; restart restore 29,952 tokens in 0.567 s against 3.967 s cold; needles 5/5 and 5/5, tool-eval 85.8, GSM8K 0.976 at 5 concurrent | 999,424 | [R579](../bench/results/r579-promote-mtp-kv-window.md) |
+
+The same overlay one pool step higher, 1,015,808, passed its A/B and four gates on 2026-09-19 and then ran out of memory capturing a decode graph at 5 concurrent, and rolled back ([R575](../bench/results/r575-promote-mtp-kv-window.md)). Every boot now runs a 1-to-8-stream decode ramp before the gates, so no graph is first captured under load.

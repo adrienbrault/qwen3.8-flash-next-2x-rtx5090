@@ -6,13 +6,13 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-19 23:46 CEST ([R576][r576]): image `tabbyapi:ngram-prefetch-r1-gdnbf16`, 8 slots, 966,656-token page pool at 8-bit KV, layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
+Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
 
 | | value | source |
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
-| page pool | 966,656 tokens, 15,236 B per token: 1.52 GB per 100k, 14.7 GB total | [R561][r561] |
-| free VRAM after boot | 2,085 / 867 MiB; 1,299 / 353 under a cold 120k prefill plus 8 streams | [R561][r561], [R558][r558] |
+| page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
+| free VRAM after boot | 1,041 / 2,531 MiB; 251 / 2,013 after a 1-to-8-stream decode ramp | [R579][r579] |
 | decode, 1 stream | code 202.2, prose 200.9 t/s (24 prompts each, 512 tokens) | [R575][r575] |
 | decode, 4 streams | code 511, prose 508 t/s aggregate; 131 / 127 t/s per stream | [R570][r570] |
 | decode, 5 streams | code 561–563, prose 541–545 t/s aggregate; 113 / 110 t/s per stream | [R570][r570], [R571][r571], [R576][r576] |
@@ -48,6 +48,7 @@ Insights behind these numbers:
 - Code decodes faster than prose at 1 stream because draft acceptance tracks how predictable the text is ([R572][r572]).
 - 8 slots beat 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
+- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moves the boundary layer across and bought 32,768 pool tokens ([R579][r579]); it also inverted which card is the tight one.
 - GSM8K figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
 
 ## What the stack is
@@ -65,6 +66,7 @@ Insights behind these numbers:
   - one-warp launches of two small decode kernels at 1 stream and a re-gridded mixer state kernel, +1.0 to +1.1 % decode at 1 stream ([R538][r538]).
   - a 20-row ring for the QSA indexer's raw keys, bit-exact, +20 % page pool ([R546][r546]).
   - GDN recurrent state stored in bf16 with fp32 math, +5 % page pool, GSM8K 0.974 and tool-eval 86.8 ([R548][r548]).
+  - a windowed MTP draft cache, a sink page plus the last 16,384 tokens per slot, +3.4 % page pool ([R579][r579]).
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at c1 (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before building it: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 1 above (`[[4, 3], [8, 1]]`). Confidence-gated dynamic depth crashes at c4 ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
@@ -79,10 +81,8 @@ Read from the box on 2026-09-19; every number in this README was measured in thi
 - Driver: NVIDIA 610.57.04 open kernel modules, CUDA 13.3 user-mode driver.
 - Storage: one KIOXIA KBG80ZNV2T04 2 TB NVMe (ext4) holds the checkpoint, including the 18.5 GiB n-gram embedding table that decode reads rows from, and the NVMe prefix tier. A sequential 16 MiB `O_DIRECT` read of a tier segment ran at 6.7 GB/s (2026-09-19).
 
-## In progress (2026-09-19)
+## In progress (2026-09-20)
 
-- A windowed MTP draft cache ([R569][r569], [R573][r573]): a sink page plus the last 16,384 tokens per slot frees about 930 MiB on cuda:0, the loader moves a layer there, and cuda:1 — the card that bounds the page pool — gains 1,884 MiB, which laddered to 1,015,808 tokens. Decode gains 0.2 to 1.6 % at short context and 4.7 % on a cold 100k-token prompt, and needles stay 5/5. It was promoted and [rolled back][r575] the same evening: 901 MiB of free VRAM on cuda:0 is not enough to capture a decode graph for a batch size first seen under load. The next attempt ladders with a full 1-to-8-stream ramp at each pool.
-- A draft policy that keeps 5 streams inside the fast MoE decode path's 16-row limit: `[[4, 3], [5, 2], [8, 1]]` reads +17.3 % at 5 streams and −3.1 % on 6-stream prose ([R570][r570]); queued for promotion with that trade accepted.
 - Upstream's tiled hyper-connection prefill mix ([`825db5b`][exl3-825db5b]) ported onto this stack behind one flag: worth +14.0 % at 60k and +11.4 % at 120k where it was measured upstream ([R568][r568]), at 302 MiB per card there and a claimed 2.1 MiB here.
 - One fused kernel per layer for the GDN linear-attention decode block, claimed bit-exact; GDN is 0.80 ms of a 13.9 ms 1-stream step ([R519][r519]).
 - Mixed draft depth per job inside one verify batch, so 6 and 7 streams can fill the 16-row budget the way 5 streams would.
@@ -275,6 +275,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r574]: bench/results/r574-chunk4096.md
 [r575]: bench/results/r575-promote-mtp-kv-window.md
 [r576]: bench/results/r576-promote-c5-policy.md
+[r579]: bench/results/r579-promote-mtp-kv-window.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md

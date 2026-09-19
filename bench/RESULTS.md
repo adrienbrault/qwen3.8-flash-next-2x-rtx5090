@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R579: the windowed draft cache is served, page pool 999,424 (+3.4 %), and a boot-time decode ramp is what got it there](results/r579-promote-mtp-kv-window.md)
 - [R576: the 5-stream draft policy is promoted, +11 to +14 % at 5 streams for -2 % at 6-stream prose](results/r576-promote-c5-policy.md)
 - [R575: the windowed draft cache passed its A/B and four gates, then rolled back on a graph-capture out-of-memory](results/r575-promote-mtp-kv-window.md)
 - [R573: the windowed draft cache is faster at short and deep context, needles 5/5, best pool 1,015,808](results/r573-mtp-kv-window-screen.md)
