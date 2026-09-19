@@ -8,6 +8,12 @@ server's own generation is discarded, so call k+1 shares a prefix with call k up
 reuse an agent gets when its re-rendered turn differs from what the server generated. --tool-gap seconds of sleep between calls
 stand in for tool execution. Same conversations, same order, same budget in every arm.
 
+--echo instead sends the server's own previous answers back, as an agent loop does: call k+1's history is call k's history,
+the recorded messages between the two assistant turns (tool results re-keyed to the server's tool-call ids; if the server made
+no call, the recorded tool output goes in as a user message), and the server's answer (content, reasoning, tool calls as
+returned). The conversation drifts from the recording after the first call; what it exercises is prefix reuse of generated
+tokens (recurrent tip checkpoints).
+
 Writes one JSON line per call and a summary line; the TabbyAPI log (prompt N tokens, X cached, Y new) gives the cache side.
 """
 import argparse
@@ -56,6 +62,25 @@ def clean(msgs):
     return [{k: v for k, v in m.items() if not k.startswith("_")} for m in msgs]
 
 
+def between(msgs, calls, k):
+    return msgs[(calls[k - 1] + 1) if k else 0:calls[k]]
+
+
+def adapt(seg, prev):
+    """Recorded messages that follow an assistant turn, re-keyed to the server's own answer `prev`."""
+    ids = [t.get("id") for t in (prev or {}).get("tool_calls") or []]
+    tools = [m for m in seg if m["role"] == "tool"]
+    rest = [m for m in seg if m["role"] != "tool"]
+    if prev is None:
+        return seg
+    if not ids:
+        body = "\n\n".join(m["content"] for m in tools)
+        return ([{"role": "user", "content": "Tool output:\n" + body}] if tools else []) + rest
+    out = [{"role": "tool", "tool_call_id": ids[i], "content": tools[i]["content"] if i < len(tools) else "(no output)"}
+           for i in range(len(ids))]
+    return out + rest
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--url", required=True)
@@ -66,6 +91,7 @@ def main():
     p.add_argument("--calls", type=int, default=24, help="first N calls of each conversation")
     p.add_argument("--cap", type=int, default=2048, help="max_tokens cap per call")
     p.add_argument("--tool-gap", type=float, default=2.0)
+    p.add_argument("--echo", action="store_true", help="send the server's own answers back (agent loop), not the recording")
     p.add_argument("--tag", required=True)
     p.add_argument("--out", required=True)
     a = p.parse_args()
@@ -88,9 +114,13 @@ def main():
                 iid, msgs, calls = work.get_nowait()
             except queue.Empty:
                 return
+            hist, prev = [], None
             for k, idx in enumerate(calls[:a.calls]):
                 max_tokens = max(64, min(a.cap, msgs[idx]["_est_tokens"]))
-                body = {"model": a.model, "messages": clean(msgs[:idx]), "tools": [BASH_TOOL], "temperature": 0,
+                if a.echo:
+                    hist += adapt(clean(between(msgs, calls, k)), prev)
+                sent = hist if a.echo else clean(msgs[:idx])
+                body = {"model": a.model, "messages": sent, "tools": [BASH_TOOL], "temperature": 0,
                         "max_tokens": max_tokens}
                 t0 = time.time()
                 err = None
@@ -100,12 +130,23 @@ def main():
                         headers={"Content-Type": "application/json"}), timeout=1800).read())
                     u = r.get("usage") or {}
                     fin = r["choices"][0].get("finish_reason")
+                    m = r["choices"][0]["message"]
+                    prev = {"role": "assistant", "content": m.get("content") or ""}
+                    if m.get("reasoning_content"):
+                        prev["reasoning_content"] = m["reasoning_content"]
+                    if m.get("tool_calls"):
+                        prev["tool_calls"] = [{"id": t.get("id"), "type": "function", "function": {
+                            "name": t["function"]["name"], "arguments": t["function"]["arguments"]}} for t in m["tool_calls"]]
                 except Exception as e:  # keep walking: a failed call is a result
                     u, fin, err = {}, None, repr(e)[:200]
+                    prev = {"role": "assistant", "content": ""}
                 t1 = time.time()
+                if a.echo:
+                    hist.append(prev)
                 row = {"tag": a.tag, "agent": n, "instance": iid, "call": k, "t0": t0, "latency_s": round(t1 - t0, 3),
                        "max_tokens": max_tokens, "prompt_tokens": u.get("prompt_tokens"),
-                       "completion_tokens": u.get("completion_tokens"), "finish": fin, "error": err}
+                       "completion_tokens": u.get("completion_tokens"), "finish": fin, "error": err,
+                       "tool_calls": len((prev or {}).get("tool_calls") or []) if a.echo else None}
                 with lock:
                     rows.append(row)
                     out.write(json.dumps(row) + "\n")

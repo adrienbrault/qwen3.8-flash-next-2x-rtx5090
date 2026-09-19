@@ -1,0 +1,70 @@
+2026-09-19T00:13:54+00:00 [r518] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+fallback {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-19T00:13:58+00:00 [r518] G0 reference: {"presence": "d28839f0bd020cfe len=972 fin=length", "rep": "c0ef0820666dd52c len=1008 fin=length", "stop": "f934a4c74cc8b1c7 len=1550 fin=stop"}
+2026-09-19T00:13:58+00:00 [r518] === ladder: largest 6-slot pool that boots and survives c6 stress ===
+2026-09-19T00:13:58+00:00 [r518] boot L6-786432: slots 6 cache 786432
+2026-09-19T00:14:17+00:00 [r518] NO BOOT L6-786432 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T00:14:18+00:00 [r518] boot L6-753664: slots 6 cache 753664
+2026-09-19T00:14:36+00:00 [r518] NO BOOT L6-753664 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T00:14:37+00:00 [r518] boot L6-720896: slots 6 cache 720896
+2026-09-19T00:14:58+00:00 [r518] UP L6-720896: VRAM free MiB 2091/1295/
+[stress L6-720896 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 487.6, "per_stream_wall_tps": 82.2, "decode_tps": 84
+[stress L6-720896 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.3, "per_stream_wall_tps": 80.3, "decode_tps": 82
+2026-09-19T00:15:50+00:00 [r518] 6 slots @ 720896 boot and survive c6 stress (VRAM free MiB 1827/1049/)
+2026-09-19T00:15:50+00:00 [r518] 6-slot pool: 720896 (-8 % vs 786,432)
+2026-09-19T00:15:50+00:00 [r518] boot S4: slots 4 cache 786432
+2026-09-19T00:16:07+00:00 [r518] UP S4: VRAM free MiB 2015/1099/
+2026-09-19T00:16:12+00:00 [r518] [S4] fingerprints c1 ae890c45d1000582 / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 4a255910dee2d9c5)
+[S4 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 217.7, "per_stream_wall_tps": 217.7, "decode_tps": 220.8, "ttft_s": 0.138}
+[S4 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.6, "per_stream_wall_tps": 220.6, "decode_tps": 223.8, "ttft_s": 0.138}
+[S4 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 503.9, "per_stream_wall_tps": 130.9, "decode_tps": 134.8, "ttft_s": 0.453}
+[S4 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 516.8, "per_stream_wall_tps": 133.9, "decode_tps": 137.9, "ttft_s": 0.442}
+[S4 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 447.6, "per_stream_wall_tps": 126.5, "decode_tps": 141.3, "ttft_s": 0.472}
+[S4 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 450.0, "per_stream_wall_tps": 127.0, "decode_tps": 141.2, "ttft_s": 0.466}
+[S4 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 189.6, "per_stream_wall_tps": 189.6, "decode_tps": 191.8, "ttft_s": 0.129}
+[S4 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 194.7, "per_stream_wall_tps": 194.7, "decode_tps": 197.1, "ttft_s": 0.13}
+[S4 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 467.3, "per_stream_wall_tps": 122.1, "decode_tps": 125.2, "ttft_s": 0.419}
+[S4 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 567.3, "per_stream_wall_tps": 141.8, "decode_tps": 145.9, "ttft_s": 0.406}
+[S4 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 419.7, "per_stream_wall_tps": 117.3, "decode_tps": 128.5, "ttft_s": 0.444}
+[S4 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 426.4, "per_stream_wall_tps": 118.7, "decode_tps": 129.5, "ttft_s": 0.441}
+[replay S4] {"tag": "S4", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 422.2, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 52.0, "lat_p50": 4.467, "lat_p90": 12.162, "lat_mean": 6.21}
+[cache S4] requests 22: prompt 158,612 tokens, cached 0 (0.0 %), new 158,612 (mean 7,210/request), prefill time 32 s, cold >4k-token prompts 6
+2026-09-19T00:26:53+00:00 [r518] boot S6: slots 6 cache 720896
+2026-09-19T00:27:16+00:00 [r518] UP S6: VRAM free MiB 2091/1295/
+2026-09-19T00:27:21+00:00 [r518] [S6] fingerprints c1 ae890c45d1000582 / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 4a255910dee2d9c5)
+[S6 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 215.5, "per_stream_wall_tps": 215.5, "decode_tps": 218.7, "ttft_s": 0.142}
+[S6 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.2, "per_stream_wall_tps": 221.2, "decode_tps": 224.4, "ttft_s": 0.139}
+[S6 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 498.9, "per_stream_wall_tps": 129.5, "decode_tps": 133.3, "ttft_s": 0.45}
+[S6 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 511.4, "per_stream_wall_tps": 127.8, "decode_tps": 131.3, "ttft_s": 0.432}
+[S6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 510.3, "per_stream_wall_tps": 86.0, "decode_tps": 87.5, "ttft_s": 0.604}
+[S6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 543.5, "per_stream_wall_tps": 90.6, "decode_tps": 93.1, "ttft_s": 0.621}
+[S6 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 189.4, "per_stream_wall_tps": 189.4, "decode_tps": 191.7, "ttft_s": 0.134}
+[S6 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 194.7, "per_stream_wall_tps": 194.7, "decode_tps": 197.1, "ttft_s": 0.13}
+[S6 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 463.3, "per_stream_wall_tps": 121.0, "decode_tps": 124.1, "ttft_s": 0.419}
+[S6 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.6, "per_stream_wall_tps": 125.0, "decode_tps": 128.2, "ttft_s": 0.417}
+[S6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 491.4, "per_stream_wall_tps": 82.0, "decode_tps": 84.0, "ttft_s": 0.568}
+[S6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 505.0, "per_stream_wall_tps": 84.2, "decode_tps": 86.4, "ttft_s": 0.57}
+[replay S6] {"tag": "S6", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 467.8, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 46.9, "lat_p50": 4.529, "lat_p90": 15.198, "lat_mean": 6.93}
+[cache S6] requests 26: prompt 237,159 tokens, cached 0 (0.0 %), new 237,159 (mean 9,122/request), prefill time 52 s, cold >4k-token prompts 10
+2026-09-19T00:38:34+00:00 [r518] boot S4b: slots 4 cache 786432
+2026-09-19T00:38:56+00:00 [r518] UP S4b: VRAM free MiB 2015/1099/
+2026-09-19T00:39:01+00:00 [r518] [S4b] fingerprints c1 ae890c45d1000582 / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 4a255910dee2d9c5)
+[replay S4b] {"tag": "S4b", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 444.8, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 49.4, "lat_p50": 4.601, "lat_p90": 12.56, "lat_mean": 6.46}
+[cache S4b] requests 24: prompt 219,647 tokens, cached 0 (0.0 %), new 219,647 (mean 9,152/request), prefill time 41 s, cold >4k-token prompts 8
+2026-09-19T00:46:26+00:00 [r518] boot S6b: slots 6 cache 720896
+2026-09-19T00:46:48+00:00 [r518] UP S6b: VRAM free MiB 2091/1295/
+2026-09-19T00:46:53+00:00 [r518] [S6b] fingerprints c1 ae890c45d1000582 / 30k 4a255910dee2d9c5 (canonical ae890c45d1000582 / 4a255910dee2d9c5)
+[replay S6b] {"tag": "S6b", "summary": true, "convs": 16, "calls": 366, "errors": 0, "wall_s": 477.3, "completion_tokens": 0, "prompt_tokens": 0, "gen_tps": 0.0, "calls_per_min": 46.0, "lat_p50": 4.327, "lat_p90": 15.679, "lat_mean": 7.19}
+[cache S6b] requests 31: prompt 352,714 tokens, cached 0 (0.0 %), new 352,714 (mean 11,378/request), prefill time 75 s, cold >4k-token prompts 15
+2026-09-19T00:54:51+00:00 [r518] === decision ===
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "<stdin>", line 6, in agg
+KeyError: 'aggregate_tps'
+2026-09-19T00:54:51+00:00 [r518] S6 does not qualify; daily stays at 4 slots
+2026-09-19T00:54:51+00:00 [r518] restoring the unchanged daily
+2026-09-19T00:54:52+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-19T00:55:13+00:00 [flashnext] UP on 8022 | warmup 0.387094s | VRAM free MiB 2015/1099/
+2026-09-19T00:55:13+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-19T00:55:13+00:00 [r518] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 786432 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true  VRAM free 2015/1099/
+2026-09-19T00:55:13+00:00 [r518] === R518 DONE ===
