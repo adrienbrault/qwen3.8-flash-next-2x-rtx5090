@@ -1,0 +1,137 @@
+{
+ "round": "nvme-tier-r4",
+ "flag": "EXL3_NVME_TIER",
+ "base_images": {
+  "stack-r4-e3r2": "tabbyapi:stack-r4-e3r2 + ple-ckpt-clone r1",
+  "stack-r4-e3r2+recurrent-tip-r1": "tabbyapi:recurrent-tip-r1 + ple-ckpt-clone r1",
+  "stack-r4-e3r2+mtp-pruned-r1": "tabbyapi:mtp-pruned-r1-tc1-plefix (served), or any mtp-pruned-r1 descendant with ple-ckpt-clone r1"
+ },
+ "paths": "relative to site-packages",
+ "variants": {
+  "stack-r4-e3r2": {
+   "pre": {
+    "exllamav3/cache/recurrent.py": "5bdc3e1ea71a6f8b4765edb7db5b50c25146f8f64967228cab19c52fbed3c1cb",
+    "exllamav3/generator/async_generator.py": "815efe97e8a156cc12e7e3153981f26e46382645df9b3be32b37b73dc541661d",
+    "exllamav3/generator/disk_cache.py": null,
+    "exllamav3/generator/generator.py": "c8692d99859dc726d68bd2cf8a6a48e006cc41b7bbf66ab468a8d628b87c0477",
+    "exllamav3/generator/pagetable.py": "0cde876b9969df7120ed7137b35bff3040dc3a7613c9f5a9547e58da4a9849ea"
+   },
+   "post": {
+    "exllamav3/cache/recurrent.py": {
+     "from": "overlay/exllamav3/cache/recurrent.py",
+     "sha256": "c4818777b2122b7ef4531aa642842ea072497a5049879892d17bbd702f8aeb36"
+    },
+    "exllamav3/generator/async_generator.py": {
+     "from": "overlay/exllamav3/generator/async_generator.py",
+     "sha256": "ac35a766b9f6eb75a9a16df093d368fc1aa94fd5d8764c4f55945763fa1eff23"
+    },
+    "exllamav3/generator/disk_cache.py": {
+     "from": "overlay/exllamav3/generator/disk_cache.py",
+     "sha256": "02faab93167dfb5da5ac47b88413806e1f0bd2f503e38c556e030a2b1e194cf9"
+    },
+    "exllamav3/generator/generator.py": {
+     "from": "overlay/exllamav3/generator/generator.py",
+     "sha256": "a97125ef48451c6965c7f87efdebe4fad6e0b95fb3a3f558da6cff5640e7aa9b"
+    },
+    "exllamav3/generator/pagetable.py": {
+     "from": "overlay/exllamav3/generator/pagetable.py",
+     "sha256": "00611bdf4fe691bf82229111f3433637fb76920e987d6512912d7a57fedd4ea0"
+    }
+   }
+  },
+  "stack-r4-e3r2+recurrent-tip-r1": {
+   "pre": {
+    "exllamav3/cache/recurrent.py": "5bdc3e1ea71a6f8b4765edb7db5b50c25146f8f64967228cab19c52fbed3c1cb",
+    "exllamav3/generator/async_generator.py": "815efe97e8a156cc12e7e3153981f26e46382645df9b3be32b37b73dc541661d",
+    "exllamav3/generator/disk_cache.py": null,
+    "exllamav3/generator/generator.py": "49b8e85da2dbf9e4de2e9b27e8a5115073e5986b7657939dddacfda0c9acfb78",
+    "exllamav3/generator/pagetable.py": "0cde876b9969df7120ed7137b35bff3040dc3a7613c9f5a9547e58da4a9849ea"
+   },
+   "post": {
+    "exllamav3/cache/recurrent.py": {
+     "from": "overlay/exllamav3/cache/recurrent.py",
+     "sha256": "c4818777b2122b7ef4531aa642842ea072497a5049879892d17bbd702f8aeb36"
+    },
+    "exllamav3/generator/async_generator.py": {
+     "from": "overlay/exllamav3/generator/async_generator.py",
+     "sha256": "ac35a766b9f6eb75a9a16df093d368fc1aa94fd5d8764c4f55945763fa1eff23"
+    },
+    "exllamav3/generator/disk_cache.py": {
+     "from": "overlay/exllamav3/generator/disk_cache.py",
+     "sha256": "02faab93167dfb5da5ac47b88413806e1f0bd2f503e38c556e030a2b1e194cf9"
+    },
+    "exllamav3/generator/generator.py": {
+     "from": "overlay-tip/exllamav3/generator/generator.py",
+     "sha256": "8b250676967de1211dfafba1a5a033ff91e909c90adb38d278089d37f4830ed5"
+    },
+    "exllamav3/generator/pagetable.py": {
+     "from": "overlay/exllamav3/generator/pagetable.py",
+     "sha256": "00611bdf4fe691bf82229111f3433637fb76920e987d6512912d7a57fedd4ea0"
+    }
+   },
+   "present": [
+    "exllamav3/cache/recurrent_tip.py"
+   ],
+   "depends": {
+    "exllamav3/cache/recurrent_tip.py": "486fd003d5a28d211e6cd83ac03d0091bb8a1ba6267ba367a92516e915a83d43"
+   }
+  },
+  "stack-r4-e3r2+mtp-pruned-r1": {
+   "pre": {
+    "exllamav3/cache/recurrent.py": "5bdc3e1ea71a6f8b4765edb7db5b50c25146f8f64967228cab19c52fbed3c1cb",
+    "exllamav3/generator/async_generator.py": "815efe97e8a156cc12e7e3153981f26e46382645df9b3be32b37b73dc541661d",
+    "exllamav3/generator/disk_cache.py": null,
+    "exllamav3/generator/generator.py": "3fbac39454d7b1fd9d02d7d1522a1367194b770072e5c6dfc083d757e4d36fcb",
+    "exllamav3/generator/pagetable.py": "0cde876b9969df7120ed7137b35bff3040dc3a7613c9f5a9547e58da4a9849ea"
+   },
+   "post": {
+    "exllamav3/cache/recurrent.py": {
+     "from": "overlay/exllamav3/cache/recurrent.py",
+     "sha256": "c4818777b2122b7ef4531aa642842ea072497a5049879892d17bbd702f8aeb36"
+    },
+    "exllamav3/generator/async_generator.py": {
+     "from": "overlay/exllamav3/generator/async_generator.py",
+     "sha256": "ac35a766b9f6eb75a9a16df093d368fc1aa94fd5d8764c4f55945763fa1eff23"
+    },
+    "exllamav3/generator/disk_cache.py": {
+     "from": "overlay/exllamav3/generator/disk_cache.py",
+     "sha256": "02faab93167dfb5da5ac47b88413806e1f0bd2f503e38c556e030a2b1e194cf9"
+    },
+    "exllamav3/generator/generator.py": {
+     "from": "overlay-pruned/exllamav3/generator/generator.py",
+     "sha256": "b03ce7fed04b63bf23ee6505c1f57f53da561737a876b982847f1371c50ff7b0"
+    },
+    "exllamav3/generator/pagetable.py": {
+     "from": "overlay/exllamav3/generator/pagetable.py",
+     "sha256": "00611bdf4fe691bf82229111f3433637fb76920e987d6512912d7a57fedd4ea0"
+    }
+   },
+   "present": [
+    "exllamav3/architecture/qwen4_exp_mtp.py",
+    "exllamav3/modules/embedding.py",
+    "exllamav3/modules/embedding_pruned.py"
+   ],
+   "depends": {
+    "exllamav3/architecture/qwen4_exp_mtp.py": "b39c3f5f5dab93342ca547a0c21537b2b6176d4fcb8dede4654849ea658007cd",
+    "exllamav3/modules/embedding.py": "655d2debea1c7901345c3221e5b57532ef5459faaac9b8ab16638935bf20757b",
+    "exllamav3/modules/embedding_pruned.py": "c1f3f0f5ec9828c2f1e708d4896962c55cb274d8748e921ab79462ff03492830"
+   }
+  }
+ },
+ "requires": {
+  "exllamav3/modules/ple.py": {
+   "contains": "        return (self.conv_state[slot, :, :self.win].cpu(), self.id_state[slot, :self.ctx].clone())\n",
+   "why": "ple-ckpt-clone r1 (PLELayerState.stash() must .clone() the host id context)",
+   "sha256_tested": "cbd597f6507f0d82f0cf59608340985cab339f6029a88ee75d7c04128164db44"
+  }
+ },
+ "depends": {
+  "exllamav3/constants.py": "d8c4f57c7d4acd41665e2f17e555ab973b1a61a2a28a8e153431b4db51bb5bc7",
+  "exllamav3/tokenizer/mm_embedding.py": "7d2a0a2a01aa6d292fcc4e3fa64216f75ae65170a2d455c4b14435135a57b0a4",
+  "exllamav3/generator/job.py": "5a780ca1598963dcdb87aac8a2bdd8558bc0fabd9ccd9bba131557142fbd05e4",
+  "exllamav3/generator/cpu_cache.py": "f0190727b51fe745d47f92d9666528dab1916e979dd0fafdbe2f92ef63953fcf",
+  "exllamav3/cache/quant.py": "7c1cce9713ecd16b90ebadb0ffc310e134960a9343464443228b7416c6604e04",
+  "exllamav3/cache/qsa.py": "67b687d4964e8dfaa798ba4b0b18f400f473ec9fd877e89658f6cf9afba219d9",
+  "exllamav3/modules/gated_delta_net.py": "ec81c8ad219150dee59ba743f14f72d1c412524ee0993c5307c40756fa1a3df7"
+ }
+}

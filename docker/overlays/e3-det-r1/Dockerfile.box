@@ -1,0 +1,18 @@
+# e3-det r1: deterministic E3 grouped MoE prefill, opt-in EXL3_MOE_PREFILL_E3_DET=1 (default off = stack-r4-e3r2 bytes: same
+# kernels, same arguments, same order). Replaces bindings.cpp, exl3_moe_prefill_e3.{cpp,cu,cuh} and block_sparse_mlp.py;
+# install.py checks each is the stack-r4-e3r2 copy first. Rebuilds the extension for sm_120 and asserts the new symbols are in
+# the site-packages build. No heredocs (flan builds with the legacy builder). Build context = this directory.
+ARG BASE=tabbyapi:stack-r4-e3r2
+FROM ${BASE}
+COPY manifest.json install.py build_extension.py /opt/e3-det-r1/
+COPY overlay /opt/e3-det-r1/overlay
+COPY tests /opt/e3-det-r1/tests
+RUN python3 /opt/e3-det-r1/install.py
+ENV TORCH_EXTENSIONS_DIR=/opt/e3-det-r1/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf /opt/e3-det-r1/torch-extensions && mkdir -p /opt/e3-det-r1/torch-extensions && \
+    MAX_JOBS=8 python3 /opt/e3-det-r1/build_extension.py && \
+    python3 -c "from exllamav3.ext import exllamav3_ext as e; assert hasattr(e, 'exl3_moe_prefill_e3_det'), 'no exl3_moe_prefill_e3_det'; assert hasattr(e, 'exl3_moe_prefill_e3_det_reduce'), 'no exl3_moe_prefill_e3_det_reduce'; assert e.exl3_moe_prefill_e3_tile_rows() == 64; assert hasattr(e, 'gr_mix_v2_int8'); assert '/site-packages/' in e.__file__, e.__file__; print(e.__file__)" && \
+    python3 -c "import exllamav3.modules.block_sparse_mlp as b; assert b.MOE_PREFILL_E3_DET is False, 'DET must default off'; print('block_sparse_mlp OK, MOE_PREFILL_E3_DET default', b.MOE_PREFILL_E3_DET)"
+ENV EXL3_MOE_PREFILL_E3=0

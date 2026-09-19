@@ -1,0 +1,5517 @@
+{
+ "verdict": "PASS",
+ "reasons": [],
+ "diagnosis": [
+  "stash-off cold control (E3 off) is deterministic over 2 reps on every turn",
+  "stash-on cold runs equal it",
+  "with E3 on, stash-off cold reps differ on turns [0]",
+  "informational: B (checkpoints detached at put) differs from the reference on turns [5], B' (stock aliasing checkpoints) on turns [5]",
+  "the stock prefill checkpoint did not change after it was stored"
+ ],
+ "e3_env": true,
+ "e3_identity_phases": false,
+ "control_deterministic": true,
+ "detach": true,
+ "turns": [
+  {
+   "turn": 0,
+   "prompt": 8017,
+   "new_A": 8017,
+   "new_B": 8017,
+   "replay_A": 0,
+   "replay_B": 0,
+   "hit_A": null,
+   "hit_B": null,
+   "tip_A": 8192,
+   "A_vs_ref": null,
+   "B_vs_ref": null,
+   "A_vs_B": null,
+   "B_stock_vs_ref": null,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": 87,
+   "e3_on_vs_ref": 27
+  },
+  {
+   "turn": 1,
+   "prompt": 8825,
+   "new_A": 633,
+   "new_B": 633,
+   "replay_A": 0,
+   "replay_B": 0,
+   "hit_A": "std",
+   "hit_B": "std",
+   "tip_A": 9216,
+   "A_vs_ref": null,
+   "B_vs_ref": null,
+   "A_vs_B": null,
+   "B_stock_vs_ref": null,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": null,
+   "e3_on_vs_ref": null
+  },
+  {
+   "turn": 2,
+   "prompt": 9633,
+   "new_A": 417,
+   "new_B": 929,
+   "replay_A": 0,
+   "replay_B": 512,
+   "hit_A": "tip",
+   "hit_B": "std",
+   "tip_A": 9984,
+   "A_vs_ref": null,
+   "B_vs_ref": null,
+   "A_vs_B": null,
+   "B_stock_vs_ref": null,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": null,
+   "e3_on_vs_ref": null
+  },
+  {
+   "turn": 3,
+   "prompt": 10441,
+   "new_A": 457,
+   "new_B": 969,
+   "replay_A": 0,
+   "replay_B": 512,
+   "hit_A": "tip",
+   "hit_B": "std",
+   "tip_A": 10752,
+   "A_vs_ref": null,
+   "B_vs_ref": null,
+   "A_vs_B": null,
+   "B_stock_vs_ref": null,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": null,
+   "e3_on_vs_ref": null
+  },
+  {
+   "turn": 4,
+   "prompt": 11249,
+   "new_A": 497,
+   "new_B": 1009,
+   "replay_A": 0,
+   "replay_B": 512,
+   "hit_A": "tip",
+   "hit_B": "std",
+   "tip_A": 11520,
+   "A_vs_ref": null,
+   "B_vs_ref": null,
+   "A_vs_B": null,
+   "B_stock_vs_ref": null,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": null,
+   "e3_on_vs_ref": null
+  },
+  {
+   "turn": 5,
+   "prompt": 12057,
+   "new_A": 537,
+   "new_B": 1049,
+   "replay_A": 0,
+   "replay_B": 512,
+   "hit_A": "tip",
+   "hit_B": "std",
+   "tip_A": 12288,
+   "A_vs_ref": null,
+   "B_vs_ref": 354,
+   "A_vs_B": 354,
+   "B_stock_vs_ref": 354,
+   "ctl_off_reps_vs_ref": [
+    null
+   ],
+   "ctl_on_vs_ref": [
+    null,
+    null
+   ],
+   "e3_on_rep_vs_rep": null,
+   "e3_on_vs_ref": null
+  }
+ ],
+ "tip_metrics_A": {
+  "jobs": 6,
+  "snapshots": 10,
+  "snapshot_skips": 0,
+  "tips_put": 5,
+  "tips_present": 1,
+  "tips_invalid": 0,
+  "tips_none": 0,
+  "hits_tip": 4,
+  "hits_std": 1,
+  "hits_superseded": 0,
+  "misses_kv": 0,
+  "replay_tokens": 0,
+  "replay_jobs": 0,
+  "replay_max": 0
+ },
+ "rc_tip_metrics": {
+  "puts_std": 152,
+  "puts_tip": 13,
+  "evict_stranded": 0,
+  "evict_superseded": 0,
+  "evict_live_tip": 0,
+  "evict_live_std": 0,
+  "detached_views": 0
+ },
+ "state_check": {
+  "ran": true,
+  "commit_statuses_A": [
+   "present@8192",
+   "put@9216",
+   "put@9984",
+   "put@10752",
+   "put@11520",
+   "put@12288"
+  ],
+  "tip": {
+   "position": 9216,
+   "n_back": 0,
+   "last_history": 3,
+   "ids_vs_tokens": {
+    "(-2, 0)[1]": {
+     "name": "PLELayerState.id_state",
+     "ok": true,
+     "ids": [
+      579,
+      264
+     ],
+     "tokens": [
+      579,
+      264
+     ]
+    }
+   }
+  },
+  "position": 9216,
+  "vs_prefill": {
+   "max_rel_l2": 0.15878649055957794,
+   "bitwise_equal": false,
+   "integer_mismatch": [
+    {
+     "tensor": "(-2, 0)[1]",
+     "name": "PLELayerState.id_state",
+     "first_mismatch": 0,
+     "mismatches": 2,
+     "numel": 2,
+     "first": [
+      579,
+      264
+     ],
+     "second": [
+      271,
+      4277
+     ]
+    }
+   ],
+   "missing": [],
+   "by_part": {
+    "GDNLayerState.conv_state": {
+     "n": 36,
+     "max": 0.15878649055957794,
+     "median": 0.03572487831115723
+    },
+    "GDNLayerState.recurrent_state": {
+     "n": 36,
+     "max": 0.12082689255475998,
+     "median": 0.03478527069091797
+    },
+    "PLELayerState.conv_state": {
+     "n": 1,
+     "max": 0.006106937769800425,
+     "median": 0.006106937769800425
+    }
+   },
+   "dominant": [
+    {
+     "tensor": "(42, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.15878649055957794,
+     "ref_norm": 328.77935791015625
+    },
+    {
+     "tensor": "(44, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.1472587138414383,
+     "ref_norm": 534.7322387695312
+    },
+    {
+     "tensor": "(40, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.14086659252643585,
+     "ref_norm": 401.815673828125
+    },
+    {
+     "tensor": "(41, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.13577866554260254,
+     "ref_norm": 336.85479736328125
+    },
+    {
+     "tensor": "(42, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.12082689255475998,
+     "ref_norm": 8.42910385131836
+    },
+    {
+     "tensor": "(45, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.11689282953739166,
+     "ref_norm": 361.1416015625
+    },
+    {
+     "tensor": "(36, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.10900472849607468,
+     "ref_norm": 5.6960768699646
+    },
+    {
+     "tensor": "(46, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.1043759435415268,
+     "ref_norm": 5.5172882080078125
+    }
+   ],
+   "per_tensor": [
+    {
+     "tensor": "(42, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.15878649055957794,
+     "ref_norm": 328.77935791015625
+    },
+    {
+     "tensor": "(44, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.1472587138414383,
+     "ref_norm": 534.7322387695312
+    },
+    {
+     "tensor": "(40, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.14086659252643585,
+     "ref_norm": 401.815673828125
+    },
+    {
+     "tensor": "(41, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.13577866554260254,
+     "ref_norm": 336.85479736328125
+    },
+    {
+     "tensor": "(42, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.12082689255475998,
+     "ref_norm": 8.42910385131836
+    },
+    {
+     "tensor": "(45, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.11689282953739166,
+     "ref_norm": 361.1416015625
+    },
+    {
+     "tensor": "(36, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.10900472849607468,
+     "ref_norm": 5.6960768699646
+    },
+    {
+     "tensor": "(46, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.1043759435415268,
+     "ref_norm": 5.5172882080078125
+    },
+    {
+     "tensor": "(45, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.10383421927690506,
+     "ref_norm": 5.041384220123291
+    },
+    {
+     "tensor": "(34, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.09441574662923813,
+     "ref_norm": 239.22021484375
+    },
+    {
+     "tensor": "(37, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.09317923337221146,
+     "ref_norm": 248.1403045654297
+    },
+    {
+     "tensor": "(36, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.09296154975891113,
+     "ref_norm": 251.77459716796875
+    },
+    {
+     "tensor": "(30, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.09253938496112823,
+     "ref_norm": 210.15708923339844
+    },
+    {
+     "tensor": "(34, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.09133559465408325,
+     "ref_norm": 5.5043158531188965
+    },
+    {
+     "tensor": "(30, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.08372555673122406,
+     "ref_norm": 6.11066198348999
+    },
+    {
+     "tensor": "(33, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.08239443600177765,
+     "ref_norm": 6.526028156280518
+    },
+    {
+     "tensor": "(32, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.07942651212215424,
+     "ref_norm": 269.20465087890625
+    },
+    {
+     "tensor": "(38, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.07912495732307434,
+     "ref_norm": 310.4847412109375
+    },
+    {
+     "tensor": "(33, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.075507253408432,
+     "ref_norm": 255.81333923339844
+    },
+    {
+     "tensor": "(29, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.07526034861803055,
+     "ref_norm": 204.0283966064453
+    },
+    {
+     "tensor": "(46, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.07449110597372055,
+     "ref_norm": 482.87744140625
+    },
+    {
+     "tensor": "(41, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0733758956193924,
+     "ref_norm": 13.719480514526367
+    },
+    {
+     "tensor": "(40, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.06972132623195648,
+     "ref_norm": 25.711254119873047
+    },
+    {
+     "tensor": "(44, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.06913281232118607,
+     "ref_norm": 38.225772857666016
+    },
+    {
+     "tensor": "(32, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.06712288409471512,
+     "ref_norm": 10.08736515045166
+    },
+    {
+     "tensor": "(26, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.06638699024915695,
+     "ref_norm": 7.13934850692749
+    },
+    {
+     "tensor": "(28, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.062429510056972504,
+     "ref_norm": 237.5544891357422
+    },
+    {
+     "tensor": "(26, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.06150975078344345,
+     "ref_norm": 242.4580078125
+    },
+    {
+     "tensor": "(37, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.06081897020339966,
+     "ref_norm": 6.807496547698975
+    },
+    {
+     "tensor": "(29, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.050867024809122086,
+     "ref_norm": 6.7008819580078125
+    },
+    {
+     "tensor": "(25, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.04739898815751076,
+     "ref_norm": 227.75799560546875
+    },
+    {
+     "tensor": "(20, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.041408833116292953,
+     "ref_norm": 6.865278720855713
+    },
+    {
+     "tensor": "(18, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.04023239389061928,
+     "ref_norm": 5.006654739379883
+    },
+    {
+     "tensor": "(25, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.036031708121299744,
+     "ref_norm": 7.387311935424805
+    },
+    {
+     "tensor": "(20, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.03572487831115723,
+     "ref_norm": 277.7530212402344
+    },
+    {
+     "tensor": "(24, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.03547259792685509,
+     "ref_norm": 207.91258239746094
+    },
+    {
+     "tensor": "(17, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.03478527069091797,
+     "ref_norm": 5.310088634490967
+    },
+    {
+     "tensor": "(18, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.034499913454055786,
+     "ref_norm": 250.31399536132812
+    },
+    {
+     "tensor": "(17, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0337052084505558,
+     "ref_norm": 246.61337280273438
+    },
+    {
+     "tensor": "(38, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.03226257115602493,
+     "ref_norm": 24.12200164794922
+    },
+    {
+     "tensor": "(14, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.03044012002646923,
+     "ref_norm": 4.710886478424072
+    },
+    {
+     "tensor": "(1, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.02986760437488556,
+     "ref_norm": 4.893805980682373
+    },
+    {
+     "tensor": "(21, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.027712425217032433,
+     "ref_norm": 261.0260314941406
+    },
+    {
+     "tensor": "(2, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.02465035766363144,
+     "ref_norm": 5.615593910217285
+    },
+    {
+     "tensor": "(21, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.023251352831721306,
+     "ref_norm": 6.401430606842041
+    },
+    {
+     "tensor": "(28, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.02195345051586628,
+     "ref_norm": 15.685012817382812
+    },
+    {
+     "tensor": "(16, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.02174210175871849,
+     "ref_norm": 6.9800872802734375
+    },
+    {
+     "tensor": "(2, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.020517446100711823,
+     "ref_norm": 205.55764770507812
+    },
+    {
+     "tensor": "(16, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.020363349467515945,
+     "ref_norm": 261.6114501953125
+    },
+    {
+     "tensor": "(22, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.01962629146873951,
+     "ref_norm": 274.8262634277344
+    },
+    {
+     "tensor": "(10, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.019376223906874657,
+     "ref_norm": 4.661764144897461
+    },
+    {
+     "tensor": "(13, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.01813764125108719,
+     "ref_norm": 4.2957329750061035
+    },
+    {
+     "tensor": "(4, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.017788248136639595,
+     "ref_norm": 5.444523334503174
+    },
+    {
+     "tensor": "(14, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.017691146582365036,
+     "ref_norm": 191.69610595703125
+    },
+    {
+     "tensor": "(9, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.017190594226121902,
+     "ref_norm": 185.322265625
+    },
+    {
+     "tensor": "(5, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.016283299773931503,
+     "ref_norm": 5.648200988769531
+    },
+    {
+     "tensor": "(24, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.01607697457075119,
+     "ref_norm": 8.550942420959473
+    },
+    {
+     "tensor": "(10, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.015002458356320858,
+     "ref_norm": 212.3257293701172
+    },
+    {
+     "tensor": "(0, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.014926206320524216,
+     "ref_norm": 447.10479736328125
+    },
+    {
+     "tensor": "(9, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.014742260798811913,
+     "ref_norm": 5.752448558807373
+    },
+    {
+     "tensor": "(6, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.01436421275138855,
+     "ref_norm": 188.69239807128906
+    },
+    {
+     "tensor": "(6, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.014322109520435333,
+     "ref_norm": 8.16551685333252
+    },
+    {
+     "tensor": "(13, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0138515904545784,
+     "ref_norm": 204.78802490234375
+    },
+    {
+     "tensor": "(12, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.01382057648152113,
+     "ref_norm": 7.044617176055908
+    },
+    {
+     "tensor": "(8, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.013781617395579815,
+     "ref_norm": 179.50927734375
+    },
+    {
+     "tensor": "(12, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.013231354765594006,
+     "ref_norm": 225.37559509277344
+    },
+    {
+     "tensor": "(4, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.012484216131269932,
+     "ref_norm": 239.1818389892578
+    },
+    {
+     "tensor": "(0, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.01195223443210125,
+     "ref_norm": 49.022377014160156
+    },
+    {
+     "tensor": "(1, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.011267500929534435,
+     "ref_norm": 175.39695739746094
+    },
+    {
+     "tensor": "(5, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.01048849243670702,
+     "ref_norm": 236.99412536621094
+    },
+    {
+     "tensor": "(8, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.00927434116601944,
+     "ref_norm": 6.465066909790039
+    },
+    {
+     "tensor": "(22, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0071455263532698154,
+     "ref_norm": 31.021425247192383
+    },
+    {
+     "tensor": "(-2, 0)[0]",
+     "name": "PLELayerState.conv_state",
+     "shape": [
+      10240,
+      9
+     ],
+     "dtype": "float16",
+     "rel_l2": 0.006106937769800425,
+     "ref_norm": 82.47773742675781
+    }
+   ]
+  },
+  "vs_prefill_shift": {
+   "GDNLayerState.conv_state": {
+    "-2": 0.7495044469833374,
+    "-1": 0.6735984086990356,
+    "0": 0.03572487831115723,
+    "1": 0.6909671425819397,
+    "2": 0.7944055795669556
+   },
+   "PLELayerState.conv_state": {
+    "-2": 1.1175535917282104,
+    "-1": 1.0555529594421387,
+    "0": 0.006106937769800425,
+    "1": 1.047527551651001,
+    "2": 1.0542505979537964
+   }
+  },
+  "prefill_ids_vs_tokens": {
+   "(-2, 0)[1]": {
+    "name": "PLELayerState.id_state",
+    "ok": false,
+    "ids": [
+     271,
+     4277
+    ],
+    "tokens": [
+     579,
+     264
+    ]
+   }
+  },
+  "stock_checkpoint_changed_after_put": {
+   "max_rel_l2": 0.0,
+   "bitwise_equal": true,
+   "integer_mismatch": [],
+   "missing": [],
+   "by_part": {
+    "GDNLayerState.conv_state": {
+     "n": 36,
+     "max": 0.0,
+     "median": 0.0
+    },
+    "GDNLayerState.recurrent_state": {
+     "n": 36,
+     "max": 0.0,
+     "median": 0.0
+    },
+    "PLELayerState.conv_state": {
+     "n": 1,
+     "max": 0.0,
+     "median": 0.0
+    }
+   },
+   "dominant": [
+    {
+     "tensor": "(0, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 49.022377014160156
+    },
+    {
+     "tensor": "(0, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 447.10479736328125
+    },
+    {
+     "tensor": "(-2, 0)[0]",
+     "name": "PLELayerState.conv_state",
+     "shape": [
+      10240,
+      9
+     ],
+     "dtype": "float16",
+     "rel_l2": 0.0,
+     "ref_norm": 82.47773742675781
+    },
+    {
+     "tensor": "(1, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.893805980682373
+    },
+    {
+     "tensor": "(1, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 175.39695739746094
+    },
+    {
+     "tensor": "(2, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.615593910217285
+    },
+    {
+     "tensor": "(2, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 205.55764770507812
+    },
+    {
+     "tensor": "(4, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.444523334503174
+    }
+   ],
+   "per_tensor": [
+    {
+     "tensor": "(0, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 49.022377014160156
+    },
+    {
+     "tensor": "(0, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 447.10479736328125
+    },
+    {
+     "tensor": "(-2, 0)[0]",
+     "name": "PLELayerState.conv_state",
+     "shape": [
+      10240,
+      9
+     ],
+     "dtype": "float16",
+     "rel_l2": 0.0,
+     "ref_norm": 82.47773742675781
+    },
+    {
+     "tensor": "(1, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.893805980682373
+    },
+    {
+     "tensor": "(1, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 175.39695739746094
+    },
+    {
+     "tensor": "(2, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.615593910217285
+    },
+    {
+     "tensor": "(2, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 205.55764770507812
+    },
+    {
+     "tensor": "(4, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.444523334503174
+    },
+    {
+     "tensor": "(4, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 239.1818389892578
+    },
+    {
+     "tensor": "(5, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.648200988769531
+    },
+    {
+     "tensor": "(5, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 236.99412536621094
+    },
+    {
+     "tensor": "(6, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 8.16551685333252
+    },
+    {
+     "tensor": "(6, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 188.69239807128906
+    },
+    {
+     "tensor": "(8, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.465066909790039
+    },
+    {
+     "tensor": "(8, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 179.50927734375
+    },
+    {
+     "tensor": "(9, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.752448558807373
+    },
+    {
+     "tensor": "(9, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 185.322265625
+    },
+    {
+     "tensor": "(10, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.661764144897461
+    },
+    {
+     "tensor": "(10, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 212.3257293701172
+    },
+    {
+     "tensor": "(12, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.044617176055908
+    },
+    {
+     "tensor": "(12, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 225.37559509277344
+    },
+    {
+     "tensor": "(13, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.2957329750061035
+    },
+    {
+     "tensor": "(13, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 204.78802490234375
+    },
+    {
+     "tensor": "(14, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.710886478424072
+    },
+    {
+     "tensor": "(14, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 191.69610595703125
+    },
+    {
+     "tensor": "(16, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.9800872802734375
+    },
+    {
+     "tensor": "(16, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 261.6114501953125
+    },
+    {
+     "tensor": "(17, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.310088634490967
+    },
+    {
+     "tensor": "(17, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 246.61337280273438
+    },
+    {
+     "tensor": "(18, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.006654739379883
+    },
+    {
+     "tensor": "(18, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 250.31399536132812
+    },
+    {
+     "tensor": "(20, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.865278720855713
+    },
+    {
+     "tensor": "(20, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 277.7530212402344
+    },
+    {
+     "tensor": "(21, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.401430606842041
+    },
+    {
+     "tensor": "(21, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 261.0260314941406
+    },
+    {
+     "tensor": "(22, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 31.021425247192383
+    },
+    {
+     "tensor": "(22, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 274.8262634277344
+    },
+    {
+     "tensor": "(24, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 8.550942420959473
+    },
+    {
+     "tensor": "(24, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 207.91258239746094
+    },
+    {
+     "tensor": "(25, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.387311935424805
+    },
+    {
+     "tensor": "(25, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 227.75799560546875
+    },
+    {
+     "tensor": "(26, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.13934850692749
+    },
+    {
+     "tensor": "(26, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 242.4580078125
+    },
+    {
+     "tensor": "(28, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 15.685012817382812
+    },
+    {
+     "tensor": "(28, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 237.5544891357422
+    },
+    {
+     "tensor": "(29, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.7008819580078125
+    },
+    {
+     "tensor": "(29, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 204.0283966064453
+    },
+    {
+     "tensor": "(30, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.11066198348999
+    },
+    {
+     "tensor": "(30, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 210.15708923339844
+    },
+    {
+     "tensor": "(32, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 10.08736515045166
+    },
+    {
+     "tensor": "(32, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 269.20465087890625
+    },
+    {
+     "tensor": "(33, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.526028156280518
+    },
+    {
+     "tensor": "(33, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 255.81333923339844
+    },
+    {
+     "tensor": "(34, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.5043158531188965
+    },
+    {
+     "tensor": "(34, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 239.22021484375
+    },
+    {
+     "tensor": "(36, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.6960768699646
+    },
+    {
+     "tensor": "(36, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 251.77459716796875
+    },
+    {
+     "tensor": "(37, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.807496547698975
+    },
+    {
+     "tensor": "(37, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 248.1403045654297
+    },
+    {
+     "tensor": "(38, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 24.12200164794922
+    },
+    {
+     "tensor": "(38, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 310.4847412109375
+    },
+    {
+     "tensor": "(40, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 25.711254119873047
+    },
+    {
+     "tensor": "(40, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 401.815673828125
+    },
+    {
+     "tensor": "(41, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 13.719480514526367
+    },
+    {
+     "tensor": "(41, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 336.85479736328125
+    },
+    {
+     "tensor": "(42, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 8.42910385131836
+    },
+    {
+     "tensor": "(42, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 328.77935791015625
+    },
+    {
+     "tensor": "(44, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 38.225772857666016
+    },
+    {
+     "tensor": "(44, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 534.7322387695312
+    },
+    {
+     "tensor": "(45, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.041384220123291
+    },
+    {
+     "tensor": "(45, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 361.1416015625
+    },
+    {
+     "tensor": "(46, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.5172882080078125
+    },
+    {
+     "tensor": "(46, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 482.87744140625
+    }
+   ]
+  },
+  "vs_decode_checkpoint": {
+   "position": 8192,
+   "kind": "std",
+   "max_rel_l2": 0.0,
+   "bitwise_equal": false,
+   "integer_mismatch": [
+    {
+     "tensor": "(-2, 0)[1]",
+     "name": "PLELayerState.id_state",
+     "first_mismatch": 0,
+     "mismatches": 2,
+     "numel": 2,
+     "first": [
+      471,
+      387
+     ],
+     "second": [
+      271,
+      4277
+     ]
+    }
+   ],
+   "missing": [],
+   "by_part": {
+    "GDNLayerState.conv_state": {
+     "n": 36,
+     "max": 0.0,
+     "median": 0.0
+    },
+    "GDNLayerState.recurrent_state": {
+     "n": 36,
+     "max": 0.0,
+     "median": 0.0
+    },
+    "PLELayerState.conv_state": {
+     "n": 1,
+     "max": 0.0,
+     "median": 0.0
+    }
+   },
+   "dominant": [
+    {
+     "tensor": "(0, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 49.030399322509766
+    },
+    {
+     "tensor": "(0, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 467.5425720214844
+    },
+    {
+     "tensor": "(-2, 0)[0]",
+     "name": "PLELayerState.conv_state",
+     "shape": [
+      10240,
+      9
+     ],
+     "dtype": "float16",
+     "rel_l2": 0.0,
+     "ref_norm": 84.93439483642578
+    },
+    {
+     "tensor": "(1, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.895174980163574
+    },
+    {
+     "tensor": "(1, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 167.5028076171875
+    },
+    {
+     "tensor": "(2, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.73093318939209
+    },
+    {
+     "tensor": "(2, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 202.2872314453125
+    },
+    {
+     "tensor": "(4, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.6861958503723145
+    }
+   ],
+   "per_tensor": [
+    {
+     "tensor": "(0, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 49.030399322509766
+    },
+    {
+     "tensor": "(0, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 467.5425720214844
+    },
+    {
+     "tensor": "(-2, 0)[0]",
+     "name": "PLELayerState.conv_state",
+     "shape": [
+      10240,
+      9
+     ],
+     "dtype": "float16",
+     "rel_l2": 0.0,
+     "ref_norm": 84.93439483642578
+    },
+    {
+     "tensor": "(1, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.895174980163574
+    },
+    {
+     "tensor": "(1, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 167.5028076171875
+    },
+    {
+     "tensor": "(2, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.73093318939209
+    },
+    {
+     "tensor": "(2, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 202.2872314453125
+    },
+    {
+     "tensor": "(4, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.6861958503723145
+    },
+    {
+     "tensor": "(4, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 231.3300018310547
+    },
+    {
+     "tensor": "(5, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.592291831970215
+    },
+    {
+     "tensor": "(5, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 242.53150939941406
+    },
+    {
+     "tensor": "(6, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 8.232230186462402
+    },
+    {
+     "tensor": "(6, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 186.28578186035156
+    },
+    {
+     "tensor": "(8, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.687899112701416
+    },
+    {
+     "tensor": "(8, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 178.18292236328125
+    },
+    {
+     "tensor": "(9, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.989797592163086
+    },
+    {
+     "tensor": "(9, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 186.16290283203125
+    },
+    {
+     "tensor": "(10, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.900595664978027
+    },
+    {
+     "tensor": "(10, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 223.57395935058594
+    },
+    {
+     "tensor": "(12, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.39368200302124
+    },
+    {
+     "tensor": "(12, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 232.2335968017578
+    },
+    {
+     "tensor": "(13, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.309514999389648
+    },
+    {
+     "tensor": "(13, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 208.38088989257812
+    },
+    {
+     "tensor": "(14, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.613518238067627
+    },
+    {
+     "tensor": "(14, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 188.4735565185547
+    },
+    {
+     "tensor": "(16, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.014328956604004
+    },
+    {
+     "tensor": "(16, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 249.9322052001953
+    },
+    {
+     "tensor": "(17, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.365411758422852
+    },
+    {
+     "tensor": "(17, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 247.7906494140625
+    },
+    {
+     "tensor": "(18, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.295695781707764
+    },
+    {
+     "tensor": "(18, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 254.2716522216797
+    },
+    {
+     "tensor": "(20, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.79626989364624
+    },
+    {
+     "tensor": "(20, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 253.08506774902344
+    },
+    {
+     "tensor": "(21, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.044099807739258
+    },
+    {
+     "tensor": "(21, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 274.4293518066406
+    },
+    {
+     "tensor": "(22, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 32.251399993896484
+    },
+    {
+     "tensor": "(22, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 275.68890380859375
+    },
+    {
+     "tensor": "(24, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 8.906700134277344
+    },
+    {
+     "tensor": "(24, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 217.56668090820312
+    },
+    {
+     "tensor": "(25, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.453085899353027
+    },
+    {
+     "tensor": "(25, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 221.82275390625
+    },
+    {
+     "tensor": "(26, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.157740592956543
+    },
+    {
+     "tensor": "(26, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 247.6390838623047
+    },
+    {
+     "tensor": "(28, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 15.933987617492676
+    },
+    {
+     "tensor": "(28, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 233.77662658691406
+    },
+    {
+     "tensor": "(29, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.843198776245117
+    },
+    {
+     "tensor": "(29, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 205.69772338867188
+    },
+    {
+     "tensor": "(30, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.882308006286621
+    },
+    {
+     "tensor": "(30, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 199.22190856933594
+    },
+    {
+     "tensor": "(32, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 10.104921340942383
+    },
+    {
+     "tensor": "(32, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 264.0055236816406
+    },
+    {
+     "tensor": "(33, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.830092906951904
+    },
+    {
+     "tensor": "(33, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 258.62066650390625
+    },
+    {
+     "tensor": "(34, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.698909282684326
+    },
+    {
+     "tensor": "(34, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 247.34930419921875
+    },
+    {
+     "tensor": "(36, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.59882116317749
+    },
+    {
+     "tensor": "(36, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 245.27366638183594
+    },
+    {
+     "tensor": "(37, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 7.8268632888793945
+    },
+    {
+     "tensor": "(37, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 282.46148681640625
+    },
+    {
+     "tensor": "(38, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 25.36002540588379
+    },
+    {
+     "tensor": "(38, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 301.9466552734375
+    },
+    {
+     "tensor": "(40, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 27.42680549621582
+    },
+    {
+     "tensor": "(40, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 430.5142517089844
+    },
+    {
+     "tensor": "(41, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 15.63190746307373
+    },
+    {
+     "tensor": "(41, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 341.5378723144531
+    },
+    {
+     "tensor": "(42, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 6.268372535705566
+    },
+    {
+     "tensor": "(42, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 331.001953125
+    },
+    {
+     "tensor": "(44, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 35.21310043334961
+    },
+    {
+     "tensor": "(44, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 528.9434204101562
+    },
+    {
+     "tensor": "(45, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 4.850635051727295
+    },
+    {
+     "tensor": "(45, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 361.09857177734375
+    },
+    {
+     "tensor": "(46, 0)[0]",
+     "name": "GDNLayerState.recurrent_state",
+     "shape": [
+      1,
+      48,
+      128,
+      128
+     ],
+     "dtype": "float32",
+     "rel_l2": 0.0,
+     "ref_norm": 5.694695472717285
+    },
+    {
+     "tensor": "(46, 0)[1]",
+     "name": "GDNLayerState.conv_state",
+     "shape": [
+      10240,
+      4
+     ],
+     "dtype": "bfloat16",
+     "rel_l2": 0.0,
+     "ref_norm": 490.52972412109375
+    }
+   ]
+  },
+  "vs_prefill_over_baseline": {
+   "GDNLayerState.conv_state": {
+    "tip_max": 0.15878649055957794,
+    "baseline_max": 0.06424281746149063,
+    "ratio": 2.4716613752932
+   },
+   "GDNLayerState.recurrent_state": {
+    "tip_max": 0.12082689255475998,
+    "baseline_max": 0.07592456787824631,
+    "ratio": 1.5914070495405344
+   },
+   "PLELayerState.conv_state": {
+    "tip_max": 0.006106937769800425,
+    "baseline_max": 0.006189851555973291,
+    "ratio": 0.9866048829405523
+   }
+  },
+  "decode_baseline": {
+   "position": 8192,
+   "kind": "std",
+   "n_back": 3,
+   "last_history": 3,
+   "tip_ids_vs_tokens": {
+    "(-2, 0)[1]": {
+     "name": "PLELayerState.id_state",
+     "ok": true,
+     "ids": [
+      471,
+      387
+     ],
+     "tokens": [
+      471,
+      387
+     ]
+    }
+   },
+   "stock_ids_vs_tokens": {
+    "(-2, 0)[1]": {
+     "name": "PLELayerState.id_state",
+     "ok": false,
+     "ids": [
+      271,
+      4277
+     ],
+     "tokens": [
+      471,
+      387
+     ]
+    }
+   },
+   "stock_changed_after_put": true,
+   "stock_decode_vs_prefill": {
+    "max_rel_l2": 0.07592456787824631,
+    "bitwise_equal": false,
+    "integer_mismatch": [],
+    "missing": [],
+    "by_part": {
+     "GDNLayerState.conv_state": {
+      "n": 36,
+      "max": 0.06424281746149063,
+      "median": 0.020808426663279533
+     },
+     "GDNLayerState.recurrent_state": {
+      "n": 36,
+      "max": 0.07592456787824631,
+      "median": 0.02417241409420967
+     },
+     "PLELayerState.conv_state": {
+      "n": 1,
+      "max": 0.006189851555973291,
+      "median": 0.006189851555973291
+     }
+    },
+    "dominant": [
+     {
+      "tensor": "(45, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.07592456787824631,
+      "ref_norm": 4.863001823425293
+     },
+     {
+      "tensor": "(40, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06491175293922424,
+      "ref_norm": 27.975732803344727
+     },
+     {
+      "tensor": "(30, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06424281746149063,
+      "ref_norm": 199.59710693359375
+     },
+     {
+      "tensor": "(29, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06234641745686531,
+      "ref_norm": 206.13150024414062
+     },
+     {
+      "tensor": "(41, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06035696342587471,
+      "ref_norm": 15.91506290435791
+     },
+     {
+      "tensor": "(28, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.05103778466582298,
+      "ref_norm": 233.7078094482422
+     },
+     {
+      "tensor": "(44, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.05082063376903534,
+      "ref_norm": 35.860137939453125
+     },
+     {
+      "tensor": "(36, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.046125590801239014,
+      "ref_norm": 5.598350524902344
+     }
+    ],
+    "per_tensor": [
+     {
+      "tensor": "(45, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.07592456787824631,
+      "ref_norm": 4.863001823425293
+     },
+     {
+      "tensor": "(40, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06491175293922424,
+      "ref_norm": 27.975732803344727
+     },
+     {
+      "tensor": "(30, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06424281746149063,
+      "ref_norm": 199.59710693359375
+     },
+     {
+      "tensor": "(29, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06234641745686531,
+      "ref_norm": 206.13150024414062
+     },
+     {
+      "tensor": "(41, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06035696342587471,
+      "ref_norm": 15.91506290435791
+     },
+     {
+      "tensor": "(28, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.05103778466582298,
+      "ref_norm": 233.7078094482422
+     },
+     {
+      "tensor": "(44, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.05082063376903534,
+      "ref_norm": 35.860137939453125
+     },
+     {
+      "tensor": "(36, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.046125590801239014,
+      "ref_norm": 5.598350524902344
+     },
+     {
+      "tensor": "(46, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.04431667923927307,
+      "ref_norm": 5.68573522567749
+     },
+     {
+      "tensor": "(30, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.04059309512376785,
+      "ref_norm": 5.880636692047119
+     },
+     {
+      "tensor": "(32, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.039799563586711884,
+      "ref_norm": 264.085205078125
+     },
+     {
+      "tensor": "(34, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.03919825702905655,
+      "ref_norm": 5.715483665466309
+     },
+     {
+      "tensor": "(32, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.03740852698683739,
+      "ref_norm": 10.111478805541992
+     },
+     {
+      "tensor": "(33, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.036362431943416595,
+      "ref_norm": 258.6875305175781
+     },
+     {
+      "tensor": "(26, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.03223805874586105,
+      "ref_norm": 247.45022583007812
+     },
+     {
+      "tensor": "(17, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.030582640320062637,
+      "ref_norm": 247.48126220703125
+     },
+     {
+      "tensor": "(34, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.0305586289614439,
+      "ref_norm": 247.2923126220703
+     },
+     {
+      "tensor": "(36, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.029779421165585518,
+      "ref_norm": 244.91392517089844
+     },
+     {
+      "tensor": "(37, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02865869551897049,
+      "ref_norm": 7.830759048461914
+     },
+     {
+      "tensor": "(26, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02858610264956951,
+      "ref_norm": 7.150004863739014
+     },
+     {
+      "tensor": "(33, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.028378216549754143,
+      "ref_norm": 6.818785190582275
+     },
+     {
+      "tensor": "(25, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.027477672323584557,
+      "ref_norm": 221.66448974609375
+     },
+     {
+      "tensor": "(20, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.027354324236512184,
+      "ref_norm": 253.22909545898438
+     },
+     {
+      "tensor": "(29, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027328724041581154,
+      "ref_norm": 6.848672389984131
+     },
+     {
+      "tensor": "(42, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027291862294077873,
+      "ref_norm": 6.26913595199585
+     },
+     {
+      "tensor": "(18, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027246197685599327,
+      "ref_norm": 5.3036980628967285
+     },
+     {
+      "tensor": "(20, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02628365159034729,
+      "ref_norm": 6.794878959655762
+     },
+     {
+      "tensor": "(18, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02547823265194893,
+      "ref_norm": 254.20669555664062
+     },
+     {
+      "tensor": "(38, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.024893099442124367,
+      "ref_norm": 25.433252334594727
+     },
+     {
+      "tensor": "(14, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02417241409420967,
+      "ref_norm": 4.608140468597412
+     },
+     {
+      "tensor": "(10, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02354036271572113,
+      "ref_norm": 223.6572723388672
+     },
+     {
+      "tensor": "(16, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.023287780582904816,
+      "ref_norm": 249.80343627929688
+     },
+     {
+      "tensor": "(1, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.023279037326574326,
+      "ref_norm": 4.897662162780762
+     },
+     {
+      "tensor": "(24, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.022753961384296417,
+      "ref_norm": 217.49134826660156
+     },
+     {
+      "tensor": "(17, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02165803126990795,
+      "ref_norm": 5.354301452636719
+     },
+     {
+      "tensor": "(9, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.021385449916124344,
+      "ref_norm": 186.30508422851562
+     },
+     {
+      "tensor": "(42, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.021104753017425537,
+      "ref_norm": 330.95220947265625
+     },
+     {
+      "tensor": "(14, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020808426663279533,
+      "ref_norm": 188.31529235839844
+     },
+     {
+      "tensor": "(12, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020676633343100548,
+      "ref_norm": 232.1207275390625
+     },
+     {
+      "tensor": "(44, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020165257155895233,
+      "ref_norm": 527.7951049804688
+     },
+     {
+      "tensor": "(25, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.020140083506703377,
+      "ref_norm": 7.470523357391357
+     },
+     {
+      "tensor": "(37, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020115572959184647,
+      "ref_norm": 282.8486328125
+     },
+     {
+      "tensor": "(41, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02008560113608837,
+      "ref_norm": 341.5868835449219
+     },
+     {
+      "tensor": "(13, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.019838081672787666,
+      "ref_norm": 208.03314208984375
+     },
+     {
+      "tensor": "(21, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01961853913962841,
+      "ref_norm": 274.5714416503906
+     },
+     {
+      "tensor": "(16, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.0196045134216547,
+      "ref_norm": 7.006001949310303
+     },
+     {
+      "tensor": "(40, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018737126141786575,
+      "ref_norm": 430.8045654296875
+     },
+     {
+      "tensor": "(4, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018735133111476898,
+      "ref_norm": 231.16859436035156
+     },
+     {
+      "tensor": "(2, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.018391078338027,
+      "ref_norm": 5.727041721343994
+     },
+     {
+      "tensor": "(0, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018079426139593124,
+      "ref_norm": 462.8505554199219
+     },
+     {
+      "tensor": "(4, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.017695289105176926,
+      "ref_norm": 5.685754776000977
+     },
+     {
+      "tensor": "(45, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01728212833404541,
+      "ref_norm": 361.0953369140625
+     },
+     {
+      "tensor": "(10, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01694037765264511,
+      "ref_norm": 4.903757095336914
+     },
+     {
+      "tensor": "(38, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.016174837946891785,
+      "ref_norm": 302.40167236328125
+     },
+     {
+      "tensor": "(21, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01541368942707777,
+      "ref_norm": 7.057892322540283
+     },
+     {
+      "tensor": "(5, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.0153691116720438,
+      "ref_norm": 6.59913969039917
+     },
+     {
+      "tensor": "(13, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01473328098654747,
+      "ref_norm": 4.300575256347656
+     },
+     {
+      "tensor": "(22, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.014528505504131317,
+      "ref_norm": 275.7972106933594
+     },
+     {
+      "tensor": "(9, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.014130753464996815,
+      "ref_norm": 5.979912757873535
+     },
+     {
+      "tensor": "(1, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.014020916074514389,
+      "ref_norm": 167.70980834960938
+     },
+     {
+      "tensor": "(46, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.013983918353915215,
+      "ref_norm": 489.646240234375
+     },
+     {
+      "tensor": "(5, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01391285378485918,
+      "ref_norm": 242.6564178466797
+     },
+     {
+      "tensor": "(28, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.013884298503398895,
+      "ref_norm": 15.930034637451172
+     },
+     {
+      "tensor": "(6, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.013778853230178356,
+      "ref_norm": 186.5066375732422
+     },
+     {
+      "tensor": "(12, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.013550136238336563,
+      "ref_norm": 7.390710353851318
+     },
+     {
+      "tensor": "(2, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.012226075865328312,
+      "ref_norm": 201.9404296875
+     },
+     {
+      "tensor": "(0, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.012173285707831383,
+      "ref_norm": 48.8160514831543
+     },
+     {
+      "tensor": "(6, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01171459536999464,
+      "ref_norm": 8.239472389221191
+     },
+     {
+      "tensor": "(8, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.010708536952733994,
+      "ref_norm": 178.23583984375
+     },
+     {
+      "tensor": "(24, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.010673398151993752,
+      "ref_norm": 8.91120719909668
+     },
+     {
+      "tensor": "(8, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.007504352368414402,
+      "ref_norm": 6.684162139892578
+     },
+     {
+      "tensor": "(22, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.00735862273722887,
+      "ref_norm": 32.251434326171875
+     },
+     {
+      "tensor": "(-2, 0)[0]",
+      "name": "PLELayerState.conv_state",
+      "shape": [
+       10240,
+       9
+      ],
+      "dtype": "float16",
+      "rel_l2": 0.006189851555973291,
+      "ref_norm": 85.06070709228516
+     }
+    ]
+   },
+   "tip_vs_prefill": {
+    "max_rel_l2": 0.07592456787824631,
+    "bitwise_equal": false,
+    "integer_mismatch": [
+     {
+      "tensor": "(-2, 0)[1]",
+      "name": "PLELayerState.id_state",
+      "first_mismatch": 0,
+      "mismatches": 2,
+      "numel": 2,
+      "first": [
+       471,
+       387
+      ],
+      "second": [
+       440,
+       2081
+      ]
+     }
+    ],
+    "missing": [],
+    "by_part": {
+     "GDNLayerState.conv_state": {
+      "n": 36,
+      "max": 0.06424281746149063,
+      "median": 0.020808426663279533
+     },
+     "GDNLayerState.recurrent_state": {
+      "n": 36,
+      "max": 0.07592456787824631,
+      "median": 0.02417241409420967
+     },
+     "PLELayerState.conv_state": {
+      "n": 1,
+      "max": 0.006189851555973291,
+      "median": 0.006189851555973291
+     }
+    },
+    "dominant": [
+     {
+      "tensor": "(45, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.07592456787824631,
+      "ref_norm": 4.863001823425293
+     },
+     {
+      "tensor": "(40, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06491175293922424,
+      "ref_norm": 27.975732803344727
+     },
+     {
+      "tensor": "(30, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06424281746149063,
+      "ref_norm": 199.59710693359375
+     },
+     {
+      "tensor": "(29, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06234641745686531,
+      "ref_norm": 206.13150024414062
+     },
+     {
+      "tensor": "(41, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06035696342587471,
+      "ref_norm": 15.91506290435791
+     },
+     {
+      "tensor": "(28, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.05103778466582298,
+      "ref_norm": 233.7078094482422
+     },
+     {
+      "tensor": "(44, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.05082063376903534,
+      "ref_norm": 35.860137939453125
+     },
+     {
+      "tensor": "(36, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.046125590801239014,
+      "ref_norm": 5.598350524902344
+     }
+    ],
+    "per_tensor": [
+     {
+      "tensor": "(45, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.07592456787824631,
+      "ref_norm": 4.863001823425293
+     },
+     {
+      "tensor": "(40, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06491175293922424,
+      "ref_norm": 27.975732803344727
+     },
+     {
+      "tensor": "(30, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06424281746149063,
+      "ref_norm": 199.59710693359375
+     },
+     {
+      "tensor": "(29, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.06234641745686531,
+      "ref_norm": 206.13150024414062
+     },
+     {
+      "tensor": "(41, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.06035696342587471,
+      "ref_norm": 15.91506290435791
+     },
+     {
+      "tensor": "(28, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.05103778466582298,
+      "ref_norm": 233.7078094482422
+     },
+     {
+      "tensor": "(44, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.05082063376903534,
+      "ref_norm": 35.860137939453125
+     },
+     {
+      "tensor": "(36, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.046125590801239014,
+      "ref_norm": 5.598350524902344
+     },
+     {
+      "tensor": "(46, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.04431667923927307,
+      "ref_norm": 5.68573522567749
+     },
+     {
+      "tensor": "(30, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.04059309512376785,
+      "ref_norm": 5.880636692047119
+     },
+     {
+      "tensor": "(32, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.039799563586711884,
+      "ref_norm": 264.085205078125
+     },
+     {
+      "tensor": "(34, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.03919825702905655,
+      "ref_norm": 5.715483665466309
+     },
+     {
+      "tensor": "(32, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.03740852698683739,
+      "ref_norm": 10.111478805541992
+     },
+     {
+      "tensor": "(33, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.036362431943416595,
+      "ref_norm": 258.6875305175781
+     },
+     {
+      "tensor": "(26, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.03223805874586105,
+      "ref_norm": 247.45022583007812
+     },
+     {
+      "tensor": "(17, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.030582640320062637,
+      "ref_norm": 247.48126220703125
+     },
+     {
+      "tensor": "(34, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.0305586289614439,
+      "ref_norm": 247.2923126220703
+     },
+     {
+      "tensor": "(36, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.029779421165585518,
+      "ref_norm": 244.91392517089844
+     },
+     {
+      "tensor": "(37, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02865869551897049,
+      "ref_norm": 7.830759048461914
+     },
+     {
+      "tensor": "(26, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02858610264956951,
+      "ref_norm": 7.150004863739014
+     },
+     {
+      "tensor": "(33, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.028378216549754143,
+      "ref_norm": 6.818785190582275
+     },
+     {
+      "tensor": "(25, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.027477672323584557,
+      "ref_norm": 221.66448974609375
+     },
+     {
+      "tensor": "(20, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.027354324236512184,
+      "ref_norm": 253.22909545898438
+     },
+     {
+      "tensor": "(29, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027328724041581154,
+      "ref_norm": 6.848672389984131
+     },
+     {
+      "tensor": "(42, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027291862294077873,
+      "ref_norm": 6.26913595199585
+     },
+     {
+      "tensor": "(18, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.027246197685599327,
+      "ref_norm": 5.3036980628967285
+     },
+     {
+      "tensor": "(20, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02628365159034729,
+      "ref_norm": 6.794878959655762
+     },
+     {
+      "tensor": "(18, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02547823265194893,
+      "ref_norm": 254.20669555664062
+     },
+     {
+      "tensor": "(38, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.024893099442124367,
+      "ref_norm": 25.433252334594727
+     },
+     {
+      "tensor": "(14, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02417241409420967,
+      "ref_norm": 4.608140468597412
+     },
+     {
+      "tensor": "(10, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02354036271572113,
+      "ref_norm": 223.6572723388672
+     },
+     {
+      "tensor": "(16, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.023287780582904816,
+      "ref_norm": 249.80343627929688
+     },
+     {
+      "tensor": "(1, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.023279037326574326,
+      "ref_norm": 4.897662162780762
+     },
+     {
+      "tensor": "(24, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.022753961384296417,
+      "ref_norm": 217.49134826660156
+     },
+     {
+      "tensor": "(17, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.02165803126990795,
+      "ref_norm": 5.354301452636719
+     },
+     {
+      "tensor": "(9, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.021385449916124344,
+      "ref_norm": 186.30508422851562
+     },
+     {
+      "tensor": "(42, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.021104753017425537,
+      "ref_norm": 330.95220947265625
+     },
+     {
+      "tensor": "(14, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020808426663279533,
+      "ref_norm": 188.31529235839844
+     },
+     {
+      "tensor": "(12, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020676633343100548,
+      "ref_norm": 232.1207275390625
+     },
+     {
+      "tensor": "(44, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020165257155895233,
+      "ref_norm": 527.7951049804688
+     },
+     {
+      "tensor": "(25, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.020140083506703377,
+      "ref_norm": 7.470523357391357
+     },
+     {
+      "tensor": "(37, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.020115572959184647,
+      "ref_norm": 282.8486328125
+     },
+     {
+      "tensor": "(41, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.02008560113608837,
+      "ref_norm": 341.5868835449219
+     },
+     {
+      "tensor": "(13, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.019838081672787666,
+      "ref_norm": 208.03314208984375
+     },
+     {
+      "tensor": "(21, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01961853913962841,
+      "ref_norm": 274.5714416503906
+     },
+     {
+      "tensor": "(16, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.0196045134216547,
+      "ref_norm": 7.006001949310303
+     },
+     {
+      "tensor": "(40, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018737126141786575,
+      "ref_norm": 430.8045654296875
+     },
+     {
+      "tensor": "(4, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018735133111476898,
+      "ref_norm": 231.16859436035156
+     },
+     {
+      "tensor": "(2, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.018391078338027,
+      "ref_norm": 5.727041721343994
+     },
+     {
+      "tensor": "(0, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.018079426139593124,
+      "ref_norm": 462.8505554199219
+     },
+     {
+      "tensor": "(4, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.017695289105176926,
+      "ref_norm": 5.685754776000977
+     },
+     {
+      "tensor": "(45, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01728212833404541,
+      "ref_norm": 361.0953369140625
+     },
+     {
+      "tensor": "(10, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01694037765264511,
+      "ref_norm": 4.903757095336914
+     },
+     {
+      "tensor": "(38, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.016174837946891785,
+      "ref_norm": 302.40167236328125
+     },
+     {
+      "tensor": "(21, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01541368942707777,
+      "ref_norm": 7.057892322540283
+     },
+     {
+      "tensor": "(5, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.0153691116720438,
+      "ref_norm": 6.59913969039917
+     },
+     {
+      "tensor": "(13, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01473328098654747,
+      "ref_norm": 4.300575256347656
+     },
+     {
+      "tensor": "(22, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.014528505504131317,
+      "ref_norm": 275.7972106933594
+     },
+     {
+      "tensor": "(9, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.014130753464996815,
+      "ref_norm": 5.979912757873535
+     },
+     {
+      "tensor": "(1, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.014020916074514389,
+      "ref_norm": 167.70980834960938
+     },
+     {
+      "tensor": "(46, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.013983918353915215,
+      "ref_norm": 489.646240234375
+     },
+     {
+      "tensor": "(5, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.01391285378485918,
+      "ref_norm": 242.6564178466797
+     },
+     {
+      "tensor": "(28, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.013884298503398895,
+      "ref_norm": 15.930034637451172
+     },
+     {
+      "tensor": "(6, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.013778853230178356,
+      "ref_norm": 186.5066375732422
+     },
+     {
+      "tensor": "(12, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.013550136238336563,
+      "ref_norm": 7.390710353851318
+     },
+     {
+      "tensor": "(2, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.012226075865328312,
+      "ref_norm": 201.9404296875
+     },
+     {
+      "tensor": "(0, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.012173285707831383,
+      "ref_norm": 48.8160514831543
+     },
+     {
+      "tensor": "(6, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.01171459536999464,
+      "ref_norm": 8.239472389221191
+     },
+     {
+      "tensor": "(8, 0)[1]",
+      "name": "GDNLayerState.conv_state",
+      "shape": [
+       10240,
+       4
+      ],
+      "dtype": "bfloat16",
+      "rel_l2": 0.010708536952733994,
+      "ref_norm": 178.23583984375
+     },
+     {
+      "tensor": "(24, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.010673398151993752,
+      "ref_norm": 8.91120719909668
+     },
+     {
+      "tensor": "(8, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.007504352368414402,
+      "ref_norm": 6.684162139892578
+     },
+     {
+      "tensor": "(22, 0)[0]",
+      "name": "GDNLayerState.recurrent_state",
+      "shape": [
+       1,
+       48,
+       128,
+       128
+      ],
+      "dtype": "float32",
+      "rel_l2": 0.00735862273722887,
+      "ref_norm": 32.251434326171875
+     },
+     {
+      "tensor": "(-2, 0)[0]",
+      "name": "PLELayerState.conv_state",
+      "shape": [
+       10240,
+       9
+      ],
+      "dtype": "float16",
+      "rel_l2": 0.006189851555973291,
+      "ref_norm": 85.06070709228516
+     }
+    ]
+   },
+   "shift": {
+    "GDNLayerState.conv_state": {
+     "-2": 0.6882830262184143,
+     "-1": 0.6692628264427185,
+     "0": 0.020808426663279533,
+     "1": 0.6891524195671082,
+     "2": 0.6847701072692871
+    },
+    "PLELayerState.conv_state": {
+     "-2": 1.0614039897918701,
+     "-1": 1.0205614566802979,
+     "0": 0.006189851555973291,
+     "1": 1.0245981216430664,
+     "2": 1.063429594039917
+    }
+   }
+  }
+ },
+ "snapshot_d2h_ms": 1.66,
+ "snapshot_mb": 113.2,
+ "args": {
+  "model": "/models/qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+  "out": "/out/gpu_tip_replay.json",
+  "cache_tokens": 131072,
+  "split": "30,30",
+  "kv_bits": "8,8",
+  "slots": 4,
+  "draft": 3,
+  "turns": 6,
+  "prefix_tokens": 8000,
+  "tool_tokens": 400,
+  "gen_tokens": 400,
+  "e3": "off",
+  "control_reps": 2,
+  "no_e3_attribution": false,
+  "autosplit_margin_mb": 2048,
+  "min_headroom_gib": 1.5
+ },
+ "summary_line": " -- recurrent tip stash: entries 2 (222 MiB), puts tip 13 std 152, snapshots 30 (skips 0), tips put 13 present 5 invalid 0 none 12, hits 15 (tip 4 std 11 superseded 0) misses_kv 0, replay 4,096 tok over 8 jobs (avg 512, max 512), evict stranded 0 superseded 0 live_tip 0 live_std 0, detached 0",
+ "memory": {
+  "trace": [
+   [
+    "start",
+    [
+     {
+      "total": 32149,
+      "free": 31642,
+      "allocated": 0,
+      "reserved": 0,
+      "other": 507,
+      "headroom": 31642
+     },
+     {
+      "total": 32149,
+      "free": 31642,
+      "allocated": 0,
+      "reserved": 0,
+      "other": 507,
+      "headroom": 31642
+     }
+    ]
+   ],
+   [
+    "after draft load",
+    [
+     {
+      "total": 32149,
+      "free": 29850,
+      "allocated": 1591,
+      "reserved": 1664,
+      "other": 635,
+      "headroom": 29922
+     },
+     {
+      "total": 32149,
+      "free": 31642,
+      "allocated": 0,
+      "reserved": 0,
+      "other": 507,
+      "headroom": 31642
+     }
+    ]
+   ],
+   [
+    "after target load",
+    [
+     {
+      "total": 32149,
+      "free": 2404,
+      "allocated": 28887,
+      "reserved": 29070,
+      "other": 675,
+      "headroom": 2587
+     },
+     {
+      "total": 32149,
+      "free": 13310,
+      "allocated": 18028,
+      "reserved": 18170,
+      "other": 669,
+      "headroom": 13451
+     }
+    ]
+   ],
+   [
+    "after Generator",
+    [
+     {
+      "total": 32149,
+      "free": 2404,
+      "allocated": 28887,
+      "reserved": 29070,
+      "other": 675,
+      "headroom": 2587
+     },
+     {
+      "total": 32149,
+      "free": 13310,
+      "allocated": 18028,
+      "reserved": 18170,
+      "other": 669,
+      "headroom": 13451
+     }
+    ]
+   ],
+   [
+    "after warm-up",
+    [
+     {
+      "total": 32149,
+      "free": 1620,
+      "allocated": 28933,
+      "reserved": 29820,
+      "other": 709,
+      "headroom": 2506
+     },
+     {
+      "total": 32149,
+      "free": 12822,
+      "allocated": 18174,
+      "reserved": 18634,
+      "other": 693,
+      "headroom": 13282
+     }
+    ]
+   ]
+  ],
+  "target_placement": [
+   [
+    "cpu",
+    0,
+    0,
+    "model.language_model.embed_tokens"
+   ],
+   [
+    "cuda:0",
+    1,
+    32,
+    "hc_expand"
+   ],
+   [
+    "cuda:1",
+    33,
+    52,
+    "model.language_model.layers.30"
+   ]
+  ],
+  "draft_placement": [
+   [
+    "cuda:0",
+    0,
+    2,
+    "mtp"
+   ]
+  ],
+  "autosplit_margin_mb": 2048,
+  "split": "30,30"
+ }
+}

@@ -1,0 +1,19 @@
+# NVMe prefix-cache tier (round 3b tier, round 4 packaging). Python only: no extension rebuild. Opt-in with
+# EXL3_NVME_TIER=<absolute directory inside the container> (unset = the base's behaviour on every path).
+# install.py picks the variant from the installed file hashes (not the tag) and refuses a base whose modules/ple.py
+# lacks the ple-ckpt-clone r1 stash fix, so the base must already carry it:
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:mtp-pruned-r1-tc1-plefix -t tabbyapi:nvme-tier-r4 .   (served chain)
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:stack-r4-e3r2-plefix -t tabbyapi:nvme-tier-r4-stack .
+#     (stack-r4-e3r2-plefix does not exist yet: build ple-ckpt-clone r1's Dockerfile.box on stack-r4-e3r2 first; plain
+#      stack-r4-e3r2, the default BASE, now fails at install.py by design)
+#   docker build -f Dockerfile.box --build-arg BASE=<recurrent-tip-r1 image with the PLE fix> -t tabbyapi:nvme-tier-r4-tip .
+# No heredocs (flan builds with the legacy builder). Build context = this directory.
+ARG BASE=tabbyapi:stack-r4-e3r2
+FROM ${BASE}
+COPY manifest.json install.py /opt/nvme-tier-r4/
+COPY overlay /opt/nvme-tier-r4/overlay
+COPY overlay-tip /opt/nvme-tier-r4/overlay-tip
+COPY overlay-pruned /opt/nvme-tier-r4/overlay-pruned
+COPY tests /opt/nvme-tier-r4/tests
+RUN python3 /opt/nvme-tier-r4/install.py && \
+    python3 /opt/nvme-tier-r4/tests/in_image_smoke.py

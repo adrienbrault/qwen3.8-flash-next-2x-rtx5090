@@ -1,0 +1,41 @@
+{
+ "during_drain": [
+  {
+   "streams": 1,
+   "per_stream_chunks_per_s": [
+    72.7
+   ],
+   "aggregate_chunks_per_s": 72.7
+  },
+  {
+   "streams": 4,
+   "per_stream_chunks_per_s": [
+    45.2,
+    45.4,
+    45.1,
+    47.0
+   ],
+   "aggregate_chunks_per_s": 182.8
+  }
+ ],
+ "after_drain": [
+  {
+   "streams": 1,
+   "per_stream_chunks_per_s": [
+    77.1
+   ],
+   "aggregate_chunks_per_s": 77.1
+  },
+  {
+   "streams": 4,
+   "per_stream_chunks_per_s": [
+    46.3,
+    46.2,
+    46.8,
+    47.1
+   ],
+   "aggregate_chunks_per_s": 186.4
+  }
+ ],
+ "drained": true
+}

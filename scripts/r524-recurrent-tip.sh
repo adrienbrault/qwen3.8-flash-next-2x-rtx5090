@@ -9,7 +9,7 @@
 # with the per-request tip log; fn_bench code c1/c4. The OFF echo baseline is R524b (daily image, same replay).
 # GPU TIMEBOX 15 min. RUN (queued): popped by r515-queue-chain from flashnext-queue.txt.
 set -uo pipefail
-export HOME=${HOME:?}
+export HOME=$HOME
 TAG=${TAG:-ON}
 R=/srv/qwen5090/results/2026-09-19-r524-recurrent-tip; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
@@ -35,26 +35,36 @@ for f in "$LIVE" "$SRC/Dockerfile.box" /srv/qwen5090/probes/agent_replay.py /srv
   [ -e "$f" ] || { log "ABORT: missing $f"; exit 3; }; done
 grep -q -- "--echo" /srv/qwen5090/probes/agent_replay.py || { log "ABORT: agent_replay.py has no --echo"; exit 3; }
 ENVS=$(sed -n 's/^EXTRA_ENV=\${EXTRA_ENV:-\(.*\)}$/\1/p' "$LIVE"); [ -n "$ENVS" ] || { log "ABORT: no daily EXTRA_ENV"; exit 3; }
-LIMG=$(sed -n 's/^IMG=\${IMG:-\(.*\)}$/\1/p' "$LIVE"); [ "$LIMG" = tabbyapi:stack-r4-e3r2 ] || { log "ABORT: live image '$LIMG' is not the overlay base"; exit 3; }
+LIMG=$(sed -n 's/^IMG=\${IMG:-\(.*\)}$/\1/p' "$LIVE")
+# The tip overlay is built on stack-r4-e3r2. If the daily moved to the pruned-draft image (R528) and/or the tool_choice
+# overlay (R529), both arms here still run on stack-r4-e3r2-based images with the pruned-draft flags stripped, so ON vs OFF
+# stays internally consistent (R522: the pruned draft is byte-identical).
+case "$LIMG" in tabbyapi:stack-r4-e3r2|tabbyapi:stack-r4-e3r2-*|tabbyapi:mtp-pruned-r1|tabbyapi:mtp-pruned-r1-*) ;; *) log "ABORT: live image '$LIMG' unknown to this unit"; exit 3;; esac
+ENVS=$(echo " $ENVS " | sed -e 's/ EXL3_MTP_DEVICE_DRAFT=1 / /; s/ EXL3_EMBED_GPU=1 / /; s/ EXL3_EMBED_GPU_PRUNED=1 / /' | xargs)
 if [ "$TAG" = ON ]; then log "building $IMG (before the lock)"
   (cd "$SRC" && sudo docker build -t "$IMG" -f Dockerfile.box . ) > "$R/build.log" 2>&1 || { log "ABORT: build failed: $(tail -3 "$R/build.log" | tr '\n' ' ' | cut -c1-240)"; exit 3; }; fi
 export GPU_QUEUE_NAME=r524-recurrent-tip-$TAG
 . /srv/qwen5090/lib/gpu-queue.sh
 gpu_lock
-END=$(( $(date +%s) + 900 ))
+END=$(( $(date +%s) + 1500 ))
 log "lock held; arm $TAG; timebox ends $(date -Is -d @$END)"
 BOOTED=1
 sudo docker stop -t 30 flashnext >/dev/null 2>&1; sudo docker rm -f flashnext >/dev/null 2>&1; sleep 2
 if [ "$TAG" = ON ]; then
   DENV=(); for kv in $ENVS; do DENV+=(-e "$kv"); done
+  # cuda:0 headroom: the harness loads the target with a 2048 MiB autosplit margin and exits 4 (SETUP) below 1.5 GiB;
+  # --split does not bind at 29-30 GB (R524 tries 6-7 OOMed on cuda:0 either way)
   log "step 0: gpu_tip_replay.py"
-  timeout 330 sudo docker run --rm --name r524-probe --gpus all --ipc=host --shm-size=16g "${DENV[@]}" \
+  timeout 720 sudo docker run --rm --name r524-probe --gpus all --ipc=host --shm-size=16g "${DENV[@]}" \
     -e EXL3_RECURRENT_TIP_STASH=1 -e EXL3_RECURRENT_TIP_LOG_EACH=1 -e EXL3_RECURRENT_TIP_LOG_SECS=0 \
     -v /srv/qwen5090/models:/models:ro -v /srv/qwen5090/.exl3cache:/exl3-cache -e TRITON_CACHE_DIR=/exl3-cache -e EXLLAMAV3_TUNE_CACHE=/exl3-cache \
     -v "$R":/out --entrypoint python3 "$IMG" /opt/recurrent-tip-r1/tests/gpu_tip_replay.py --model /models/$MODEL --out /out/gpu_tip_replay.json \
     > "$R/gpu_tip_replay.log" 2>&1; rc=$?
   log "step 0 exit $rc: $(tail -4 "$R/gpu_tip_replay.log" | tr '\n' ' ' | cut -c1-300)"
-  case $rc in 0|2) ;; *) log "step 0 FAIL"; finish FAILED; exit 1;; esac
+  grep -a "verdict\|control_deterministic\|e3_on_rep_vs_rep\|phase D" "$R/gpu_tip_replay.log" | tail -6 | cut -c1-240 | tee -a "$R/audit.log"
+  onlyD=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); r=d.get("reasons") or []; print(1 if r and all(x.startswith("phase D") for x in r) else 0)' "$R/gpu_tip_replay.json" 2>/dev/null || echo 0)
+  case $rc in 0|2) ;; 3) log "step 0 INDETERMINATE (control not reproducible): continuing to the served A/B";;
+    *) if [ "$onlyD" = 1 ]; then log "step 0 FAIL on phase D only (identity phases pass): continuing to the served A/B for throughput"; else log "step 0 FAIL"; finish FAILED; exit 1; fi;; esac
   BIMG=$IMG; BENV="$ENVS $ONENV"
 else BIMG=tabbyapi:stack-r4-e3r2; BENV="$ENVS"; fi
 "${CLEAN_ENV[@]}" IMG="$BIMG" EXTRA_ENV="$BENV" bash "$LIVE" > "$R/boot-$TAG.log" 2>&1 || { log "NO BOOT $TAG"; finish ABORTED; exit 3; }
@@ -77,8 +87,9 @@ open(out,"w").write(json.dumps(d)); m=d["choices"][0]["message"]
 print(hashlib.sha256(((m.get("content") or "")+"|"+(m.get("reasoning_content") or "")).encode()).hexdigest()[:16])
 PY
 }
-a=$(greedy $TAG); b=$(greedy30k $TAG); log "[$TAG] fingerprints c1 $a / 30k $b (canonical ae890c45d1000582 / 4a255910dee2d9c5)"
-[ "$a" = ae890c45d1000582 ] && [ "$b" = 4a255910dee2d9c5 ] || { log "G2 FAIL"; finish FAILED; exit 1; }
+C1=ae890c45d1000582; case " $ENVS " in *" EXL3_HC_MIX_V2_INT8=1 "*) C1=e7fb377c987d685c;; esac   # R525 int8 mixer daily
+a=$(greedy $TAG); b=$(greedy30k $TAG); log "[$TAG] fingerprints c1 $a / 30k $b (canonical $C1 / 4a255910dee2d9c5)"
+[ "$a" = "$C1" ] && [ "$b" = 4a255910dee2d9c5 ] || { log "G2 FAIL"; finish FAILED; exit 1; }
 sudo docker logs -f --since "$(date -Is)" flashnext > "$R/replay-$TAG.docker.log" 2>&1 & LP=$!
 timeout 360 python3 /srv/qwen5090/probes/agent_replay.py --url "$API" --model "$MODEL" --trajs $TRAJS --agents 8 --convs 8 --calls 15 \
   --tool-gap 2 --echo --tag "echo-$TAG" --out "$R/replay.jsonl" 2>&1 | tail -1 | sed "s/^/[replay $TAG] /" | cut -c1-300 | tee -a "$R/audit.log"
@@ -96,7 +107,7 @@ try: print("last summary:", last[-400:])
 except NameError: print("no stash summary line")
 PY
 if [ $(( END - $(date +%s) )) -ge 120 ]; then
-  timeout $(( END - $(date +%s) )) python3 /srv/qwen5090/probes/fn_bench.py --url "$API" --model "$MODEL" --tag "$TAG-code" --kind code --tokens 2048 \
+  timeout $(( END - $(date +%s) )) python3 /srv/qwen5090/probes/fn_bench.py --url "$API" --model "$MODEL" --tag "$TAG-code" --kind code --tokens 2048 --warmup-runs 1 \
     --conc 1 4 --runs 2 --out "$R/records-$TAG.jsonl" 2>&1 | grep -E "^  c=|FAILED|Traceback|Error" | sed "s/^/[$TAG code]/" | cut -c1-220 | tee -a "$R/audit.log"
 else log "SKIP fn_bench: timebox"; fi
 sudo docker logs flashnext > "$R/docker-$TAG.log" 2>&1

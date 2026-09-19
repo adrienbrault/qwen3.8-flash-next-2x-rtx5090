@@ -1,0 +1,13 @@
+#pragma once
+// syntax-check stand-in for libcu++ <cuda/atomic>
+namespace cuda {
+enum thread_scope { thread_scope_system, thread_scope_device, thread_scope_block };
+enum memory_order { memory_order_relaxed, memory_order_acquire, memory_order_release, memory_order_acq_rel, memory_order_seq_cst };
+template <typename T, thread_scope S = thread_scope_system> struct atomic_ref {
+  __host__ __device__ explicit atomic_ref(T& r) : p(&r) {}
+  __host__ __device__ T load(memory_order = memory_order_seq_cst) const { return *p; }
+  __host__ __device__ void store(T v, memory_order = memory_order_seq_cst) const { *p = v; }
+  __host__ __device__ T fetch_add(T v, memory_order = memory_order_seq_cst) const { T o = *p; *p += v; return o; }
+  T* p;
+};
+}

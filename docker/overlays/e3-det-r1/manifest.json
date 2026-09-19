@@ -1,0 +1,19 @@
+{
+ "base_image": "tabbyapi:stack-r4-e3r2",
+ "round": "e3-det-r1",
+ "flag": "EXL3_MOE_PREFILL_E3_DET (literal 1; default off = stack-r4-e3r2 behaviour)",
+ "pre": {
+  "exllamav3_ext/bindings.cpp": "efe014ceeedd2b222381ba582bf702f61f251c1c394e193f5d307606911555a1",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cpp": "5a38f63e7801f354a3d2c216e4c20f75a3e514885398a806a4d040404ffa43fc",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cu": "84d83911c2249f1f7f26bbaa515f698c36496946ace23dd5f3186fdcac4f22de",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cuh": "406ad0a0e1ec47ed1021fa6f68ac083b9404a3610b968ab80ea26de3408c580a",
+  "modules/block_sparse_mlp.py": "9a4f4279e026320db5ff3e73cf878dfcc433e865637d13ef5599456cb383dada"
+ },
+ "post": {
+  "exllamav3_ext/bindings.cpp": "59ad68efef9b59d8438002153e93eb1cf0beafb7570acdd60715ecce0e70cdc5",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cpp": "7091125b6b366456bff793ea81c6c72b4129cf17ea614fc79ff2203cfb3eb99a",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cu": "885d56246f7d9bae817805e8f185e91d8ad5c65cee5897fd081b96c6e28fb02e",
+  "exllamav3_ext/quant/exl3_moe_prefill_e3.cuh": "d0896873614873b2e9608ff452459ef5548b7af4c7089e7a44d5d9c700bff3e0",
+  "modules/block_sparse_mlp.py": "64dded9fb78434a96a57b3c26849dd56179936ba8a9872ed842703df58561cdf"
+ }
+}

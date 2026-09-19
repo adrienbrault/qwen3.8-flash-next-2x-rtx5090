@@ -1,0 +1,6 @@
+prefill 60000: boot means A1=9593 B2=9387 B3=9530 A4=9759 B5=9354 A6=9549 A7=9733 B8=9639
+prefill 60000: atomic (A) 9658.4, DET (B) 9477.5 -> B/A 0.9813, B-A 95 % CI [-4.63, +0.88] % (n 4+4 boots)
+prefill 120000: boot means A1=10064 B2=9968 B3=10199 A4=10078 B5=9998 A6=10063 A7=10129 B8=10097
+prefill 120000: atomic (A) 10083.6, DET (B) 10065.3 -> B/A 0.9982, B-A 95 % CI [-1.91, +1.54] % (n 4+4 boots)
+decode code c1: boot means A1=224 B2=223 B3=223 A4=222 B5=224 A6=222 A7=223 B8=224
+decode code c1: atomic (A) 222.8, DET (B) 223.4 -> B/A 1.0029, B-A 95 % CI [-0.47, +1.04] % (n 4+4 boots)

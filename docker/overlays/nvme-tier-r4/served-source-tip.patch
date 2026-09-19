@@ -1,0 +1,54 @@
+diff -ruN a/exllamav3/generator/generator.py b/exllamav3/generator/generator.py
+--- a/exllamav3/generator/generator.py	2026-09-19 07:01:55
++++ b/exllamav3/generator/generator.py	2026-09-19 07:01:55
+@@ -40,6 +40,10 @@
+ # `self.tip_stash is not None` test that is False.
+ _RECURRENT_TIP_STASH = os.environ.get("EXL3_RECURRENT_TIP_STASH", "0") == "1"
+ 
++# Persistent NVMe prefix tier (generator/disk_cache.py): EXL3_NVME_TIER=<absolute directory>. Unset = no tier:
++# disk_cache is never imported and every hook below is a `self.disk_page_cache is not None` test that is False.
++_NVME_TIER = os.environ.get("EXL3_NVME_TIER", "")
++
+ class Generator:
+ 
+     def __init__(
+@@ -304,6 +308,10 @@
+         recurrent_checkpoint_interval = recurrent_checkpoint_interval
+         self.recurrent_checkpoint_interval = recurrent_checkpoint_interval
+         self.recurrent_checkpoint_interval_pp = ceil_span(recurrent_checkpoint_interval_pp, self.max_chunk_size)
++        self.disk_page_cache = None
++        if _NVME_TIER:
++            from .disk_cache import DiskPageCache
++            self.disk_page_cache = DiskPageCache.install(self, cache, draft_cache, _NVME_TIER)
+         self.tip_stash = None
+         if _RECURRENT_TIP_STASH and self.recurrent_cache is not None:
+             from ..cache.recurrent_tip import TipStash
+@@ -583,6 +591,10 @@
+         assert self.draft_cache is None or self.draft_cache.initialized, \
+             "Draft cache tensors were never allocated. Construct the draft Cache BEFORE calling draft_model.load()"
+ 
++        # NVMe tier: stop the idle drain, then copy out a few pages of admitted chains (no file I/O here)
++        if self.disk_page_cache is not None:
++            self.disk_page_cache.pump()
++
+         results = []
+         self.iterate_start_jobs(results)
+ 
+@@ -638,6 +650,8 @@
+         glibc is retaining from stash/offload churn (issue #277) — sub-threshold residue would otherwise sit
+         in the arenas for the whole idle period.
+         """
++        if self.disk_page_cache is not None:
++            self.disk_page_cache.on_busy()
+         if self.recurrent_cache is not None:
+             self.recurrent_cache.prune_stranded()
+         self.pagetable.defrag()
+@@ -647,6 +661,8 @@
+         from ..modules.block_sparse_mlp_cpu import run_pending_swap_sweeps
+         run_pending_swap_sweeps(self.model.config.infer_params)
+         malloc_trim()
++        if self.disk_page_cache is not None:
++            self.disk_page_cache.on_idle()
+ 
+ 
+     def recurrent_checkpoint(self):

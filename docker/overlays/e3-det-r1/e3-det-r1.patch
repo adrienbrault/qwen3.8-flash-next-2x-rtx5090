@@ -1,0 +1,858 @@
+--- a/exllamav3/exllamav3_ext/bindings.cpp
++++ b/exllamav3/exllamav3_ext/bindings.cpp
+@@ -263,6 +263,8 @@
+     m.def("exl3_moe_gather", &exl3_moe_gather, "exl3_moe_gather");
+     m.def("exl3_moe_prefill_e3", &exl3_moe_prefill_e3, "exl3_moe_prefill_e3");
+     m.def("exl3_moe_prefill_e3_tile_rows", &exl3_moe_prefill_e3_tile_rows, "exl3_moe_prefill_e3_tile_rows");
++    m.def("exl3_moe_prefill_e3_det", &exl3_moe_prefill_e3_det, "exl3_moe_prefill_e3_det");
++    m.def("exl3_moe_prefill_e3_det_reduce", &exl3_moe_prefill_e3_det_reduce, "exl3_moe_prefill_e3_det_reduce");
+     m.def("exl3_moe_coop", &exl3_moe_coop, "exl3_moe_coop");
+ 
+     m.def("bighead_attn", &bighead_attn, "bighead_attn");
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp
+@@ -138,3 +138,158 @@
+         static_cast<int>(gate_bits), static_cast<int>(up_bits), static_cast<int>(down_bits),
+         static_cast<int>(thin_rows), static_cast<float>(act_limit));
+ }
++
++// e3-det r1: deterministic E3 (EXL3_MOE_PREFILL_E3_DET=1). exl3_moe_prefill_e3 above is unchanged.
++void exl3_moe_prefill_e3_det(
++    const at::Tensor& x,
++    const at::Tensor& expert_count,
++    const at::Tensor& token_sorted,
++    const at::Tensor& weight_sorted,
++    const at::Tensor& gate_trellis,
++    const at::Tensor& gate_suh,
++    const at::Tensor& gate_svh,
++    const at::Tensor& up_trellis,
++    const at::Tensor& up_suh,
++    const at::Tensor& up_svh,
++    const at::Tensor& down_trellis,
++    const at::Tensor& down_suh,
++    const at::Tensor& h13_gate,
++    const at::Tensor& h13_up,
++    const at::Tensor& h2,
++    const at::Tensor& row_token,
++    const at::Tensor& row_weight,
++    const at::Tensor& row_expert,
++    const at::Tensor& row_pos,
++    const at::Tensor& order,
++    const at::Tensor& expert_start,
++    const at::Tensor& inv_order,
++    const at::Tensor& seg_expert,
++    const at::Tensor& seg_row0,
++    const at::Tensor& seg_rows,
++    const at::Tensor& num_rows,
++    const at::Tensor& num_segs,
++    const at::Tensor& slots,
++    int64_t gate_bits,
++    int64_t up_bits,
++    int64_t down_bits,
++    int64_t thin_rows,
++    double act_limit)
++{
++    const at::cuda::OptionalCUDAGuard device_guard(x.device());
++    int current_device = -1;
++    C10_CUDA_CHECK(cudaGetDevice(&current_device));
++    TORCH_CHECK(current_device == x.get_device(), "E3 det current-device guard failed");
++
++    check_cuda_contiguous(x, at::kHalf, "x");
++    check_cuda_contiguous(expert_count, at::kLong, "expert_count");
++    check_cuda_contiguous(token_sorted, at::kLong, "token_sorted");
++    check_cuda_contiguous(weight_sorted, at::kHalf, "weight_sorted");
++    TORCH_CHECK(x.dim() == 2, "x must be a matrix");
++    TORCH_CHECK(x.size(1) == 2560, "E3 det is pinned to hidden_size=2560");
++    TORCH_CHECK(expert_count.dim() == 1 && expert_count.numel() == 513,
++                "E3 det is pinned to 512 experts plus sentinel");
++    TORCH_CHECK(token_sorted.dim() == 1 && weight_sorted.sizes() == token_sorted.sizes(),
++                "sorted token/weight vectors must match");
++    TORCH_CHECK(token_sorted.numel() == x.size(0) * 10, "E3 det is pinned to top_k=10");
++    auto check_bits = [](int64_t bits, const char* name)
++    {
++        TORCH_CHECK(bits >= 2 && bits <= 4, name, " K must be 2, 3, or 4");
++    };
++    check_bits(gate_bits, "gate");
++    check_bits(up_bits, "up");
++    check_bits(down_bits, "down");
++    TORCH_CHECK(thin_rows >= 1 && thin_rows <= 256, "thin_rows must be in [1, 256]");
++
++    constexpr int64_t experts = 512;
++    check_ptrs(gate_trellis, experts, "gate_trellis");
++    check_ptrs(gate_suh, experts, "gate_suh");
++    check_ptrs(gate_svh, experts, "gate_svh");
++    check_ptrs(up_trellis, experts, "up_trellis");
++    check_ptrs(up_suh, experts, "up_suh");
++    check_ptrs(up_svh, experts, "up_svh");
++    check_ptrs(down_trellis, experts, "down_trellis");
++    check_ptrs(down_suh, experts, "down_suh");
++
++    const int64_t cap = token_sorted.numel();
++    auto check_half_matrix = [cap](const at::Tensor& t, int64_t width, const char* name)
++    {
++        check_cuda_contiguous(t, at::kHalf, name);
++        TORCH_CHECK(t.dim() == 2 && t.size(0) == cap && t.size(1) == width,
++                    name, " has the wrong workspace shape");
++    };
++    check_half_matrix(h13_gate, 2560, "h13_gate");
++    check_half_matrix(h13_up, 2560, "h13_up");
++    check_half_matrix(h2, 640, "h2");
++    check_cuda_contiguous(row_token, at::kLong, "row_token");
++    check_cuda_contiguous(row_weight, at::kHalf, "row_weight");
++    check_cuda_contiguous(row_expert, at::kInt, "row_expert");
++    check_cuda_contiguous(row_pos, at::kInt, "row_pos");
++    check_cuda_contiguous(order, at::kLong, "order");
++    check_cuda_contiguous(expert_start, at::kLong, "expert_start");
++    check_cuda_contiguous(inv_order, at::kLong, "inv_order");
++    TORCH_CHECK(row_token.numel() == cap && row_weight.numel() == cap && row_expert.numel() == cap &&
++                row_pos.numel() == cap && order.numel() == cap && inv_order.numel() == cap,
++                "row workspaces must have assignment capacity");
++    TORCH_CHECK(expert_start.dim() == 1 && expert_start.numel() == 513, "expert_start must be int64[513]");
++    check_i32_vector(seg_expert, "seg_expert");
++    check_i32_vector(seg_row0, "seg_row0");
++    check_i32_vector(seg_rows, "seg_rows");
++    TORCH_CHECK(seg_expert.numel() == seg_row0.numel() && seg_row0.numel() == seg_rows.numel(),
++                "segment workspaces must match");
++    TORCH_CHECK(seg_expert.numel() >= (cap + 63) / 64 + experts,
++                "segment workspace is smaller than the no-sync upper bound");
++    check_i32_vector(num_rows, "num_rows");
++    check_i32_vector(num_segs, "num_segs");
++    TORCH_CHECK(num_rows.numel() == 1 && num_segs.numel() == 1, "live counts must have one element");
++    check_cuda_contiguous(slots, at::kFloat, "slots");
++    TORCH_CHECK(slots.dim() == 2 && slots.size(0) == cap && slots.size(1) == 2560,
++                "slots must be float32 [assignments, 2560]");
++
++    exl3_moe_prefill_e3_det_cuda(
++        x, expert_count, token_sorted, weight_sorted,
++        gate_trellis, gate_suh, gate_svh,
++        up_trellis, up_suh, up_svh,
++        down_trellis, down_suh,
++        h13_gate, h13_up, h2,
++        row_token, row_weight, row_expert, row_pos, order, expert_start, inv_order,
++        seg_expert, seg_row0, seg_rows, num_rows, num_segs, slots,
++        static_cast<int>(gate_bits), static_cast<int>(up_bits), static_cast<int>(down_bits),
++        static_cast<int>(thin_rows), static_cast<float>(act_limit));
++}
++
++void exl3_moe_prefill_e3_det_reduce(
++    const at::Tensor& out,
++    const at::Tensor& slots,
++    const at::Tensor& flat_expert,
++    const at::Tensor& inv_order,
++    const at::Tensor& flat_weight,
++    const at::Tensor& expert_count,
++    const at::Tensor& down_svh,
++    int64_t thin_rows)
++{
++    const at::cuda::OptionalCUDAGuard device_guard(out.device());
++    int current_device = -1;
++    C10_CUDA_CHECK(cudaGetDevice(&current_device));
++    TORCH_CHECK(current_device == out.get_device(), "E3 det reduce current-device guard failed");
++
++    check_cuda_contiguous(out, at::kFloat, "out");
++    TORCH_CHECK(out.dim() == 2 && out.size(1) == 2560, "out must be float32 [tokens, 2560]");
++    const int64_t cap = out.size(0) * 10;
++    check_cuda_contiguous(slots, at::kFloat, "slots");
++    TORCH_CHECK(slots.dim() == 2 && slots.size(0) == cap && slots.size(1) == 2560,
++                "slots must be float32 [tokens * 10, 2560]");
++    check_cuda_contiguous(flat_expert, at::kLong, "flat_expert");
++    check_cuda_contiguous(inv_order, at::kLong, "inv_order");
++    check_cuda_contiguous(flat_weight, at::kHalf, "flat_weight");
++    TORCH_CHECK(flat_expert.numel() == cap && inv_order.numel() == cap && flat_weight.numel() == cap,
++                "assignment vectors must have tokens * 10 entries");
++    check_cuda_contiguous(expert_count, at::kLong, "expert_count");
++    TORCH_CHECK(expert_count.dim() == 1 && expert_count.numel() == 513,
++                "E3 det is pinned to 512 experts plus sentinel");
++    check_ptrs(down_svh, 512, "down_svh");
++    TORCH_CHECK(thin_rows >= 1 && thin_rows <= 256, "thin_rows must be in [1, 256]");
++
++    exl3_moe_prefill_e3_det_reduce_cuda(
++        out, slots, flat_expert, inv_order, flat_weight, expert_count, down_svh,
++        static_cast<int>(thin_rows));
++}
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cu
+@@ -657,8 +657,325 @@
+ {
+     if (capacity < 1) return 1;
+     return static_cast<int>(capacity > 512 ? 512 : capacity);
++}
++
++// ---------------------------------------------------------------------------------------------
++// Deterministic E3 (EXL3_MOE_PREFILL_E3_DET=1, e3-det r1). Everything above this line, and the
++// exl3_moe_prefill_e3_cuda entry point, is unchanged; the default path launches exactly the
++// kernels it launched before.
++//
++// Every routed assignment owns one slot in a per-call fp32 scratch [assignments, hidden] whose
++// row is the assignment's position p in the expert-sorted order (the caller carves the scratch
++// from the same bytes as h13_gate|h13_up, which are dead once the gate/up kernel has run):
++//   * fat experts (count > thin_rows, E3): e3_down_det_kernel stores the down GEMM's
++//     half-rounded, pre-Hadamard output -- the exact half4 the atomic epilogue hands to
++//     e3_had_float_raw -- into the first `hidden` halves of the slot row;
++//   * thin experts (1..thin_rows, served exl3_moe kernel): that kernel's existing slot mode
++//     (output_scratch + fused_base = expert start) stores the final weighted fp32 contribution;
++//   * e3_det_reduce_kernel sums each token's top-k contributions in router top-k order, applying
++//     the fat epilogue (Hadamard, HAD_SCALE * route, svh) with the atomic kernel's exact
++//     operations, and stores the sum into the output row.
++// No floating-point atomics remain; every output value is produced by one thread in a fixed
++// order, so the result does not depend on CTA scheduling.
++
++constexpr int E3_TOPK = 10;
++
++// Index preparation, one launch. Block 0 runs a parallel exclusive scan of the expert counts
++// (all counts, and fat counts = count > thin_rows) and writes
++//   row_pos[fat_row] = the fat row's position in the expert-sorted order (fat rows are laid out
++//                      by e3_metadata_kernel, which is left untouched and still runs first),
++//   expert_start[e]  = first sorted position of expert e (the thin tier's slot base);
++// every block inverts its slice of the sort permutation: inv_order[order[p]] = p.
++// Integer arithmetic only; same values as the serial scan in e3_metadata_kernel.
++__global__ __launch_bounds__(E3_META_THREADS)
++void e3_det_prep_kernel(
++    const int64_t* __restrict__ expert_count,
++    const int64_t* __restrict__ order,
++    int* __restrict__ row_pos,
++    int64_t* __restrict__ expert_start,
++    int64_t* __restrict__ inv_order,
++    int thin_rows,
++    int assignments)
++{
++    const int p = blockIdx.x * E3_META_THREADS + threadIdx.x;
++    if (p < assignments)
++        inv_order[order[p]] = p;
++    if (blockIdx.x != 0) return;
++
++    constexpr int NW = E3_META_THREADS / 32;
++    static_assert(E3_META_THREADS == E3_EXPERTS && NW <= 32, "one thread per expert");
++    __shared__ int warp_s[NW];
++    __shared__ int warp_f[NW];
++    const int e = threadIdx.x;
++    const int lane = e & 31;
++    const int warp = e >> 5;
++    const int c = static_cast<int>(expert_count[e]);
++    const int f = c > thin_rows ? c : 0;
++    int s_inc = c;
++    int f_inc = f;
++    #pragma unroll
++    for (int d = 1; d < 32; d <<= 1)
++    {
++        const int s_up = __shfl_up_sync(0xffffffff, s_inc, d);
++        const int f_up = __shfl_up_sync(0xffffffff, f_inc, d);
++        if (lane >= d)
++        {
++            s_inc += s_up;
++            f_inc += f_up;
++        }
++    }
++    if (lane == 31)
++    {
++        warp_s[warp] = s_inc;
++        warp_f[warp] = f_inc;
++    }
++    __syncthreads();
++    if (warp == 0)
++    {
++        const int ws0 = lane < NW ? warp_s[lane] : 0;
++        const int wf0 = lane < NW ? warp_f[lane] : 0;
++        int ws = ws0;
++        int wf = wf0;
++        #pragma unroll
++        for (int d = 1; d < 32; d <<= 1)
++        {
++            const int s_up = __shfl_up_sync(0xffffffff, ws, d);
++            const int f_up = __shfl_up_sync(0xffffffff, wf, d);
++            if (lane >= d)
++            {
++                ws += s_up;
++                wf += f_up;
++            }
++        }
++        if (lane < NW)
++        {
++            warp_s[lane] = ws - ws0;  // exclusive prefix of the warp totals
++            warp_f[lane] = wf - wf0;
++        }
++    }
++    __syncthreads();
++    const int src0 = warp_s[warp] + s_inc - c;
++    const int dst0 = warp_f[warp] + f_inc - f;
++    expert_start[e] = src0;
++    if (e == E3_EXPERTS - 1)
++        expert_start[E3_EXPERTS] = src0 + c;  // sentinel bin (empty: every expert is layer-local)
++    if (f == 0) return;
++    for (int r = 0; r < c; ++r)
++        row_pos[dst0 + r] = src0 + r;
++}
++
++// e3_down_kernel with a store epilogue: identical main loop and fp32 -> half rounding, then the
++// half4 goes to the assignment's slot instead of through the Hadamard + atomicAdd.
++template <int DOWN_BITS>
++__global__ __launch_bounds__(E3_THREADS, 2)
++void e3_down_det_kernel(
++    const half* __restrict__ h2,
++    const uint16_t* const* __restrict__ down_trellis,
++    half* __restrict__ slots_h,
++    const int* __restrict__ row_pos,
++    const int* __restrict__ seg_expert,
++    const int* __restrict__ seg_row0,
++    const int* __restrict__ seg_rows,
++    const int* __restrict__ num_segs,
++    int intermediate,
++    int hidden)
++{
++    constexpr int AS = 1;
++    constexpr int TILE_N2 = 2 * E3_TILE_N;
++    extern __shared__ __align__(16) unsigned char smem[];
++    half* sh_a = reinterpret_cast<half*>(smem);
++    uint16_t* sh_b = reinterpret_cast<uint16_t*>(
++        sh_a + E3_STAGES * AS * E3_TILE_M * E3_TILE_K);
++    float* sh_c = reinterpret_cast<float*>(smem);
++
++    const int live_segs = *num_segs;
++    const int warp = threadIdx.x >> 5;
++    const int lane = threadIdx.x & 31;
++    const int tiles_n = hidden / 16;
++    const int n_base = blockIdx.x * TILE_N2;
++    // Slot rows are fp32 [hidden]; a fat slot uses its first `hidden` halves
++    const int64_t slot_stride_h = 2 * static_cast<int64_t>(hidden);
++    for (int seg = blockIdx.y; seg < live_segs; seg += gridDim.y)
++    {
++        const int e = seg_expert[seg];
++        const int row0 = seg_row0[seg];
++        const int rows = seg_rows[seg];
++        const half* const a[AS] = {h2};
++        const uint16_t* const packed[2] = {down_trellis[e], down_trellis[e]};
++        FragC acc[2][E3_MB][2];
++        e3_mainloop<E3_MB, AS, E3_TILE_N / 16, DOWN_BITS, DOWN_BITS>(
++            a, intermediate, row0, rows, packed, tiles_n, n_base / 16, sh_a, sh_b, acc);
++
++        #pragma unroll
++        for (int mb = 0; mb < E3_MB; ++mb)
++        {
++            const int rows_mb = rows - mb * 16;
++            if (rows_mb <= 0) break;
++            e3_stage_acc<2>(sh_c, acc[0][mb], acc[1][mb], warp, lane);
++            __syncthreads();
++            #pragma unroll
++            for (int rr = 0; rr < 2; ++rr)
++            {
++                const int r = warp + rr * E3_WARPS;
++                if (r < rows_mb)
++                {
++                    const int fat_row = row0 + mb * 16 + r;
++                    const float* src = sh_c + r * TILE_N2;
++                    half* dst = slots_h + static_cast<int64_t>(row_pos[fat_row]) * slot_stride_h
++                                + n_base + lane * 4;
++                    #pragma unroll
++                    for (int s = 0; s < 2; ++s)
++                    {
++                        const half4 hv = e3_float4_to_half4(
++                            *reinterpret_cast<const float4*>(src + s * E3_TILE_N + lane * 4));
++                        *reinterpret_cast<half4*>(dst + s * E3_TILE_N) = hv;
++                    }
++                }
++            }
++            __syncthreads();
++        }
++    }
+ }
+ 
++__device__ __forceinline__ half2 e3_u32_as_half2(uint32_t u)
++{
++    return half2_uint32(u).as_half2;
++}
++
++// One warp per (token, 128-column block): each lane owns 4 columns, the same lane/column map as
++// the atomic epilogue, so e3_had_float_raw sees exactly the half4 it saw there. The token's
++// top-k slots are summed in k order (router top-k order) from +0.0f and the sum is stored.
++__global__ __launch_bounds__(E3_THREADS)
++void e3_det_reduce_kernel(
++    float* __restrict__ out,
++    const float* __restrict__ slots,
++    const int64_t* __restrict__ flat_expert,
++    const int64_t* __restrict__ inv_order,
++    const half* __restrict__ flat_weight,
++    const int64_t* __restrict__ expert_count,
++    const half* const* __restrict__ down_svh,
++    int tokens,
++    int hidden,
++    int thin_rows)
++{
++    const int lane = threadIdx.x & 31;
++    const int col_blocks = hidden / 128;
++    const int64_t w = static_cast<int64_t>(blockIdx.x) * E3_WARPS + (threadIdx.x >> 5);
++    if (w >= static_cast<int64_t>(tokens) * col_blocks) return;  // warp-uniform
++    const int token = static_cast<int>(w / col_blocks);
++    const int col = static_cast<int>(w - static_cast<int64_t>(token) * col_blocks) * 128 + lane * 4;
++
++    // Lanes 0..TOPK-1 resolve the token's assignments once; values are broadcast per k
++    long long my_pos = 0;
++    int my_e = 0;
++    float my_route = 0.0f;
++    int my_fat = 0;
++    if (lane < E3_TOPK)
++    {
++        const int64_t a = static_cast<int64_t>(token) * E3_TOPK + lane;
++        my_e = static_cast<int>(flat_expert[a]);
++        my_pos = static_cast<long long>(inv_order[a]);
++        my_route = __half2float(flat_weight[a]);
++        my_fat = expert_count[my_e] > thin_rows;
++    }
++
++    // Issue every slot (and fat svh) load before any arithmetic
++    const half* slots_h = reinterpret_cast<const half*>(slots);
++    uint4 raw[E3_TOPK];
++    uint2 svh_raw[E3_TOPK];
++    #pragma unroll
++    for (int k = 0; k < E3_TOPK; ++k)
++    {
++        const int64_t pos = static_cast<int64_t>(__shfl_sync(0xffffffff, my_pos, k));
++        const int fat = __shfl_sync(0xffffffff, my_fat, k);
++        const int e = __shfl_sync(0xffffffff, my_e, k);
++        if (fat)
++        {
++            const uint2 h = *reinterpret_cast<const uint2*>(slots_h + pos * (2 * static_cast<int64_t>(hidden)) + col);
++            raw[k] = make_uint4(h.x, h.y, 0u, 0u);
++            svh_raw[k] = *reinterpret_cast<const uint2*>(down_svh[e] + col);
++        }
++        else
++        {
++            raw[k] = *reinterpret_cast<const uint4*>(slots + pos * static_cast<int64_t>(hidden) + col);
++            svh_raw[k] = make_uint2(0u, 0u);
++        }
++    }
++
++    float4 acc = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++    #pragma unroll
++    for (int k = 0; k < E3_TOPK; ++k)
++    {
++        const int fat = __shfl_sync(0xffffffff, my_fat, k);
++        const float route = __shfl_sync(0xffffffff, my_route, k);
++        float4 v;
++        if (fat)
++        {
++            // The atomic epilogue of e3_down_kernel, operation for operation (__fmul_rn keeps
++            // the compiler from contracting the scale multiplies into the sum below)
++            const half4 hv(e3_u32_as_half2(raw[k].x), e3_u32_as_half2(raw[k].y));
++            v = e3_had_float_raw(hv, lane);
++            const half2 sc0 = e3_u32_as_half2(svh_raw[k].x);
++            const half2 sc1 = e3_u32_as_half2(svh_raw[k].y);
++            const float r_scale = __fmul_rn(E3_HAD_SCALE, route);
++            v.x = __fmul_rn(v.x, r_scale); v.y = __fmul_rn(v.y, r_scale);
++            v.z = __fmul_rn(v.z, r_scale); v.w = __fmul_rn(v.w, r_scale);
++            v.x = __fmul_rn(v.x, __low2float(sc0)); v.y = __fmul_rn(v.y, __high2float(sc0));
++            v.z = __fmul_rn(v.z, __low2float(sc1)); v.w = __fmul_rn(v.w, __high2float(sc1));
++        }
++        else
++        {
++            v = make_float4(__uint_as_float(raw[k].x), __uint_as_float(raw[k].y),
++                            __uint_as_float(raw[k].z), __uint_as_float(raw[k].w));
++        }
++        acc.x = __fadd_rn(acc.x, v.x);
++        acc.y = __fadd_rn(acc.y, v.y);
++        acc.z = __fadd_rn(acc.z, v.z);
++        acc.w = __fadd_rn(acc.w, v.w);
++    }
++    *reinterpret_cast<float4*>(out + static_cast<int64_t>(token) * hidden + col) = acc;
++}
++
++struct E3DownDetLaunch
++{
++    const half* h2;
++    const uint16_t* const* down_trellis;
++    half* slots_h;
++    const int* row_pos;
++    const int* seg_expert;
++    const int* seg_row0;
++    const int* seg_rows;
++    const int* num_segs;
++    int intermediate;
++    int hidden;
++    int grid_y;
++    cudaStream_t stream;
++};
++
++template <int DOWN_BITS>
++void e3_launch_down_det(const E3DownDetLaunch& a)
++{
++    constexpr int smem = e3_smem_bytes<E3_MB, 1, DOWN_BITS, DOWN_BITS>();
++    C10_CUDA_CHECK(cudaFuncSetAttribute(
++        e3_down_det_kernel<DOWN_BITS>, cudaFuncAttributeMaxDynamicSharedMemorySize, smem));
++    e3_down_det_kernel<DOWN_BITS>
++        <<<dim3(a.hidden / (2 * E3_TILE_N), a.grid_y), E3_THREADS, smem, a.stream>>>(
++            a.h2, a.down_trellis, a.slots_h, a.row_pos,
++            a.seg_expert, a.seg_row0, a.seg_rows, a.num_segs, a.intermediate, a.hidden);
++    C10_CUDA_KERNEL_LAUNCH_CHECK();
++}
++
++void e3_dispatch_down_det(int down_bits, const E3DownDetLaunch& a)
++{
++    switch (down_bits)
++    {
++        case 2: e3_launch_down_det<2>(a); break;
++        case 3: e3_launch_down_det<3>(a); break;
++        case 4: e3_launch_down_det<4>(a); break;
++        default: TORCH_CHECK(false, "E3 down K must be 2, 3, or 4");
++    }
++}
++
+ }  // namespace
+ 
+ void exl3_moe_prefill_e3_cuda(
+@@ -754,3 +1071,147 @@
+     };
+     e3_dispatch_down(down_bits, down_args);
+ }
++
++// Deterministic E3, phase 1 (e3-det r1). The metadata, gather and gate/up launches are the ones
++// exl3_moe_prefill_e3_cuda issues, with the same arguments; one index-preparation launch is added
++// (row_pos, expert_start, inv_order) and the down projection stores half pre-Hadamard slots
++// instead of adding into `out`. The caller then runs the thin tier into the same slots (exl3_moe
++// slot mode, fused_base = expert_start) and phase 2.
++void exl3_moe_prefill_e3_det_cuda(
++    const at::Tensor& x,
++    const at::Tensor& expert_count,
++    const at::Tensor& token_sorted,
++    const at::Tensor& weight_sorted,
++    const at::Tensor& gate_trellis,
++    const at::Tensor& gate_suh,
++    const at::Tensor& gate_svh,
++    const at::Tensor& up_trellis,
++    const at::Tensor& up_suh,
++    const at::Tensor& up_svh,
++    const at::Tensor& down_trellis,
++    const at::Tensor& down_suh,
++    const at::Tensor& h13_gate,
++    const at::Tensor& h13_up,
++    const at::Tensor& h2,
++    const at::Tensor& row_token,
++    const at::Tensor& row_weight,
++    const at::Tensor& row_expert,
++    const at::Tensor& row_pos,
++    const at::Tensor& order,
++    const at::Tensor& expert_start,
++    const at::Tensor& inv_order,
++    const at::Tensor& seg_expert,
++    const at::Tensor& seg_row0,
++    const at::Tensor& seg_rows,
++    const at::Tensor& num_rows,
++    const at::Tensor& num_segs,
++    const at::Tensor& slots,
++    int gate_bits,
++    int up_bits,
++    int down_bits,
++    int thin_rows,
++    float act_limit)
++{
++    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
++    e3_metadata_kernel<<<1, E3_META_THREADS, 0, stream>>>(
++        expert_count.data_ptr<int64_t>(),
++        token_sorted.data_ptr<int64_t>(),
++        reinterpret_cast<const half*>(weight_sorted.data_ptr()),
++        row_token.data_ptr<int64_t>(),
++        reinterpret_cast<half*>(row_weight.data_ptr()),
++        row_expert.data_ptr<int>(),
++        seg_expert.data_ptr<int>(),
++        seg_row0.data_ptr<int>(),
++        seg_rows.data_ptr<int>(),
++        num_rows.data_ptr<int>(),
++        num_segs.data_ptr<int>(),
++        thin_rows);
++    C10_CUDA_KERNEL_LAUNCH_CHECK();
++
++    const int assignments = static_cast<int>(order.numel());
++    const int prep_blocks = assignments > 0 ? (assignments + E3_META_THREADS - 1) / E3_META_THREADS : 1;
++    e3_det_prep_kernel<<<prep_blocks, E3_META_THREADS, 0, stream>>>(
++        expert_count.data_ptr<int64_t>(),
++        order.data_ptr<int64_t>(),
++        row_pos.data_ptr<int>(),
++        expert_start.data_ptr<int64_t>(),
++        inv_order.data_ptr<int64_t>(),
++        thin_rows,
++        assignments);
++    C10_CUDA_KERNEL_LAUNCH_CHECK();
++
++    const int hidden = static_cast<int>(x.size(1));
++    const int intermediate = static_cast<int>(h2.size(1));
++    int64_t row_cap = h13_gate.size(0);
++    int gx = static_cast<int>((row_cap + E3_WARPS - 1) / E3_WARPS);
++    if (gx > 1024) gx = 1024;
++    if (gx < 1) gx = 1;
++    e3_gather_kernel<<<dim3(gx, hidden / 128), E3_THREADS, 0, stream>>>(
++        reinterpret_cast<const half*>(x.data_ptr()),
++        row_token.data_ptr<int64_t>(),
++        row_expert.data_ptr<int>(),
++        reinterpret_cast<const half* const*>(gate_suh.data_ptr()),
++        reinterpret_cast<const half* const*>(up_suh.data_ptr()),
++        reinterpret_cast<half*>(h13_gate.data_ptr()),
++        reinterpret_cast<half*>(h13_up.data_ptr()),
++        num_rows.data_ptr<int>(),
++        hidden);
++    C10_CUDA_KERNEL_LAUNCH_CHECK();
++
++    const int gy = e3_grid_y(seg_expert.numel());
++    const E3GateUpLaunch gateup_args = {
++        reinterpret_cast<const half*>(h13_gate.data_ptr()),
++        reinterpret_cast<const half*>(h13_up.data_ptr()),
++        reinterpret_cast<const uint16_t* const*>(gate_trellis.data_ptr()),
++        reinterpret_cast<const uint16_t* const*>(up_trellis.data_ptr()),
++        reinterpret_cast<const half* const*>(gate_svh.data_ptr()),
++        reinterpret_cast<const half* const*>(up_svh.data_ptr()),
++        reinterpret_cast<const half* const*>(down_suh.data_ptr()),
++        reinterpret_cast<half*>(h2.data_ptr()),
++        seg_expert.data_ptr<int>(), seg_row0.data_ptr<int>(), seg_rows.data_ptr<int>(),
++        num_segs.data_ptr<int>(), hidden, intermediate, act_limit, gy, stream,
++    };
++    e3_dispatch_gateup(gate_bits, up_bits, gateup_args);
++
++    // `slots` may alias h13_gate/h13_up: the gate/up kernel above is their last reader and the
++    // down kernel below is stream-ordered after it
++    const E3DownDetLaunch down_args = {
++        reinterpret_cast<const half*>(h2.data_ptr()),
++        reinterpret_cast<const uint16_t* const*>(down_trellis.data_ptr()),
++        reinterpret_cast<half*>(slots.data_ptr()),
++        row_pos.data_ptr<int>(),
++        seg_expert.data_ptr<int>(), seg_row0.data_ptr<int>(), seg_rows.data_ptr<int>(),
++        num_segs.data_ptr<int>(), intermediate, hidden, gy, stream,
++    };
++    e3_dispatch_down_det(down_bits, down_args);
++}
++
++// Deterministic E3, phase 2: out[t] = sum over k = 0..TOPK-1 (router order) of assignment
++// (t, k)'s contribution, stored (not added): every token row of `out` is overwritten.
++void exl3_moe_prefill_e3_det_reduce_cuda(
++    const at::Tensor& out,
++    const at::Tensor& slots,
++    const at::Tensor& flat_expert,
++    const at::Tensor& inv_order,
++    const at::Tensor& flat_weight,
++    const at::Tensor& expert_count,
++    const at::Tensor& down_svh,
++    int thin_rows)
++{
++    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
++    const int tokens = static_cast<int>(out.size(0));
++    const int hidden = static_cast<int>(out.size(1));
++    if (tokens == 0) return;
++    const int64_t warps = static_cast<int64_t>(tokens) * (hidden / 128);
++    const int blocks = static_cast<int>((warps + E3_WARPS - 1) / E3_WARPS);
++    e3_det_reduce_kernel<<<blocks, E3_THREADS, 0, stream>>>(
++        reinterpret_cast<float*>(out.data_ptr()),
++        reinterpret_cast<const float*>(slots.data_ptr()),
++        flat_expert.data_ptr<int64_t>(),
++        inv_order.data_ptr<int64_t>(),
++        reinterpret_cast<const half*>(flat_weight.data_ptr()),
++        expert_count.data_ptr<int64_t>(),
++        reinterpret_cast<const half* const*>(down_svh.data_ptr()),
++        tokens, hidden, thin_rows);
++    C10_CUDA_KERNEL_LAUNCH_CHECK();
++}
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cuh
+@@ -72,3 +72,101 @@
+     int down_bits,
+     int thin_rows,
+     float act_limit);
++
++// Deterministic E3 (EXL3_MOE_PREFILL_E3_DET=1, e3-det r1). Phase 1 runs metadata, gather and
++// gate/up exactly as exl3_moe_prefill_e3, fills row_pos / expert_start / inv_order from the
++// counts and the sort permutation `order`, then stores every fat assignment's half-rounded,
++// pre-Hadamard down output into `slots` (fp32 [assignments, 2560], row = expert-sorted
++// position, may alias h13_gate|h13_up) instead of adding into the output. The caller then runs
++// the thin tier through exl3_moe's slot mode (fused_base = expert_start) into the same slots and
++// calls phase 2, which sums each token's 10 slots in router top-k order and stores the result.
++// No float atomics.
++void exl3_moe_prefill_e3_det(
++    const at::Tensor& x,
++    const at::Tensor& expert_count,
++    const at::Tensor& token_sorted,
++    const at::Tensor& weight_sorted,
++    const at::Tensor& gate_trellis,
++    const at::Tensor& gate_suh,
++    const at::Tensor& gate_svh,
++    const at::Tensor& up_trellis,
++    const at::Tensor& up_suh,
++    const at::Tensor& up_svh,
++    const at::Tensor& down_trellis,
++    const at::Tensor& down_suh,
++    const at::Tensor& h13_gate,
++    const at::Tensor& h13_up,
++    const at::Tensor& h2,
++    const at::Tensor& row_token,
++    const at::Tensor& row_weight,
++    const at::Tensor& row_expert,
++    const at::Tensor& row_pos,
++    const at::Tensor& order,
++    const at::Tensor& expert_start,
++    const at::Tensor& inv_order,
++    const at::Tensor& seg_expert,
++    const at::Tensor& seg_row0,
++    const at::Tensor& seg_rows,
++    const at::Tensor& num_rows,
++    const at::Tensor& num_segs,
++    const at::Tensor& slots,
++    int64_t gate_bits,
++    int64_t up_bits,
++    int64_t down_bits,
++    int64_t thin_rows,
++    double act_limit);
++
++void exl3_moe_prefill_e3_det_reduce(
++    const at::Tensor& out,
++    const at::Tensor& slots,
++    const at::Tensor& flat_expert,
++    const at::Tensor& inv_order,
++    const at::Tensor& flat_weight,
++    const at::Tensor& expert_count,
++    const at::Tensor& down_svh,
++    int64_t thin_rows);
++
++void exl3_moe_prefill_e3_det_cuda(
++    const at::Tensor& x,
++    const at::Tensor& expert_count,
++    const at::Tensor& token_sorted,
++    const at::Tensor& weight_sorted,
++    const at::Tensor& gate_trellis,
++    const at::Tensor& gate_suh,
++    const at::Tensor& gate_svh,
++    const at::Tensor& up_trellis,
++    const at::Tensor& up_suh,
++    const at::Tensor& up_svh,
++    const at::Tensor& down_trellis,
++    const at::Tensor& down_suh,
++    const at::Tensor& h13_gate,
++    const at::Tensor& h13_up,
++    const at::Tensor& h2,
++    const at::Tensor& row_token,
++    const at::Tensor& row_weight,
++    const at::Tensor& row_expert,
++    const at::Tensor& row_pos,
++    const at::Tensor& order,
++    const at::Tensor& expert_start,
++    const at::Tensor& inv_order,
++    const at::Tensor& seg_expert,
++    const at::Tensor& seg_row0,
++    const at::Tensor& seg_rows,
++    const at::Tensor& num_rows,
++    const at::Tensor& num_segs,
++    const at::Tensor& slots,
++    int gate_bits,
++    int up_bits,
++    int down_bits,
++    int thin_rows,
++    float act_limit);
++
++void exl3_moe_prefill_e3_det_reduce_cuda(
++    const at::Tensor& out,
++    const at::Tensor& slots,
++    const at::Tensor& flat_expert,
++    const at::Tensor& inv_order,
++    const at::Tensor& flat_weight,
++    const at::Tensor& expert_count,
++    const at::Tensor& down_svh,
++    int thin_rows);
+--- a/exllamav3/modules/block_sparse_mlp.py
++++ b/exllamav3/modules/block_sparse_mlp.py
+@@ -48,6 +48,12 @@
+ MOE_PREFILL_E3 = os.environ.get("EXL3_MOE_PREFILL_E3", "0") == "1"
+ MOE_PREFILL_E3_MIN_ROWS = max(512, int(os.environ.get("EXL3_MOE_PREFILL_E3_MIN_ROWS", "512")))
+ MOE_PREFILL_E3_THIN_ROWS = min(256, max(1, int(os.environ.get("EXL3_MOE_PREFILL_E3_THIN_ROWS", "32"))))
++# Deterministic E3 (e3-det r1), literal 1 only, read at call time like MOE_PREFILL_E3 (tests flip
++# the module attribute). Only acts where E3 itself is active: every routed assignment gets its own
++# slot (fat experts: half pre-Hadamard down output from E3; thin experts: the fused kernel's
++# weighted fp32 slot mode) and one reduction sums each token's top-k slots in router order, so a
++# prompt's prefill output no longer depends on CTA scheduling. Unset = today's atomic E3, unchanged
++MOE_PREFILL_E3_DET = os.environ.get("EXL3_MOE_PREFILL_E3_DET", "0") == "1"
+ MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/blocksparse_mlp.h
+ 
+ @dataclass
+@@ -1036,8 +1042,13 @@
+                     valid = (flat_expert_local >= 0) & (flat_expert_local < E)
+                     flat_expert_local = torch.where(valid, flat_expert_local, torch.full_like(flat_expert_local, E))
+ 
+-                # Group once by local expert id (including sentinel for expert-P mode)
+-                order = flat_expert_local.argsort()
++                # Group once by local expert id (including sentinel for expert-P mode). The
++                # deterministic E3 path asks for a stable sort so the in-expert order is a pure
++                # function of the routing (its slots are keyed by sorted position)
++                if MOE_PREFILL_E3 and MOE_PREFILL_E3_DET and num_tokens >= MOE_PREFILL_E3_MIN_ROWS:
++                    order = flat_expert_local.argsort(stable = True)
++                else:
++                    order = flat_expert_local.argsort()
+                 token_sorted = flat_token[order]
+                 weight_sorted = flat_weight[order]
+ 
+@@ -1139,10 +1150,15 @@
+                             tables = torch.from_numpy(np.stack([base, starts_np, kind])).to(y.device, non_blocking = True)
+                     scratch = torch.empty((max(n_slots, 1), y.shape[1]), dtype = torch.float, device = y.device)
+ 
+-                def run_fused(num_active, count_lo = 1, count_hi = self.fused_rows, m_tile = 16):
++                def run_fused(num_active, count_lo = 1, count_hi = self.fused_rows, m_tile = 16, det_slots = None):
+                     # Gateless: the up module stands in for the gate pointer tables (the kernel
+                     # skips the gate GEMM when activation_fn_idx is MOE_ACT_RELU2_NOGATE)
+                     multi_gate = self.multi_gate if self.gated else self.multi_up
++                    # det_slots (deterministic E3 only): (fp32 slot scratch, per-expert slot base)
++                    if det_slots is None:
++                        out_scratch, out_base = scratch, tables[0] if tables is not None else None
++                    else:
++                        out_scratch, out_base = det_slots
+                     ext.exl3_moe(
+                         y,
+                         final_hidden_states,
+@@ -1174,13 +1190,55 @@
+                         self.multi_down.mul1,
+                         self.act_limit,
+                         num_active,
+-                        scratch, tables[0] if tables is not None else None,
++                        out_scratch, out_base,
+                         count_lo, count_hi, m_tile
+                     )
+ 
+                 # num_active -1 = unknown (all fused), kernel launches at max concurrency
+                 if self.fused_mode_buffers is not None:
+-                    if e3_active:
++                    if e3_active and MOE_PREFILL_E3_DET:
++                        # Deterministic E3 (e3-det r1). Slot row p = assignment's position in the
++                        # expert-sorted order; the fp32 slot scratch reuses h13_g|h13_u's bytes
++                        # (both dead once E3's gate/up kernel has run), so VRAM is unchanged.
++                        # Order on the stream: E3 phase 1 (metadata, index prep, gather, gate/up,
++                        # down -> fat slots), thin tier -> thin slots, one reduction.
++                        thin = MOE_PREFILL_E3_THIN_ROWS
++                        A = token_sorted.numel()
++                        seg_cap = (A + 63) // 64 + self.num_experts
++                        slots = torch.empty((A, 2560), dtype = torch.float, device = y.device)
++                        h13 = slots.view(torch.half).view(-1)
++                        h13_g = h13[:A * 2560].view(A, 2560)
++                        h13_u = h13[A * 2560:].view(A, 2560)
++                        h2 = torch.empty((A, 640), dtype = torch.half, device = y.device)
++                        row_token = torch.empty((A,), dtype = torch.long, device = y.device)
++                        row_weight = torch.empty((A,), dtype = torch.half, device = y.device)
++                        row_expert = torch.empty((A,), dtype = torch.int, device = y.device)
++                        row_pos = torch.empty((A,), dtype = torch.int, device = y.device)
++                        expert_start = torch.empty((self.num_experts + 1,), dtype = torch.long, device = y.device)
++                        inv_order = torch.empty_like(order)
++                        seg_expert = torch.empty((seg_cap,), dtype = torch.int, device = y.device)
++                        seg_row0 = torch.empty_like(seg_expert)
++                        seg_rows = torch.empty_like(seg_expert)
++                        live = torch.empty((2,), dtype = torch.int, device = y.device)
++                        ext.exl3_moe_prefill_e3_det(
++                            y, expert_count, token_sorted, weight_sorted,
++                            self.multi_gate.ptrs_trellis, self.multi_gate.ptrs_suh, self.multi_gate.ptrs_svh,
++                            self.multi_up.ptrs_trellis, self.multi_up.ptrs_suh, self.multi_up.ptrs_svh,
++                            self.multi_down.ptrs_trellis, self.multi_down.ptrs_suh,
++                            h13_g, h13_u, h2, row_token, row_weight, row_expert,
++                            row_pos, order, expert_start, inv_order,
++                            seg_expert, seg_row0, seg_rows, live[:1], live[1:], slots,
++                            self.multi_gate.K, self.multi_up.K, self.multi_down.K,
++                            thin, self.act_limit)
++                        # Thin tier into its slots (slot = expert start + row within the expert;
++                        # expert_start and inv_order were filled by the call above)
++                        run_fused(-1, 1, min(16, thin), 16, det_slots = (slots, expert_start))
++                        if thin > 16:
++                            run_fused(-1, 17, thin, 32, det_slots = (slots, expert_start))
++                        ext.exl3_moe_prefill_e3_det_reduce(
++                            final_hidden_states, slots, flat_expert_local.contiguous(), inv_order,
++                            flat_weight.contiguous(), expert_count, self.multi_down.ptrs_svh, thin)
++                    elif e3_active:
+                         # Thin experts stay on the served fused kernel. Two count windows retain
+                         # its 16/32-row tiling without a count readback; E3 consumes > thin_rows.
+                         thin = MOE_PREFILL_E3_THIN_ROWS

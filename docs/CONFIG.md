@@ -51,7 +51,9 @@ is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 
 | knob | default | what it does |
 | --- | --- | --- |
-| `IMG=` | `tabbyapi:mtp-pruned-r1-tc1-plefix` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
+| `IMG=` | `tabbyapi:nvme-tier-r4` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
+| `NVME_TIER=` | `/srv/qwen5090/fast/exl3-nvme-daily` when `IMG` is the served tier image and the variable is unset; otherwise off | host directory for the NVMe prefix tier, mounted at `/nvme-tier`; `NVME_TIER=` (empty) turns it off. Experiments that launch another image never open the daily's directory ([R534](../bench/results/r534-promote-nvme-tier.md)) |
+| `NVME_TIER_GB=` | `64` with the daily default | byte cap for the tier; above it the tier evicts leaf-first on its radix tree, superseded interior checkpoints first |
 | `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each |
 | `CACHE=`, `MAXBS=`, `CACHE_MODE=`, `GPU_SPLIT=`, `CKPT_NAME=` | 819200, 4, `8,8`, `[30, 30]`, the 2.50 bpw pack | pool, slots, KV bits, split and checkpoint for experiments; the defaults are the served values |
 | `DRAFT_POLICY=` | empty | expands into `draft_model.draft_num_tokens_by_batch` only when set, so the unpatched path stays byte-identical |
@@ -106,4 +108,4 @@ KV page pool cost: 14,144 B per token, so 1.41 GB of VRAM per 100k tokens and 11
 
 ## Image
 
-`tabbyapi:mtp-pruned-r1-tc1-plefix` (`tabbyapi:stack-r4-e3r2` plus the [`mtp-pruned-r1`](../docker/overlays/mtp-pruned-r1/), [`tool-choice-r1`](../docker/overlays/tool-choice-r1/) and [`ple-ckpt-clone-r1`](../docker/overlays/ple-ckpt-clone-r1/) overlays): TabbyAPI pinned at `53da7919`, ExLlamaV3 v1.5.0, the R338 requeue token-count fix, and every layer in [`docker/README.md`](../docker/README.md). Each Dockerfile asserts the versions it builds on and each overlay installer checks the SHA-256 of every file it replaces.
+`tabbyapi:nvme-tier-r4` (`tabbyapi:stack-r4-e3r2` plus the [`mtp-pruned-r1`](../docker/overlays/mtp-pruned-r1/), [`tool-choice-r1`](../docker/overlays/tool-choice-r1/), [`ple-ckpt-clone-r1`](../docker/overlays/ple-ckpt-clone-r1/) and [`nvme-tier-r4`](../docker/overlays/nvme-tier-r4/) overlays): TabbyAPI pinned at `53da7919`, ExLlamaV3 v1.5.0, the R338 requeue token-count fix, and every layer in [`docker/README.md`](../docker/README.md). Each Dockerfile asserts the versions it builds on and each overlay installer checks the SHA-256 of every file it replaces.

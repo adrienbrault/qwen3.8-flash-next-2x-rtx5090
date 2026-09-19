@@ -1,0 +1,23 @@
+124c124
+< IMG=${IMG:-tabbyapi:mtp-pruned-r1-tc1-plefix}
+---
+> IMG=${IMG:-tabbyapi:nvme-tier-r4}
+208a209,222
+> # NVMe prefix tier (nvme-tier-r4, opt-in): NVME_TIER=<host directory on the dedicated fast filesystem> mounts it at
+> # /nvme-tier and sets EXL3_NVME_TIER=/nvme-tier; NVME_TIER_GB caps the bytes the tier keeps there (default 128).
+> # The directory survives `docker rm -f`: a restart serves the same prefixes from disk. Unset = no tier, no mount.
+> # Daily default (R534): the tier below when IMG is the served tier image and NVME_TIER is unset. Any other image, or an
+> # explicit NVME_TIER= (empty), gets no tier, so experiment boots reusing this launcher never open the daily's directory.
+> if [ -z "${NVME_TIER+x}" ]; then
+>   if [ "$IMG" = tabbyapi:nvme-tier-r4 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+> fi
+> NT=()
+> if [ -n "$NVME_TIER" ]; then
+>   sudo mkdir -p "$NVME_TIER" || { log "ABORT: cannot create NVME_TIER $NVME_TIER"; exit 3; }
+>   NT=(-v "$NVME_TIER":/nvme-tier -e EXL3_NVME_TIER=/nvme-tier)
+>   [ -n "${NVME_TIER_GB:-}" ] && NT+=(-e EXL3_NVME_TIER_GB="$NVME_TIER_GB")
+> fi
+369c383
+< sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${EV[@]}" "${HV[@]}" \
+---
+> sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${EV[@]}" "${HV[@]}" "${NT[@]}" \

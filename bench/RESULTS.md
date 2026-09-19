@@ -4,6 +4,11 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R534: the NVMe prefix tier is served; every gate passes](results/r534-promote-nvme-tier.md)
+- [R531 and R533: deterministic E3 prefill is bit-identical run to run; it costs 1.9 % prefill at the 60k target and 0.2 % at 120k](results/r533-e3-det-precise.md)
+- [R532: the NVMe tier on the served chain passes every step; with the tier idle, decode is unchanged (8 boots)](results/r532-nvme-tier-r4.md)
+- [R526: a persistent NVMe prefix tier restores 30k and 120k prompts after a restart in 0.7 and 1.0 s, output identical to cold](results/r526-nvme-tier.md)
+- [R524: recurrent checkpoints at the end of each answer are correct but save about 9k prefill tokens per agent replay; not served](results/r524-recurrent-tip.md)
 - [R530: ExLlamaV3's PLE checkpoints no longer alias the live slot; every gate passes](results/r530-promote-plefix.md)
 - [R527: tensor parallelism across the two cards would make decode at most 1.07–1.08× faster; not built](results/r527-tp-bound.md)
 - [R529: `tool_choice` "required" and named functions are enforced; tool-eval 88.0, TC-45 passes on every trial](results/r529-promote-tool-choice.md)
