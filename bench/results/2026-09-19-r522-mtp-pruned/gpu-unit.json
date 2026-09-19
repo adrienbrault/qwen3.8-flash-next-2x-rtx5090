@@ -1,0 +1,239 @@
+{
+ "device": "cuda:1",
+ "checks": {
+  "table on host": {
+   "ok": true,
+   "detail": null
+  },
+  "pruned mirror built": {
+   "ok": true,
+   "detail": null
+  },
+  "mirror rows exact": {
+   "ok": true,
+   "detail": null
+  },
+  "VRAM added = N*D*2 bytes": {
+   "ok": true,
+   "detail": "320.0 MiB allocated, 320.0 MiB free-delta"
+  },
+  "full mirror refused in pruned mode": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_1: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_1: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_1: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_1: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +0"
+  },
+  "in_set_4: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_4: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_4: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_4: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +0"
+  },
+  "in_set_16: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_16: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_16: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "in_set_16: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +0"
+  },
+  "boundary: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "boundary: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "boundary: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "boundary: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +0"
+  },
+  "oos_boundary: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_boundary: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_boundary: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_boundary: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +2"
+  },
+  "oos_special: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_special: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_special: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_special: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +2"
+  },
+  "oos_mixed_16: pruned == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_mixed_16: pruned(hinted) == full mirror": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_mixed_16: full mirror == host path": {
+   "ok": true,
+   "detail": null
+  },
+  "oos_mixed_16: host fallback used iff out-of-set": {
+   "ok": true,
+   "detail": "host_calls +2"
+  },
+  "oos lookup does not wait for the device": {
+   "ok": true,
+   "detail": "0.14 ms host time with ~100 ms queued"
+  },
+  "oos staging reuse waits for the previous upload": {
+   "ok": true,
+   "detail": "70.03 ms host time for the second lookup (expected ~ the queued sleep)"
+  },
+  "oos raw rows exact after async upload (A)": {
+   "ok": true,
+   "detail": "torch.bfloat16(2, 1, 2560) vs torch.bfloat16(2, 1, 2560), 0 differing words"
+  },
+  "oos raw rows exact after buffer reuse (B)": {
+   "ok": true,
+   "detail": "torch.bfloat16(2, 1, 2560) vs torch.bfloat16(2, 1, 2560), 0 differing words"
+  },
+  "oos forward output == full-mirror forward": {
+   "ok": true,
+   "detail": "torch.float16(2, 1, 2560) vs torch.float16(2, 1, 2560), 0 differing words"
+  },
+  "info: oos forward == host-cast reference": {
+   "ok": true,
+   "detail": "torch.float16(2, 1, 2560) vs torch.float16(2, 1, 2560), 0 differing words"
+  }
+ },
+ "bench_us": {
+  "pruned device gather r1": {
+   "wall": 8.9,
+   "gpu": 8.89
+  },
+  "pruned idx0 in-set (host check) r1": {
+   "wall": 10.76,
+   "gpu": 10.75
+  },
+  "pruned idx0 out-of-set upload r1": {
+   "wall": 17.16,
+   "gpu": 17.16
+  },
+  "full mirror gather r1": {
+   "wall": 8.93,
+   "gpu": 8.91
+  },
+  "host path + upload r1": {
+   "wall": 16.6,
+   "gpu": 16.58
+  },
+  "pruned device gather r4": {
+   "wall": 8.79,
+   "gpu": 8.78
+  },
+  "pruned idx0 in-set (host check) r4": {
+   "wall": 10.72,
+   "gpu": 10.71
+  },
+  "pruned idx0 out-of-set upload r4": {
+   "wall": 18.05,
+   "gpu": 18.04
+  },
+  "full mirror gather r4": {
+   "wall": 8.97,
+   "gpu": 8.96
+  },
+  "host path + upload r4": {
+   "wall": 19.58,
+   "gpu": 19.56
+  },
+  "pruned device gather r16": {
+   "wall": 8.8,
+   "gpu": 8.79
+  },
+  "pruned idx0 in-set (host check) r16": {
+   "wall": 10.67,
+   "gpu": 10.67
+  },
+  "pruned idx0 out-of-set upload r16": {
+   "wall": 25.89,
+   "gpu": 25.89
+  },
+  "full mirror gather r16": {
+   "wall": 9.45,
+   "gpu": 9.45
+  },
+  "host path + upload r16": {
+   "wall": 31.06,
+   "gpu": 31.04
+  }
+ },
+ "table": [
+  248320,
+  2560
+ ],
+ "dtype": "torch.bfloat16",
+ "n_keep": 65536,
+ "vram_pruned_bytes": 335544320,
+ "vram_pruned_free_delta_bytes": 335544320,
+ "vram_full_mirror_bytes": 1271398400,
+ "stats": {
+  "builds": 1,
+  "device_calls": 12128,
+  "host_calls": 6069,
+  "host_rows": 42474
+ },
+ "ok": true
+}

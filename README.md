@@ -47,7 +47,7 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 ## In progress (queued on the box 2026-09-19)
 
-- The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver]. Its output is byte-identical and one boot per arm read code c1 +1.4 %, inside the between-boot spread, so an 8-boot counterbalanced A/B decides: [`scripts/r522b-mtp-pruned-precise.sh`][r522b-driver].
+- The MTP draft chain kept on the GPU with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit: byte-identical, +1.99 % at 1 stream and +1.49 % at 4 over 8 counterbalanced boots ([R522][r522]); the promotion run with every gate is queued: [`scripts/r528-promote-mtp-pruned.sh`][r528-driver].
 - `tool_choice: "required"` and named tool choice enforced by a grammar that switches on when reasoning ends; today tool-eval's TC-45 fails 12/12: [`scripts/r523-tool-choice.sh`][r523-driver].
 - Recurrent-state checkpoints at the end of each answer, so an agent's next call resumes after its previous answer instead of re-reading it, with an eviction order that keeps each conversation's newest checkpoint: [`scripts/r524-recurrent-tip.sh`][r524-driver], measured with the agent replay in echo mode ([`bench/agent_replay.py`][agent-replay] `--echo`).
 - A persistent prefix tier on NVMe: KV pages and recurrent checkpoints written to disk in the background, restored after a restart, under a byte cap: [`scripts/r526-nvme-tier.sh`][r526-driver].
@@ -196,6 +196,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r517]: bench/results/r517-promote-stack.md
 [r525]: bench/results/r525-promote-int8mix.md
 [r521]: bench/results/r521-shared-bound.md
+[r522]: bench/results/r522-mtp-pruned.md
+[r528-driver]: scripts/r528-promote-mtp-pruned.sh
 [r522b-driver]: scripts/r522b-mtp-pruned-precise.sh
 [r526-driver]: scripts/r526-nvme-tier.sh
 [r518]: bench/results/r518-slots6.md
