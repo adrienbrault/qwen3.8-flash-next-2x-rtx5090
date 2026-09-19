@@ -1,0 +1,27 @@
+{
+  "name": "tool-choice-r1",
+  "root": "/app",
+  "note": "paths relative to /app; baseline_sha256 null = new file",
+  "files": [
+    {
+      "path": "endpoints/OAI/utils/chat_completion.py",
+      "baseline_sha256": "20f73001b342b9f318c85fad995f6d2344bf61b3790afeb425b6bbda130072ec",
+      "overlay_sha256": "5ee37a2bfc1185293fb1121848d0bc2260e7b18d2c9040634e9c0d651ef53fa5"
+    },
+    {
+      "path": "endpoints/OAI/utils/tool_choice.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "76c3cc3ec9bb08355adc5b7a30f9800d269c5202598cfa448ea4f7460f34cf67"
+    },
+    {
+      "path": "tests/test_tool_choice.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "c8d9f3cfe8c7ad4b94fd843fae48159b35686648b117be5be2d2b27fcd67362d"
+    },
+    {
+      "path": "tests/test_tool_choice_collector.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "0fb949b88aea0be61e6f3d3ea6bcc8a65351a572de11e06850a74c026639407c"
+    }
+  ]
+}

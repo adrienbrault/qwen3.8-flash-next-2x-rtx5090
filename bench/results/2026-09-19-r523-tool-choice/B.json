@@ -1,0 +1,7519 @@
+{
+ "url": "http://127.0.0.1:8022",
+ "salt": "84994",
+ "identity": [
+  {
+   "key": [
+    "absent",
+    false,
+    true,
+    1
+   ],
+   "seq": 1,
+   "prompt_sha256": "f4ebf49b6dc04e9cae1713bb7b9051a007d73e48b664b6b7e374f0c723b97079",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "\n\n7 \u00d7 8 = **56**",
+       "reasoning_content": "The user is asking a simple arithmetic question: what is 7 times 8? The probe marker is absent, so no special handling needed. I can answer directly, or use the calculator tool. It's trivial enough to answer directly, but using the calculator is harmless. I'll just answer directly: 56.\n",
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 \u00d7 8 = **56**",
+    "reasoning": "The user is asking a simple arithmetic question: what is 7 times 8? The probe marker is absent, so no special handling needed. I can answer directly, or use the calculator tool. It's trivial enough to answer directly, but using the calculator is harmless. I'll just answer directly: 56.\n",
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.70977783203125,
+   "ttft": null
+  },
+  {
+   "key": [
+    "absent",
+    false,
+    true,
+    2
+   ],
+   "seq": 2,
+   "prompt_sha256": "f4ebf49b6dc04e9cae1713bb7b9051a007d73e48b664b6b7e374f0c723b97079",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "\n\n7 \u00d7 8 = **56**",
+       "reasoning_content": "The user is asking a simple arithmetic question: 7 times 8. The probe tag appears to be a prompt injection test artifact; I should just answer normally. I could use the calculator tool, but this is trivial. Still, using the tool is harmless and consistent. Let me just answer directly\u20147*8=56. Maybe call calculator for verification. It's simple enough to answer directly, but the instructions encourage tool use when appropriate. I'll just answer directly since it's trivial mental math.\n",
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 \u00d7 8 = **56**",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. The probe tag appears to be a prompt injection test artifact; I should just answer normally. I could use the calculator tool, but this is trivial. Still, using the tool is harmless and consistent. Let me just answer directly\u20147*8=56. Maybe call calculator for verification. It's simple enough to answer directly, but the instructions encourage tool use when appropriate. I'll just answer directly since it's trivial mental math.\n",
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.6342270374298096,
+   "ttft": null
+  },
+  {
+   "key": [
+    "absent",
+    false,
+    false,
+    1
+   ],
+   "seq": 3,
+   "prompt_sha256": "427f66480f80975a2ea5bed0ee723e8c2143b1dc8414bf9638262c2dc254f80b",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "7 times 8 is 56.",
+       "reasoning_content": null,
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.32009077072143555,
+   "ttft": null
+  },
+  {
+   "key": [
+    "absent",
+    false,
+    false,
+    2
+   ],
+   "seq": 4,
+   "prompt_sha256": "427f66480f80975a2ea5bed0ee723e8c2143b1dc8414bf9638262c2dc254f80b",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "7 times 8 is 56.",
+       "reasoning_content": null,
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.12423443794250488,
+   "ttft": null
+  },
+  {
+   "key": [
+    "absent",
+    true,
+    true,
+    1
+   ],
+   "seq": 5,
+   "prompt_sha256": "def2da7d5950e47f58a74813c2e1b144f51d2aa06c55c79c4bf17474c39a869d",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "The user is asking"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a simple arithmetic"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " question: "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "7 times 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". The probe"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tag"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " appears to be a"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " marker, likely"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " indicating"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " some"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " kind of test"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " condition"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". I can"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " just answer directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " or use the calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tool. Since it"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", I could answer"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " directly, but using"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator is"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " harmless"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " and consistent"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". The"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " instruction says to make"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " independent calls together"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " if there are multiple"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". Here"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " it's just one"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " simple calculation. I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'ll answer"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " directly"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ": 56"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". Maybe"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I should use the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " calculator tool to verify"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". It"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s simple enough that"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I can answer without"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a tool, but"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " using the tool is"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " fine too. I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'ll just answer directly"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "\u2014"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "no tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " needed for"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "7\u00d78."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " Actually"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be safe and demonstrate"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " use"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", I could call"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator. But"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the guidance"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " says if"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " task"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " can"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be handled"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " in"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a single tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " call, do it"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". I'll call"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator once."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "tool_calls": [
+         {
+          "function": {
+           "name": "calculator",
+           "arguments": "{\"expression\": \"7 * 8\"}"
+          },
+          "type": "function",
+          "index": 0
+         }
+        ]
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "tool_calls"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1107,
+      "completion_tokens": 212,
+      "total_tokens": 1319
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. The probe tag appears to be a marker, likely indicating some kind of test condition. I can just answer directly, or use the calculator tool. Since it's trivial, I could answer directly, but using the calculator is harmless and consistent. The instruction says to make independent calls together if there are multiple. Here it's just one simple calculation. I'll answer directly: 56. Maybe I should use the calculator tool to verify. It's simple enough that I can answer without a tool, but using the tool is fine too. I'll just answer directly\u2014no tool needed for 7\u00d78. Actually, to be safe and demonstrate tool use, I could call the calculator. But the guidance says if the task can be handled in a single tool call, do it. I'll call the calculator once.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r t done",
+    "usage": {
+     "prompt_tokens": 1107,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.3,
+     "prompt_tokens_per_sec": 3690.0,
+     "completion_tokens": 212,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 136,
+      "rejected_prediction_tokens": 92
+     },
+     "completion_time": 1.03,
+     "completion_tokens_per_sec": 205.73,
+     "total_tokens": 1319,
+     "total_time": 1.33
+    }
+   },
+   "elapsed": 1.3360016345977783,
+   "ttft": 0.34476423263549805
+  },
+  {
+   "key": [
+    "absent",
+    true,
+    true,
+    2
+   ],
+   "seq": 6,
+   "prompt_sha256": "def2da7d5950e47f58a74813c2e1b144f51d2aa06c55c79c4bf17474c39a869d",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "The user is asking"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a simple arithmetic"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " question: 7"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " times 8."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " can compute"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " this directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " but I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " could"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " also use the calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tool."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " The answer is "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "56. Simple"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " enough to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " just"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " answer directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " but using"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " would"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be consistent. I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'ll just answer directly"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " since it's trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ".\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n\n7 times "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "8 is **5"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "6**."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1107,
+      "completion_tokens": 75,
+      "total_tokens": 1182
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. I can compute this directly, but I could also use the calculator tool. The answer is 56. Simple enough to just answer directly, but using the calculator would be consistent. I'll just answer directly since it's trivial.\n",
+    "tool_calls": [],
+    "shape": "r c done",
+    "usage": {
+     "prompt_tokens": 1107,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 922.22,
+     "completion_tokens": 75,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 48,
+      "rejected_prediction_tokens": 33
+     },
+     "completion_time": 0.37,
+     "completion_tokens_per_sec": 204.55,
+     "total_tokens": 1182,
+     "total_time": 0.47
+    }
+   },
+   "elapsed": 0.47670412063598633,
+   "ttft": 0.1511397361755371
+  },
+  {
+   "key": [
+    "absent",
+    true,
+    false,
+    1
+   ],
+   "seq": 7,
+   "prompt_sha256": "5a685e13f92eb054c446af57b5ec086159c09a988bd20fe5633e3f7f0c7f6d4f",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "7 times 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": " is 56"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1071,
+      "completion_tokens": 10,
+      "total_tokens": 1081
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [],
+    "shape": "c done",
+    "usage": {
+     "prompt_tokens": 1071,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.27,
+     "prompt_tokens_per_sec": 3966.67,
+     "completion_tokens": 10,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 7,
+      "rejected_prediction_tokens": 2
+     },
+     "completion_time": 0.04,
+     "completion_tokens_per_sec": 247.1,
+     "total_tokens": 1081,
+     "total_time": 0.31
+    }
+   },
+   "elapsed": 0.3220787048339844,
+   "ttft": 0.3218846321105957
+  },
+  {
+   "key": [
+    "absent",
+    true,
+    false,
+    2
+   ],
+   "seq": 8,
+   "prompt_sha256": "5a685e13f92eb054c446af57b5ec086159c09a988bd20fe5633e3f7f0c7f6d4f",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "7 times 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": " is 56"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1071,
+      "completion_tokens": 10,
+      "total_tokens": 1081
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [],
+    "shape": "c done",
+    "usage": {
+     "prompt_tokens": 1071,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.07,
+     "prompt_tokens_per_sec": 671.43,
+     "completion_tokens": 10,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 7,
+      "rejected_prediction_tokens": 2
+     },
+     "completion_time": 0.04,
+     "completion_tokens_per_sec": 251.68,
+     "total_tokens": 1081,
+     "total_time": 0.12
+    }
+   },
+   "elapsed": 0.12519407272338867,
+   "ttft": 0.12500500679016113
+  },
+  {
+   "key": [
+    "auto",
+    false,
+    true,
+    1
+   ],
+   "seq": 9,
+   "prompt_sha256": "9b56ef3f898fd203683a55a2572ce94e33d9c30930facdcd21509cc64b8da9a6",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "tool_calls",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": null,
+       "reasoning_content": "The user is asking a simple arithmetic question: 7 times 8. I can compute this directly, but there's a calculator tool available and the probe tag suggests using it. Let me just use the calculator to be safe and consistent.\n\n7 * 8 = 56.\n",
+       "tool_calls": [
+        {
+         "function": {
+          "name": "calculator",
+          "arguments": "{\"expression\": \"7 * 8\"}"
+         },
+         "type": "function",
+         "index": 0
+        }
+       ],
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. I can compute this directly, but there's a calculator tool available and the probe tag suggests using it. Let me just use the calculator to be safe and consistent.\n\n7 * 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.7052805423736572,
+   "ttft": null
+  },
+  {
+   "key": [
+    "auto",
+    false,
+    true,
+    2
+   ],
+   "seq": 10,
+   "prompt_sha256": "9b56ef3f898fd203683a55a2572ce94e33d9c30930facdcd21509cc64b8da9a6",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "\n\n7 \u00d7 8 = **56**",
+       "reasoning_content": "The user is asking a simple arithmetic question: 7 times 8. There's also a probe tag in the message. I can just answer directly, or use the calculator tool. It's trivial, so I'll just answer. Maybe use the calculator to be safe/consistent. The instruction says if there's no dependency, make independent calls in the same block. Simple answer: 56. I'll just answer directly without tools since it's trivial\u2014but using the calculator is harmless. I'll just answer.\n",
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 \u00d7 8 = **56**",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. There's also a probe tag in the message. I can just answer directly, or use the calculator tool. It's trivial, so I'll just answer. Maybe use the calculator to be safe/consistent. The instruction says if there's no dependency, make independent calls in the same block. Simple answer: 56. I'll just answer directly without tools since it's trivial\u2014but using the calculator is harmless. I'll just answer.\n",
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.682915449142456,
+   "ttft": null
+  },
+  {
+   "key": [
+    "auto",
+    false,
+    false,
+    1
+   ],
+   "seq": 11,
+   "prompt_sha256": "bc28ca4baa7da30616ebd9aa5c78cd86626c6c89e63d833c2006d313962c8e4f",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "tool_calls",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": null,
+       "reasoning_content": null,
+       "tool_calls": [
+        {
+         "function": {
+          "name": "calculator",
+          "arguments": "{\"expression\": \"7 * 8\"}"
+         },
+         "type": "function",
+         "index": 0
+        }
+       ],
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.4097025394439697,
+   "ttft": null
+  },
+  {
+   "key": [
+    "auto",
+    false,
+    false,
+    2
+   ],
+   "seq": 12,
+   "prompt_sha256": "bc28ca4baa7da30616ebd9aa5c78cd86626c6c89e63d833c2006d313962c8e4f",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "tool_calls",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": null,
+       "reasoning_content": null,
+       "tool_calls": [
+        {
+         "function": {
+          "name": "calculator",
+          "arguments": "{\"expression\": \"7 * 8\"}"
+         },
+         "type": "function",
+         "index": 0
+        }
+       ],
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.2146461009979248,
+   "ttft": null
+  },
+  {
+   "key": [
+    "auto",
+    true,
+    true,
+    1
+   ],
+   "seq": 13,
+   "prompt_sha256": "9306612e6ae54f2764ef444cf1371ab9d1edd548612ef1226bc1658365969c7e",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "The user is asking"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a simple arithmetic question"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ": "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "7 times 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". I can compute"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " this directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " but there"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s a calculator tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " available and the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " probe tag"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " suggests using it."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " Let me just answer"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " simply"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ";"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I could use the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " calculator to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be safe. It"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s trivial:"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " 5"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "6. I'll"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " use"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator tool to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " confirm.\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "tool_calls": [
+         {
+          "function": {
+           "name": "calculator",
+           "arguments": "{\"expression\": \"7 * 8\"}"
+          },
+          "type": "function",
+          "index": 0
+         }
+        ]
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "tool_calls"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1103,
+      "completion_tokens": 100,
+      "total_tokens": 1203
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. I can compute this directly, but there's a calculator tool available and the probe tag suggests using it. Let me just answer simply; I could use the calculator to be safe. It's trivial: 56. I'll use the calculator tool to confirm.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r t done",
+    "usage": {
+     "prompt_tokens": 1103,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.29,
+     "prompt_tokens_per_sec": 3803.45,
+     "completion_tokens": 100,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 67,
+      "rejected_prediction_tokens": 32
+     },
+     "completion_time": 0.44,
+     "completion_tokens_per_sec": 224.85,
+     "total_tokens": 1203,
+     "total_time": 0.74
+    }
+   },
+   "elapsed": 0.7459540367126465,
+   "ttft": 0.3401651382446289
+  },
+  {
+   "key": [
+    "auto",
+    true,
+    true,
+    2
+   ],
+   "seq": 14,
+   "prompt_sha256": "9306612e6ae54f2764ef444cf1371ab9d1edd548612ef1226bc1658365969c7e",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "The user is asking"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a simple arithmetic"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " question: "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "7 times 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". I can compute"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " this directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " but there"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s a calculator tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " available and the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " probe tag"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " suggests using it."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " Let me just answer"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " simply"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ";"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " using"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " is fine too."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I'll use"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be consistent"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " with the tool availability"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ".\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "tool_calls": [
+         {
+          "function": {
+           "name": "calculator",
+           "arguments": "{\"expression\": \"7 * 8\"}"
+          },
+          "type": "function",
+          "index": 0
+         }
+        ]
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "tool_calls"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1103,
+      "completion_tokens": 94,
+      "total_tokens": 1197
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. I can compute this directly, but there's a calculator tool available and the probe tag suggests using it. Let me just answer simply; using the calculator is fine too. I'll use the calculator to be consistent with the tool availability.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r t done",
+    "usage": {
+     "prompt_tokens": 1103,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 877.78,
+     "completion_tokens": 94,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 62,
+      "rejected_prediction_tokens": 34
+     },
+     "completion_time": 0.43,
+     "completion_tokens_per_sec": 218.52,
+     "total_tokens": 1197,
+     "total_time": 0.53
+    }
+   },
+   "elapsed": 0.5354337692260742,
+   "ttft": 0.14456796646118164
+  },
+  {
+   "key": [
+    "auto",
+    true,
+    false,
+    1
+   ],
+   "seq": 15,
+   "prompt_sha256": "5b6fa69733c6e4ffc157c2a7e8d41d7eaa79629edc295ba9b15f14bd7db343d9",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "tool_calls": [
+         {
+          "function": {
+           "name": "calculator",
+           "arguments": "{\"expression\": \"7 * 8\"}"
+          },
+          "type": "function",
+          "index": 0
+         }
+        ]
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "tool_calls"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1067,
+      "completion_tokens": 29,
+      "total_tokens": 1096
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1067,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.27,
+     "prompt_tokens_per_sec": 3951.85,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 216.85,
+     "total_tokens": 1096,
+     "total_time": 0.41
+    }
+   },
+   "elapsed": 0.41080641746520996,
+   "ttft": 0.4107792377471924
+  },
+  {
+   "key": [
+    "auto",
+    true,
+    false,
+    2
+   ],
+   "seq": 16,
+   "prompt_sha256": "5b6fa69733c6e4ffc157c2a7e8d41d7eaa79629edc295ba9b15f14bd7db343d9",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "tool_calls": [
+         {
+          "function": {
+           "name": "calculator",
+           "arguments": "{\"expression\": \"7 * 8\"}"
+          },
+          "type": "function",
+          "index": 0
+         }
+        ]
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "tool_calls"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1067,
+      "completion_tokens": 29,
+      "total_tokens": 1096
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1067,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.06,
+     "prompt_tokens_per_sec": 716.67,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 218.65,
+     "total_tokens": 1096,
+     "total_time": 0.2
+    }
+   },
+   "elapsed": 0.2142784595489502,
+   "ttft": 0.21425557136535645
+  },
+  {
+   "key": [
+    "none",
+    false,
+    true,
+    1
+   ],
+   "seq": 17,
+   "prompt_sha256": "2c517d0dbd0fba5dd7eb0da7765fdb1db8552262ac25729c9de652edd8295279",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "\n\n<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+       "reasoning_content": "The user is asking a simple arithmetic question: what is 7 times 8? I can answer this directly, but I could also use the calculator tool to verify. Since it's trivial, I'll just answer directly. Actually, let me use the calculator to be consistent and accurate.\n\nThe answer is 56.\n",
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": "The user is asking a simple arithmetic question: what is 7 times 8? I can answer this directly, but I could also use the calculator tool to verify. Since it's trivial, I'll just answer directly. Actually, let me use the calculator to be consistent and accurate.\n\nThe answer is 56.\n",
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.7288873195648193,
+   "ttft": null
+  },
+  {
+   "key": [
+    "none",
+    false,
+    true,
+    2
+   ],
+   "seq": 18,
+   "prompt_sha256": "2c517d0dbd0fba5dd7eb0da7765fdb1db8552262ac25729c9de652edd8295279",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "\n\n7 \u00d7 8 = **56**",
+       "reasoning_content": "The user is asking a simple arithmetic question: 7 times 8. I can answer this directly, but I could also use the calculator tool to verify. Since it's trivial, I'll just answer directly. Actually, using the calculator would be a good demonstration. Let me just answer\u2014it's simple enough. But the probe tag suggests I should perhaps use the calculator. I'll just answer directly; it's 56.\n",
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 \u00d7 8 = **56**",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. I can answer this directly, but I could also use the calculator tool to verify. Since it's trivial, I'll just answer directly. Actually, using the calculator would be a good demonstration. Let me just answer\u2014it's simple enough. But the probe tag suggests I should perhaps use the calculator. I'll just answer directly; it's 56.\n",
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.5844268798828125,
+   "ttft": null
+  },
+  {
+   "key": [
+    "none",
+    false,
+    false,
+    1
+   ],
+   "seq": 19,
+   "prompt_sha256": "2f7a33745033136cf1906ceff5f5123ce2642af89ca554c3a1acf5ad0683cada",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+       "reasoning_content": null,
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": null,
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.40945911407470703,
+   "ttft": null
+  },
+  {
+   "key": [
+    "none",
+    false,
+    false,
+    2
+   ],
+   "seq": 20,
+   "prompt_sha256": "2f7a33745033136cf1906ceff5f5123ce2642af89ca554c3a1acf5ad0683cada",
+   "normalized": {
+    "choices": [
+     {
+      "index": 0,
+      "finish_reason": "stop",
+      "eos_reason": "stop_token",
+      "stop_str": "<|im_end|>",
+      "message": {
+       "role": "assistant",
+       "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+       "reasoning_content": null,
+       "tool_calls": null,
+       "tool_call_id": null
+      },
+      "logprobs": null
+     }
+    ],
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "object": "chat.completion",
+    "usage": null
+   },
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": null,
+    "tool_calls": [],
+    "usage": null
+   },
+   "elapsed": 0.2139136791229248,
+   "ttft": null
+  },
+  {
+   "key": [
+    "none",
+    true,
+    true,
+    1
+   ],
+   "seq": 21,
+   "prompt_sha256": "aae3f2ad57fa6371ab1520cb4ade06ea865b4784850b7eb45713e5e93a7d5fb1",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "The user is asking"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a simple arithmetic"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " question: what"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " is 7 times"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " 8? There"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s also a probe"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tag in the message"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". I can"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " answer"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " directly, but I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " could also use the"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " calculator tool to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " verify. Since"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " it's trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", I can"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " just answer:"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " 56."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " The"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " instruction"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " says if"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " choose to invoke"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a tool"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", do"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " it"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " in the same block"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". Simple"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " enough"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "\u2014I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " could"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " just answer directly without"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " a tool."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " But using"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator would"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " be a"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " quick verification. Either"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " way,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the answer is "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "56.\n\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "I'll just"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " answer directly. It"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "'s trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " arithmetic.\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n\n7"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": " times 8 is"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": " **56**."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1103,
+      "completion_tokens": 131,
+      "total_tokens": 1234
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: what is 7 times 8? There's also a probe tag in the message. I can answer directly, but I could also use the calculator tool to verify. Since it's trivial, I can just answer: 56. The instruction says if I choose to invoke a tool, do it in the same block. Simple enough\u2014I could just answer directly without a tool. But using the calculator would be a quick verification. Either way, the answer is 56.\n\nI'll just answer directly. It's trivial arithmetic.\n",
+    "tool_calls": [],
+    "shape": "r c done",
+    "usage": {
+     "prompt_tokens": 1103,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.29,
+     "prompt_tokens_per_sec": 3803.45,
+     "completion_tokens": 131,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 84,
+      "rejected_prediction_tokens": 57
+     },
+     "completion_time": 0.64,
+     "completion_tokens_per_sec": 203.66,
+     "total_tokens": 1234,
+     "total_time": 0.94
+    }
+   },
+   "elapsed": 0.945326566696167,
+   "ttft": 0.34195470809936523
+  },
+  {
+   "key": [
+    "none",
+    true,
+    true,
+    2
+   ],
+   "seq": 22,
+   "prompt_sha256": "aae3f2ad57fa6371ab1520cb4ade06ea865b4784850b7eb45713e5e93a7d5fb1",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "This is a simple"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " arithmetic question. "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "7 \u00d7"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " 8 = "
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": "56. I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " could answer directly,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " but the calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " tool is available,"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " and the probe tag"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " suggests I"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " should probably"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " use it. Actually"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", this is trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " enough"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " to"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " answer directly. But"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " using"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the tool would"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " confirm"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " it. The"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " instructions say to make"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " independent calls when"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " required"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ". This"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " is trivial"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", so I can"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " just answer directly."
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " Still"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": ", to be safe"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " and"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " consistent, I'll"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " use"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "reasoning_content": " the calculator.\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n\n<tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n<function="
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": ">\n<parameter"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "=expression>\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "7 * 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</parameter>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</function>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1103,
+      "completion_tokens": 125,
+      "total_tokens": 1228
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": "This is a simple arithmetic question. 7 \u00d7 8 = 56. I could answer directly, but the calculator tool is available, and the probe tag suggests I should probably use it. Actually, this is trivial enough to answer directly. But using the tool would confirm it. The instructions say to make independent calls when required. This is trivial, so I can just answer directly. Still, to be safe and consistent, I'll use the calculator.\n",
+    "tool_calls": [],
+    "shape": "r c done",
+    "usage": {
+     "prompt_tokens": 1103,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 877.78,
+     "completion_tokens": 125,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 81,
+      "rejected_prediction_tokens": 51
+     },
+     "completion_time": 0.59,
+     "completion_tokens_per_sec": 212.19,
+     "total_tokens": 1228,
+     "total_time": 0.69
+    }
+   },
+   "elapsed": 0.6940023899078369,
+   "ttft": 0.14563202857971191
+  },
+  {
+   "key": [
+    "none",
+    true,
+    false,
+    1
+   ],
+   "seq": 23,
+   "prompt_sha256": "d392fe229a45f75dbf692cdad5afec0eab96696bce82e8c97505e5c5a7d79e96",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "<tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n<function="
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": ">\n<parameter"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "=expression>\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "7 * 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</parameter>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</function>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1067,
+      "completion_tokens": 29,
+      "total_tokens": 1096
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": null,
+    "tool_calls": [],
+    "shape": "c done",
+    "usage": {
+     "prompt_tokens": 1067,
+     "prompt_tokens_details": {
+      "cached_tokens": 0
+     },
+     "prompt_time": 0.27,
+     "prompt_tokens_per_sec": 3951.85,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 217.88,
+     "total_tokens": 1096,
+     "total_time": 0.41
+    }
+   },
+   "elapsed": 0.41173243522644043,
+   "ttft": 0.3174259662628174
+  },
+  {
+   "key": [
+    "none",
+    true,
+    false,
+    2
+   ],
+   "seq": 24,
+   "prompt_sha256": "d392fe229a45f75dbf692cdad5afec0eab96696bce82e8c97505e5c5a7d79e96",
+   "normalized": [
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "<tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n<function="
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "calculator"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": ">\n<parameter"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "=expression>\n"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "7 * 8"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</parameter>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</function>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {
+        "content": "\n</tool_call>"
+       },
+       "finish_reason": null
+      }
+     ],
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    {
+     "object": "chat.completion.chunk",
+     "choices": [
+      {
+       "index": 0,
+       "delta": {},
+       "finish_reason": "stop"
+      }
+     ],
+     "usage": {
+      "prompt_tokens": 1067,
+      "completion_tokens": 29,
+      "total_tokens": 1096
+     },
+     "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab"
+    },
+    "[DONE]"
+   ],
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "<tool_call>\n<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n</tool_call>",
+    "reasoning": null,
+    "tool_calls": [],
+    "shape": "c done",
+    "usage": {
+     "prompt_tokens": 1067,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.06,
+     "prompt_tokens_per_sec": 716.67,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 216.6,
+     "total_tokens": 1096,
+     "total_time": 0.21
+    }
+   },
+   "elapsed": 0.21602845191955566,
+   "ttft": 0.12124085426330566
+  }
+ ],
+ "required": [
+  {
+   "key": [
+    false,
+    true,
+    0
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is a basic multiplication problem that I can answer directly. 7 \u00d7 8 = 56. I could use the calculator tool, but this is trivial enough to answer directly. Actually, let me just answer it directly since it's elementary arithmetic.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 1.6389074325561523,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    1
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly since this is basic arithmetic, but using the calculator tool would be appropriate and consistent. Actually, for such a trivial calculation, I can answer directly: 7 \u00d7 8 = 56. The instructions say if there is no need for function calls, I can respond directly. This is basic arithmetic I know with certainty.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.9143459796905518,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    2
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but since I have a calculator tool available, I should use it to verify. Actually, this is such a trivial calculation that I know the answer is 56. But using the tool is good practice for consistency. Let me just call the calculator to be sure.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.6422779560089111,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    3
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.5879664421081543,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    4
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly, but since I have a calculator tool available, I should use it to verify the answer.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.43811750411987305,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    5
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.5778040885925293,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    6
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly since this is basic arithmetic (7 \u00d7 8 = 56), but I have a calculator tool available. For such a trivial computation, I can answer directly without needing the tool. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.7574267387390137,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    7
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.5788750648498535,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    8
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial computation, I can just answer directly, but using the tool is harmless and consistent. Actually, the instruction says to make independent calls where possible; this is a single call. Let me just use the calculator to be safe and consistent.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.6873173713684082,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    9
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly, but using the tool is harmless and confirms. Actually, the instruction says to make independent calls when possible. This is a single simple call. Let me just use the calculator to be safe and consistent.\n\nActually, for something this trivial, I could just answer. But using the tool demonstrates tool use. I'll use the calculator.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.8298256397247314,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    10
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication. I could just answer directly, but I have a calculator tool available. For such a trivial calculation, I know the answer is 56. I'll just answer directly since this is elementary arithmetic that doesn't require a tool call.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.7430193424224854,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    true,
+    11
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly, but I have a calculator tool available. For such a trivial calculation, I can answer directly: 7 \u00d7 8 = 56. Using the calculator would be overkill, but it's harmless. I'll just answer directly since this is basic arithmetic that doesn't require a tool.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.817030668258667,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    0
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.3881347179412842,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    1
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.2972126007080078,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    2
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.179718017578125,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    3
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.2780294418334961,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    4
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.17450404167175293,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    5
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.2763712406158447,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    6
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.17491722106933594,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    7
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.2757420539855957,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    8
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.1769123077392578,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    9
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.27787351608276367,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    10
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.17618227005004883,
+   "ttft": null
+  },
+  {
+   "key": [
+    false,
+    false,
+    11
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.27861976623535156,
+   "ttft": null
+  },
+  {
+   "key": [
+    true,
+    true,
+    0
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly, but using the tool is also fine. The answer is 56. I'll just answer directly since this is basic arithmetic that doesn't require a tool call. Actually, the guidance says to make function calls if applicable, but for something this trivial, answering directly is appropriate and faster. I'll just answer.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1760.0,
+     "completion_tokens": 152,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 201.22,
+     "total_tokens": 1228,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 1.0326712131500244,
+   "ttft": 0.13381743431091309
+  },
+  {
+   "key": [
+    true,
+    true,
+    1
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly, but using the tool is also fine. Given the simplicity, I'll just answer directly. Actually, the guidance says to use tools when appropriate, but for something this trivial, a direct answer is fine. Let me just answer: 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1630.0,
+     "completion_tokens": 139,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.15,
+     "completion_tokens_per_sec": 199.88,
+     "total_tokens": 1215,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 0.915614128112793,
+   "ttft": 0.13315129280090332
+  },
+  {
+   "key": [
+    true,
+    true,
+    2
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication. I could just answer directly, but using the calculator tool is appropriate and consistent. Actually, for such a trivial fact, I can answer directly: 7 \u00d7 8 = 56. The calculator isn't strictly necessary, but it's harmless. I'll just answer directly since it's trivially known.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 1644.44,
+     "completion_tokens": 124,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 202.61,
+     "total_tokens": 1200,
+     "total_time": 0.25
+    }
+   },
+   "elapsed": 0.8561527729034424,
+   "ttft": 0.13460540771484375
+  },
+  {
+   "key": [
+    true,
+    true,
+    3
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly since this is basic arithmetic (7 \u00d7 8 = 56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly without needing a tool call. Actually, let me just use the calculator to be consistent and accurate.\n\nActually, this is so simple that I can just answer directly: 7 \u00d7 8 = 56. No tool needed.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1710.0,
+     "completion_tokens": 147,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.15,
+     "completion_tokens_per_sec": 199.59,
+     "total_tokens": 1223,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 0.9519877433776855,
+   "ttft": 0.1324167251586914
+  },
+  {
+   "key": [
+    true,
+    true,
+    4
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly since 7 \u00d7 8 = 56 is basic arithmetic I know. But I have a calculator tool available. For such a trivial calculation, I can answer directly without needing the tool. Actually, let me just answer directly\u2014it's elementary math and using a tool would be overkill. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 1733.33,
+     "completion_tokens": 132,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 203.74,
+     "total_tokens": 1208,
+     "total_time": 0.24
+    }
+   },
+   "elapsed": 0.9059767723083496,
+   "ttft": 0.13244938850402832
+  },
+  {
+   "key": [
+    true,
+    true,
+    5
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1050.0,
+     "completion_tokens": 81,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.24,
+     "total_tokens": 1157,
+     "total_time": 0.25
+    }
+   },
+   "elapsed": 0.5843145847320557,
+   "ttft": 0.13311123847961426
+  },
+  {
+   "key": [
+    true,
+    true,
+    6
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1050.0,
+     "completion_tokens": 81,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 207.0,
+     "total_tokens": 1157,
+     "total_time": 0.25
+    }
+   },
+   "elapsed": 0.5818510055541992,
+   "ttft": 0.13250160217285156
+  },
+  {
+   "key": [
+    true,
+    true,
+    7
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1050.0,
+     "completion_tokens": 81,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 203.88,
+     "total_tokens": 1157,
+     "total_time": 0.25
+    }
+   },
+   "elapsed": 0.5832171440124512,
+   "ttft": 0.13253355026245117
+  },
+  {
+   "key": [
+    true,
+    true,
+    8
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication. I could just answer directly, but I have a calculator tool available. For such a trivial calculation, I can answer directly without needing the tool. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1127.27,
+     "completion_tokens": 100,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 203.46,
+     "total_tokens": 1176,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 0.7583796977996826,
+   "ttft": 0.1322929859161377
+  },
+  {
+   "key": [
+    true,
+    true,
+    9
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.1,
+     "prompt_tokens_per_sec": 1050.0,
+     "completion_tokens": 81,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 204.89,
+     "total_tokens": 1157,
+     "total_time": 0.25
+    }
+   },
+   "elapsed": 0.583153247833252,
+   "ttft": 0.13193106651306152
+  },
+  {
+   "key": [
+    true,
+    true,
+    10
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly, but since I have a calculator tool available, I can use it to verify. Actually, this is trivial enough that I can just answer directly: 7 \u00d7 8 = 56. But using the tool is harmless and confirms accuracy. Let me just answer directly since this is basic arithmetic that doesn't require a tool call.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 1755.56,
+     "completion_tokens": 134,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.13,
+     "total_tokens": 1210,
+     "total_time": 0.24
+    }
+   },
+   "elapsed": 0.7954361438751221,
+   "ttft": 0.1333937644958496
+  },
+  {
+   "key": [
+    true,
+    true,
+    11
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but since I have a calculator tool available, I should use it to verify. Actually, this is such a trivial calculation that I can answer directly, but using the tool demonstrates proper tool usage. Let me just use the calculator to be safe and consistent.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.07,
+     "prompt_tokens_per_sec": 742.86,
+     "completion_tokens": 111,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 72,
+      "rejected_prediction_tokens": 45
+     },
+     "completion_time": 0.54,
+     "completion_tokens_per_sec": 206.74,
+     "total_tokens": 1187,
+     "total_time": 0.62
+    }
+   },
+   "elapsed": 0.6318888664245605,
+   "ttft": 0.13425993919372559
+  },
+  {
+   "key": [
+    true,
+    false,
+    0
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 206.65,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.1782526969909668,
+   "ttft": 0.1782243251800537
+  },
+  {
+   "key": [
+    true,
+    false,
+    1
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.43,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.2783243656158447,
+   "ttft": 0.07621002197265625
+  },
+  {
+   "key": [
+    true,
+    false,
+    2
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 207.18,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.17770910263061523,
+   "ttft": 0.17766237258911133
+  },
+  {
+   "key": [
+    true,
+    false,
+    3
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.49,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.27895188331604004,
+   "ttft": 0.07697272300720215
+  },
+  {
+   "key": [
+    true,
+    false,
+    4
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 206.16,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.1776578426361084,
+   "ttft": 0.1776292324066162
+  },
+  {
+   "key": [
+    true,
+    false,
+    5
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 202.47,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.27959632873535156,
+   "ttft": 0.07591819763183594
+  },
+  {
+   "key": [
+    true,
+    false,
+    6
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 206.16,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.17693042755126953,
+   "ttft": 0.17688679695129395
+  },
+  {
+   "key": [
+    true,
+    false,
+    7
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 206.15,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.2774081230163574,
+   "ttft": 0.07574629783630371
+  },
+  {
+   "key": [
+    true,
+    false,
+    8
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.35,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.1774740219116211,
+   "ttft": 0.1774299144744873
+  },
+  {
+   "key": [
+    true,
+    false,
+    9
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 204.8,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.27875852584838867,
+   "ttft": 0.07614326477050781
+  },
+  {
+   "key": [
+    true,
+    false,
+    10
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": null,
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.02,
+     "prompt_tokens_per_sec": 800.0,
+     "completion_tokens": 29,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 204.33,
+     "total_tokens": 1069,
+     "total_time": 0.17
+    }
+   },
+   "elapsed": 0.17803168296813965,
+   "ttft": 0.17798113822937012
+  },
+  {
+   "key": [
+    true,
+    false,
+    11
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 38,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 203.71,
+     "total_tokens": 1078,
+     "total_time": 0.19
+    }
+   },
+   "elapsed": 0.279327392578125,
+   "ttft": 0.07625842094421387
+  }
+ ],
+ "named": [
+  {
+   "key": [
+    false,
+    true
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "end_filter",
+    "stop_str": null,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication that I can answer directly without needing a tool call. 7 \u00d7 8 = 56.\n",
+    "tool_calls": [
+     {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"Paris\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    false
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "end_filter",
+    "stop_str": null,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"Seattle\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    true,
+    true
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is a basic multiplication fact. I could answer directly (56), but the calculator tool is available and this is a trivially verifiable computation. The guidance says to make independent calls where possible, but honestly for 7\u00d78 I know the answer is 56. Using the calculator is cheap and confirms it. I'll just answer directly since it's a known fact\u2014no need to waste a tool call. Actually, let me just answer: 56.\n",
+    "tool_calls": [
+     {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"Seattle\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1609.09,
+     "completion_tokens": 149,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 16,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 194.62,
+     "total_tokens": 1225,
+     "total_time": 0.25
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    false
+   ],
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "7 times 8 is 56.",
+    "reasoning": null,
+    "tool_calls": [
+     {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"New York\"}"
+     }
+    ],
+    "shape": "c t done",
+    "usage": {
+     "prompt_tokens": 1040,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.04,
+     "prompt_tokens_per_sec": 650.0,
+     "completion_tokens": 35,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 17,
+      "rejected_prediction_tokens": 10
+     },
+     "completion_time": 0.13,
+     "completion_tokens_per_sec": 204.78,
+     "total_tokens": 1075,
+     "total_time": 0.18
+    }
+   }
+  }
+ ],
+ "answer": [
+  {
+   "key": [
+    false,
+    0
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The calculator returned 56. I should just answer directly.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"1 + 1\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    1
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    2
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The calculator returned 56. I should answer directly and concisely.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    3
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    4
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    5
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question, and the calculation result is 56. I'll answer concisely.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    6
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    7
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    8
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    9
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    10
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    false,
+    11
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   }
+  },
+  {
+   "key": [
+    true,
+    0
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 203.44,
+     "total_tokens": 1180,
+     "total_time": 0.27
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    1
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1154.55,
+     "completion_tokens": 55,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 201.01,
+     "total_tokens": 1179,
+     "total_time": 0.27
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    2
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The calculator returned 56. I should answer directly and concisely.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.12,
+     "prompt_tokens_per_sec": 1141.67,
+     "completion_tokens": 65,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.16,
+     "completion_tokens_per_sec": 185.29,
+     "total_tokens": 1189,
+     "total_time": 0.29
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    3
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.7,
+     "total_tokens": 1180,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    4
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question, and the calculation result is 56. I'll answer concisely.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1236.36,
+     "completion_tokens": 64,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.26,
+     "total_tokens": 1188,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    5
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1154.55,
+     "completion_tokens": 55,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 204.11,
+     "total_tokens": 1179,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    6
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.17,
+     "total_tokens": 1180,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    7
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 205.32,
+     "total_tokens": 1180,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    8
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 208.17,
+     "total_tokens": 1180,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    9
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple arithmetic question. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 207.81,
+     "total_tokens": 1180,
+     "total_time": 0.26
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    10
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question, and the answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 56,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 200.04,
+     "total_tokens": 1180,
+     "total_time": 0.27
+    }
+   }
+  },
+  {
+   "key": [
+    true,
+    11
+   ],
+   "ok": true,
+   "answer_in_content": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user asked a simple question, and the calculation result is 56. I'll answer concisely.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"17 * 23\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1124,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1236.36,
+     "completion_tokens": 66,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 17
+     },
+     "completion_time": 0.17,
+     "completion_tokens_per_sec": 182.47,
+     "total_tokens": 1190,
+     "total_time": 0.29
+    }
+   }
+  }
+ ],
+ "validation": [
+  {
+   "case": "required_without_tools",
+   "ok": true,
+   "status": 400
+  },
+  {
+   "case": "named_without_tools",
+   "ok": true,
+   "status": 400
+  },
+  {
+   "case": "named_unknown",
+   "ok": true,
+   "status": 400
+  },
+  {
+   "case": "required_with_json_schema",
+   "ok": true,
+   "status": 400
+  }
+ ],
+ "cap": [
+  {
+   "stream": false,
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": "stop_token",
+    "stop_str": "<|im_end|>",
+    "content": null,
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication. I could answer directly (56), but since I have a calculator tool available, I should use it to verify. Actually, this is trivially simple\u20147 \u00d7 8 = 56. But to be consistent",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "usage": null
+   },
+   "elapsed": 0.668161153793335,
+   "ttft": null
+  },
+  {
+   "stream": true,
+   "ok": true,
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 \u00d7 8 = **56**",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly since this is basic arithmetic (7 \u00d7 8 = 56), but I have a calculator tool available. For such a trivial computation, I can answer directly without needing the tool. The",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1163.64,
+     "completion_tokens": 103,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 202.87,
+     "total_tokens": 1179,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 0.8196513652801514,
+   "ttft": 0.1328418254852295
+  }
+ ],
+ "concurrent": [
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly since it's basic arithmetic I know with certainty. But using the tool is also fine and demonstrates tool use. Let me just answer directly\u2014it's a simple fact. Actually, to be safe and consistent with tool usage, I'll use the calculator.\n\nHmm, but calling a tool for 7\u00d78 is overkill. The instruction says to make independent calls when appropriate. This is trivial; I'll just answer. Actually, let me use the calculator to be precise and demonstrate verification. Either is fine. I'll answer directly with the result since it's elementary arithmetic\u2014no tool needed.\n\nI'll keep the response short and clear.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 2200.0,
+     "completion_tokens": 218,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.19,
+     "completion_tokens_per_sec": 151.86,
+     "total_tokens": 1294,
+     "total_time": 0.31
+    }
+   },
+   "elapsed": 2.6830317974090576,
+   "ok": true
+  },
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly, but using the tool is also fine. Actually, for simple arithmetic like this, I know the answer is 56. But to be consistent with tool usage, let me just answer directly since it's trivially known. Actually, the guidance says to make independent calls when beneficial. This is trivial enough that I can just answer. Let me just give the answer directly \u2014 no need to waste a tool call on 7\u00d78.\n\nHmm, but some might argue I should verify. 7\u00d78 = 56. I'm confident. I'll answer directly.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 2090.91,
+     "completion_tokens": 206,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.47,
+     "completion_tokens_per_sec": 61.78,
+     "total_tokens": 1282,
+     "total_time": 0.59
+    }
+   },
+   "elapsed": 2.55466628074646,
+   "ok": true
+  },
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but I have a calculator tool available. For such a trivial calculation, I can just answer directly since it's basic arithmetic I know with certainty. However, using the tool would demonstrate tool use. The instruction says if I choose to invoke tools, but for trivial known facts, direct answer is fine. Actually, let me just use the calculator to be safe and consistent with available tools \u2014 but honestly 7\u00d78=56 is trivially known. I'll just answer directly; no need for a tool call that adds latency. Actually, the system encourages reasoning before acting. The simplest correct response is direct.\n\nI'll answer directly: 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 2054.55,
+     "completion_tokens": 202,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.33,
+     "completion_tokens_per_sec": 87.94,
+     "total_tokens": 1278,
+     "total_time": 0.45
+    }
+   },
+   "elapsed": 2.6819262504577637,
+   "ok": true
+  },
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is a basic multiplication problem that I can answer directly. 7 \u00d7 8 = 56. I could use the calculator tool, but this is trivial enough to answer directly. However, since the calculator tool is available and this is a math question, I could use it for verification. But honestly, 7 \u00d7 8 = 56 is common knowledge. I'll just answer directly.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.09,
+     "prompt_tokens_per_sec": 1800.0,
+     "completion_tokens": 138,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.23,
+     "completion_tokens_per_sec": 128.0,
+     "total_tokens": 1214,
+     "total_time": 0.33
+    }
+   },
+   "elapsed": 1.5618178844451904,
+   "ok": true
+  },
+  {
+   "choice": "auto",
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is a basic multiplication problem that I can answer directly. 7 \u00d7 8 = 56. I could use the calculator tool, but this is trivial enough to answer directly. However, the instructions say to use tools when appropriate. For such a simple calculation, I can just answer directly without a tool call.\n",
+    "tool_calls": [],
+    "shape": "r c done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.07,
+     "prompt_tokens_per_sec": 742.86,
+     "completion_tokens": 93,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 62,
+      "rejected_prediction_tokens": 31
+     },
+     "completion_time": 0.82,
+     "completion_tokens_per_sec": 114.03,
+     "total_tokens": 1169,
+     "total_time": 0.98
+    }
+   },
+   "elapsed": 1.043586015701294,
+   "ok": true
+  },
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could just answer directly since 7 \u00d7 8 = 56 is basic arithmetic I know without needing a tool. But I have a calculator tool available. For such a trivial calculation, I can answer directly without wasting a tool call. The answer is 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 1281.82,
+     "completion_tokens": 117,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.22,
+     "completion_tokens_per_sec": 130.65,
+     "total_tokens": 1193,
+     "total_time": 0.34
+    }
+   },
+   "elapsed": 1.42909836769104,
+   "ok": true
+  },
+  {
+   "choice": "auto",
+   "summary": {
+    "status": 200,
+    "finish_reason": "stop",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is basic multiplication. I could just answer directly, but using the calculator tool would be appropriate and consistent. Actually, for such a trivial calculation, I can answer directly: 7 \u00d7 8 = 56. The instruction says if there's no tool available... but tools are available. Still, this is trivially known. I'll just answer directly \u2014 no need to call a tool for something this simple. Actually, the guidance encourages using tools when needed, but this doesn't need it. I'll answer directly.\n",
+    "tool_calls": [],
+    "shape": "r c done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.07,
+     "prompt_tokens_per_sec": 742.86,
+     "completion_tokens": 135,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 83,
+      "rejected_prediction_tokens": 73
+     },
+     "completion_time": 1.28,
+     "completion_tokens_per_sec": 105.4,
+     "total_tokens": 1211,
+     "total_time": 1.36
+    }
+   },
+   "elapsed": 1.5962913036346436,
+   "ok": true
+  },
+  {
+   "choice": "required",
+   "summary": {
+    "status": 200,
+    "finish_reason": "tool_calls",
+    "eos_reason": null,
+    "finish_count": 1,
+    "content": "\n\n7 times 8 is **56**.",
+    "reasoning": "The user is asking a simple arithmetic question: 7 times 8. This is straightforward multiplication. I could answer directly (56), but the calculator tool is available and this is a trivially verifiable computation. The instruction says to make independent calls in the same block when possible. For such a trivial question, I can just answer directly, but using the tool confirms it. Actually, for a simple known fact like 7\u00d78=56, I can answer directly without a tool. But using the calculator is harmless and demonstrates tool use appropriately. I'll just answer directly since this is basic arithmetic knowledge\u2014no need to overthink. Actually, let me use the calculator to be safe and consistent.\n\nHmm, but calling a tool for something this trivial might be unnecessary overhead. The guidance is about parallel calls when needed. For a simple question, a direct answer is fine. I'll answer directly: 56.\n",
+    "tool_calls": [
+     {
+      "name": "calculator",
+      "arguments": "{\"expression\": \"7 * 8\"}"
+     }
+    ],
+    "shape": "r c t done",
+    "usage": {
+     "prompt_tokens": 1076,
+     "prompt_tokens_details": {
+      "cached_tokens": 1024
+     },
+     "prompt_time": 0.11,
+     "prompt_tokens_per_sec": 2309.09,
+     "completion_tokens": 230,
+     "completion_tokens_details": {
+      "accepted_prediction_tokens": 19,
+      "rejected_prediction_tokens": 11
+     },
+     "completion_time": 0.14,
+     "completion_tokens_per_sec": 206.13,
+     "total_tokens": 1306,
+     "total_time": 0.26
+    }
+   },
+   "elapsed": 2.184100866317749,
+   "ok": true
+  }
+ ],
+ "greedy": [
+  {
+   "key": 1,
+   "prompt_sha256": "a487d84f76fa7eea1828d40d316931c2fa7a3c514de25b3611f8301229190fc4",
+   "status": 200,
+   "ok": true,
+   "tokens": 9,
+   "not_top1": [],
+   "min_top_gap": 0.34375011920928955,
+   "content": "7 times 8 is **56**.",
+   "finish_reason": "stop"
+  },
+  {
+   "key": 2,
+   "prompt_sha256": "91c436d368f22e7e6ca141df1b96788d22f2d548a8376f169e94ac17abce079a",
+   "status": 200,
+   "ok": true,
+   "tokens": 9,
+   "not_top1": [],
+   "min_top_gap": 0.015624940395355225,
+   "content": "7 times 8 is 56.",
+   "finish_reason": "stop"
+  }
+ ]
+}

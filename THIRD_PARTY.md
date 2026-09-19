@@ -51,6 +51,8 @@ All of these were written with **OpenAI Codex** (`gpt-6-astra`, and `gpt-5.6-sol
 | `docker/overlays/decode-kernels-r4` | ExLlamaV3 (`generator/*`, `modules/hyperconnections.py`, `exllamav3_ext/*`) | MIT | pinned draft staging, batched verify, draft-head pruning (`EXL3_MTP_HEAD_N`), int8 mixer weights |
 | `docker/overlays/prefill-e3-r2` | ExLlamaV3 (`modules/block_sparse_mlp.py`, `exllamav3_ext/quant/exl3_moe_prefill_e3*`, `bindings.cpp`) | MIT | grouped MoE prefill for K = 2 / 3 / 4 (`EXL3_MOE_PREFILL_E3`) |
 | `docker/overlays/stack-r4-e3r2` | same files as the two above | MIT | both overlays in one image, with a merged `bindings.cpp` |
+| `docker/overlays/mtp-pruned-r1/` | ExLlamaV3 (`generator/generator.py`, `architecture/qwen4_exp_mtp.py`, `modules/embedding.py`, new `modules/embedding_pruned.py`) | MIT | the MTP draft chain kept on the GPU with a 320 MiB copy of the 65,536 embedding rows the pruned draft head can emit; written for this repository by an Opus agent round (R522, served since R528) |
+| `docker/overlays/tool-choice-r1/` | TabbyAPI (`endpoints/OAI/utils/chat_completion.py`, new `endpoints/OAI/utils/tool_choice.py`, tests) | AGPL-3.0 | `tool_choice: "required"` and named-function enforcement: an llguidance (Microsoft, MIT) Lark grammar that switches on when reasoning ends through TabbyAPI's existing `filter_trigger`, a call-only continuation when a forced turn ends in content, and a 503 when a forced turn ends without the call; written for this repository by an Opus agent round (R523, served since R529) |
 
 Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of the file it installs, and `install.py` refuses to run on a base whose files do not match.
 

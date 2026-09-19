@@ -1,0 +1,21 @@
+# tool-choice-r1: enforce tool_choice "required" / named function in TabbyAPI.
+# Build context: out/tool-choice-r1/  (legacy builder compatible: no heredocs)
+#
+#   docker build -f Dockerfile.box -t tabbyapi:stack-r4-e3r2-tc1 .
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:decode-kernels-r4 -t tabbyapi:decode-kernels-r4-tc1 .
+#
+# Any daily image works as BASE: they share the same /app TabbyAPI files, and
+# install.py refuses to build if a baseline hash differs.
+ARG BASE=tabbyapi:stack-r4-e3r2
+FROM ${BASE}
+
+COPY overlay /tmp/tool-choice-r1/overlay
+COPY manifest.json install.py /tmp/tool-choice-r1/
+
+RUN python3 /tmp/tool-choice-r1/install.py --root /app \
+        --manifest /tmp/tool-choice-r1/manifest.json \
+        --overlay /tmp/tool-choice-r1/overlay \
+    && python3 -c "import llguidance, sys; print('llguidance', getattr(llguidance, '__version__', '?'), file=sys.stderr)" \
+    && cd /app \
+    && TABBY_TOOLCHOICE_REQUIRE_LLG=1 python3 -m unittest -v tests.test_tool_choice \
+    && rm -rf /tmp/tool-choice-r1
