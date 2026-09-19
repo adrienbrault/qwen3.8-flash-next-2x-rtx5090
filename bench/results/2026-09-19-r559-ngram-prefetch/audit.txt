@@ -1,0 +1,28 @@
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.4T  350G  81% /
+2026-09-19T17:42:12+00:00 [r559] S1 building tabbyapi:ngram-prefetch-r1-gdnbf16 on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (before the lock)
+2026-09-19T17:42:23+00:00 [r559] lock held; served at entry: <no answer>
+2026-09-19T17:42:25+00:00 [r559] harness cuda:0 exit 0: GPU harness: PASS
+2026-09-19T17:42:28+00:00 [r559] harness cuda:1 exit 0: GPU harness: PASS
+2026-09-19T17:42:28+00:00 [r559] === T-OFF: flag off + timing instrument ===
+2026-09-19T17:42:53+00:00 [r559] T-OFF: VRAM free 1367/419/; fingerprints f4add302e176d78e / 4a255910dee2d9c5
+cold prefill pf-T-OFF-60000: 45168 tokens, 9455 tok/s
+cold prefill pf-T-OFF-120000: 90027 tokens, 10089 tok/s
+[T-OFF]  -- ngram timing: forwards 3 | prefill exposed wait: 1 calls, mean 2.00 ms, p50 2.00, p90 2.00, max 2.00 | decode/verify exposed wait: 2 calls, mean 1.45 ms, p50 1.60, p90 1.60, max 1.60 | staging {'hit': 0, 'miss': 3, 'retired': 0}
+[T-OFF]  -- ngram timing: forwards 185 | prefill exposed wait: 37 calls, mean 24.15 ms, p50 18.06, p90 50.93, max 96.56 | decode/verify exposed wait: 148 calls, mean 0.76 ms, p50 0.59, p90 0.94, max 13.26 | staging {'hit': 36, 'miss': 149, 'retired': 0}
+[T-OFF]  -- ngram timing: forwards 287 | prefill exposed wait: 81 calls, mean 13.14 ms, p50 5.73, p90 35.05, max 96.56 | decode/verify exposed wait: 206 calls, mean 0.66 ms, p50 0.49, p90 0.94, max 13.26 | staging {'hit': 80, 'miss': 207, 'retired': 0}
+[T-OFF]  -- ngram timing: forwards 887 | prefill exposed wait: 81 calls, mean 13.14 ms, p50 5.73, p90 35.05, max 96.56 | decode/verify exposed wait: 806 calls, mean 0.46 ms, p50 0.24, p90 0.78, max 34.38 | staging {'hit': 80, 'miss': 807, 'retired': 0}
+2026-09-19T17:43:35+00:00 [r559] === T-ON: flag on (timing implied) ===
+2026-09-19T17:44:02+00:00 [r559] T-ON: VRAM free 1367/419/; fingerprints f4add302e176d78e / 4a255910dee2d9c5
+cold prefill pf-T-ON-60000: 44915 tokens, 9230 tok/s
+cold prefill pf-T-ON-120000: 90084 tokens, 10036 tok/s
+2026-09-19T17:44:43+00:00 [r559] === AB: one boot per arm, ON then OFF: salted prefill + mp_decode ===
+cold prefill pf-B1-60000: 44979 tokens, 9054 tok/s
+cold prefill pf-B1-120000: 90281 tokens, 10213 tok/s
+cold prefill pf-A2-60000: 45092 tokens, 9326 tok/s
+cold prefill pf-A2-120000: 89865 tokens, 10089 tok/s
+code c1: 24 prompts, per-request decode_tps A 198.6 / B 200.8; paired geo-mean B/A +1.13 %, 95 % CI [+0.58, +1.69] %; per-prompt range -2.3 .. +4.7 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 125.3 / B 127.7; paired geo-mean B/A +2.01 %, 95 % CI [-0.02, +4.19] %; per-prompt range -9.2 .. +16.0 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 198.1 / B 199.5; paired geo-mean B/A +0.74 %, 95 % CI [+0.38, +1.12] %; per-prompt range -1.6 .. +3.6 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 117.6 / B 119.4; paired geo-mean B/A +1.58 %, 95 % CI [+0.57, +2.63] %; per-prompt range -2.6 .. +7.8 %; short A 0 / B 0
+2026-09-19T17:52:14+00:00 [r559] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T17:52:15+00:00 [r559] === R559 DONE ===

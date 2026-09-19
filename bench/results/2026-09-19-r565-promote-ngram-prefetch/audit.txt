@@ -1,0 +1,59 @@
+124c124
+< IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16}
+---
+> IMG=${IMG:-tabbyapi:ngram-prefetch-r1-gdnbf16}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1}
+215c215
+<   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:ngram-prefetch-r1-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T18:00:03+00:00 [r565] lock held; served at entry: <no answer> cache_size: 966656 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T18:00:03+00:00 [r565] === AB: 4 boots A B B A, A = live, B = candidate, tier off, pool 966656 x 8 ===
+2026-09-19T18:00:44+00:00 [r565] UP A1: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16, prefetch env 0; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9179 / 120k 9975
+2026-09-19T18:04:34+00:00 [r565] UP B2: tabbyapi:ngram-prefetch-r1-gdnbf16, prefetch env 1; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9636 / 120k 10222
+2026-09-19T18:08:24+00:00 [r565] UP B3: tabbyapi:ngram-prefetch-r1-gdnbf16, prefetch env 1; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9587 / 120k 10045
+2026-09-19T18:12:13+00:00 [r565] UP A4: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16, prefetch env 0; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9625 / 120k 10137
+code c1: 24 prompts, per-request decode_tps A 199.2 / B 200.8; paired geo-mean B/A +0.81 %, 95 % CI [+0.59, +1.02] %; per-prompt range -0.6 .. +2.3 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 126.9 / B 127.1; paired geo-mean B/A +0.23 %, 95 % CI [-0.76, +1.36] %; per-prompt range -4.1 .. +9.2 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 197.6 / B 199.5; paired geo-mean B/A +0.94 %, 95 % CI [+0.56, +1.31] %; per-prompt range -1.9 .. +3.4 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 118.3 / B 119.0; paired geo-mean B/A +0.59 %, 95 % CI [-0.25, +1.45] %; per-prompt range -2.4 .. +4.9 %; short A 0 / B 0
+prefill 60k: A 9402 B 9612 B/A 1.022
+prefill 120k: A 10056 B 10134 B/A 1.008
+shapes [(0.81, 0.59), (0.23, -0.76), (0.94, 0.56), (0.59, -0.25)]
+AB OK
+2026-09-19T18:15:23+00:00 [r565] === G1: candidate with the NVMe tier ON ===
+2026-09-19T18:15:50+00:00 [r565] G1: cache_size: 966656 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; tier:  -- nvme tier: ON at /nvme-tier/ns-be1eb77e1b3ea06edcd9061dd467ef804459767115ff404587cb9561ca9115ef (cap 64.0 GiB, on disk 0.00 GiB: 0 pages, 0 checkpoints, 0 torn, 0 stranded pruned, 1 stale namespac; VRAM free at boot 2085/867/; fingerprints c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+2026-09-19T18:15:50+00:00 [r565] === PROMOTE (early): launch-flashnext.sh := launch-flashnext-r565.sh ===
+2026-09-19T18:15:50+00:00 [r565] promoted: live launcher = tabbyapi:ngram-prefetch-r1-gdnbf16 + EXL3_NGRAM_PREFETCH2=1 (the G1 container is that launcher's boot); post-promotion gates follow
+2026-09-19T18:15:50+00:00 [r565] === GT: crash-restart restore ===
+fill 30000: prompt 30011 tok; cold 7e708b66c4f4b1d8 cached 0 3.999 s; warm 7e708b66c4f4b1d8 cached 29952 0.373 s
+drained 5.0 s after the marked request:  -- nvme tier: drained (224 pages, 6 ckpts, 1.15/64.0 GiB; wrote 224 pages + 6 ckpts (1.15 GiB); restored 0 pages + 0 ckpts; pending 0; skips queue 0 evict 0; refused mm 0 cap 0 free 0; evicted 0 page
+ -- nvme tier: open scan: 6/6 checkpoints intact in 0.6 s
+verify 30000: after restart 7e708b66c4f4b1d8 cached 29952 (0.613 s latency) | warm 7e708b66c4f4b1d8 cached 29952 (0.373 s) | cold 7e708b66c4f4b1d8 (3.999 s) -> PASS
+VERIFY PASS
+2026-09-19T18:16:19+00:00 [r565] GT PASS
+2026-09-19T18:16:19+00:00 [r565] === G2: agentic-edit ===
+[BR] agentic-edit greedy c1: 6/6 ok, 16985 tokens, per-request decode median 258.9 t/s (min 210.8, max 283.7), aggregate 232.0 t/s
+[BR] agentic-edit greedy c1 first full wave: aggregate 253.9 t/s, per stream 253.9 t/s
+[BR] agentic-edit greedy c4: 6/6 ok, 17172 tokens, per-request decode median 162.7 t/s (min 150.0, max 218.5), aggregate 445.7 t/s
+[BR] agentic-edit greedy c4 first full wave: aggregate 528.4 t/s, per stream 153.7 t/s
+[BR] agentic-edit sampled c1: 6/6 ok, 18030 tokens, per-request decode median 250.7 t/s (min 195.9, max 292.9), aggregate 235.5 t/s
+[BR] agentic-edit sampled c1 first full wave: aggregate 246.3 t/s, per stream 246.3 t/s
+[BR] agentic-edit sampled c4: 6/6 ok, 17959 tokens, per-request decode median 142.6 t/s (min 135.7, max 213.7), aggregate 428.8 t/s
+[BR] agentic-edit sampled c4 first full wave: aggregate 510.8 t/s, per stream 136.1 t/s
+2026-09-19T18:20:09+00:00 [r565] G2 PASS
+2026-09-19T18:20:09+00:00 [r565] === G3: needles ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-19T18:22:09+00:00 [r565] G3 PASS
+2026-09-19T18:22:09+00:00 [r565] === G4: tool-eval 69 x 4 ===
+BR tool-eval 69x4: 84 +- 2.4 CI [82.0, 86.0] points [118, 112, 115, 118] ['C:6/8', 'G:5/6', 'I:16/20', 'K:16/26', 'N:5/6', 'O:10/12']
+2026-09-19T18:30:40+00:00 [r565] G4 PASS (84)
+2026-09-19T18:30:40+00:00 [r565] === G5: GSM8K n=500 (nostop proxy) ===
+2026-09-19T18:38:39+00:00 [r565] GSM8K n=500 flexible: 0.978
+2026-09-19T18:38:39+00:00 [r565] G5 PASS
+2026-09-19T18:38:39+00:00 [r565] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 966656 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; canonical c1 f4add302e176d78e / 30k 4a255910dee2d9c5; VRAM free 1103/113/
+2026-09-19T18:38:39+00:00 [r565] === R565 PROMOTED ===

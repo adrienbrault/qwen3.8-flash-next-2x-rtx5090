@@ -78,5 +78,6 @@ Measured and not promoted in the same period: chunk 1024 for pool ([R483](../ben
 | 16:30 | QSA raw-key ring | byte-identical; tool-eval 86.5 ± 2.4, GSM8K 0.976 | 983,040 | [R546](../bench/results/r546-promote-rawk.md) |
 | 17:18 | bf16 GDN recurrent state | new c1 fingerprint, decode +0.3 to +2.1 % on 48 paired prompts; tool-eval 86.8 ± 2.6, GSM8K 0.974 | 1,032,192 | [R548](../bench/results/r548-promote-gdnbf16-ring.md) |
 | 19:07 | 8 slots | fingerprints unchanged, prefill 1.00–1.02×; tool-eval 88.2 ± 1.0, GSM8K 0.974 | 966,656 | [R561](../bench/results/r561-promote-slots8.md) |
+| 20:15 | n-gram row prefetch after the draft readback | byte-identical, +0.8 % code / +0.9 % prose at 1 stream over 4 boots; tool-eval 84.0 ± 2.4, GSM8K 0.978 | 966,656 | [R565](../bench/results/r565-promote-ngram-prefetch.md) |
 
 Measured and not promoted in the same period: a deeper single-job draft ([R537](../bench/results/r537-draft-depth.md)), the K=3 MoE kernel without spills ([R536](../bench/results/r536-nospill.md)), the draft embedding copy on cuda:0 ([R555](../bench/results/r555-headdev-mirror.md)), adaptive draft depth ([R556](../bench/results/r556-adaptive-draft-r2.md)), prefill chunk 1,024 / 512 ([R553](../bench/results/r553-chunk-hot-stall.md)), draft depth 2 above 4 jobs ([R560](../bench/results/r560-c8-policy.md)).

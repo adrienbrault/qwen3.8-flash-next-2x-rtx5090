@@ -1,0 +1,20 @@
+{
+ "flags": {
+  "prefetch2": false
+ },
+ "checks": {
+  "forward_equals_reference": true,
+  "prefetch_consumed_exact": true,
+  "deferred_h1_exact": true,
+  "deferred_h2_exact": true,
+  "event_reuse_h1": true,
+  "event_reuse_h2": true,
+  "verify_prefetch_exact": true,
+  "verify_prefetch_hit": true,
+  "discard_changes_nothing": true,
+  "timing_report_present": true
+ },
+ "bench_us": {
+  "forward_2036_rows_ms": 16.672
+ }
+}

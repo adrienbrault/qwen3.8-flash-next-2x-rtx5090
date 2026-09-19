@@ -1,0 +1,4 @@
+code c1: 24 prompts, per-request decode_tps A 199.2 / B 200.8; paired geo-mean B/A +0.81 %, 95 % CI [+0.59, +1.02] %; per-prompt range -0.6 .. +2.3 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 126.9 / B 127.1; paired geo-mean B/A +0.23 %, 95 % CI [-0.76, +1.36] %; per-prompt range -4.1 .. +9.2 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 197.6 / B 199.5; paired geo-mean B/A +0.94 %, 95 % CI [+0.56, +1.31] %; per-prompt range -1.9 .. +3.4 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 118.3 / B 119.0; paired geo-mean B/A +0.59 %, 95 % CI [-0.25, +1.45] %; per-prompt range -2.4 .. +4.9 %; short A 0 / B 0

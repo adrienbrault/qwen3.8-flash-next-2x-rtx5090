@@ -1,0 +1,371 @@
+--- a/modules/ngram_embedding.py
++++ b/modules/ngram_embedding.py
+@@ -2,6 +2,8 @@
+ from typing_extensions import override
+ import os
+ from concurrent.futures import ThreadPoolExecutor
++from contextlib import contextmanager
++import time
+ import torch
+ from ..model.config import Config
+ from ..loader.safetensors import DiskTensorHandle
+@@ -43,6 +45,18 @@
+ 
+ PREFETCH_ENABLED = os.environ.get("EXL3_NGRAM_PREFETCH", "1") != "0"   # debug/A-B switch
+ PREFETCH_MIN_TOKENS = 256   # positions (bsz * seq) below which prefetch() declines (decode-sized)
++# EXL3_NGRAM_PREFETCH2=1 (default off, timing only): deeper prefetch for the served chain. The
++# stock prefetch() already stages prefill chunk k+1 (the prefill pipeline stages A_(i+1) before
++# B_i runs), so this flag adds (a) per-forward instrumentation of the exposed gather wait
++# (EXL3_NGRAM_TIMING, or implicitly with PREFETCH2) and (b) an early verify-window prefetch:
++# the generator hands the verify forward's (pinned) id history to the worker as soon as the
++# draft tokens exist, instead of staging inline at forward start. Gathers stay behind the same
++# events/entry machinery as the stock path; outputs are untouched by construction.
++PREFETCH2 = os.environ.get("EXL3_NGRAM_PREFETCH2", "0") == "1"
++# Timing-only instrumentation (default off): records the wait the PLE forward spends inside
++# _stage()/entry.result() per call, split by kind ("prefill" | "decode"), exposed through
++# NGramEmbedding.timing_report()
++_TIMING = os.environ.get("EXL3_NGRAM_TIMING", "0") == "1" or PREFETCH2
+ MAX_PIN_SETS = 2            # staging sets: one with the last forward's uploads in flight, one being staged
+ 
+ 
+@@ -118,6 +132,8 @@
+         self._pending = []          # queued prefetches, oldest first: {"history", "pin", "future"}
+         self._executor = None
+         self.prefetch_stats = {"hit": 0, "miss": 0, "retired": 0}
++        self._timing = []           # per-forward records when _TIMING (last 4096 calls)
++        self._timing_n = 0          # total forwards seen (reporting coverage)
+         self._row_dtype = None      # stored row dtype of the unquantized table
+ 
+         self.caps.update({"prefer_cpu": True})
+@@ -393,6 +409,44 @@
+     # Decode-sized inputs stay inline: their 16-row gathers are already parallel preads, and the
+     # thread hop per token measured as a net loss.
+ 
++    @contextmanager
++    def _timed(self, kind: str, out_len: int):
++        """EXL3_NGRAM_TIMING instrumentation: record the exposed wait of one forward's row
++        staging (a prefetch entry the forward waited on, or an inline stage). Timing only."""
++        if not _TIMING:
++            yield
++            return
++        t0 = time.perf_counter()
++        yield
++        dt = time.perf_counter() - t0
++        self._timing.append((kind, out_len, dt))
++        self._timing_n += 1
++        if len(self._timing) > 4096:
++            del self._timing[: len(self._timing) - 4096]
++
++    def timing_report(self) -> dict:
++        """Aggregate the recorded per-forward exposed-wait samples (prefill vs decode)."""
++        def agg(rows):
++            if not rows:
++                return None
++            ts = sorted(t for _, _, t in rows)
++            n = len(ts)
++            return {
++                "calls": n,
++                "mean_ms": 1000.0 * sum(ts) / n,
++                "p50_ms": 1000.0 * ts[n // 2],
++                "p90_ms": 1000.0 * ts[min(n - 1, (n * 9) // 10)],
++                "max_ms": 1000.0 * ts[-1],
++                "total_ms": 1000.0 * sum(ts),
++            }
++        prefill = [r for r in self._timing if r[0] == "prefill"]
++        decode = [r for r in self._timing if r[0] == "decode"]
++        return {
++            "forwards_seen": self._timing_n,
++            "exposed_wait": {"prefill": agg(prefill), "decode": agg(decode)},
++            "staging": dict(self.prefetch_stats),
++        }
++
+     def _drain_prefetch(self):
+         for e in list(self._pending):
+             self._retire(e)
+@@ -412,20 +466,34 @@
+         f = entry["future"]
+         if not f.cancel():
+             f.result()
+-        entry["pin"].held = False
++        if entry["pin"] is not None:        # None while a deferred stage is still acquiring
++            entry["pin"].held = False
+ 
+-    def _acquire_pin(self, n: int, row_words: int, row_dtype: torch.dtype) -> _PinSet:
+-        """A staging set not held by a queued prefetch, grown to n ids."""
++    def _acquire_pin(self, n: int, row_words: int, row_dtype: torch.dtype,
++                     skip: dict | None = None) -> _PinSet:
++        """A staging set not held by a queued prefetch, grown to n ids. `skip` excludes one
++        pending entry (the caller's own deferred stage) from the retire candidates below: its
++        future running on this same thread would deadlock in _retire's f.result()."""
+         free = [p for p in self._pins if not p.held]
+         if not free and len(self._pins) < MAX_PIN_SETS:
+             free = [_PinSet()]
+             self._pins += free
+         if not free:
+             # every set is held by a queued prefetch: retire one, preferably one whose staging
+-            # already finished (a stale guess), else the oldest
+-            done = [e for e in self._pending if e["future"].done()]
+-            self._retire(done[0] if done else self._pending[0])
+-            free = [p for p in self._pins if not p.held]
++            # already finished and owns its set (a stale guess), else the oldest other entry
++            # (whose future is either cancellable before it runs, or joined here — unchanged
++            # served cost)
++            done = [e for e in self._pending
++                    if e is not skip and e["future"].done() and e["pin"] is not None]
++            others = [e for e in self._pending if e is not skip]
++            if not others:
++                # every held set belongs to an inline forward's staging (no queued entry to
++                # retire): that holder frees its set when its stage ends, so wait it out
++                while not (free := [p for p in self._pins if not p.held]):
++                    time.sleep(0.001)
++            else:
++                self._retire(done[0] if done else others[0])
++                free = [p for p in self._pins if not p.held]
+         pin = free[0]
+         pin.grow(n, row_words, row_dtype)
+         pin.held = True
+@@ -493,19 +561,69 @@
+         if self._match(history) is not None:
+             return
+         trellis = self.mode.startswith("trellis")
++        if not PREFETCH2:
++            pin = self._acquire_pin(
++                bsz * out_len * self.num_heads,
++                words_per_row(self.K) if trellis else ROW_DIM,
++                torch.int16 if trellis else self._row_dtype)
++        for h in self.handles or []:
++            h._ensure_open()        # lazy open isn't thread-safe; do it here, not on the worker
++        if self._executor is None:
++            self._executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "ngram_prefetch")
++        if not PREFETCH2:
++            self._pending.append({
++                "history": history,
++                "pin": pin,
++                "future": self._executor.submit(self._stage, history, pin),
++            })
++        else:
++            # PREFETCH2: _acquire_pin (and the previous set's event wait inside _stage) run on
++            # the worker instead of the issuing thread, so a cold gather or a still-streaming
++            # H2D never stalls the generator / stage-0 thread. The executor is single-worker,
++            # so staging stays ordered exactly as the served path.
++            entry = {"history": history, "pin": None, "future": None}
++            self._pending.append(entry)
++            entry["future"] = self._executor.submit(self._stage_deferred, history, entry)
++
++    def _stage_deferred(self, history, entry):
++        """PREFETCH2 worker-side staging: acquire the staging set here (so the issuing thread
++        never waits on a cold gather or on the previous set's CUDA event), then run the normal
++        _stage."""
++        trellis = self.mode.startswith("trellis")
++        out_len = history.shape[1] - self.context_len
+         pin = self._acquire_pin(
+-            bsz * out_len * self.num_heads,
++            history.shape[0] * out_len * self.num_heads,
+             words_per_row(self.K) if trellis else ROW_DIM,
+-            torch.int16 if trellis else self._row_dtype)
++            torch.int16 if trellis else self._row_dtype,
++            skip = entry)
++        entry["pin"] = pin
++        return self._stage(history, pin)
++
++    def prefetch_ids(self, history: torch.Tensor):
++        """EXL3_NGRAM_PREFETCH2 hook for the generator: stage rows for the *verify* forward whose
++        exact id history already exists (the draft tokens were just produced), so the gather
++        runs behind the MTP draft chain instead of at the verify forward's start. Same machinery
++        as prefetch(), without its decode-sized decline: a verify history is exactly the small
++        window whose cold gather is otherwise exposed. Timing only, like prefetch()."""
++        if not PREFETCH2 or self.mode is None or history.dim() != 2:
++            return
++        bsz, out_len = history.shape[0], history.shape[1] - self.context_len
++        if out_len <= 0:
++            return
++        history = history.to("cpu", torch.int64).contiguous().clone()
++        if self._match(history) is not None:
++            return
++        trellis = self.mode.startswith("trellis")
++        entry = {"history": history, "pin": None, "future": None}
++        self._pending.append(entry)
+         for h in self.handles or []:
+             h._ensure_open()        # lazy open isn't thread-safe; do it here, not on the worker
+         if self._executor is None:
+             self._executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "ngram_prefetch")
+-        self._pending.append({
+-            "history": history,
+-            "pin": pin,
+-            "future": self._executor.submit(self._stage, history, pin),
+-        })
++        # Same deferred acquisition as prefetch() under the flag (and the only path this hook
++        # runs on): the set is acquired on the worker, so the generator thread only pays the
++        # submit.
++        entry["future"] = self._executor.submit(self._stage_deferred, history, entry)
+ 
+     @override
+     def forward(
+@@ -532,12 +650,14 @@
+         if entry is not None:
+             self._forget(entry)
+             self.prefetch_stats["hit"] += 1
++            with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
++                U = entry["future"].result()      # deferred entries have set entry["pin"] by now
+             pin = entry["pin"]
+-            U = entry["future"].result()
+         else:
+             self.prefetch_stats["miss"] += 1
+-            pin = self._acquire_pin(n, row_words, row_dtype)
+-            U = self._stage(ids, pin)
++            with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
++                pin = self._acquire_pin(n, row_words, row_dtype)
++                U = self._stage(ids, pin)
+ 
+         packed_d = pin.packed[:U].to(dev, non_blocking = True)
+         inv_d = pin.inverse[:n].to(dev, non_blocking = True)
+--- a/modules/ple.py
++++ b/modules/ple.py
+@@ -352,6 +352,38 @@
+         history, _, _ = self._state_history(self._prepare_ids(input_ids), params)
+         self.ple_embedding.prefetch(history)
+ 
++    def prefetch_ids(self, ids: torch.Tensor, params: dict):
++        """EXL3_NGRAM_PREFETCH2: stage the rows for the verify forward whose input ids the
++        generator has already assembled (batch_ids: (bsz, 1 + window) — the verify forward's
++        exact ids). The carried id context comes from the same recurrent state slots the
++        forward will read, so the history staged here is the one forward() will build; a set
++        that still does not match (state advanced between the call and the forward) is simply
++        not used. Timing only."""
++        from .ngram_embedding import PREFETCH2     # module constant, not an attribute (R559 try 3)
++        if not PREFETCH2:
++            return
++        ctx = self.ple_embedding.context_len
++        rsg = params.get("recurrent_states")
++        ids = self._prepare_ids(ids)
++        if rsg:
++            # Same lookup as _state_history, but from the slot handles the generator put in
++            # params (params["recurrent_slots"] is only created inside prepare_inputs, which
++            # has not run yet at this point). layer_instance defaults to 0 exactly as the
++            # forward's default path does; a layer_map with repeated PLE instances would read
++            # instance 0's carried context here — a mismatch only ever discards the set.
++            layer_instance = (self.layer_idx, params.get("layer_instance", 0))
++            rsl = rsg[0].cache.get_recurrent_layer(layer_instance)
++            _, id_state = rsl.get_state_tensors()
++            slots = [r.slot for r in rsg]
++            assert len(slots) == ids.shape[0]
++            prev_ids = torch.stack([id_state[s, :ctx] for s in slots])
++            history = torch.cat((prev_ids, ids), dim = 1)
++        else:
++            assert params.get("position", 0) == 0, \
++                "PLELayer requires recurrent states for forwards past position 0"
++            history = self._history(ids)
++        self.ple_embedding.prefetch_ids(history)
++
+     @override
+     def forward(self, x: torch.Tensor, params: dict, out_dtype: torch.dtype | None = None):
+         """
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ import logging
+ import os
++import time
+ import torch
+ from ..model.model import Model
+ from ..cache.cache import Cache
+@@ -40,6 +41,15 @@
+ # EXL3_EMBED_GPU=1 and a pruned MTP head, EXL3_MTP_HEAD_N)
+ _EMBED_GPU_PRUNED = os.environ.get("EXL3_EMBED_GPU_PRUNED", "0") == "1"
+ 
++# EXL3_NGRAM_PREFETCH2 (timing only, default off): start the PLE gather of the verify window as
++# soon as the draft tokens exist, instead of staging it inline at the verify forward's start.
++_NGRAM_PREFETCH2 = os.environ.get("EXL3_NGRAM_PREFETCH2", "0") == "1"
++# EXL3_NGRAM_TIMING=1: print the PLE exposed-wait report to stdout every
++# EXL3_NGRAM_TIMING_INTERVAL seconds (0 disables periodic printing; the report is also
++# available from NGramEmbedding.timing_report() in-process).
++_NGRAM_TIMING = os.environ.get("EXL3_NGRAM_TIMING", "0") == "1"
++_NGRAM_TIMING_INTERVAL = float(os.environ.get("EXL3_NGRAM_TIMING_INTERVAL", "30") or 0)
++
+ # Persistent NVMe prefix tier (generator/disk_cache.py): EXL3_NVME_TIER=<absolute directory>. Unset = no tier:
+ # disk_cache is never imported and every hook below is a `self.disk_page_cache is not None` test that is False.
+ _NVME_TIER = os.environ.get("EXL3_NVME_TIER", "")
+@@ -255,6 +265,7 @@
+         # Pinned staging buffer for batched token readback in iterate_gen
+         self.sample_pinned = None
+         self.staging_buffers = {}
++        self._ngram_timing_last = None      # EXL3_NGRAM_TIMING periodic report clock
+         self.verify_readback_events = {}
+ 
+         # Buffers
+@@ -635,6 +646,10 @@
+         else:
+             self.iterate_gen(results)
+ 
++        # EXL3_NGRAM_TIMING: periodic PLE exposed-wait summary (instrument only)
++        if _NGRAM_TIMING:
++            self._ngram_timing_maybe_report()
++
+         # Visualization
+         if self.visualizer:
+             self.update_visualizer()
+@@ -684,6 +699,34 @@
+         self.visualizer.update(chains, usage)
+ 
+ 
++    def _ngram_timing_maybe_report(self):
++        """EXL3_NGRAM_TIMING: print each PLE embedding's exposed-gather-wait summary at most
++        once per EXL3_NGRAM_TIMING_INTERVAL seconds. Read-only; no effect on outputs."""
++        if _NGRAM_TIMING_INTERVAL <= 0:
++            return
++        now = time.time()
++        last = self._ngram_timing_last
++        if last is not None and now - last < _NGRAM_TIMING_INTERVAL:
++            return
++        self._ngram_timing_last = now
++
++        def fmt(cell):
++            if cell is None:
++                return "n/a"
++            return (f"{cell['calls']} calls, mean {cell['mean_ms']:.2f} ms, p50 {cell['p50_ms']:.2f}, "
++                    f"p90 {cell['p90_ms']:.2f}, max {cell['max_ms']:.2f}")
++        for m in self.model._get_prefetch_layers:
++            emb = getattr(m, "ple_embedding", None)
++            if emb is None:
++                continue
++            rep = emb.timing_report()
++            w = rep["exposed_wait"]
++            if w["prefill"] is None and w["decode"] is None:
++                continue
++            print(f" -- ngram timing: forwards {rep['forwards_seen']} | prefill exposed wait: "
++                  f"{fmt(w['prefill'])} | decode/verify exposed wait: {fmt(w['decode'])} | "
++                  f"staging {rep['staging']}", flush = True)
++
+     def _get_draft_depth(self, batch_size: int) -> int:
+         # All rows in this round share one window; pending and still-prefilling jobs do not count
+         if self.num_draft_tokens_by_batch is not None:
+@@ -1250,6 +1293,14 @@
+         }
+         if self.draft_model:
+             params.update(self.draft_model.draft_verifier_params)
++        if _NGRAM_PREFETCH2:
++            # The verify window's id history is complete on the host here: the draft tokens
++            # were just read back into draft_ids_pinned. Hand it to the PLE worker now so the
++            # gather overlaps the remaining host work between the draft chain and the verify
++            # forward's PLE layer. Timing only: forward() takes the set whose staged history
++            # matches and stages inline otherwise.
++            for m in self.model._get_prefetch_layers:
++                m.prefetch_ids(batch_ids, params)
+         batch_logits = self.model.forward(
+             input_ids = batch_ids,
+             params = params,
+--- a/generator/prefill_pipeline.py
++++ b/generator/prefill_pipeline.py
+@@ -193,6 +193,11 @@
+                     params[key] = params[key].clone().pin_memory()
+             # A_i has already run PLE before A_(i+1) is submitted. Its CPU ID history
+             # is current even though B_i and the logical position commit are pending.
++            # EXL3_NGRAM_PREFETCH2 (timing only): with the flag on, NGramEmbedding.prefetch
++            # submits the stage to the worker without acquiring the staging set on this
++            # thread, so issuing A_(i+1) never waits on chunk i's cold gather or on its
++            # forward's still-in-flight H2D uploads; the discard-on-mismatch contract keeps
++            # results untouched.
+             for module in self.model._get_prefetch_layers:
+                 module.prefetch(x, params)
+             x = self._modules(x, params, self.prefix)

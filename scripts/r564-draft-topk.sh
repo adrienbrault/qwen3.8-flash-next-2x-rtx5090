@@ -65,8 +65,9 @@ PY
 }
 trap 'log SIGTERM; finish ABORTED; exit 4' TERM
 for f in "$LIVE" "$SRC/Dockerfile.box" "$SRC/tests/collect_topk.py" "$SRC/tests/estimate_two_chain.py" /srv/qwen5090/probes/fn_bench.py; do [ -e "$f" ] || { log "ABORT: missing $f"; exit 3; }; done
-LENV=$(sed -n 's/^EXTRA_ENV=\${EXTRA_ENV:-\(.*\)}$/\1/p' "$LIVE")
-LIMG=$(sed -n 's/^IMG=\${IMG:-\(.*\)}$/\1/p' "$LIVE"); NIMG="$LIMG-topkstats"
+# pinned to the R561 image: the overlay's manifest pins that image's generator.py (R565 may promote the n-gram prefetch first)
+LENV=$(sed -n 's/^EXTRA_ENV=\${EXTRA_ENV:-\(.*\)}$/\1/p' "$LIVE" | tr ' ' '\n' | grep -v '^EXL3_NGRAM_PREFETCH2=' | tr '\n' ' ' | sed 's/ $//')
+LIMG=tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; NIMG="$LIMG-topkstats"
 [ -n "$LENV" ] && [ -n "$LIMG" ] || { log "ABORT: cannot parse live IMG / EXTRA_ENV"; exit 3; }
 log "building $NIMG on $LIMG (python only)"
 (cd "$SRC" && sudo docker build --build-arg BASE="$LIMG" -f Dockerfile.box -t "$NIMG" . ) > "$R/build.log" 2>&1 \

@@ -10,10 +10,12 @@
 # Decision rule (fixed before the run, from the round's box-ab-spec): P is a promotion candidate iff code and prose c1 / c4
 # paired geo-means are each >= -1 % vs S with CI lower bound >= -2 %, cold prefill >= 0.95x S at 30k and 120k, per-card boot
 # free VRAM >= S - 32 MiB, and the server stays alive. C replaces our overlap if it is >= 0 on every row with CI excluding -1 %.
+# Try 4: P / C boot at PPOOL, the largest pool (16,384 steps down from the live pool) the rebase boots at; a PPOOL below the
+# live pool is a cost the decode result has to pay for (or a port bug to find) and blocks a promotion as-is.
 # Measurement only (promotion = a separate gated unit). GPU TIMEBOX 40 min after the lock. RUN (queued): r515-queue-chain.
 set -uo pipefail
 export HOME=$HOME PATH="$HOME/.local/bin:$PATH"
-R=/srv/qwen5090/results/2026-09-19-r563-rebase-dev; mkdir -p "$R"
+R=/srv/qwen5090/results/2026-09-19-r563-rebase-dev-try4; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 NEWM=qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
 LIVE=/srv/qwen5090/launch-flashnext.sh
@@ -40,9 +42,11 @@ finish(){
 trap 'log SIGTERM; finish ABORTED; exit 4' TERM
 for f in "$LIVE" "$MP" "$SRC/Dockerfile.box" "$SRC/exllamav3/__init__.py" /srv/qwen5090/probes/fn_bench.py; do [ -e "$f" ] || { log "ABORT: missing $f"; exit 3; }; done
 sudo docker image inspect "$BIMG" >/dev/null 2>&1 || { log "ABORT: base image $BIMG missing"; exit 3; }
-LENV=$(sed -n 's/^EXTRA_ENV=\${EXTRA_ENV:-\(.*\)}$/\1/p' "$LIVE")
+# S is pinned to the R561 image and env: R565 may promote the n-gram prefetch (another image + EXL3_NGRAM_PREFETCH2) first,
+# and the rebase tree carries no prefetch overlay
+LENV=$(sed -n 's/^EXTRA_ENV=\${EXTRA_ENV:-\(.*\)}$/\1/p' "$LIVE" | tr ' ' '\n' | grep -v '^EXL3_NGRAM_PREFETCH2=' | tr '\n' ' ' | sed 's/ $//')
 case " $LENV " in *" EXL3_GDN_STATE_BF16=1 "*) ;; *) log "ABORT: live EXTRA_ENV lacks bf16 (expected R548 or later)"; exit 3;; esac
-LIMG=$(sed -n 's/^IMG=\${IMG:-\(.*\)}$/\1/p' "$LIVE"); [ "$LIMG" = "$BIMG" ] || { log "ABORT: live image $LIMG != $BIMG"; exit 3; }
+LIMG=$(sed -n 's/^IMG=\${IMG:-\(.*\)}$/\1/p' "$LIVE"); case "$LIMG" in "$BIMG"|tabbyapi:ngram-prefetch-r1-gdnbf16) ;; *) log "ABORT: live image $LIMG unexpected"; exit 3;; esac
 LPOOL=$(sed -n 's/^CACHE=\${CACHE:-\([0-9]*\)}.*/\1/p' "$LIVE"); LBS=$(sed -n 's/^MAXBS=\${MAXBS:-\([0-9]*\)}$/\1/p' "$LIVE")
 df -h / | tail -1 | tee -a "$R/audit.log"
 log "S1 building $PIMG on $BIMG (before the lock; full extension rebuild)"
@@ -88,14 +92,22 @@ prefill(){ local tag=$1 c
       --salt $(( SALT + c/1000 + ${#tag}*13 + RANDOM )) --out "$R/prefill.jsonl" > /dev/null 2>&1; done
   python3 -c 'import json,sys; r=[x for x in map(json.loads,open(sys.argv[1])) if x.get("tag","").startswith("pf-"+sys.argv[2]+"-") and x.get("ttft_s")]; print(" ".join("%dk %d" % (x["ctx_requested"]//1000, x["prompt_tokens"]/x["ttft_s"]) for x in r))' "$R/prefill.jsonl" "$tag"; }
 END=$(( $(date +%s) + 2400 ))
-rc=0; n=0; S0=; S1=
+rc=0; n=0; S0=; S1=; PPOOL=
+# try 3 (2026-09-19 18:00): P did not boot at the live pool ("Insufficient VRAM in split for model and cache"). Per the round's
+# box-ab-spec, P is laddered down 16,384 at a time (at most 8 steps) on its first arm; every P / C arm then runs at PPOOL.
+pladder(){ local c=$LPOOL k
+  for k in $(seq 0 8); do
+    up "P-L$c" NVME_TIER= IMG="$PIMG" EXTRA_ENV="$LENV" CACHE=$c && { PPOOL=$c; log "P ladder: $c boots ($(( LPOOL - c )) below the live $LPOOL)"; return 0; }
+    log "P ladder: $c does not boot"; c=$(( c - 16384 )); done
+  return 1; }
 for arm in S P P S C; do
   n=$((n+1)); tag="$arm$n"
   [ $(( END - $(date +%s) )) -lt 300 ] && { log "timebox: stopping before $tag"; break; }
   case $arm in
-    S) up "$tag" NVME_TIER= || { rc=1; break; } ;;
-    P) up "$tag" NVME_TIER= IMG="$PIMG" || { rc=1; break; } ;;
-    C) up "$tag" NVME_TIER= IMG="$PIMG" EXTRA_ENV="$(echo "$LENV" | tr ' ' '\n' | grep -v '^EXL3_SHARED_EXPERT_OVERLAP=' | tr '\n' ' ' | sed 's/ $//')" || { rc=1; break; } ;;
+    S) up "$tag" NVME_TIER= IMG="$BIMG" EXTRA_ENV="$LENV" || { rc=1; break; } ;;
+    P) if [ -z "$PPOOL" ]; then pladder || { log "P: no boot down to $(( LPOOL - 8*16384 ))"; rc=1; break; }
+       else up "$tag" NVME_TIER= IMG="$PIMG" EXTRA_ENV="$LENV" CACHE=$PPOOL || { rc=1; break; }; fi ;;
+    C) up "$tag" NVME_TIER= IMG="$PIMG" CACHE=$PPOOL EXTRA_ENV="$(echo "$LENV" | tr ' ' '\n' | grep -v '^EXL3_SHARED_EXPERT_OVERLAP=' | tr '\n' ' ' | sed 's/ $//')" || { rc=1; break; } ;;
   esac
   f0=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i 0); f1=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i 1)
   img=$(sudo docker inspect -f '{{.Config.Image}}' flashnext); ov=$(sudo docker exec flashnext env | grep -c '^EXL3_SHARED_EXPERT_OVERLAP=1')

@@ -1,0 +1,20 @@
+# ngram-prefetch r1: deeper PLE row prefetch + exposed-gather timing instrument
+# (EXL3_NGRAM_PREFETCH2=1, EXL3_NGRAM_TIMING=1, both default off) on the served chain
+# (tabbyapi:nvme-tier-r4-e3det-r6-rawk). Python only: no .cu/.cpp change, the prebuilt
+# extension is kept as it is. No heredocs (legacy builder). Build context = this directory.
+# The selectors are deliberately NOT set with ENV here: unset = off in code, and every
+# EXL3_* variable present in the environment enters the NVMe tier namespace.
+ARG BASE=tabbyapi:nvme-tier-r4-e3det-r6-rawk
+FROM ${BASE}
+COPY served-source.patch overlay/install.py overlay/manifest.json /opt/ngram-prefetch-r1/
+COPY tests /opt/ngram-prefetch-r1/tests
+RUN python3 /opt/ngram-prefetch-r1/install.py && \
+    python3 -m py_compile /opt/ngram-prefetch-r1/tests/cpu_runtime.py \
+        /opt/ngram-prefetch-r1/tests/test_ngram_prefetch_cpu.py \
+        /opt/ngram-prefetch-r1/tests/gpu_ngram_prefetch.py && \
+    env -u EXL3_NGRAM_PREFETCH2 -u EXL3_NGRAM_TIMING python3 -c "import exllamav3.modules.ngram_embedding as n; assert n.PREFETCH2 is False and n._TIMING is False; print('ngram-prefetch r1 default off: PREFETCH2 and _TIMING both False')" && \
+    EXL3_NGRAM_TIMING=1 python3 -c "import exllamav3.modules.ngram_embedding as n; assert n.PREFETCH2 is False and n._TIMING is True; assert hasattr(n.NGramEmbedding, 'prefetch_ids') and hasattr(n.NGramEmbedding, 'timing_report'); print('selector reads EXL3_NGRAM_TIMING=1; prefetch_ids/timing_report present')" && \
+    EXL3_NGRAM_PREFETCH2=1 python3 -c "import exllamav3.modules.ngram_embedding as n, exllamav3.modules.ple as p, exllamav3.generator.generator as g; assert n.PREFETCH2 is True and n._TIMING is True; assert hasattr(g.Generator, '_ngram_timing_maybe_report'); print('selector reads EXL3_NGRAM_PREFETCH2=1; generator hooks present')"
+
+# The runtime scenarios re-run inside the patched image on the box (GPU script, both arms):
+#   tests/gpu_ngram_prefetch.py --device cuda:0 [--timing]   (see box-ab-spec.md step 2)

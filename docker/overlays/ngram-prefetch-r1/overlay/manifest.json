@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "round": "ngram-prefetch-r1",
+  "patch_sha256": "86c59cb286b92d9300acfdd48ecc9c9ae85c0a7657920592d763adb993987d44",
+  "selectors": {
+    "EXL3_NGRAM_PREFETCH2": "modules/ngram_embedding.py",
+    "EXL3_NGRAM_TIMING": "modules/ngram_embedding.py"
+  },
+  "base_image": "tabbyapi:nvme-tier-r4-e3det-r6-rawk",
+  "notes": "Both selectors are default-off. Unset EXL3_NGRAM_PREFETCH2 keeps every served branch byte-identical; EXL3_NGRAM_TIMING=1 alone enables the wait instrument without any behaviour change. engine_identity() already puts every EXL3_* variable in the NVMe tier namespace, so a flag-on boot opens its own tier namespace.",
+  "files": {
+    "modules/ngram_embedding.py": {
+      "baseline_sha256": "7efa618c8eb9eea62eee70681f597f84cfc44454e404e5593960d5860920f972",
+      "overlay_sha256": "6155614fe1b395139357f5916a045f2bc6b118170f8fd9360e469efbb228ac46"
+    },
+    "modules/ple.py": {
+      "baseline_sha256": "cbd597f6507f0d82f0cf59608340985cab339f6029a88ee75d7c04128164db44",
+      "overlay_sha256": "09b02a987129c73dfeeb9f16f85d456ba1b2ddc480fb3db8aac1134e4620067e"
+    },
+    "generator/generator.py": {
+      "baseline_sha256": "b03ce7fed04b63bf23ee6505c1f57f53da561737a876b982847f1371c50ff7b0",
+      "overlay_sha256": "e6f9be572acadb9fd24893e1cc23c69fb0320369e5c95da6b3a54be315a2fa05"
+    },
+    "generator/prefill_pipeline.py": {
+      "baseline_sha256": "7f6e4b34bda7d0437b3352f98404fb3d4da98b9c65790cf48f8c16e91c54b177",
+      "overlay_sha256": "eb180b795aea2e049cb3c3fb9f36540e8ec4991ba01b153f43838627c8a165df"
+    }
+  }
+}

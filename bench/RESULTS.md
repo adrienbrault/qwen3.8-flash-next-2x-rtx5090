@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R565: the n-gram row prefetch is served; +0.8 % code and +0.9 % prose at 1 stream over four boots, output unchanged](results/r565-promote-ngram-prefetch.md)
+- [R559: the n-gram embedding rows prefetched after the draft readback give byte-identical output; one boot per arm reads +0.7 to +2.0 % decode](results/r559-ngram-prefetch.md)
 - [R561: the daily serves 8 slots with a 966,656-token page pool](results/r561-promote-slots8.md)
 - [R562: decode profile at 4 to 8 streams; above 16 verify rows the MoE layers run a generic kernel at 2.4–2.9× the time](results/r562-profile-c8.md)
 - [R560: drafting 2 tokens above 4 jobs costs 32–39 % at 6 and 8 streams; the served policy stays](results/r560-c8-policy.md)
