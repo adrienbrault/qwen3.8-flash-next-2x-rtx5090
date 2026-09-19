@@ -4,7 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
-- [R520: switching off the int8-activation GEMV changes no output and moves decode by +0.5 to +1.0 %, inside the run spread](results/r520-int8gemv.md)
+- [R520: switching off the int8-activation GEMV changes no output; its decode effect is below what this design resolves](results/r520-int8gemv.md)
 - [R519: the 2.50 bpw decode step is 81–82 % kernel time; MoE kernels are the largest share at every shape](results/r519-profile-2p50.md)
 - [R518: 6 decode slots are not served; c6 gains 17 % on a synthetic load but an 8-agent replay runs 9 % slower](results/r518-slots6.md)
 - [R517: decode round 4 and grouped MoE prefill are served together; cold prefill 9.5k t/s at 60k and 10.0k at 120k](results/r517-promote-stack.md)

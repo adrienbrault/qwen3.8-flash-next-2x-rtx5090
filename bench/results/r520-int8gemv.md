@@ -1,4 +1,4 @@
-# R520: switching off the int8-activation GEMV changes no output and moves decode by +0.5 to +1.0 %, inside the run spread
+# R520: switching off the int8-activation GEMV changes no output; its decode effect is below what this design resolves
 
 Results directory on the serving host: `results/2026-09-19-r520-int8gemv`. Raw records: [`2026-09-19-r520-int8gemv/`](2026-09-19-r520-int8gemv/). Driver: [`scripts/r520-int8gemv.sh`](../../scripts/r520-int8gemv.sh). Date: 2026-09-19.
 
@@ -13,4 +13,6 @@ ExLlamaV3 defaults to `EXL3_INT8_GEMV=2`: single-row linears with the `mul1` cod
 | prose c1 | 190.7 | 191.6 | +0.5 % |
 | prose c4 | 473.1 | 477.8 | +1.0 % |
 
-The ON runs at code c1 range from 210.2 to 220.0 t/s. Not served: the difference is inside that spread.
+The table above overstates OFF. ON always booted first, and every first run of that first boot read 1–4 % low (code c1 210.2 t/s against 216.8–220.0 for the other ON runs). Without each boot's first run the difference is −0.6 % (code c1), −0.3 % (code c4), +0.1 % (prose c1) and −0.3 % (prose c4). The run-level 95 % confidence intervals are about ±2.5 % wide, so this design cannot resolve a 0.5 % effect in either direction.
+
+`bench/probe.py` now takes `--warmup-runs N`: full-length rounds per shape, run first and not recorded. The re-measurement (`scripts/r520b-int8gemv-precise.sh`) boots 8 times in the order A B B A B A A B, uses one warm-up round per shape, 3 runs at c1 and 2 at c4 per boot, and logs GPU clocks and draft acceptance per boot.

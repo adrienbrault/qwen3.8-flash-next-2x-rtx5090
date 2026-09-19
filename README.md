@@ -49,13 +49,14 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 - How much of the shared expert's time is still on the critical path after [R490][r490] moved it to a side stream, per layer and row count: [`scripts/r521-shared-bound.sh`][r521-driver]. A fused shared-expert kernel cannot be bit-identical, so it is built only if this number is large.
 - The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver].
+- `EXL3_INT8_GEMV=0` again, with 8 counterbalanced boots and warm-up rounds, because the first measurement ([R520][r520]) could not resolve 0.5 %: [`scripts/r520b-int8gemv-precise.sh`][r520b-driver].
 - `tool_choice: "required"` and named tool choice enforced by a grammar that switches on when reasoning ends; today tool-eval's TC-45 fails 12/12: [`scripts/r523-tool-choice.sh`][r523-driver].
 - Recurrent-state checkpoints at the end of each answer, so an agent's next call resumes after its previous answer instead of re-reading it, with an eviction order that keeps each conversation's newest checkpoint: [`scripts/r524-recurrent-tip.sh`][r524-driver], measured with the agent replay in echo mode ([`bench/agent_replay.py`][agent-replay] `--echo`).
 - int8 mixer weights as a pool lever: 819,200 tokens (+4 %) at equal GSM8K, needles and tool-eval, decode 0 to −2 % ([R516][r516]).
 
 ## Measured and not served
 
-`EXL3_INT8_GEMV=0`, +0.5 to +1.0 % inside the run spread ([R520][r520]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
+6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
 
 ## Reproducing a boot
 
@@ -132,6 +133,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [launcher]: scripts/launch-flashnext.sh
 [launchers]: scripts/launchers/
 [scripts]: scripts/
+[r520b-driver]: scripts/r520b-int8gemv-precise.sh
 [r521-driver]: scripts/r521-shared-bound.sh
 [r522-driver]: scripts/r522-mtp-pruned.sh
 [r523-driver]: scripts/r523-tool-choice.sh

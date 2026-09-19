@@ -185,6 +185,9 @@ def main():
     ap.add_argument("--conc", type=int, nargs="+", default=[1])
     ap.add_argument("--tokens", type=int, default=256, help="forced completion length (min_tokens = this)")
     ap.add_argument("--runs", type=int, default=1)
+    ap.add_argument("--warmup-runs", type=int, default=0,
+                    help="full-length rounds per shape run first and not recorded. R520 (2026-09-19): the first measured round"
+                         " after a boot read up to 4 %% low, enough to flip the sign of a 0.5 %% A/B")
     ap.add_argument("--ctx", type=int, nargs="+", default=[0],
                     help="filler tokens prepended; a list runs the depth ladder (e.g. --ctx 0 30000 120000)")
     ap.add_argument("--kind", choices=["prose", "code"], default="prose")
@@ -225,6 +228,9 @@ def main():
             w = []
             round_run(a.url, a.model, c, 8, not a.completions, "Warmup.", a.timeout, w, log, a.distinct)
             ok_w = sum(1 for x in w if x["ok"])
+            for _ in range(a.warmup_runs):
+                ww = round_run(a.url, a.model, c, a.tokens, not a.completions, prompt, a.timeout, [], log, a.distinct)
+                print(f"  c={c} warm-up round ctx~{ctx}: {ww:.1f} s (not recorded)", flush=True)
             for r in range(a.runs):
                 sink = []
                 wall = round_run(a.url, a.model, c, a.tokens, not a.completions, prompt, a.timeout, sink,
