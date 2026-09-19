@@ -22,7 +22,7 @@ Served since 2026-09-19 23:46 CEST ([R576][r576]): image `tabbyapi:ngram-prefetc
 | decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 t/s per stream | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
-| cold prefill, 1 request | 9,409 / 9,814 / 10,027 t/s at 30k / 60k / 120k targets | [R574][r574] |
+| cold prefill, 1 request | 9,409 / 9,814 / 10,027 t/s at 22,600 / 45,077 / 90,008 prompt tokens | [R574][r574] |
 | TTFT, short prompt | 0.13 / 0.22 / 0.31 / 0.39 s at 1 / 2 / 3 / 4 at once; 0.26 s while 3 slots decode ~112k contexts | [R549][r549] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
 | prompt restored from the NVMe tier after a restart | 29,952 tokens in 0.69 s (cold 3.96 s); 119,808 in 0.99 s (cold 12.33 s) | [R534][r534] |
