@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R535: deterministic E3 prefill is served on top of the NVMe tier; every gate passes](results/r535-promote-e3det.md)
 - [R534: the NVMe prefix tier is served; every gate passes](results/r534-promote-nvme-tier.md)
 - [R531 and R533: deterministic E3 prefill is bit-identical run to run; it costs 1.9 % prefill at the 60k target and 0.2 % at 120k](results/r533-e3-det-precise.md)
 - [R532: the NVMe tier on the served chain passes every step; with the tier idle, decode is unchanged (8 boots)](results/r532-nvme-tier-r4.md)

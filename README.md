@@ -6,7 +6,7 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served configuration since 2026-09-19 08:22 CEST ([R534][r534]): image `tabbyapi:nvme-tier-r4` with a persistent prefix tier on NVMe that restores prompts after a restart ([R534][r534]), a fix for ExLlamaV3's PLE checkpoint aliasing ([R530][r530]), `tool_choice` enforcement in TabbyAPI ([R529][r529]), int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`, [R525][r525]) and the MTP draft chain on the GPU with a 320 MiB copy of the 65,536 embedding rows the draft head can emit ([R528][r528]), 4 slots, a 819,200-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
+Served configuration since 2026-09-19 09:23 CEST ([R535][r535]): image `tabbyapi:nvme-tier-r4-e3det` with deterministic E3 prefill, so a cold prefill of a long prompt gives the same output every run ([R535][r535]), a persistent prefix tier on NVMe that restores prompts after a restart ([R534][r534]), a fix for ExLlamaV3's PLE checkpoint aliasing ([R530][r530]), `tool_choice` enforcement in TabbyAPI ([R529][r529]), int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`, [R525][r525]) and the MTP draft chain on the GPU with a 320 MiB copy of the 65,536 embedding rows the draft head can emit ([R528][r528]), 4 slots, a 819,200-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
 
 | | value | measured |
 | --- | --- | --- |
@@ -18,10 +18,11 @@ Served configuration since 2026-09-19 08:22 CEST ([R534][r534]): image `tabbyapi
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 per stream (first wave of 4 requests; the tool's whole-run figure, 421.3, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R525][r525], [`bench/agentic-edit.py`][agentic-edit] |
 | decode at depth | prose 172.7 / 152.8 / 169.2 t/s at 0 / 99,919 / 199,457 prompt tokens | 2026-09-18 on the 3.05 bpw pack, [R492][r492] |
 | cold prefill, 1 request | • requested 30k: 8,740 t/s<br>• requested 60k (45,073–45,163 prompt tokens): 9,354–9,841 t/s<br>• requested 120k (90,040–90,135 prompt tokens): 10,015–10,278 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517], [R528][r528], [R530][r530]; sizes are `fn_bench --ctx` targets, and the prompts carry about three quarters of that in tokens; one invocation per length |
-| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517], [R525][r525], [R528][r528], [R530][r530], [R534][r534] |
+| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517], [R525][r525], [R528][r528], [R530][r530], [R534][r534], [R535][r535] |
+| cold prefill determinism | a long prompt prefilled twice gives identical output (E3 with `atomicAdd` diverged by generated token 47 to 172); costs 1.9 % prefill at the 60k target (95 % interval −4.6 to +0.9 %) and 0.2 % at 120k, decode unchanged | 2026-09-19, [R533][r533] (8 boots), [R535][r535] |
 | prompt restored from the NVMe tier after a restart | • 29,952-token prompt: 0.69 s (cold prefill 3.96 s)<br>• 119,808-token prompt: 0.99 s (cold 12.33 s)<br>• output identical to the warm and cold runs; 64 GiB cap, about 2.7 million tokens | 2026-09-19, [R534][r534], [R532][r532]; with the tier idle, decode differs from the untiered daily by −0.21 % at 1 stream and +0.11 % at 4 (8 boots); while a 120k prefix drains to disk, −3.8 % / −3.0 % for about 26 s |
-| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.976, 0.974, 0.978, 0.970 and 0.974 on the last five configurations (byte-identical decode); 0.978 and 0.980 before them | 2026-09-19, [R534][r534], [R530][r530], [R529][r529], [R528][r528], [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
-| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 87.0 ± 1.2 | 2026-09-19, [R534][r534]; 84.8 ± 1.3 on [R530][r530] and 88.0 ± 1.6 on [R529][r529], where `tool_choice` enforcement turned TC-45 from 0 to 2 points on every trial (worth 2.9 points of the score). The ± is the spread of 4 trials on one boot; the last seven configurations read 84.5 to 88.0, and the R529–R530 gap sits in scenarios that already change between trials of one boot ([R530][r530]) |
+| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.972, 0.976, 0.974, 0.978, 0.970 and 0.974 on the last six configurations (byte-identical decode); 0.978 and 0.980 before them | 2026-09-19, [R535][r535], [R534][r534], [R530][r530], [R529][r529], [R528][r528], [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
+| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 85.0 ± 0.8 | 2026-09-19, [R535][r535]; 87.0 ± 1.2 on [R534][r534], 84.8 ± 1.3 on [R530][r530] and 88.0 ± 1.6 on [R529][r529], where `tool_choice` enforcement turned TC-45 from 0 to 2 points on every trial (worth 2.9 points of the score). The ± is the spread of 4 trials on one boot; the last eight configurations read 84.5 to 88.0, and the R529–R530 gap sits in scenarios that already change between trials of one boot ([R530][r530]) |
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6, official scorer | 46 of 49 instances resolved | 2026-09-16 on the 3.05 bpw pack, [R359][r359]; the instances were selected on earlier outcomes, so this is a tally, not a full-set score. Cost per instance: [agent runs][agent-cost] |
 | structured output ([llguidance][llguidance]) | `json_schema`, `response_format`, `regex_pattern` pass, thinking on and off, c4 | 2026-09-17, [R453][r453] |
 | `tool_choice` | `required` 48/48, named 4/4, 8/8 concurrent; a forced turn that answers in content first continues into the call; `auto` / `none` unchanged | 2026-09-19, [R529][r529] |
@@ -49,7 +50,6 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 ## In progress (queued on the box 2026-09-19)
 
-- Deterministic E3 prefill (`EXL3_MOE_PREFILL_E3_DET=1`): cold prefill of a long prompt becomes run-to-run identical; 8 boots measured −1.9 % prefill at the 60k target and −0.2 % at 120k, decode unchanged ([R533][r533]). Promotion queued.
 
 ## Measured and not served
 
@@ -203,6 +203,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r532]: bench/results/r532-nvme-tier-r4.md
 [r533]: bench/results/r533-e3-det-precise.md
 [r534]: bench/results/r534-promote-nvme-tier.md
+[r535]: bench/results/r535-promote-e3det.md
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md
 [r528-driver]: scripts/r528-promote-mtp-pruned.sh
