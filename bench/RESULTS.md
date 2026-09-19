@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R528: the MTP draft chain on the GPU with a pruned embedding copy is served; every gate passes](results/r528-promote-mtp-pruned.md)
 - [R522 and R522b: keeping the MTP draft chain on the GPU with a pruned embedding mirror is byte-identical and +2.0 % at 1 stream, +1.5 % at 4](results/r522-mtp-pruned.md)
 - [R525: int8 mixer weights and a 819,200-token pool are served; every gate passes](results/r525-promote-int8mix.md)
 - [R521: after the side-stream overlap, the shared expert costs 1.9 µs per layer at 4 rows; a fused kernel could save at most about 1 %](results/r521-shared-bound.md)

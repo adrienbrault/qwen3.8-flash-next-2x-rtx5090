@@ -1,0 +1,18 @@
+{
+ "base_image": "tabbyapi:stack-r4-e3r2",
+ "flag": "EXL3_EMBED_GPU_PRUNED",
+ "pre": {
+  "architecture/qwen4_exp_mtp.py": "b1526a9e31c35b0f512d33c7ac7e312222784e55e4381c278541c45996e65097",
+  "generator/generator.py": "c8692d99859dc726d68bd2cf8a6a48e006cc41b7bbf66ab468a8d628b87c0477",
+  "modules/embedding.py": "5a33555735ceaee5c27af5c7da1e315d91a57ac9f2b465fc81cb1306ddc5167d"
+ },
+ "new": [
+  "modules/embedding_pruned.py"
+ ],
+ "post": {
+  "architecture/qwen4_exp_mtp.py": "b39c3f5f5dab93342ca547a0c21537b2b6176d4fcb8dede4654849ea658007cd",
+  "generator/generator.py": "3fbac39454d7b1fd9d02d7d1522a1367194b770072e5c6dfc083d757e4d36fcb",
+  "modules/embedding.py": "655d2debea1c7901345c3221e5b57532ef5459faaac9b8ab16638935bf20757b",
+  "modules/embedding_pruned.py": "c1f3f0f5ec9828c2f1e708d4896962c55cb274d8748e921ab79462ff03492830"
+ }
+}

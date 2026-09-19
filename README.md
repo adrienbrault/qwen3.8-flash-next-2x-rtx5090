@@ -6,25 +6,25 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served configuration since 2026-09-19 04:15 CEST ([R525][r525]): image `tabbyapi:stack-r4-e3r2` with int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`), 4 slots, a 819,200-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
+Served configuration since 2026-09-19 05:16 CEST ([R528][r528]): image `tabbyapi:mtp-pruned-r1` with int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`, [R525][r525]) and the MTP draft chain on the GPU with a 320 MiB copy of the 65,536 embedding rows the draft head can emit, 4 slots, a 819,200-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
 
 | | value | measured |
 | --- | --- | --- |
 | context window | 262,144 tokens | the checkpoint's native length |
 | page pool | 819,200 tokens at 8-bit KV, shared by 4 slots: **1.41 GB of VRAM per 100k tokens**, 11.6 GB for the whole pool ([derivation][config-memory]) | 2026-09-19, [R516][r516], [R525][r525]; the int8 mixer weights free the VRAM for it, and 835,584 does not boot |
-| decode, 1 stream | • code 220.2 t/s<br>• prose 190.7 t/s | code: 2026-09-19, [R520b][r520b], 4 boots × 3 runs after a warm-up round (boot means 219.2–221.4); prose: 2026-09-18, [R499][r499], two boots. Both on the configuration before R525; the R525 promotion boot read code 224.4 (one boot) |
-| decode, 4 streams | • code 522.4 t/s aggregate, 134.6 per stream (4 boots × 2 runs after a warm-up round, [R520b][r520b])<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt]. The R525 promotion boot read code 503.2 aggregate (one boot) |
+| decode, 1 stream | • code 221.8 t/s<br>• prose 190.7 t/s | code: 2026-09-19, [R522][r522] (R522b), 4 boots × 3 runs after a warm-up round on the served configuration (boot means 221.3–222.1); prose: 2026-09-18, [R499][r499], two boots, before R525 and R528 |
+| decode, 4 streams | • code 508.4 t/s aggregate, 139.9 per stream (4 boots × 2 runs after a warm-up round on the served configuration, [R522][r522])<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
 | decode, 6 streams (4 slots: 2 requests queue) | • code 448.8 t/s aggregate, 112.9 per stream<br>• prose 423.1 t/s aggregate, 104.8 per stream<br>• 6 slots would give 526.9 / 498.2 aggregate but run an 8-agent replay 9 % slower, so they are not served | 2026-09-19, [R518][r518] |
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 per stream (first wave of 4 requests; the tool's whole-run figure, 421.3, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R525][r525], [`bench/agentic-edit.py`][agentic-edit] |
 | decode at depth | prose 172.7 / 152.8 / 169.2 t/s at 0 / 99,919 / 199,457 prompt tokens | 2026-09-18 on the 3.05 bpw pack, [R492][r492] |
-| cold prefill, 1 request | • requested 30k: 8,740 t/s<br>• requested 60k (45,073 prompt tokens): 9,543–9,814 t/s<br>• requested 120k (90,092 prompt tokens): 10,015–10,163 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517]; sizes are `fn_bench --ctx` targets, and the prompts carry about three quarters of that in tokens; one invocation per length |
-| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517], [R525][r525] |
-| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.974 on the served configuration; 0.978 and 0.980 before it | 2026-09-19, [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
-| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 85.0 ± 1.4 | 2026-09-19, [R525][r525]; 85.8 ± 2.1, 84.5 ± 1.9 and 86.0 ± 2.6 on the three configurations before it |
+| cold prefill, 1 request | • requested 30k: 8,740 t/s<br>• requested 60k (45,073–45,110 prompt tokens): 9,543–9,841 t/s<br>• requested 120k (90,092–90,135 prompt tokens): 10,015–10,278 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517], [R528][r528]; sizes are `fn_bench --ctx` targets, and the prompts carry about three quarters of that in tokens; one invocation per length |
+| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R517][r517], [R525][r525], [R528][r528] |
+| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.970 and 0.974 on the last two configurations (byte-identical decode); 0.978 and 0.980 before them | 2026-09-19, [R528][r528], [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
+| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 84.8 ± 1.5 | 2026-09-19, [R528][r528]; 85.0 ± 1.4, 85.8 ± 2.1, 84.5 ± 1.9 and 86.0 ± 2.6 on the four configurations before it |
 | [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6, official scorer | 46 of 49 instances resolved | 2026-09-16 on the 3.05 bpw pack, [R359][r359]; the instances were selected on earlier outcomes, so this is a tally, not a full-set score. Cost per instance: [agent runs][agent-cost] |
 | structured output ([llguidance][llguidance]) | `json_schema`, `response_format`, `regex_pattern` pass, thinking on and off, c4 | 2026-09-17, [R453][r453] |
-| boot to serving | 21 s with warm kernel caches | 2026-09-19, [R525][r525] promotion boot |
-| free VRAM after boot | 1,973 MiB on cuda:0, 1,057 MiB on cuda:1 | 2026-09-19, [R525][r525] |
+| boot to serving | about 20 s with warm kernel caches | 2026-09-19, [R525][r525], [R528][r528] promotion boots |
+| free VRAM after boot | 1,973 MiB on cuda:0, 737 MiB on cuda:1; 1,173 / 225 MiB with the whole pool in flight | 2026-09-19, [R528][r528] |
 
 GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) were measured with lm-eval's stop strings, which cut the model's reasoning when it restates the problem as "Question: …"; they undercount by 7 to 18 % of questions ([R509][r509]).
 
@@ -47,7 +47,6 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 ## In progress (queued on the box 2026-09-19)
 
-- The MTP draft chain kept on the GPU with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit: byte-identical, +1.99 % at 1 stream and +1.49 % at 4 over 8 counterbalanced boots ([R522][r522]); the promotion run with every gate is queued: [`scripts/r528-promote-mtp-pruned.sh`][r528-driver].
 - `tool_choice: "required"` and named tool choice enforced by a grammar that switches on when reasoning ends; today tool-eval's TC-45 fails 12/12: [`scripts/r523-tool-choice.sh`][r523-driver].
 - Recurrent-state checkpoints at the end of each answer, so an agent's next call resumes after its previous answer instead of re-reading it, with an eviction order that keeps each conversation's newest checkpoint: [`scripts/r524-recurrent-tip.sh`][r524-driver], measured with the agent replay in echo mode ([`bench/agent_replay.py`][agent-replay] `--echo`).
 - A persistent prefix tier on NVMe: KV pages and recurrent checkpoints written to disk in the background, restored after a restart, under a byte cap: [`scripts/r526-nvme-tier.sh`][r526-driver].
@@ -195,6 +194,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r516]: bench/results/r516-int8-mixer-pool.md
 [r517]: bench/results/r517-promote-stack.md
 [r525]: bench/results/r525-promote-int8mix.md
+[r528]: bench/results/r528-promote-mtp-pruned.md
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md
 [r528-driver]: scripts/r528-promote-mtp-pruned.sh

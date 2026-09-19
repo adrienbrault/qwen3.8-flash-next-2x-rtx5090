@@ -1,0 +1,13 @@
+# MTP device draft chain, pruned embedding mirror round 1 (EXL3_EMBED_GPU_PRUNED), on the daily stack image.
+# Pure Python overlay: 3 changed files + 1 new module, no extension rebuild. install.py checks the base holds the stack's exact
+# embedding.py / generator.py / qwen4_exp_mtp.py and that embedding_pruned.py is absent, then installs and re-verifies.
+# The new flag defaults off (and is pinned off below); the default path is byte-identical to stack-r4-e3r2.
+# No heredocs (flan builds with the legacy builder). Build context = this directory.
+ARG BASE=tabbyapi:stack-r4-e3r2
+FROM ${BASE}
+COPY manifest.json install.py /opt/mtp-pruned-r1/
+COPY overlay /opt/mtp-pruned-r1/overlay
+COPY tests /opt/mtp-pruned-r1/tests
+RUN python3 /opt/mtp-pruned-r1/install.py
+RUN python3 -c "import exllamav3.modules.embedding as e, exllamav3.modules.embedding_pruned as p, exllamav3.generator.generator as g, exllamav3.architecture.qwen4_exp_mtp as m; assert e._EMBED_GPU_PRUNED is False and g._EMBED_GPU_PRUNED is False; assert hasattr(e.Embedding, 'prepare_pruned_mirror') and hasattr(p, 'PrunedEmbeddingMirror'); assert hasattr(g.Generator, '_prepare_pruned_embed') and hasattr(m.Qwen4ExpMTPModel, 'draft_head_keep_ids'); assert all('/site-packages/' in x.__file__ for x in (e, p, g, m)), e.__file__; print(e.__file__, p.__file__)"
+ENV EXL3_EMBED_GPU_PRUNED=0
