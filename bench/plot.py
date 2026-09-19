@@ -85,7 +85,8 @@ def merged(dicts, key):
 
 R570 = RESULTS / "2026-09-19-r570-promote-c5-policy" / "records.jsonl"
 R571 = RESULTS / "2026-09-19-r571-promote-c5-policy-2" / "records.jsonl"
-R580 = RESULTS / "2026-09-20-r580-decode-curve" / "records.jsonl"
+R580 = RESULTS / "2026-09-20-r580-decode-curve-try2" / "records.jsonl"
+R580_PREFILL = R580.parent / "prefill.jsonl"
 CONC = [4, 5, 6, 7, 8]
 
 
@@ -135,27 +136,46 @@ def figure_decode_scaling():
 
 
 def figure_prefill():
+    """R580 asked for the filler budget that lands on each target, so its tags are the token counts it aimed at
+    and the points are what the server counted. Before it, the only prefill records were R574's, whose "120k"
+    is really 90,008 tokens because fn_bench's --ctx is a budget at about 0.75 tokens per unit."""
+    if R580_PREFILL.exists():
+        path, keys = R580_PREFILL, [f"pf-{t}" for t in (30000, 60000, 120000, 200000, 240000)]
+    else:
+        path, keys = (RESULTS / "2026-09-19-r574-chunk4096" / "prefill.jsonl",
+                      ["pf-S-30000", "pf-S-60000", "pf-S-120000"])
     rows = collections.defaultdict(list)
-    for line in open(RESULTS / "2026-09-19-r574-chunk4096" / "prefill.jsonl"):
+    for line in open(path):
         r = json.loads(line)
         if r.get("ttft_s") and r.get("prompt_tokens"):
-            rows[r["tag"]].append((r["prompt_tokens"], r["prompt_tokens"] / r["ttft_s"]))
-    keys = ["pf-S-30000", "pf-S-60000", "pf-S-120000"]
-    toks = [st.mean([t for t, _ in rows[k]]) for k in keys]
-    rate = [st.mean([v for _, v in rows[k]]) for k in keys]
+            rows[r["tag"]].append((r["prompt_tokens"], r["prompt_tokens"] / r["ttft_s"], r["ttft_s"]))
+    keys = [k for k in keys if rows[k]]
+    toks = [st.mean([t for t, _, _ in rows[k]]) for k in keys]
+    rate = [st.mean([v for _, v, _ in rows[k]]) for k in keys]
+    ttft = [st.mean([w for _, _, w in rows[k]]) for k in keys]
 
-    fig, ax = plt.subplots(figsize=(7.4, 3.6))
-    ax.plot(toks, rate, marker="o", color=CODE, linewidth=2)
+    fig, ax = plt.subplots(figsize=(8.4, 4.2))
+    ax2 = ax.twinx()
+    ax2.spines["right"].set_visible(True)
+    ax2.spines["right"].set_color("#d8dee4")
+    handles = ax.plot(toks, rate, marker="o", color=CODE, linewidth=2, label="prefill rate")
+    handles += ax2.plot(toks, ttft, marker="s", markersize=4, linestyle="--", color=PROSE,
+                        linewidth=1.6, label="time to first token")
     annotate(ax, toks, rate, CODE)
-    ax.set_title("Cold prefill rate against prompt length")
+    annotate(ax2, toks, ttft, PROSE, "{:.1f} s", dy=-14)
+    ax.set_title("Cold prefill against prompt length")
     ax.set_xlabel("prompt tokens")
     ax.set_ylabel("prompt tokens per second")
-    ax.set_ylim(0, 12000)
+    ax2.set_ylabel("seconds to first token")
+    ax.set_ylim(0, max(rate) * 1.3)
+    ax2.set_ylim(0, max(ttft) * 1.3)
     ax.set_xticks(toks, [f"{round(t / 1000)}k" for t in toks])
     ax.grid(axis="y", color="#eaeef2")
     ax.set_axisbelow(True)
-    print("prefill:", [round(v) for v in rate], "at", [round(t) for t in toks])
-    save(fig, "prefill.svg", "Cold prefill rate at three prompt lengths")
+    ax.legend(handles, [h.get_label() for h in handles], frameon=False, fontsize=9, loc="lower right")
+    print("prefill:", [round(v) for v in rate], "t/s; TTFT", [round(w, 2) for w in ttft],
+          "at", [round(t) for t in toks], "tokens")
+    save(fig, "prefill.svg", "Cold prefill rate and time to first token against prompt length")
 
 
 if __name__ == "__main__":

@@ -6,23 +6,25 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
+Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape; aggregate = all streams' tokens over the round's wall time. Every decode row and both figures come from one boot of the served launcher ([R580][r580]).
 
 | | value | source |
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
 | page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
 | free VRAM after boot | 1,041 / 2,531 MiB; 251 / 2,013 after a 1-to-8-stream decode ramp | [R579][r579] |
-| decode, 1 stream | code 202.2, prose 200.9 t/s (24 prompts each, 512 tokens) | [R575][r575] |
-| decode, 4 streams | code 511, prose 508 t/s aggregate; 131 / 127 t/s per stream | [R570][r570] |
-| decode, 5 streams | code 561–563, prose 541–545 t/s aggregate; 113 / 110 t/s per stream | [R570][r570], [R571][r571], [R576][r576] |
-| decode, 6 streams | code 514, prose 510–514 t/s aggregate; 86 / 86 t/s per stream | [R570][r570], [R571][r571] |
-| decode, 7 streams | code 611, prose 608 t/s aggregate; 88 / 88 t/s per stream | [R571][r571] |
-| decode, 8 streams | code 644, prose 637 t/s aggregate; 83 / 81 t/s per stream | [R570][r570] |
+| decode, 1 stream | code 213, prose 192 t/s | [R580][r580] |
+| decode, 2 streams | code 361, prose 338 t/s aggregate; 181 / 169 t/s per stream | [R580][r580] |
+| decode, 3 streams | code 400, prose 403 t/s aggregate; 134 / 137 t/s per stream | [R580][r580] |
+| decode, 4 streams | code 515, prose 495 t/s aggregate; 133 / 124 t/s per stream | [R580][r580] |
+| decode, 5 streams | code 551, prose 537 t/s aggregate; 111 / 109 t/s per stream | [R580][r580] |
+| decode, 6 streams | code 507, prose 508 t/s aggregate; 85 / 85 t/s per stream | [R580][r580] |
+| decode, 7 streams | code 595, prose 605 t/s aggregate; 86 / 88 t/s per stream | [R580][r580] |
+| decode, 8 streams | code 627, prose 630 t/s aggregate; 80 / 79 t/s per stream | [R580][r580] |
 | decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 t/s per stream | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
-| cold prefill, 1 request | 9,409 / 9,814 / 10,027 t/s at 22,600 / 45,077 / 90,008 prompt tokens | [R574][r574] |
+| cold prefill, 1 request | 9,706 / 10,381 / 10,538 / 10,636 / 10,543 t/s at 30k / 60k / 120k / 200k / 240k prompt tokens | [R580][r580] |
 | TTFT, short prompt | 0.13 / 0.22 / 0.31 / 0.39 s at 1 / 2 / 3 / 4 at once; 0.26 s while 3 slots decode ~112k contexts | [R549][r549] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
 | prompt restored from the NVMe tier after a restart | 29,952 tokens in 0.69 s (cold 3.96 s); 119,808 in 0.99 s (cold 12.33 s) | [R534][r534] |
@@ -34,9 +36,11 @@ Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
-Per-stream rate is nearly flat from 6 to 8 streams; the 5-stream dip is the draft policy, not contention.
+Aggregate throughput dips at 6 streams, where the draft policy drops to one draft token; per-stream rate is flat from 6 to 8. Until R576 the dip sat at 5 streams.
 
-![Cold prefill rate at three prompt lengths](docs/img/prefill.svg)
+![Cold prefill rate and time to first token against prompt length](docs/img/prefill.svg)
+
+Prefill rate is flat from 60k to the top of the window: 199,844 tokens prefill in 18.8 s.
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
@@ -44,11 +48,11 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 Insights behind these numbers:
 
-- 5 streams used to decode slower than 4: the policy dropped to 1 draft token there, because a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams is +11 to +20 % and has been served since R576, for −2 to −3 % on 6-stream prose ([R570][r570], [R571][r571], [R576][r576]).
+- The aggregate dip is at 6 streams, not 5: the draft policy drops to one draft token there, because a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip one place right and is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
 - Code decodes faster than prose at 1 stream because draft acceptance tracks how predictable the text is ([R572][r572]).
 - 8 slots beat 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
-- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moves the boundary layer across and bought 32,768 pool tokens ([R579][r579]); it also inverted which card is the tight one.
+- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moves the boundary layer across and bought 32,768 pool tokens ([R579][r579]); it also inverted which card is the tight one. The `gpu_split` budget does not move it, and the decode graphs themselves cost 790 MiB on the bounding card ([R581][r581]).
 - GSM8K figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
 
 ## What the stack is
@@ -276,6 +280,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r575]: bench/results/r575-promote-mtp-kv-window.md
 [r576]: bench/results/r576-promote-c5-policy.md
 [r579]: bench/results/r579-promote-mtp-kv-window.md
+[r580]: bench/results/r580-decode-curve.md
+[r581]: bench/results/r581-split-rebalance.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md
