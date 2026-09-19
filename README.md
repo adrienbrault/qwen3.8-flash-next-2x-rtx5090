@@ -11,7 +11,7 @@ Served configuration since 2026-09-19 01:26 CEST ([R517][r517]): image `tabbyapi
 | | value | measured |
 | --- | --- | --- |
 | context window | 262,144 tokens | the checkpoint's native length |
-| page pool | 786,432 tokens at 8-bit KV, shared by 4 slots | 2026-09-18, [R495b][r495b], [R511][r511]; 819,200 and above do not boot |
+| page pool | 786,432 tokens at 8-bit KV, shared by 4 slots: **1.41 GB of VRAM per 100k tokens** (14,144 B per token: 12 full-attention layers plus the MTP block's 1, each 2 KV heads × 256 dims × K and V at 8 bits plus fp16 scales per 32 values), 11.1 GB for the whole pool. The 36 linear-attention layers keep no per-token KV: they hold a fixed-size recurrent state per slot (fp32, 36 × 48 heads × 128 × 128, 108 MiB per sequence), whatever the context length | 2026-09-18, [R495b][r495b], [R511][r511]; 819,200 and above do not boot |
 | decode, 1 stream | • code 217.7 t/s<br>• prose 190.7 t/s | 2026-09-18, [R499][r499], mean of two boots; the prefill change served after it leaves decode unchanged, [R513][r513] |
 | decode, 4 streams | • code 510.5 t/s aggregate, 132.3 per stream<br>• prose 473.6 t/s aggregate, 122.9 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-18, [R499][r499]; the sampled rows use [`bench/multiprompt.py`][multiprompt] |
 | decode, agent-shaped edit | 211.9 t/s at 1 stream; at 4 streams 511.8 aggregate, 141.5 per stream (first wave of 4 requests; the tool's whole-run figure, 437.1, includes a second wave of only 2) (six real files rewritten with a small edit, greedy) | 2026-09-19, [R517][r517], [`bench/agentic-edit.py`][agentic-edit] |
