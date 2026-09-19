@@ -36,8 +36,6 @@ Served since 2026-09-19 23:46 CEST ([R576][r576]): image `tabbyapi:ngram-prefetc
 
 Per-stream rate is nearly flat from 6 to 8 streams; the 5-stream dip is the draft policy, not contention.
 
-![Aggregate decode under the served draft policy and the 5-stream policy](docs/img/c5-draft-policy.svg)
-
 ![Cold prefill rate at three prompt lengths](docs/img/prefill.svg)
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).

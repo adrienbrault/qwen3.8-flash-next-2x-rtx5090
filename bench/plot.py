@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "bench" / "results"
 OUT = ROOT / "docs" / "img"
 
-CODE, PROSE, CAND, SERVED = "#0969da", "#cf222e", "#1a7f37", "#9a6700"
+CODE, PROSE = "#0969da", "#cf222e"
 plt.rcParams.update({
     "figure.dpi": 110,
     "font.size": 10,
@@ -134,29 +134,6 @@ def figure_decode_scaling():
     save(fig, "decode-scaling.svg", "Decode rate against concurrency, aggregate and per stream")
 
 
-def figure_c5_policy():
-    a = [fn_bench_rates(R570, "A")[0], fn_bench_rates(R571, "A")[0]]
-    b = [fn_bench_rates(R570, "B")[0], fn_bench_rates(R571, "B")[0]]
-    served = [st.mean([v for v in (merged(a, f"c{c}-code"), merged(a, f"c{c}-prose")) if v]) for c in CONC]
-    cand = [st.mean([v for v in (merged(b, f"c{c}-code"), merged(b, f"c{c}-prose")) if v]) for c in CONC]
-
-    fig, ax = plt.subplots(figsize=(7.4, 4.0))
-    ax.plot(CONC, served, marker="o", color=SERVED, linewidth=2, label="[[4, 3], [8, 1]] (served before R576)")
-    ax.plot(CONC, cand, marker="o", color=CAND, linewidth=2, label="[[4, 3], [5, 2], [8, 1]] (served since R576)")
-    annotate(ax, CONC, served, SERVED)
-    annotate(ax, CONC, cand, CAND, dy=-14)
-    ax.set_title("Draft depth 2 at 5 streams: mean of code and prose")
-    ax.set_xlabel("concurrent streams")
-    ax.set_ylabel("tokens per second, all streams")
-    ax.set_xticks(CONC)
-    ax.set_ylim(0, 800)
-    ax.grid(axis="y", color="#eaeef2")
-    ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=9, loc="lower right")
-    print("c5 policy, served:", [round(v) for v in served], "candidate:", [round(v) for v in cand])
-    save(fig, "c5-draft-policy.svg", "Aggregate decode under the served draft policy and the 5-stream policy")
-
-
 def figure_prefill():
     rows = collections.defaultdict(list)
     for line in open(RESULTS / "2026-09-19-r574-chunk4096" / "prefill.jsonl"):
@@ -183,6 +160,5 @@ def figure_prefill():
 
 if __name__ == "__main__":
     figure_decode_scaling()
-    figure_c5_policy()
     figure_prefill()
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.svg"))))
