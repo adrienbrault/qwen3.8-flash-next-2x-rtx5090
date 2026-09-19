@@ -1,0 +1,50 @@
+2026-09-19T00:58:33+00:00 [r520] lock held; timebox ends 2026-09-19T01:13:33+00:00; served <no answer>
+2026-09-19T00:58:49+00:00 [r520] UP ON default
+2026-09-19T00:58:50+00:00 [r520] [ON] c1 fingerprint ae890c45d1000582 (canonical ae890c45d1000582)
+[ON code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 210.2, "per_stream_wall_tps": 210.2, "decode_tps": 213.3, "ttft_s": 0.147}
+[ON code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.0, "per_stream_wall_tps": 220.0, "decode_tps": 223.3, "ttft_s": 0.14}
+[ON code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 495.5, "per_stream_wall_tps": 128.7, "decode_tps": 132.5, "ttft_s": 0.455}
+[ON code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 516.6, "per_stream_wall_tps": 133.9, "decode_tps": 137.9, "ttft_s": 0.448}
+[ON prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 185.4, "per_stream_wall_tps": 185.4, "decode_tps": 188.3, "ttft_s": 0.177}
+[ON prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 191.6, "per_stream_wall_tps": 191.6, "decode_tps": 193.9, "ttft_s": 0.131}
+[ON prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 458.5, "per_stream_wall_tps": 119.8, "decode_tps": 122.8, "ttft_s": 0.42}
+[ON prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 479.8, "per_stream_wall_tps": 125.3, "decode_tps": 128.6, "ttft_s": 0.421}
+2026-09-19T01:00:57+00:00 [r520] UP OFF EXL3_INT8_GEMV=0
+2026-09-19T01:00:58+00:00 [r520] [OFF] c1 fingerprint ae890c45d1000582 (canonical ae890c45d1000582)
+[OFF code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.4, "per_stream_wall_tps": 216.4, "decode_tps": 219.5, "ttft_s": 0.138}
+[OFF code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 218.3, "per_stream_wall_tps": 218.3, "decode_tps": 221.4, "ttft_s": 0.138}
+[OFF code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 510.9, "per_stream_wall_tps": 132.8, "decode_tps": 136.9, "ttft_s": 0.457}
+[OFF code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 515.1, "per_stream_wall_tps": 133.6, "decode_tps": 137.6, "ttft_s": 0.446}
+[OFF prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 189.2, "per_stream_wall_tps": 189.2, "decode_tps": 191.4, "ttft_s": 0.129}
+[OFF prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 192.9, "per_stream_wall_tps": 192.9, "decode_tps": 195.2, "ttft_s": 0.13}
+[OFF prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 476.9, "per_stream_wall_tps": 124.4, "decode_tps": 127.5, "ttft_s": 0.417}
+[OFF prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.0, "per_stream_wall_tps": 124.3, "decode_tps": 127.5, "ttft_s": 0.416}
+2026-09-19T01:03:03+00:00 [r520] UP ON2 default
+2026-09-19T01:03:04+00:00 [r520] [ON2] c1 fingerprint ae890c45d1000582 (canonical ae890c45d1000582)
+[ON2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 216.8, "per_stream_wall_tps": 216.8, "decode_tps": 219.9, "ttft_s": 0.138}
+[ON2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 219.9, "per_stream_wall_tps": 219.9, "decode_tps": 223.1, "ttft_s": 0.138}
+[ON2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 513.9, "per_stream_wall_tps": 133.6, "decode_tps": 137.7, "ttft_s": 0.454}
+[ON2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 513.7, "per_stream_wall_tps": 133.8, "decode_tps": 137.9, "ttft_s": 0.45}
+[ON2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 192.9, "per_stream_wall_tps": 192.9, "decode_tps": 195.3, "ttft_s": 0.132}
+[ON2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 193.0, "per_stream_wall_tps": 193.0, "decode_tps": 195.3, "ttft_s": 0.13}
+[ON2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 475.1, "per_stream_wall_tps": 124.2, "decode_tps": 127.4, "ttft_s": 0.422}
+[ON2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.9, "per_stream_wall_tps": 125.0, "decode_tps": 128.2, "ttft_s": 0.418}
+2026-09-19T01:05:08+00:00 [r520] UP OFF2 EXL3_INT8_GEMV=0
+2026-09-19T01:05:10+00:00 [r520] [OFF2] c1 fingerprint ae890c45d1000582 (canonical ae890c45d1000582)
+[OFF2 code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 217.8, "per_stream_wall_tps": 217.8, "decode_tps": 221.0, "ttft_s": 0.138}
+[OFF2 code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 219.1, "per_stream_wall_tps": 219.1, "decode_tps": 222.3, "ttft_s": 0.14}
+[OFF2 code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 512.0, "per_stream_wall_tps": 133.1, "decode_tps": 137.1, "ttft_s": 0.452}
+[OFF2 code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 511.9, "per_stream_wall_tps": 132.8, "decode_tps": 136.7, "ttft_s": 0.446}
+[OFF2 prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 192.2, "per_stream_wall_tps": 192.2, "decode_tps": 194.4, "ttft_s": 0.13}
+[OFF2 prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 192.1, "per_stream_wall_tps": 192.1, "decode_tps": 194.4, "ttft_s": 0.13}
+[OFF2 prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.6, "per_stream_wall_tps": 124.6, "decode_tps": 127.8, "ttft_s": 0.423}
+[OFF2 prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 477.8, "per_stream_wall_tps": 124.2, "decode_tps": 127.4, "ttft_s": 0.418}
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+KeyError: 'aggregate_tps'
+2026-09-19T01:06:57+00:00 [r520] restoring the unchanged daily
+2026-09-19T01:06:58+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 786432 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-19T01:07:14+00:00 [flashnext] UP on 8022 | warmup 0.333898s | VRAM free MiB 2015/1099/
+2026-09-19T01:07:14+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-19T01:07:14+00:00 [r520] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-19T01:07:14+00:00 [r520] === R520 DONE ===
