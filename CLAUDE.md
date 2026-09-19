@@ -12,7 +12,7 @@ the image recipe). The two must never disagree about the served configuration.
 
 ## Visibility — read this before pushing anywhere
 
-This repository is prepared for publication on GitHub as `qwen3.8-flash-next-2x-rtx5090` (the user calls it the new public repo, 2026-09-17 and 2026-09-19). It has not been pushed. Creating the GitHub repository and every push are the user's call: never push without an explicit request.
+This repository is public on GitHub as `adrienbrault/qwen3.8-flash-next-2x-rtx5090` since 2026-09-19. Its history was rewritten on 2026-09-19 to remove local paths, private addresses, session ids and personal e-mail addresses; commits use the GitHub noreply address (`git config user.email adrienbrault@users.noreply.github.com` in this checkout).
 
 - Treat every commit as public already: GitHub keeps serving a commit by its SHA after a history rewrite. Run `scripts/check-public-hygiene.sh` before every commit and `scripts/check-public-hygiene.sh --tree` before the first push.
 - Stage explicit paths; `git add -A` and `git add .` are forbidden.
