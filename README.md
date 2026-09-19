@@ -6,33 +6,41 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served configuration since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetch-r1-gdnbf16`, which starts the per-layer n-gram embedding row reads right after the MTP draft readback instead of inline in the forward, byte-identical and +0.8 % code / +0.9 % prose at 1 stream over four boots ([R565][r565]), stores the GDN recurrent state in bf16 (fp32 math, 864 MiB freed for the pool, [R548][r548]) and keeps a 20-row ring of the QSA indexer's raw keys per page instead of every token's key, bit-exact and +20 % page pool ([R546][r546]), one-warp launches of the GDN B/A GEMV and `hc_apply` and a re-gridded mixer state kernel, byte-identical and +1.0 % code / +1.1 % prose at 1 stream ([R538][r538], [R540][r540]), deterministic E3 prefill, so a cold prefill of a long prompt gives the same output every run ([R535][r535]), a persistent prefix tier on NVMe that restores prompts after a restart ([R534][r534]), a fix for ExLlamaV3's PLE checkpoint aliasing ([R530][r530]), `tool_choice` enforcement in TabbyAPI ([R529][r529]), int8 hyper-connection mixer weights (`EXL3_HC_MIX_V2_INT8=1`, [R525][r525]) and the MTP draft chain on the GPU with a 320 MiB copy of the 65,536 embedding rows the draft head can emit ([R528][r528]), 8 slots, a 966,656-token page pool at 8-bit KV, layer split `[30, 30]`, MTP draft depth 3 while up to 4 jobs decode and 1 above (`[[4, 3], [8, 1]]`), launcher [`scripts/launch-flashnext.sh`][launcher]. Decode rates are `fn_bench` ([`bench/probe.py`][probe]): 2,048 forced tokens per request, greedy. "Aggregate" is all streams' tokens over the round's wall time; "per stream" is one request's tokens over its own wall time (first token included), averaged over the requests. Each rate names its kind, because on this checkpoint code decodes faster than prose at c1 (draft acceptance tracks how predictable the text is).
+Served since 2026-09-19 20:15 CEST ([R565][r565]): image `tabbyapi:ngram-prefetch-r1-gdnbf16`, 8 slots, 966,656-token page pool at 8-bit KV, layer split `[30, 30]`, MTP depth 3 up to 4 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Decode is `fn_bench` ([`bench/probe.py`][probe]), greedy; aggregate = all streams' tokens over the round's wall time.
 
-| | value | measured |
+| | value | source |
 | --- | --- | --- |
-| context window | 262,144 tokens | the checkpoint's native length |
-| page pool | 966,656 tokens at 8-bit KV, shared by 8 slots: **1.52 GB of VRAM per 100k tokens**, 14.7 GB for the whole pool ([derivation][config-memory]) | 2026-09-19: [R561][r561], 8 slots, 65,536 tokens fewer than 4 slots at 1,032,192 (the [R558][r558] ladder: 983,040 left cuda:0 36 MiB below the 4-slot minimum under load); [R546][r546], the raw-key ring, +163,840 tokens with unchanged output, decode and prefill; [R548][r548], bf16 GDN state, +49,152 more, decode +0.3 to +2.1 % on 48 paired prompts; at 4 slots 1,048,576 would leave cuda:1 below the served boot's free VRAM. 819,200 at the start of the day ([R525][r525]) |
-| decode, 1 stream | • code 200.9 t/s<br>• prose 199.6 t/s | 2026-09-19, [R558][r558], 8 slots, NVMe tier off, 2 runs after a warm-up round. [R538][r538] read 225.4 / 200.2 before bf16 GDN state; bf16 state changed the greedy continuation of the single code prompt, and 48 paired prompts show no decode loss ([R548][r548]) |
-| decode, 4 streams | • code 566.3 t/s aggregate, 154.6 per stream<br>• prose 522.8 t/s aggregate, 135.3 per stream<br>• 12 distinct sampled prompts per kind: code 440.2 aggregate / 116.7 per stream, prose 367.6 / 111.6 | 2026-09-19, [R558][r558]; sampled rows 2026-09-18, [R499][r499], with [`bench/multiprompt.py`][multiprompt]. The 1,861-token requests in earlier code rows at 4 streams do not recur ([R552b][r552b]) |
-| decode, 6 streams | • code 513.5–544.2 t/s aggregate, 93.3 per stream<br>• prose 512.7–522.6 t/s aggregate, 89.9 per stream<br>• below 4 streams because above 4 jobs the draft depth drops to 1: depth 2 would verify more than 16 rows per step, where the MoE layers leave their fast decode kernels and the step takes about twice as long ([R560][r560], [R562][r562]) | 2026-09-19, [R558][r558] (2,048 tokens), [R560][r560] (1,024 tokens) |
-| decode, 8 streams | • code 640.2–674.2 t/s aggregate, 87.5 per stream<br>• prose 628.2–639.4 t/s aggregate, 83.0 per stream<br>• 8 requests on the former 4 slots: 549.4 aggregate, the second 4 waiting 7.0–8.0 s for their first token | 2026-09-19, [R558][r558], [R560][r560] |
-| 8-agent SWE-bench replay (366 calls, NVMe tier off) | wall 408.6 s at 8 slots, 413.2 / 395.1 s at 4 slots; latency p50 3.76 s (4.23 / 4.11); queue wait p50 0.12 s (1.39–1.52). The agents spend two thirds of the run with 5 to 7 calls open at once, where 8 slots decode at depth 1 and produce no more tokens per second than 4 slots at depth 3 | 2026-09-19, [R558][r558], [R557][r557], [R560][r560] |
-| TTFT and decode with slots in use | • short prompts sent together: TTFT 0.13 / 0.22 / 0.31–0.34 / 0.39–0.45 s at 1 / 2 / 3 / 4 requests<br>• a new short request while 3 slots decode ~112k-token contexts: TTFT 0.26 s (0.16 s with none)<br>• 4 prompts of ~142.6k tokens sent together (570k tokens resident): 104–117 t/s per stream once all four decode, longest gap between streamed chunks 0.051 s, no failures<br>• long prompts sent together share the prefill: 4 × ~22.5k tokens reach their first token at 12.0–12.1 s, 4 × ~142.6k at 24 s and 70 s; running streams get about 2 decode steps per second while a new long prompt prefills | 2026-09-19, [R549][r549], the served configuration with the NVMe tier off; [`bench/hot_slots.py`][hot-slots] |
-| decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 per stream (first wave of 4 requests; the tool's whole-run figure, 421.3, includes a second wave of only 2); six real files rewritten with a small edit, greedy | 2026-09-19, [R525][r525], [`bench/agentic-edit.py`][agentic-edit] |
-| decode at depth, 1 stream | prose 196.9 / 195.6 / 193.3 t/s at 89 / 99,839 / 199,451 prompt tokens; code 212.0 at 179,575; 4 prose streams of ~100k tokens each (399k resident) 455.4 t/s aggregate | 2026-09-19, [R554][r554], the R548 configuration (4 slots), NVMe tier off |
-| cold prefill, 1 request | • requested 30k: 8,740 t/s<br>• requested 60k (45,073–45,163 prompt tokens): 9,354–9,841 t/s<br>• requested 120k (90,040–90,135 prompt tokens): 10,015–10,278 t/s | 2026-09-18 and 2026-09-19, [R513][r513], [R517][r517], [R528][r528], [R530][r530]; sizes are `fn_bench --ctx` targets, and the prompts carry about three quarters of that in tokens; one invocation per length |
-| long-context retrieval | 5/5 planted needles at 131k and at 240k prompt tokens | 2026-09-19, [R548][r548], [R546][r546], [R517][r517], [R525][r525], [R528][r528], [R530][r530], [R534][r534], [R535][r535], [R540][r540] |
-| cold prefill determinism | a long prompt prefilled twice gives identical output (E3 with `atomicAdd` diverged by generated token 47 to 172); costs 1.9 % prefill at the 60k target (95 % interval −4.6 to +0.9 %) and 0.2 % at 120k, decode unchanged | 2026-09-19, [R533][r533] (8 boots), [R535][r535] |
-| prompt restored from the NVMe tier after a restart | • 29,952-token prompt: 0.69 s (cold prefill 3.96 s)<br>• 119,808-token prompt: 0.99 s (cold 12.33 s)<br>• output identical to the warm and cold runs; 64 GiB cap, about 2.7 million tokens | 2026-09-19, [R534][r534], [R532][r532]; with the tier idle, decode differs from the untiered daily by −0.21 % at 1 stream and +0.11 % at 4 (8 boots); while a 120k prefix drains to disk, −3.8 % / −3.0 % for about 26 s |
-| GSM8K 5-shot, n=500, thinking on, no stop strings | 0.978 with the n-gram row prefetch; 0.974 at 8 slots; 0.974 with bf16 GDN state; 0.976, 0.974, 0.972, 0.976, 0.974, 0.978, 0.970 and 0.974 on the eight configurations before it (byte-identical decode); 0.978 and 0.980 before them | 2026-09-19, [R565][r565], [R561][r561], [R548][r548], [R546][r546], [R540][r540], [R535][r535], [R534][r534], [R530][r530], [R529][r529], [R528][r528], [R525][r525]; 2026-09-18, [R509][r509]; 2026-09-19, [R516][r516] |
-| [tool-eval-bench][tool-eval], 69 scenarios × 4 | 84.0 ± 2.4 | 2026-09-19, [R565][r565], greedy output byte-identical to R561; 88.2 ± 1.0 on [R561][r561], 86.8 ± 2.6 on [R548][r548], 86.5 ± 2.4 on [R546][r546], 87.2 ± 1.5 on [R540][r540], 85.0 ± 0.8 on [R535][r535], 87.0 ± 1.2 on [R534][r534], 84.8 ± 1.3 on [R530][r530] and 88.0 ± 1.6 on [R529][r529], where `tool_choice` enforcement turned TC-45 from 0 to 2 points on every trial (worth 2.9 points of the score). The ± is the spread of 4 trials on one boot; the last thirteen configurations read 84.0 to 88.2, and the R529–R530 gap sits in scenarios that already change between trials of one boot ([R530][r530]) |
-| [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6, official scorer | 46 of 49 instances resolved | 2026-09-16 on the 3.05 bpw pack, [R359][r359]; the instances were selected on earlier outcomes, so this is a tally, not a full-set score. Cost per instance: [agent runs][agent-cost] |
-| structured output ([llguidance][llguidance]) | `json_schema`, `response_format`, `regex_pattern` pass, thinking on and off, c4 | 2026-09-17, [R453][r453] |
-| `tool_choice` | `required` 48/48, named 4/4, 8/8 concurrent; a forced turn that answers in content first continues into the call; `auto` / `none` unchanged | 2026-09-19, [R529][r529] |
-| boot to serving | about 20 s with warm kernel caches | 2026-09-19, [R525][r525], [R528][r528] promotion boots |
-| free VRAM after boot | 2,085 MiB on cuda:0, 867 MiB on cuda:1 at 8 slots and 966,656 tokens; 2,013 / 737 at 4 slots and 1,032,192 | 2026-09-19, [R561][r561], [R548][r548]; minimum under a cold 120k prefill plus 8 streams 1,299 / 353 MiB ([R558][r558]) |
+| context window | 262,144 tokens | checkpoint |
+| page pool | 966,656 tokens, 15,236 B per token: 1.52 GB per 100k, 14.7 GB total | [R561][r561] |
+| free VRAM after boot | 2,085 / 867 MiB; 1,299 / 353 under a cold 120k prefill plus 8 streams | [R561][r561], [R558][r558] |
+| decode, 1 stream | code 202.2, prose 200.9 t/s (24 prompts each, 512 tokens) | [R575][r575] |
+| decode, 4 streams | code 511, prose 510 t/s aggregate | [R570][r570] |
+| decode, 5 streams | code 470–480, prose 475 t/s aggregate | [R570][r570], [R571][r571] |
+| decode, 6 streams | code 514, prose 524–534 t/s aggregate | [R570][r570], [R571][r571] |
+| decode, 7 streams | code 612, prose 593 t/s aggregate | [R571][r571] |
+| decode, 8 streams | code 649, prose 629 t/s aggregate | [R570][r570] |
+| decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
+| decode, agent-shaped edit | 223.7 t/s at 1 stream; 502.2 aggregate at 4 | [R525][r525] |
+| MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
+| cold prefill, 1 request | 9,409 / 9,814 / 10,027 t/s at 30k / 60k / 120k targets | [R574][r574] |
+| TTFT, short prompt | 0.13 / 0.22 / 0.31 / 0.39 s at 1 / 2 / 3 / 4 at once; 0.26 s while 3 slots decode ~112k contexts | [R549][r549] |
+| 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
+| prompt restored from the NVMe tier after a restart | 29,952 tokens in 0.69 s (cold 3.96 s); 119,808 in 0.99 s (cold 12.33 s) | [R534][r534] |
+| long-context retrieval | 5/5 needles at 131k and at 240k prompt tokens | [R548][r548], [R546][r546] |
+| GSM8K 5-shot, n=500, no stop strings | 0.978 | [R565][r565] |
+| [tool-eval-bench][tool-eval], 69 × 4 | 84.0 ± 2.4 | [R565][r565] |
+| [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6 | 46 of 49 selected instances | [R359][r359], 3.05 bpw pack |
+| boot to serving | ~20 s, warm kernel caches | [R525][r525] |
 
-GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) were measured with lm-eval's stop strings, which cut the model's reasoning when it restates the problem as "Question: …"; they undercount by 7 to 18 % of questions ([R509][r509]).
+Also passing: structured output (`json_schema`, `response_format`, `regex_pattern`, thinking on and off, [R453][r453]); `tool_choice` `required` 48/48, named 4/4, 8/8 concurrent ([R529][r529]); a long prompt prefilled twice gives identical output ([R535][r535]).
+
+Insights behind these numbers:
+
+- 5 streams decode slower than 4: the policy drops to 1 draft token there, and a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams instead is +17 % ([R570][r570]).
+- Code decodes faster than prose at 1 stream because draft acceptance tracks how predictable the text is ([R572][r572]).
+- 8 slots beat 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
+- 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
+- GSM8K figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
 
 ## What the stack is
 
@@ -253,6 +261,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r568]: bench/results/r568-rebase-prefill.md
 [r569]: bench/results/r569-mtp-kv-window.md
 [r570]: bench/results/r570-c5-draft-policy.md
+[r571]: bench/results/r570-c5-draft-policy.md
 [r572]: bench/results/r572-mtp-acceptance.md
 [r573]: bench/results/r573-mtp-kv-window-screen.md
 [r574]: bench/results/r574-chunk4096.md
