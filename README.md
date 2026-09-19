@@ -6,15 +6,15 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off. The table is everything the figures do not show.
+Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
 Aggregate throughput dips at 6 streams, where the draft policy drops to one draft token; per-stream rate is flat from 6 to 8. Until R576 the dip sat at 5 streams.
 
-![Cold prefill rate and time to first token against prompt length](docs/img/prefill.svg)
+![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
 
-Prefill rate is flat from 60k to the top of the window: 199,844 tokens prefill in 18.8 s.
+Both lines are flat: prefill holds its rate to the top of the window (199,844 tokens in 18.8 s, 240,047 in 22.8 s, [R580][r580]) and decode on top of an already-prefilled context holds its rate too ([R554][r554]). Depth costs latency, not throughput.
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
@@ -23,10 +23,8 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 | context window | 262,144 tokens | checkpoint |
 | page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
 | free VRAM after boot | 1,041 / 2,531 MiB; 251 / 2,013 after a 1-to-8-stream decode ramp | [R579][r579] |
-| decode at depth, 1 stream | prose 197 / 196 / 193 t/s at 89 / 99,839 / 199,451 prompt tokens | [R554][r554] |
 | decode, agent-shaped edit | 223.7 t/s at 1 stream; at 4 streams 502.2 aggregate, 143.1 t/s per stream | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
-| TTFT, short prompt | 0.13 / 0.22 / 0.31 / 0.39 s at 1 / 2 / 3 / 4 at once; 0.26 s while 3 slots decode ~112k contexts | [R549][r549] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
 | prompt restored from the NVMe tier after a restart | 29,952 tokens in 0.69 s (cold 3.96 s); 119,808 in 0.99 s (cold 12.33 s) | [R534][r534] |
 | long-context retrieval | 5/5 needles at 131k and at 240k prompt tokens | [R548][r548], [R546][r546] |

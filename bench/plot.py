@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "bench" / "results"
 OUT = ROOT / "docs" / "img"
 
-CODE, PROSE = "#0969da", "#cf222e"
+CODE, PROSE, PREFILL = "#0969da", "#cf222e", "#8250df"
 plt.rcParams.update({
     "figure.dpi": 110,
     "font.size": 10,
@@ -135,6 +135,20 @@ def figure_decode_scaling():
     save(fig, "decode-scaling.svg", "Decode rate against concurrency, aggregate and per stream")
 
 
+def depth_decode():
+    """R554 read decode rate at one stream on top of an already-prefilled context, per kind."""
+    rows = collections.defaultdict(list)
+    for line in open(RESULTS / "2026-09-19-r554-depth-decode" / "depth.jsonl"):
+        r = json.loads(line)
+        # c1 only: the file also holds a 4-stream arm, whose per-request rate is a different quantity.
+        if r.get("decode_tps") and r.get("prompt_tokens") and r["tag"].startswith("c1-"):
+            rows[(r["tag"].split("-")[1], r["prompt_tokens"])].append(r["decode_tps"])
+    out = collections.defaultdict(list)
+    for (kind, toks), v in sorted(rows.items(), key=lambda kv: kv[0][1]):
+        out[kind].append((toks, st.mean(v)))
+    return out
+
+
 def figure_prefill():
     """R580 asked for the filler budget that lands on each target, so its tags are the token counts it aimed at
     and the points are what the server counted. Before it, the only prefill records were R574's, whose "120k"
@@ -148,34 +162,37 @@ def figure_prefill():
     for line in open(path):
         r = json.loads(line)
         if r.get("ttft_s") and r.get("prompt_tokens"):
-            rows[r["tag"]].append((r["prompt_tokens"], r["prompt_tokens"] / r["ttft_s"], r["ttft_s"]))
+            rows[r["tag"]].append((r["prompt_tokens"], r["prompt_tokens"] / r["ttft_s"]))
     keys = [k for k in keys if rows[k]]
-    toks = [st.mean([t for t, _, _ in rows[k]]) for k in keys]
-    rate = [st.mean([v for _, v, _ in rows[k]]) for k in keys]
-    ttft = [st.mean([w for _, _, w in rows[k]]) for k in keys]
+    toks = [st.mean([t for t, _ in rows[k]]) for k in keys]
+    rate = [st.mean([v for _, v in rows[k]]) for k in keys]
+    depth = depth_decode()
 
     fig, ax = plt.subplots(figsize=(8.4, 4.2))
     ax2 = ax.twinx()
     ax2.spines["right"].set_visible(True)
     ax2.spines["right"].set_color("#d8dee4")
-    handles = ax.plot(toks, rate, marker="o", color=CODE, linewidth=2, label="prefill rate")
-    handles += ax2.plot(toks, ttft, marker="s", markersize=4, linestyle="--", color=PROSE,
-                        linewidth=1.6, label="time to first token")
-    annotate(ax, toks, rate, CODE)
-    annotate(ax2, toks, ttft, PROSE, "{:.1f} s", dy=-14)
-    ax.set_title("Cold prefill against prompt length")
+    handles = ax.plot(toks, rate, marker="o", color=PREFILL, linewidth=2, label="prefill rate")
+    annotate(ax, toks, rate, PREFILL)
+    for kind, color, dy in (("code", CODE, 7), ("prose", PROSE, -14)):
+        xs = [t for t, _ in depth[kind]]
+        ys = [v for _, v in depth[kind]]
+        handles += ax2.plot(xs, ys, marker="s", markersize=4, linestyle="--", color=color, linewidth=1.6,
+                            label=f"decode at depth, {kind}")
+        annotate(ax2, xs, ys, color, dy=dy)
+    ax.set_title("Prompt length costs latency, not rate")
     ax.set_xlabel("prompt tokens")
-    ax.set_ylabel("prompt tokens per second")
-    ax2.set_ylabel("seconds to first token")
+    ax.set_ylabel("prompt tokens per second, prefill")
+    ax2.set_ylabel("tokens per second, decode at 1 stream")
     ax.set_ylim(0, max(rate) * 1.3)
-    ax2.set_ylim(0, max(ttft) * 1.3)
+    ax2.set_ylim(0, max(v for d in depth.values() for _, v in d) * 1.6)
     ax.set_xticks(toks, [f"{round(t / 1000)}k" for t in toks])
     ax.grid(axis="y", color="#eaeef2")
     ax.set_axisbelow(True)
     ax.legend(handles, [h.get_label() for h in handles], frameon=False, fontsize=9, loc="lower right")
-    print("prefill:", [round(v) for v in rate], "t/s; TTFT", [round(w, 2) for w in ttft],
-          "at", [round(t) for t in toks], "tokens")
-    save(fig, "prefill.svg", "Cold prefill rate and time to first token against prompt length")
+    print("prefill:", [round(v) for v in rate], "t/s at", [round(t) for t in toks], "tokens")
+    print("decode at depth:", {k: [(round(t), round(v)) for t, v in d] for k, d in depth.items()})
+    save(fig, "prefill.svg", "Cold prefill rate and decode rate at depth against prompt length")
 
 
 if __name__ == "__main__":
