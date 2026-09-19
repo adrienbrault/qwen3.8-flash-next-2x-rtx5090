@@ -28,6 +28,7 @@ This repository ships no weights.
 |---|---|---|---|---|
 | `docker/upstream-pr337-layer-split-device.patch` | [exllamav3#337](https://github.com/turboderp-org/exllamav3/pull/337) | **creslinux** | open (2026-09-17) | keeps the current CUDA device on the module's device during a layer-split forward; **verbatim redistribution**, applied by `docker/Dockerfile.tabbyapi-pr337` |
 | `bench/hotvocab/hotvocab-applied.patch` | [exllamav3#303](https://github.com/turboderp-org/exllamav3/pull/303) | **keldenl** | open | "Speed up Qwen MTP decoding by 22% with a selected vocabulary head"; ported to this checkpoint's `qwen4_exp_mtp` by this repo. Measured **inapplicable** on a two-card layer split (`docs/MEASUREMENTS.md`, R377); not in the served image |
+| the `gdn.cu` hunks of `docker/overlays/decode-kernels-r6/served-source.patch` | [exllamav3#369](https://github.com/turboderp-org/exllamav3/pull/369) | **troycheng** | closed without merge (2026-09-14) | "[kernel] Use one-warp blocks for GDN B/A decode on SM120"; **adapted, not verbatim**: the PR's kernel template on warps per block, its launch pair and its graph-parameter recording are kept, and the PR's fixed-shape condition (rows = 1, N = 96, K = 5,120) is replaced by "served grid below the SM count on SM 12.0" behind `EXL3_GDN_BA_WARP1`, to match this checkpoint's 4-row verify calls; served since R540 |
 
 ## Patches written for this repository (MIT for the patch text; derivative of ExLlamaV3 MIT / TabbyAPI AGPL-3.0 where they modify those files)
 
@@ -56,6 +57,7 @@ All of these were written with **OpenAI Codex** (`gpt-6-astra`, and `gpt-5.6-sol
 | `docker/overlays/ple-ckpt-clone-r1/` | ExLlamaV3 (`modules/ple.py`) | MIT | a one-line change to `PLELayerState.stash()`: `.clone()` in place of `.cpu()` on the host-resident token-id window; found and written for this repository while testing the recurrent-tip checkpoint round (R524), served since R530 |
 | `docker/overlays/nvme-tier-r4/` | ExLlamaV3 (`generator/generator.py`, `generator/pagetable.py`, `generator/async_generator.py`, `cache/recurrent.py`, new `generator/disk_cache.py`) | MIT | persistent NVMe prefix tier; written for this repository by agent rounds: Codex (gpt-5.6-sol) round 1, an omp agent round 2, Opus rounds 3 and 4 (R526, R532; served since R534) |
 | `docker/overlays/e3-det-r1/` | ExLlamaV3 (`exllamav3_ext/bindings.cpp`, `exllamav3_ext/quant/exl3_moe_prefill_e3.{cpp,cu,cuh}`, `modules/block_sparse_mlp.py`) | MIT | deterministic E3 grouped MoE prefill: per-assignment slots and a fixed-order reduction in place of `atomicAdd`, opt-in `EXL3_MOE_PREFILL_E3_DET=1`; written for this repository by an Opus agent round (R531, R533; served since R535) |
+| `docker/overlays/decode-kernels-r6/` | ExLlamaV3 (`exllamav3_ext/gdn.cu`, `exllamav3_ext/hc_mix.{cu,cuh}`, `exllamav3_ext/bindings.cpp`, `modules/hyperconnections.py`) | MIT | one-warp launches of the GDN B/A projection GEMV (`EXL3_GDN_BA_WARP1`, adapted from exllamav3#369, see the upstream table above) and of `hc_apply` (`EXL3_HC_APPLY_WARP1`) when their served grid does not fill the card, and a re-gridded V2 mixer state kernel on the int8 path (`EXL3_GR_STATE_REGRID`), all keeping each output's arithmetic order; written for this repository: round 5 by Codex, rebased onto the served chain and ported to the int8 mixer as round 6 by an Opus agent round (R538; served since R540) |
 
 Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of the file it installs, and `install.py` refuses to run on a base whose files do not match.
 
@@ -68,6 +70,7 @@ Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of t
 | vcruz305 — https://github.com/vcruz305/vllm-exl3 | the vLLM plugin that loads EXL3 checkpoints, the basis of the vLLM + EXL3 audition track (its patch series is not in this repository) |
 | vcruz305 — https://github.com/vcruz305/Qwen3.8-Flash-Next-EXL3-DGX-Spark-recipe | the pruned draft head (`EXL3_MTP_HEAD_N=65536`) and int8 hyper-connection mixer weights, both measured here in R499 |
 | peonist-ai — https://github.com/peonist-ai/halogen (0.6.0) | prompt lookup beside the MTP draft, measured here in R501 |
+| **plotarmordev** — [MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks#217](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks/pull/217) "EXL3 thin-decode fast path" | the SASS audit for local-memory spills in the fused MoE decode kernel, and re-staging to remove them; applied here to the K=3 instances of the MoE coop V2 kernel, measured bit-exact and not faster in R536, not served |
 
 ## Benchmark and evaluation tools
 

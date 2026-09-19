@@ -1,0 +1,64 @@
+2026-09-19T08:41:08+00:00 [r540] building tabbyapi:nvme-tier-r4-e3det-r6 from tabbyapi:nvme-tier-r4-e3det (before the lock)
+124c124
+< IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det}
+---
+> IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1}
+215c215
+<   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T08:44:11+00:00 [r540] lock held; served at entry: <no answer> cache_size: 819200 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T08:44:11+00:00 [r540] === G1: boot the candidate ===
+2026-09-19T08:44:32+00:00 [r540] G1 PASS: cache_size: 819200 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; image tabbyapi:nvme-tier-r4-e3det-r6; tier:  -- nvme tier: ON at /nvme-tier/ns-abc24e7c0d5198dcc941bae836d1066f36bd6725c747295991632024cb0064cb (cap 64.0 GiB, on disk 0.00 GiB: 0 pages, 0 checkpoints, 0 torn, 0 stranded pruned, 1 stale namespac; VRAM free MiB 1973/737/
+2026-09-19T08:44:37+00:00 [r540] candidate fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5 (live e7fb377c987d685c / 4a255910dee2d9c5)
+2026-09-19T08:44:37+00:00 [r540] === G1b: cold prefill + decode ===
+2026-09-19T08:44:43+00:00 [r540] cold prefill ctx 60000: 9131 tok/s (floor 9000)
+2026-09-19T08:44:52+00:00 [r540] cold prefill ctx 120000: 9834 tok/s (floor 9500)
+[code]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[code]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.5, "per_stream_wall_tps": 220.6, "decode_tps": 224.1, "ttft_s": 0.153}
+[code]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 219.6, "per_stream_wall_tps": 219.6, "decode_tps": 222.8, "ttft_s": 0.139}
+[code]  c=4 warm-up round ctx~0: 15.7 s (not recorded)
+[code]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 513.0, "per_stream_wall_tps": 142.3, "decode_tps": 146.9, "ttft_s": 0.444}
+[code]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 513.4, "per_stream_wall_tps": 142.4, "decode_tps": 147.1, "ttft_s": 0.443}
+[prose]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[prose]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.0, "per_stream_wall_tps": 200.0, "decode_tps": 202.5, "ttft_s": 0.128}
+[prose]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.1, "per_stream_wall_tps": 200.1, "decode_tps": 202.6, "ttft_s": 0.129}
+[prose]  c=4 warm-up round ctx~0: 17.6 s (not recorded)
+[prose]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 479.5, "per_stream_wall_tps": 122.3, "decode_tps": 125.5, "ttft_s": 0.416}
+[prose]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 483.0, "per_stream_wall_tps": 123.2, "decode_tps": 126.4, "ttft_s": 0.42}
+code c1: 220.1 vs 221.8 (-0.8 %)
+code c4: 513.2 vs 508.4 (+0.9 %)
+prose c1: 200.1 vs 194.5 (+2.9 %)
+prose c4: 481.3 vs 484.4 (-0.6 %)
+DECODE OK
+2026-09-19T08:47:31+00:00 [r540] G1b PASS
+2026-09-19T08:47:31+00:00 [r540] === G2: agentic-edit ===
+[DT] agentic-edit greedy c1: 6/6 ok, 17466 tokens, per-request decode median 257.0 t/s (min 210.2, max 291.6), aggregate 233.6 t/s
+[DT] agentic-edit greedy c1 first full wave: aggregate 256.8 t/s, per stream 256.8 t/s
+[DT] agentic-edit greedy c4: 6/6 ok, 17871 tokens, per-request decode median 151.3 t/s (min 136.4, max 209.0), aggregate 429.7 t/s
+[DT] agentic-edit greedy c4 first full wave: aggregate 512.5 t/s, per stream 141.7 t/s
+[DT] agentic-edit sampled c1: 6/6 ok, 18416 tokens, per-request decode median 241.1 t/s (min 205.4, max 284.6), aggregate 235.8 t/s
+[DT] agentic-edit sampled c1 first full wave: aggregate 243.6 t/s, per stream 243.6 t/s
+[DT] agentic-edit sampled c4: 6/6 ok, 17756 tokens, per-request decode median 143.1 t/s (min 123.8, max 210.8), aggregate 393.9 t/s
+[DT] agentic-edit sampled c4 first full wave: aggregate 462.8 t/s, per stream 131.7 t/s
+2026-09-19T08:51:30+00:00 [r540] G2 PASS
+2026-09-19T08:51:30+00:00 [r540] === G3: needles ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-19T08:53:31+00:00 [r540] G3 PASS
+2026-09-19T08:53:31+00:00 [r540] === G4: tool-eval 69 x 4 ===
+DT tool-eval 69x4: 87.2 +- 1.5 CI [85.8, 88.0] points [122, 122, 117, 122] ['G:5/6', 'I:16/20', 'K:16/26', 'N:5/6']
+2026-09-19T09:02:58+00:00 [r540] G4 PASS (87.2)
+2026-09-19T09:02:58+00:00 [r540] === G5: GSM8K n=500 (nostop proxy) ===
+2026-09-19T09:11:12+00:00 [r540] GSM8K n=500 flexible: 0.974 (R530 0.974)
+2026-09-19T09:11:12+00:00 [r540] G5 PASS
+2026-09-19T09:11:12+00:00 [r540] === PROMOTE: launch-flashnext.sh := launch-flashnext-r540.sh ===
+2026-09-19T09:11:13+00:00 [flashnext] starting on 0.0.0.0:8022, slots 4, cache 819200 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [8, 1]]'
+2026-09-19T09:11:34+00:00 [flashnext] UP on 8022 | warmup 0.417347s | VRAM free MiB 1973/737/
+2026-09-19T09:11:34+00:00 [flashnext] OpenAI-compatible base URL: http://<serving-host>:8022/v1
+2026-09-19T09:11:36+00:00 [r540] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 819200 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; c1 fingerprint e7fb377c987d685c (promotion-boot e7fb377c987d685c); VRAM free MiB 1969/729/
+2026-09-19T09:11:36+00:00 [r540] === R540 PROMOTED ===

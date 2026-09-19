@@ -1,0 +1,118 @@
+2026-09-19T07:34:34+00:00 [r536] building tabbyapi:nvme-tier-r4-e3det-nospill on tabbyapi:nvme-tier-r4-e3det (before the lock); env: EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1
+image OK /opt/venv/lib/python3.12/site-packages/exllamav3_ext.so
+2026-09-19T07:34:35+00:00 [r536] lock held; timebox ends 2026-09-19T08:14:35+00:00
+2026-09-19T07:34:36+00:00 [r536] === gate 0: SASS audit (12 nospill symbols, LOCAL:0) ===
+cuobjdump warning : Function listed in --function '_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi2ELb1EEEv13MoeCoopParams' not found
+FAIL: no-spill symbol contains LDL/STL
+symbol	LDL	STL
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi0ELb0EEEv13MoeCoopParams.sass	1	2
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi0ELb1EEEv13MoeCoopParams.sass	1	2
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi1ELb0EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi1ELb1EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi2ELb0EEEv13MoeCoopParams.sass	1	2
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_a_nospill_kernelILi3ELi2ELb1EEEv13MoeCoopParams.sass	1	2
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi0ELb0EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi0ELb1EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi1ELb0EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi1ELb1EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi2ELb0EEEv13MoeCoopParams.sass	0	1
+_ZN19exl3_moe_coop_v2_ns30exl3_moe_coop_b_nospill_kernelILi3ELi2ELb1EEEv13MoeCoopParams.sass	0	1
+LDL/STL present (recorded; served kernels also carry STACK:8, so this is not the gate)
+resource usage of nospill instances:
+      2 REG:61 STACK:8 SHARED:1104 LOCAL:0
+      1 REG:63 STACK:8 SHARED:1104 LOCAL:0
+      4 REG:64 STACK:16 SHARED:1088 LOCAL:0
+      2 REG:64 STACK:8 SHARED:1088 LOCAL:0
+      3 REG:64 STACK:8 SHARED:1104 LOCAL:0
+2026-09-19T07:34:42+00:00 [r536] === gate 1: torch.equal served V2 vs nospill (real layer 0 both cards, split-k 1/2; synthetic wide x cb) ===
+2026-09-19T07:34:47+00:00 [r536] [real ks1 gpu0] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:34:53+00:00 [r536] [real ks1 gpu1] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:34:59+00:00 [r536] [real ks2 gpu0] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:05+00:00 [r536] [real ks2 gpu1] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:08+00:00 [r536] [synth wide0 cb0] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:13+00:00 [r536] [synth wide0 cb1] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:17+00:00 [r536] [synth wide0 cb2] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:20+00:00 [r536] [synth wide1 cb0] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:24+00:00 [r536] [synth wide1 cb1] PASS served-V2 vs K=3-nospill bit-exact 
+2026-09-19T07:35:28+00:00 [r536] [synth wide1 cb2] PASS served-V2 vs K=3-nospill bit-exact 
+[gate1 real-ks1-gpu0.json] failures 0; distinct: R1 32.8->32.8us x1.001; R4 109.7->114.4us x0.959; R16 284.4->290.6us x0.979 | resident []
+[gate1 real-ks1-gpu1.json] failures 0; distinct: R1 34.8->32.9us x1.056; R4 109.7->114.3us x0.960; R16 289.6->296.1us x0.978 | resident []
+[gate1 real-ks2-gpu0.json] failures 0; distinct: R1 41.0->43.0us x0.952; R4 134.9->139.0us x0.971; R16 284.6->290.9us x0.978 | resident []
+[gate1 real-ks2-gpu1.json] failures 0; distinct: R1 41.8->45.0us x0.928; R4 136.4->140.5us x0.971; R16 289.7->296.2us x0.978 | resident []
+[gate1 synth-w0-cb0.json] failures 0; distinct: R1 39.1->40.0us x0.977; R4 119.0->122.8us x0.969; R16 452.5->459.3us x0.985 | resident []
+[gate1 synth-w0-cb1.json] failures 0; distinct: R1 39.1->40.9us x0.958; R4 118.1->123.7us x0.955; R16 449.9->465.9us x0.966 | resident []
+[gate1 synth-w0-cb2.json] failures 0; distinct: R1 39.4->39.7us x0.994; R4 117.1->118.8us x0.986; R16 435.8->438.4us x0.994 | resident []
+[gate1 synth-w1-cb0.json] failures 0; distinct: R1 38.9->41.9us x0.929; R4 93.4->97.6us x0.957; R16 291.3->308.7us x0.944 | resident []
+[gate1 synth-w1-cb1.json] failures 0; distinct: R1 38.9->41.0us x0.949; R4 92.8->97.6us x0.951; R16 289.4->303.8us x0.952 | resident []
+[gate1 synth-w1-cb2.json] failures 0; distinct: R1 39.0->41.0us x0.951; R4 95.3->98.8us x0.964; R16 279.3->290.3us x0.962 | resident []
+2026-09-19T07:35:28+00:00 [r536] === A/B: 8 boots, A = daily env, B = + EXL3_MOE_COOP_V2_NOSPILL=1 (image tabbyapi:nvme-tier-r4-e3det-nospill both arms; NVMe tier off: IMG is not the served image) ===
+2026-09-19T07:35:56+00:00 [r536] UP A1 (nospill 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A1]  c=1 warm-up round ctx~0: 9.2 s (not recorded)
+[A1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.0, "per_stream_wall_tps": 221.1, "decode_tps": 224.3, "ttft_s": 0.137
+[A1]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.7, "ttft_s": 0.137
+[A1]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.4, "ttft_s": 0.137
+[A1]  c=4 warm-up round ctx~0: 15.8 s (not recorded)
+[A1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 529.6, "per_stream_wall_tps": 132.8, "decode_tps": 136.5, "ttft_s": 0.4
+[A1]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 540.1, "per_stream_wall_tps": 135.4, "decode_tps": 139.3, "ttft_s": 0.4
+2026-09-19T07:37:49+00:00 [r536] UP B2 (nospill 1) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B2]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[B2]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.6, "ttft_s": 0.136
+[B2]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.9, "per_stream_wall_tps": 220.9, "decode_tps": 224.1, "ttft_s": 0.137
+[B2]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.137
+[B2]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[B2]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 512.4, "per_stream_wall_tps": 142.2, "decode_tps": 146.9, "ttft_s": 0.4
+[B2]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 507.0, "per_stream_wall_tps": 140.6, "decode_tps": 145.1, "ttft_s": 0.4
+2026-09-19T07:39:42+00:00 [r536] UP B3 (nospill 1) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B3]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[B3]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.5, "per_stream_wall_tps": 222.5, "decode_tps": 225.7, "ttft_s": 0.137
+[B3]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.0, "per_stream_wall_tps": 220.0, "decode_tps": 223.2, "ttft_s": 0.137
+[B3]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.9, "per_stream_wall_tps": 221.9, "decode_tps": 225.4, "ttft_s": 0.147
+[B3]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[B3]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.6, "per_stream_wall_tps": 141.7, "decode_tps": 146.3, "ttft_s": 0.4
+[B3]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.5, "per_stream_wall_tps": 141.4, "decode_tps": 146.0, "ttft_s": 0.4
+2026-09-19T07:41:36+00:00 [r536] UP A4 (nospill 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A4]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[A4]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.9, "per_stream_wall_tps": 223.9, "decode_tps": 227.2, "ttft_s": 0.137
+[A4]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.9, "per_stream_wall_tps": 223.9, "decode_tps": 227.2, "ttft_s": 0.138
+[A4]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.2, "per_stream_wall_tps": 221.2, "decode_tps": 224.4, "ttft_s": 0.137
+[A4]  c=4 warm-up round ctx~0: 15.7 s (not recorded)
+[A4]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 514.5, "per_stream_wall_tps": 142.9, "decode_tps": 147.6, "ttft_s": 0.4
+[A4]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 513.1, "per_stream_wall_tps": 142.4, "decode_tps": 147.1, "ttft_s": 0.4
+2026-09-19T07:43:29+00:00 [r536] UP B5 (nospill 1) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B5]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[B5]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.5, "per_stream_wall_tps": 222.5, "decode_tps": 225.8, "ttft_s": 0.137
+[B5]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.6, "per_stream_wall_tps": 222.6, "decode_tps": 225.9, "ttft_s": 0.137
+[B5]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.5, "per_stream_wall_tps": 222.6, "decode_tps": 225.8, "ttft_s": 0.138
+[B5]  c=4 warm-up round ctx~0: 16.1 s (not recorded)
+[B5]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.2, "per_stream_wall_tps": 141.3, "decode_tps": 145.9, "ttft_s": 0.4
+[B5]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 529.8, "per_stream_wall_tps": 132.8, "decode_tps": 136.6, "ttft_s": 0.4
+2026-09-19T07:45:22+00:00 [r536] UP A6 (nospill 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A6]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[A6]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.8, "per_stream_wall_tps": 222.8, "decode_tps": 226.1, "ttft_s": 0.141
+[A6]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.7, "per_stream_wall_tps": 223.7, "decode_tps": 227.0, "ttft_s": 0.137
+[A6]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.8, "per_stream_wall_tps": 223.8, "decode_tps": 227.1, "ttft_s": 0.137
+[A6]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[A6]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 513.5, "per_stream_wall_tps": 142.5, "decode_tps": 147.2, "ttft_s": 0.4
+[A6]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 534.3, "per_stream_wall_tps": 133.9, "decode_tps": 137.8, "ttft_s": 0.4
+2026-09-19T07:47:10+00:00 [r536] UP A7 (nospill 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A7]  c=1 warm-up round ctx~0: 9.2 s (not recorded)
+[A7]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.138
+[A7]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.137
+[A7]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.137
+[A7]  c=4 warm-up round ctx~0: 15.3 s (not recorded)
+[A7]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 506.8, "per_stream_wall_tps": 140.5, "decode_tps": 145.1, "ttft_s": 0.4
+[A7]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 101, "aggregate_tps": 544.1, "per_stream_wall_tps": 136.4, "decode_tps": 140.4, "ttft_s": 0.4
+2026-09-19T07:48:57+00:00 [r536] UP B8 (nospill 1) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B8]  c=1 warm-up round ctx~0: 9.2 s (not recorded)
+[B8]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.1, "per_stream_wall_tps": 221.1, "decode_tps": 224.3, "ttft_s": 0.138
+[B8]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.9, "per_stream_wall_tps": 222.9, "decode_tps": 226.1, "ttft_s": 0.136
+[B8]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.137
+[B8]  c=4 warm-up round ctx~0: 15.3 s (not recorded)
+[B8]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.8, "per_stream_wall_tps": 142.1, "decode_tps": 146.7, "ttft_s": 0.4
+[B8]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 507.3, "per_stream_wall_tps": 140.7, "decode_tps": 145.3, "ttft_s": 0.4
+c1: boot means A1=222.5 B2=222.5 B3=221.5 A4=223.0 B5=222.6 A6=223.4 A7=223.2 B8=222.4
+c1: served V2 (A) 223.1, nospill (B) 222.2 -> B-A -0.37 %, 95 % CI [-0.83, +0.09] % (n 4+4 boots)
+c4: boot means A1=534.8 B2=509.7 B3=510.0 A4=513.8 B5=519.5 A6=523.9 A7=525.5 B8=509.5
+c4: served V2 (A) 524.5, nospill (B) 512.2 -> B-A -2.35 %, 95 % CI [-5.35, +0.66] % (n 4+4 boots)
+2026-09-19T07:50:20+00:00 [r536] not restoring: GPU queue continues (r515-queue-chain(pid 3675336))
+2026-09-19T07:50:21+00:00 [r536] === R536 DONE ===

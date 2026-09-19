@@ -1,0 +1,103 @@
+2026-09-19T08:17:29+00:00 [r538] building tabbyapi:nvme-tier-r4-e3det-r6 on tabbyapi:nvme-tier-r4-e3det (before the lock); env: EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1
+image OK /opt/venv/lib/python3.12/site-packages/exllamav3_ext.so
+2026-09-19T08:20:54+00:00 [r538] lock held; timebox ends 2026-09-19T09:05:54+00:00
+2026-09-19T08:20:54+00:00 [r538] === gate 1: r6 kernel equality on both cards ===
+2026-09-19T08:20:57+00:00 [r538] [gpu0] exit 0: {"device": "cuda:0", "gpu": "NVIDIA GeForce RTX 5090", "rows": [1, 16], "cases": 224, "mismatches": 0, "pass": true} 
+2026-09-19T08:20:59+00:00 [r538] [gpu1] exit 0: {"device": "cuda:1", "gpu": "NVIDIA GeForce RTX 5090", "rows": [1, 16], "cases": 224, "mismatches": 0, "pass": true} 
+2026-09-19T08:20:59+00:00 [r538] === A/B: 8 boots, A = daily env, B = + EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 (image tabbyapi:nvme-tier-r4-e3det-r6 both arms; NVMe tier off: IMG is not the served image) ===
+2026-09-19T08:21:22+00:00 [r538] UP A1 (selectors 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A1]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[A1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.1, "per_stream_wall_tps": 224.1, "decode_tps": 227.4, "ttft_s": 0.136
+[A1]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.1, "per_stream_wall_tps": 224.1, "decode_tps": 227.4, "ttft_s": 0.137
+[A1]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.1, "per_stream_wall_tps": 224.1, "decode_tps": 227.3, "ttft_s": 0.137
+[A1]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[A1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 514.3, "per_stream_wall_tps": 142.7, "decode_tps": 147.5, "ttft_s": 0.4
+[A1]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 513.2, "per_stream_wall_tps": 142.5, "decode_tps": 147.1, "ttft_s": 0.4
+[A1]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[A1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.9, "per_stream_wall_tps": 198.9, "decode_tps": 201.3, "ttft_s": 0.128}
+[A1]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 197.0, "per_stream_wall_tps": 197.0, "decode_tps": 199.4, "ttft_s": 0.13}
+2026-09-19T08:23:47+00:00 [r538] UP B2 (selectors 3) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B2]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[B2]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.9, "per_stream_wall_tps": 225.9, "decode_tps": 229.2, "ttft_s": 0.137
+[B2]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.6, "ttft_s": 0.137
+[B2]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.9, "per_stream_wall_tps": 225.9, "decode_tps": 229.2, "ttft_s": 0.136
+[B2]  c=4 warm-up round ctx~0: 15.8 s (not recorded)
+[B2]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 512.3, "per_stream_wall_tps": 142.1, "decode_tps": 146.7, "ttft_s": 0.4
+[B2]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.5, "per_stream_wall_tps": 142.0, "decode_tps": 146.7, "ttft_s": 0.4
+[B2]  c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[B2]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.2, "per_stream_wall_tps": 200.2, "decode_tps": 202.6, "ttft_s": 0.128}
+[B2]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.3, "per_stream_wall_tps": 200.3, "decode_tps": 202.7, "ttft_s": 0.128}
+2026-09-19T08:26:11+00:00 [r538] UP B3 (selectors 3) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B3]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[B3]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.7, "per_stream_wall_tps": 225.7, "decode_tps": 229.0, "ttft_s": 0.137
+[B3]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.8, "per_stream_wall_tps": 225.8, "decode_tps": 229.2, "ttft_s": 0.136
+[B3]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 226.0, "per_stream_wall_tps": 226.0, "decode_tps": 229.4, "ttft_s": 0.136
+[B3]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[B3]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 508.2, "per_stream_wall_tps": 140.8, "decode_tps": 145.4, "ttft_s": 0.4
+[B3]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 512.2, "per_stream_wall_tps": 142.0, "decode_tps": 146.7, "ttft_s": 0.4
+[B3]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[B3]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.2, "per_stream_wall_tps": 200.2, "decode_tps": 202.7, "ttft_s": 0.128}
+[B3]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.3, "per_stream_wall_tps": 200.3, "decode_tps": 202.7, "ttft_s": 0.129}
+2026-09-19T08:28:35+00:00 [r538] UP A4 (selectors 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A4]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[A4]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.5, "per_stream_wall_tps": 223.5, "decode_tps": 226.8, "ttft_s": 0.137
+[A4]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.7, "ttft_s": 0.137
+[A4]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 220.8, "per_stream_wall_tps": 220.8, "decode_tps": 224.0, "ttft_s": 0.137
+[A4]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[A4]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.0, "per_stream_wall_tps": 141.8, "decode_tps": 146.5, "ttft_s": 0.4
+[A4]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.7, "per_stream_wall_tps": 141.4, "decode_tps": 146.0, "ttft_s": 0.4
+[A4]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[A4]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 197.2, "per_stream_wall_tps": 197.2, "decode_tps": 199.8, "ttft_s": 0.141}
+[A4]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.8, "per_stream_wall_tps": 198.8, "decode_tps": 201.2, "ttft_s": 0.129}
+2026-09-19T08:31:00+00:00 [r538] UP B5 (selectors 3) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B5]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[B5]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.3, "per_stream_wall_tps": 223.3, "decode_tps": 226.6, "ttft_s": 0.136
+[B5]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.8, "per_stream_wall_tps": 225.8, "decode_tps": 229.2, "ttft_s": 0.137
+[B5]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.8, "per_stream_wall_tps": 225.8, "decode_tps": 229.2, "ttft_s": 0.137
+[B5]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[B5]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.2, "per_stream_wall_tps": 141.7, "decode_tps": 146.4, "ttft_s": 0.4
+[B5]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 506.1, "per_stream_wall_tps": 140.2, "decode_tps": 144.7, "ttft_s": 0.4
+[B5]  c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[B5]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.8, "per_stream_wall_tps": 199.8, "decode_tps": 202.2, "ttft_s": 0.128}
+[B5]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.3, "ttft_s": 0.129}
+2026-09-19T08:33:24+00:00 [r538] UP A6 (selectors 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A6]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[A6]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.7, "per_stream_wall_tps": 223.7, "decode_tps": 227.0, "ttft_s": 0.136
+[A6]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.5, "per_stream_wall_tps": 223.5, "decode_tps": 226.8, "ttft_s": 0.138
+[A6]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.2, "per_stream_wall_tps": 223.2, "decode_tps": 226.5, "ttft_s": 0.137
+[A6]  c=4 warm-up round ctx~0: 16.0 s (not recorded)
+[A6]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.8, "per_stream_wall_tps": 141.7, "decode_tps": 146.4, "ttft_s": 0.4
+[A6]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.4, "per_stream_wall_tps": 141.9, "decode_tps": 146.5, "ttft_s": 0.4
+[A6]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[A6]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.3, "per_stream_wall_tps": 198.3, "decode_tps": 200.7, "ttft_s": 0.129}
+[A6]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 196.9, "per_stream_wall_tps": 196.9, "decode_tps": 199.3, "ttft_s": 0.129}
+2026-09-19T08:35:48+00:00 [r538] UP A7 (selectors 0) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[A7]  c=1 warm-up round ctx~0: 9.4 s (not recorded)
+[A7]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.8, "ttft_s": 0.142
+[A7]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 221.3, "per_stream_wall_tps": 221.3, "decode_tps": 224.5, "ttft_s": 0.137
+[A7]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.4, "per_stream_wall_tps": 223.4, "decode_tps": 226.7, "ttft_s": 0.137
+[A7]  c=4 warm-up round ctx~0: 15.9 s (not recorded)
+[A7]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.7, "per_stream_wall_tps": 141.8, "decode_tps": 146.4, "ttft_s": 0.4
+[A7]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 506.0, "per_stream_wall_tps": 140.6, "decode_tps": 145.2, "ttft_s": 0.4
+[A7]  c=1 warm-up round ctx~0: 10.7 s (not recorded)
+[A7]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.4, "per_stream_wall_tps": 198.4, "decode_tps": 200.8, "ttft_s": 0.128}
+[A7]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.6, "per_stream_wall_tps": 198.6, "decode_tps": 201.0, "ttft_s": 0.128}
+2026-09-19T08:38:13+00:00 [r538] UP B8 (selectors 3) fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5; VRAM free 1257/289/
+[B8]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[B8]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 226.0, "per_stream_wall_tps": 226.0, "decode_tps": 229.3, "ttft_s": 0.136
+[B8]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.7, "per_stream_wall_tps": 225.7, "decode_tps": 229.0, "ttft_s": 0.136
+[B8]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.8, "per_stream_wall_tps": 225.8, "decode_tps": 229.1, "ttft_s": 0.136
+[B8]  c=4 warm-up round ctx~0: 16.0 s (not recorded)
+[B8]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 508.6, "per_stream_wall_tps": 140.9, "decode_tps": 145.5, "ttft_s": 0.4
+[B8]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 512.0, "per_stream_wall_tps": 142.0, "decode_tps": 146.7, "ttft_s": 0.4
+[B8]  c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[B8]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.2, "per_stream_wall_tps": 200.2, "decode_tps": 202.6, "ttft_s": 0.128}
+[B8]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.6, "per_stream_wall_tps": 200.6, "decode_tps": 203.1, "ttft_s": 0.128}
+c1: boot means A1=224.1 B2=225.0 B3=225.8 A4=222.6 B5=225.0 A6=223.5 A7=222.7 B8=225.8
+c1: daily (A) 223.2, r6 selectors (B) 225.4 -> B-A +0.99 %, 95 % CI [+0.39, +1.59] % (n 4+4 boots)
+c4: boot means A1=513.8 B2=510.9 B3=510.2 A4=510.4 B5=508.6 A6=511.1 A7=508.4 B8=510.3
+c4: daily (A) 510.9, r6 selectors (B) 510.0 -> B-A -0.17 %, 95 % CI [-0.93, +0.58] % (n 4+4 boots)
+p1: boot means A1=198.0 B2=200.2 B3=200.3 A4=198.0 B5=199.8 A6=197.6 A7=198.5 B8=200.4
+p1: daily (A) 198.0, r6 selectors (B) 200.2 -> B-A +1.10 %, 95 % CI [+0.74, +1.45] % (n 4+4 boots)
+2026-09-19T08:40:08+00:00 [r538] not restoring: GPU queue continues (r515-queue-chain(pid 843755))
+2026-09-19T08:40:09+00:00 [r538] === R538 DONE ===

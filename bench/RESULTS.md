@@ -4,6 +4,10 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R540: decode kernels round 6 are served; every gate passes](results/r540-promote-r6.md)
+- [R538: decode kernels round 6 are bit-exact and +1.0 % code / +1.1 % prose at 1 stream; c4 unchanged (8 boots)](results/r538-decode-r6.md)
+- [R537: a deeper MTP draft at 1 stream is +5 % on code and −5 to −8 % on prose; not served](results/r537-draft-depth.md)
+- [R536: the K=3 MoE decode kernel without register spills is bit-exact and not faster; not served](results/r536-nospill.md)
 - [R535: deterministic E3 prefill is served on top of the NVMe tier; every gate passes](results/r535-promote-e3det.md)
 - [R534: the NVMe prefix tier is served; every gate passes](results/r534-promote-nvme-tier.md)
 - [R531 and R533: deterministic E3 prefill is bit-identical run to run; it costs 1.9 % prefill at the 60k target and 0.2 % at 120k](results/r533-e3-det-precise.md)

@@ -1,0 +1,483 @@
+--- a/exllamav3_ext/gdn.cu
++++ b/exllamav3_ext/gdn.cu
+@@ -8,6 +8,7 @@
+ #include "compat.cuh"
+ #include "graph.cuh"
+ #include "gdn.cuh"
++#include <cstdlib>
+ #include <cmath>
+ 
+ using bfloat16 = __nv_bfloat16;
+@@ -1629,7 +1630,18 @@
+ 
+ #define BA_GEMV_WARPS 8
+ 
+-__global__ __launch_bounds__(BA_GEMV_WARPS * 32)
++static bool r5_gdn_ba_warp1_enabled()
++{
++    static const bool enabled = []()
++    {
++        const char* value = std::getenv("EXL3_GDN_BA_WARP1");
++        return value && value[0] == '1' && value[1] == '\0';
++    }();
++    return enabled;
++}
++
++template<int WARPS>
++__global__ __launch_bounds__(WARPS * 32)
+ void gdn_ba_gemv_kernel
+ (
+     const half* __restrict__ x,                 // [rows, k]
+@@ -1642,7 +1654,7 @@
+ {
+     int warp = threadIdx.x / 32;
+     int lane = threadIdx.x % 32;
+-    int row = blockIdx.x * BA_GEMV_WARPS + warp;
++    int row = blockIdx.x * WARPS + warp;
+     if (row >= n) return;
+     int r = blockIdx.y;
+ 
+@@ -1694,21 +1706,36 @@
+     TORCH_CHECK(x.is_contiguous() && w_t.is_contiguous() && y.is_contiguous(), "tensors must be contiguous");
+ 
+     const half* bias_ptr = (const half*) OPTPTR(bias);
+-    dim3 blocks(CEIL_DIVIDE(n, BA_GEMV_WARPS), rows);
+-
+-    gdn_ba_gemv_kernel<<<blocks, BA_GEMV_WARPS * 32, 0, stream>>>
+-    (
+-        (const half*) x.data_ptr(),
+-        (const half*) w_t.data_ptr(),
+-        bias_ptr,
+-        (float*) y.data_ptr(),
++    bool single_warp = false;
++    if (r5_gdn_ba_warp1_enabled())
++    {
++        const auto* prop = at::cuda::getDeviceProperties(x.get_device());
++        const int served_blocks = CEIL_DIVIDE(n, BA_GEMV_WARPS) * rows;
++        single_warp = prop->major == 12 && prop->minor == 0 &&
++                      served_blocks < prop->multiProcessorCount;
++    }
++    const int warps = single_warp ? 1 : BA_GEMV_WARPS;
++    dim3 blocks(CEIL_DIVIDE(n, warps), rows);
++
++    #define BA_ARGS \
++        (const half*) x.data_ptr(), \
++        (const half*) w_t.data_ptr(), \
++        bias_ptr, \
++        (float*) y.data_ptr(), \
+         k, n
+-    );
++    if (single_warp)
++        gdn_ba_gemv_kernel<1><<<blocks, 32, 0, stream>>>(BA_ARGS);
++    else
++        gdn_ba_gemv_kernel<BA_GEMV_WARPS><<<blocks, BA_GEMV_WARPS * 32, 0, stream>>>(BA_ARGS);
++    #undef BA_ARGS
+ 
+     if (graph)
+     {
+-        graph->record_param((void*) &gdn_ba_gemv_kernel, GP_gdn_ba_x, 0);
+-        graph->record_param((void*) &gdn_ba_gemv_kernel, GP_end, 0);
++        void* kernel = single_warp
++            ? (void*) &gdn_ba_gemv_kernel<1>
++            : (void*) &gdn_ba_gemv_kernel<BA_GEMV_WARPS>;
++        graph->record_param(kernel, GP_gdn_ba_x, 0);
++        graph->record_param(kernel, GP_end, 0);
+     }
+ 
+     cuda_check(cudaPeekAtLastError());
+--- a/exllamav3_ext/hc_mix.cu
++++ b/exllamav3_ext/hc_mix.cu
+@@ -1,6 +1,7 @@
+ #include <cuda_fp16.h>
+ #include <cooperative_groups.h>
+ #include <cstdint>
++#include <cstdlib>
+ #include <mutex>
+ #include "hc_mix.cuh"
+ #include <c10/cuda/CUDAGuard.h>
+@@ -37,6 +38,18 @@
+ #define NUM_THREADS 256
+ #define NUM_THREADS_A 64
+ 
++#define HC_APPLY_WARP1_THREADS 32
++
++static bool r5_hc_apply_warp1_enabled()
++{
++    static const bool enabled = []()
++    {
++        const char* value = std::getenv("EXL3_HC_APPLY_WARP1");
++        return value && value[0] == '1' && value[1] == '\0';
++    }();
++    return enabled;
++}
++
+ __device__ __forceinline__ float sigmoidf_(float x)
+ {
+     return 1.0f / (1.0f + __expf(-x));
+@@ -476,8 +489,8 @@
+ // mix of the H stream rows, so it runs in place: each thread loads all H values of its columns
+ // into registers before writing any back.
+ 
+-template <int H, typename Y_T, bool HAS_COMB>
+-__global__ __launch_bounds__(NUM_THREADS)
++template <int H, typename Y_T, bool HAS_COMB, int THREADS>
++__global__ __launch_bounds__(THREADS)
+ void hc_apply_kernel
+ (
+     float* __restrict__ x,               // (R, H, D), updated in place
+@@ -508,7 +521,7 @@
+     }
+ 
+     float4* x4 = (float4*) (x + (size_t) r * H * D);
+-    for (int c = c0 / 4 + threadIdx.x; c < c1 / 4; c += NUM_THREADS)
++    for (int c = c0 / 4 + threadIdx.x; c < c1 / 4; c += THREADS)
+     {
+         float4 xv[H];
+         #pragma unroll
+@@ -744,24 +757,55 @@
+         comb_p = (const float*) comb.value().data_ptr();
+     }
+ 
++    int threads = NUM_THREADS;
+     int chunks_c = std::min(32, std::max(1, 256 / R));
+-    int chunk_cols = ((D / chunks_c + 4 * NUM_THREADS - 1)
+-                      / (4 * NUM_THREADS)) * (4 * NUM_THREADS);
++    int chunk_cols = ((D / chunks_c + 4 * threads - 1)
++                      / (4 * threads)) * (4 * threads);
+     int n_chunks = (D + chunk_cols - 1) / chunk_cols;
++    bool single_warp = false;
++    if (r5_hc_apply_warp1_enabled())
++    {
++        const auto* prop = at::cuda::getDeviceProperties(x.get_device());
++        single_warp = prop->major == 12 && prop->minor == 0 &&
++                      n_chunks * R < prop->multiProcessorCount;
++    }
++    if (single_warp)
++    {
++        threads = HC_APPLY_WARP1_THREADS;
++        chunk_cols = ((D / chunks_c + 4 * threads - 1)
++                      / (4 * threads)) * (4 * threads);
++        n_chunks = (D + chunk_cols - 1) / chunk_cols;
++    }
+ 
+     dim3 grid(n_chunks, R);
+     #define ARGS(Y_T) \
+         (float*) x.data_ptr(), (const Y_T*) y.data_ptr(), \
+         (const float*) post.data_ptr(), comb_p, D, chunk_cols
+-    if (y.dtype() == at::kHalf)
++    if (single_warp)
+     {
+-        if (comb_p) hc_apply_kernel<4, half, true><<<grid, NUM_THREADS, 0, stream>>>(ARGS(half));
+-        else        hc_apply_kernel<4, half, false><<<grid, NUM_THREADS, 0, stream>>>(ARGS(half));
++        if (y.dtype() == at::kHalf)
++        {
++            if (comb_p) hc_apply_kernel<4, half, true, HC_APPLY_WARP1_THREADS><<<grid, threads, 0, stream>>>(ARGS(half));
++            else        hc_apply_kernel<4, half, false, HC_APPLY_WARP1_THREADS><<<grid, threads, 0, stream>>>(ARGS(half));
++        }
++        else
++        {
++            if (comb_p) hc_apply_kernel<4, float, true, HC_APPLY_WARP1_THREADS><<<grid, threads, 0, stream>>>(ARGS(float));
++            else        hc_apply_kernel<4, float, false, HC_APPLY_WARP1_THREADS><<<grid, threads, 0, stream>>>(ARGS(float));
++        }
+     }
+     else
+     {
+-        if (comb_p) hc_apply_kernel<4, float, true><<<grid, NUM_THREADS, 0, stream>>>(ARGS(float));
+-        else        hc_apply_kernel<4, float, false><<<grid, NUM_THREADS, 0, stream>>>(ARGS(float));
++        if (y.dtype() == at::kHalf)
++        {
++            if (comb_p) hc_apply_kernel<4, half, true, NUM_THREADS><<<grid, threads, 0, stream>>>(ARGS(half));
++            else        hc_apply_kernel<4, half, false, NUM_THREADS><<<grid, threads, 0, stream>>>(ARGS(half));
++        }
++        else
++        {
++            if (comb_p) hc_apply_kernel<4, float, true, NUM_THREADS><<<grid, threads, 0, stream>>>(ARGS(float));
++            else        hc_apply_kernel<4, float, false, NUM_THREADS><<<grid, threads, 0, stream>>>(ARGS(float));
++        }
+     }
+     #undef ARGS
+     cuda_check(cudaPeekAtLastError());
+@@ -1067,6 +1111,41 @@
+     }
+     __syncthreads();
+     for (int i = threadIdx.x; i < M; i += GR_THREADS_A)
++    {
++        float v = 0.0f;
++        #pragma unroll
++        for (int h = 0; h < H; ++h) v = fmaf(rmr[h], dr[(size_t) i * H + h], v);
++        v *= 1.0f / (float) H;
++        if (i < LR) state[(size_t) r * (LR + H) + i] = v * sigmoidf_(v);
++        else post[(size_t) r * H + i - LR] = 2.0f * sigmoidf_(v);
++    }
++}
++
++#define GR_V2_STATE_REGRID_THREADS 32
++
++// Re-grid the independent state outputs without changing any output's H-ordered FMA chain.
++// Each CTA recomputes the same four rmr scalars; only x-block zero writes their global copy.
++__global__ __launch_bounds__(GR_V2_STATE_REGRID_THREADS)
++void gr_v2_state_regrid_kernel
++(
++    const float* __restrict__ dots, float* __restrict__ state,
++    float* __restrict__ post, const int D, const int LR, const float rms_eps
++)
++{
++    constexpr int H = GR_V2_H;
++    const int r = blockIdx.y, M = LR + (post ? H : 0);
++    const float* dr = dots + (size_t) r * (M + 1) * H;
++    __shared__ float rmr[H];
++    if (threadIdx.x < H)
++    {
++        float rm = rsqrtf(dr[(size_t) M * H + threadIdx.x] / (float) D + rms_eps);
++        rmr[threadIdx.x] = rm;
++        if (blockIdx.x == 0)
++            state[(size_t) r * (LR + H) + LR + threadIdx.x] = rm;
++    }
++    __syncthreads();
++    const int i = blockIdx.x * GR_V2_STATE_REGRID_THREADS + threadIdx.x;
++    if (i < M)
+     {
+         float v = 0.0f;
+         #pragma unroll
+@@ -1410,7 +1489,8 @@
+ (
+     const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
+     const at::Tensor& w, float rms_eps, at::Tensor& dots, at::Tensor& state,
+-    float* post, at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream
++    float* post, at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream,
++    bool state_regrid
+ )
+ {
+     const int M = LR + (post ? GR_V2_H : 0);
+@@ -1418,8 +1498,12 @@
+     gr_v2_dots_kernel<B><<<grid_a, GR_THREADS_A, 0, stream>>>
+     ((const float*) streams.data_ptr(), (const half*) fn.data_ptr(), (float*) dots.data_ptr(), R, D, M);
+     cuda_check(cudaPeekAtLastError());
+-    gr_v2_state_kernel<<<R, GR_THREADS_A, 0, stream>>>
+-    ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
++    if (state_regrid)
++        gr_v2_state_regrid_kernel<<<dim3(CEIL_DIVIDE(M, GR_V2_STATE_REGRID_THREADS), R), GR_V2_STATE_REGRID_THREADS, 0, stream>>>
++        ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
++    else
++        gr_v2_state_kernel<<<R, GR_THREADS_A, 0, stream>>>
++        ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
+     cuda_check(cudaPeekAtLastError());
+     dim3 grid_b((D / 4 + GR_V2_QUADS - 1) / GR_V2_QUADS, (R + B - 1) / B);
+     const int smem = B * (LR + GR_V2_H) * sizeof(float);
+@@ -1440,7 +1524,8 @@
+     const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
+     const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
+     float rms_eps, at::Tensor& dots, at::Tensor& state, float* post,
+-    at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream
++    at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream,
++    bool state_regrid
+ )
+ {
+     const int M = LR + (post ? GR_V2_H : 0);
+@@ -1451,8 +1536,13 @@
+         (const float*) fn_s.data_ptr(), (float*) dots.data_ptr(), R, D, M
+     );
+     C10_CUDA_CHECK(cudaPeekAtLastError());
+-    gr_v2_state_kernel<<<R, GR_THREADS_A, 0, stream>>>
+-    ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
++    // The int8 path consumes the same fp32 dots layout, so the fp16 path's state re-grid applies unchanged.
++    if (state_regrid)
++        gr_v2_state_regrid_kernel<<<dim3(CEIL_DIVIDE(M, GR_V2_STATE_REGRID_THREADS), R), GR_V2_STATE_REGRID_THREADS, 0, stream>>>
++        ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
++    else
++        gr_v2_state_kernel<<<R, GR_THREADS_A, 0, stream>>>
++        ((const float*) dots.data_ptr(), (float*) state.data_ptr(), post, D, LR, rms_eps);
+     C10_CUDA_CHECK(cudaPeekAtLastError());
+     dim3 grid_b((D / 4 + GR_V2_QUADS - 1) / GR_V2_QUADS, (R + B - 1) / B);
+     const int smem = B * (LR + GR_V2_H) * sizeof(float);
+@@ -1508,11 +1598,12 @@
+     return launched;
+ }
+ 
+-void gr_mix_v2
++static void gr_mix_v2_impl
+ (
+     const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
+     const at::Tensor& w, double rms_eps, at::Tensor dots, at::Tensor state,
+-    c10::optional<at::Tensor> post, at::Tensor mixed
++    c10::optional<at::Tensor> post, at::Tensor mixed,
++    bool state_regrid
+ )
+ {
+     const at::cuda::OptionalCUDAGuard device_guard(streams.device());
+@@ -1554,7 +1645,9 @@
+     // Stay inside the default 48 KiB CTA allocation, no device-wide attribute mutation.
+     TORCH_CHECK(GR_V2_ROWS * (LR + H) * sizeof(float) + GR_V2_ROWS * GR_V2_QUADS * H * 4 * sizeof(float)
+                 <= 48 * 1024, "gr_mix_v2: rank exceeds shared-memory limit");
+-    #define GR_V2_LAUNCH(B) gr_v2_launch<B>(streams, fn, upt, w, (float) rms_eps, dots, state, post_p, mixed, R, D, LR, stream)
++    #define GR_V2_LAUNCH(B) \
++        gr_v2_launch<B>(streams, fn, upt, w, (float) rms_eps, dots, state, post_p, mixed, \
++                        R, D, LR, stream, state_regrid)
+     if (R == 1) GR_V2_LAUNCH(1);
+     else if (R == 2) GR_V2_LAUNCH(2);
+     else if (R <= 4) GR_V2_LAUNCH(4);
+@@ -1562,12 +1655,39 @@
+     #undef GR_V2_LAUNCH
+ }
+ 
+-void gr_mix_v2_int8
++void gr_mix_v2
+ (
++    const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
++    const at::Tensor& w, double rms_eps, at::Tensor dots, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    gr_mix_v2_impl(streams, fn, upt, w, rms_eps, dots, state, post, mixed, false);
++}
++
++void gr_mix_v2_regrid
++(
++    const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
++    const at::Tensor& w, double rms_eps, at::Tensor dots, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    bool state_regrid = false;
++    if (streams.is_cuda())
++    {
++        const auto* prop = at::cuda::getDeviceProperties(streams.get_device());
++        state_regrid = prop->major == 12 && prop->minor == 0;
++    }
++    gr_mix_v2_impl(streams, fn, upt, w, rms_eps, dots, state, post, mixed, state_regrid);
++}
++
++static void gr_mix_v2_int8_impl
++(
+     const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
+     const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
+     double rms_eps, at::Tensor dots, at::Tensor state,
+-    c10::optional<at::Tensor> post, at::Tensor mixed
++    c10::optional<at::Tensor> post, at::Tensor mixed,
++    bool state_regrid
+ )
+ {
+     const at::cuda::OptionalCUDAGuard device_guard(streams.device());
+@@ -1624,7 +1744,7 @@
+                 "gr_mix_v2_int8: rank exceeds shared-memory limit");
+     #define GR_V2_I8_LAUNCH(B) \
+         gr_v2_launch_i8<B>(streams, fn_q, fn_s, up_q, up_s, w, (float) rms_eps, \
+-                           dots, state, post_p, mixed, R, D, LR, stream)
++                           dots, state, post_p, mixed, R, D, LR, stream, state_regrid)
+     if (R == 1) GR_V2_I8_LAUNCH(1);
+     else if (R == 2) GR_V2_I8_LAUNCH(2);
+     else if (R <= 4) GR_V2_I8_LAUNCH(4);
+@@ -1632,6 +1752,34 @@
+     #undef GR_V2_I8_LAUNCH
+ }
+ 
++void gr_mix_v2_int8
++(
++    const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
++    const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
++    double rms_eps, at::Tensor dots, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    gr_mix_v2_int8_impl(streams, fn_q, fn_s, up_q, up_s, w, rms_eps, dots, state, post, mixed, false);
++}
++
++void gr_mix_v2_int8_regrid
++(
++    const at::Tensor& streams, const at::Tensor& fn_q, const at::Tensor& fn_s,
++    const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
++    double rms_eps, at::Tensor dots, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    bool state_regrid = false;
++    if (streams.is_cuda())
++    {
++        const auto* prop = at::cuda::getDeviceProperties(streams.get_device());
++        state_regrid = prop->major == 12 && prop->minor == 0;
++    }
++    gr_mix_v2_int8_impl(streams, fn_q, fn_s, up_q, up_s, w, rms_eps, dots, state, post, mixed, state_regrid);
++}
++
+ bool gr_mix_v2_fused
+ (
+     const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
+--- a/exllamav3_ext/hc_mix.cuh
++++ b/exllamav3_ext/hc_mix.cuh
+@@ -85,6 +85,36 @@
+     at::Tensor mixed
+ );
+ 
++// SM120 state-output re-grid; all other devices execute gr_mix_v2's served state launch.
++void gr_mix_v2_regrid
++(
++    const at::Tensor& streams,
++    const at::Tensor& fn,
++    const at::Tensor& upt,
++    const at::Tensor& w,
++    double rms_eps,
++    at::Tensor dots,
++    at::Tensor state,
++    c10::optional<at::Tensor> post,
++    at::Tensor mixed
++);
++
++// SM120 state-output re-grid of gr_mix_v2_int8; other devices execute its served state launch.
++void gr_mix_v2_int8_regrid
++(
++    const at::Tensor& streams,
++    const at::Tensor& fn_q,
++    const at::Tensor& fn_s,
++    const at::Tensor& up_q,
++    const at::Tensor& up_s,
++    const at::Tensor& w,
++    double rms_eps,
++    at::Tensor dots,
++    at::Tensor state,
++    c10::optional<at::Tensor> post,
++    at::Tensor mixed
++);
++
+ // Decode-only experimental variant. It preserves gr_mix_v2's dots/state arithmetic but
+ // combines the state and up phases in one cooperative launch. The caller gates this path;
+ // gr_mix_v2 itself remains the served implementation.
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -120,7 +120,9 @@
+     m.def("hc_apply", &hc_apply, "hc_apply");
+     m.def("gr_mix", &gr_mix, "gr_mix");
+     m.def("gr_mix_v2", &gr_mix_v2, "gr_mix_v2");
++    m.def("gr_mix_v2_regrid", &gr_mix_v2_regrid, "gr_mix_v2_regrid");
+     m.def("gr_mix_v2_int8", &gr_mix_v2_int8, "gr_mix_v2_int8");
++    m.def("gr_mix_v2_int8_regrid", &gr_mix_v2_int8_regrid, "gr_mix_v2_int8_regrid");
+     m.def("gr_mix_v2_fused", &gr_mix_v2_fused, "gr_mix_v2_fused");
+     m.attr("hc_mix_v2_revision") = 2;
+     m.def("routing_std", &routing_std, "routing_std");
+--- a/modules/hyperconnections.py
++++ b/modules/hyperconnections.py
+@@ -245,6 +245,7 @@
+     MIX_V2_MIN_R = int(os.environ.get("EXL3_HC_MIX_V2_MIN_R", "8"))
+     DECODE_FUSE = os.environ.get("EXL3_DECODE_FUSE", "0") == "1"
+     MIX_V2_INT8 = os.environ.get("EXL3_HC_MIX_V2_INT8", "0") == "1"
++    STATE_REGRID = os.environ.get("EXL3_GR_STATE_REGRID", "0") == "1"
+     if MIX_V2_MIN_R < 1:
+         raise ValueError("EXL3_HC_MIX_V2_MIN_R must be >= 1")
+ 
+@@ -416,12 +417,15 @@
+                 post = ws(R * H, torch.float, "gr_mix_post").view(R, H) if self.use_combine else None
+                 mixed = ws(R * Dh, torch.half, "gr_mix_mixed").view(R, Dh)
+                 if self.fn_q is not None:
+-                    ext.gr_mix_v2_int8(
++                    mix_fn = ext.gr_mix_v2_int8_regrid if self.STATE_REGRID else ext.gr_mix_v2_int8
++                    mix_fn(
+                         s3, self.fn_q, self.fn_s, self.upx_q, self.upx_s,
+                         self.w_h, self.rms_eps, dots, state, post, mixed,
+                     )
+                 else:
+-                    mix_fn = ext.gr_mix_v2_fused if self.DECODE_FUSE else ext.gr_mix_v2
++                    mix_fn = ext.gr_mix_v2_regrid if self.STATE_REGRID else (
++                        ext.gr_mix_v2_fused if self.DECODE_FUSE else ext.gr_mix_v2
++                    )
+                     mix_fn(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps,
+                            dots, state, post, mixed)
+             else:

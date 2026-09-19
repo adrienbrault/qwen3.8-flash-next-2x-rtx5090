@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "round": "decode-kernels-r6",
+  "base_image": "tabbyapi:nvme-tier-r4-e3det",
+  "patch_sha256": "31202a3ec9f54f9d70afe676ace01ae9f26048b2c3058fb48028cf08cf488b1c",
+  "selectors": {
+    "EXL3_GDN_BA_WARP1": "exllamav3_ext/gdn.cu",
+    "EXL3_HC_APPLY_WARP1": "exllamav3_ext/hc_mix.cu",
+    "EXL3_GR_STATE_REGRID": "modules/hyperconnections.py"
+  },
+  "dropped_selectors": {
+    "EXL3_GR_FREE_UP_H": "no-op under EXL3_HC_MIX_V2_INT8=1 with EXL3_HC_MIX_V2_MIN_R=1: upx_h is already released and up_h is the only lossless up copy"
+  },
+  "files": {
+    "exllamav3_ext/gdn.cu": {
+      "baseline_sha256": "a06effe57ac621eea19d908796b4848135f675438d5b3eedbd3c4e67d336eaf0",
+      "overlay_sha256": "b262455621e99732ea1ec2c4120a572b8723c1264e3d12b1c4228ad2f98a3dfa"
+    },
+    "exllamav3_ext/hc_mix.cu": {
+      "baseline_sha256": "912db071240fbfe02a46ebf7629c0433d625533c83744c8e703407c50312b4d3",
+      "overlay_sha256": "16a1c79907182d82346aac3e1063481ddaa9f1d982662db3c1f8f7696952ed9e"
+    },
+    "exllamav3_ext/hc_mix.cuh": {
+      "baseline_sha256": "33ef3437812bce78e8d9e02718f13470d1aa00636280ec8cac21019845fff3e1",
+      "overlay_sha256": "4be278ba6837b62f8edf62a1a51e0f98e7a322f8351671d82bad555fc21f14d1"
+    },
+    "exllamav3_ext/bindings.cpp": {
+      "baseline_sha256": "59ad68efef9b59d8438002153e93eb1cf0beafb7570acdd60715ecce0e70cdc5",
+      "overlay_sha256": "3cd3a4d7ee727346cdd1d6a5fe4f23a1454d3b1c7d62227abcc0399cbef20779"
+    },
+    "modules/hyperconnections.py": {
+      "baseline_sha256": "a17978dc7aab71d50ac84681d34906173bdb068732926ba2584dffe579d24e46",
+      "overlay_sha256": "220e185c5279580f2100f445b2d561b983c476c234bdf2299fce8c5730f94828"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+# decode-kernels r6 = r5's live selectors rebased onto the served chain (tabbyapi:nvme-tier-r4-e3det, R535):
+# EXL3_GDN_BA_WARP1, EXL3_HC_APPLY_WARP1, EXL3_GR_STATE_REGRID (now also on the int8 V2 mixer). All default off; unset =
+# served launches. EXL3_GR_FREE_UP_H is not carried (no-op under the daily's int8 mixer, see impl-status.md).
+# install.py hash-pins the five served files, applies with fuzz 0 and checks the post-patch hashes; the extension is
+# rebuilt once for sm_120 and must still carry the served chain's E3 DET and int8 bindings. No heredocs (legacy builder).
+# Build context = the r6 directory:  docker build -f overlay/Dockerfile.box -t tabbyapi:decode-kernels-r6 .
+ARG BASE=tabbyapi:nvme-tier-r4-e3det
+FROM ${BASE}
+COPY served-source.patch overlay/install.py overlay/manifest.json overlay/build_extension.py /opt/decode-kernels-r6/
+COPY tests /opt/decode-kernels-r6/tests
+RUN python3 /opt/decode-kernels-r6/install.py
+ENV TORCH_EXTENSIONS_DIR=/opt/decode-kernels-r6/torch-extensions
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN rm -f /opt/venv/lib/python3.12/site-packages/exllamav3_ext*.so && \
+    rm -rf ${TORCH_EXTENSIONS_DIR} && mkdir -p ${TORCH_EXTENSIONS_DIR} && \
+    MAX_JOBS=8 python3 /opt/decode-kernels-r6/build_extension.py && \
+    python3 -c "from exllamav3.ext import exllamav3_ext as e; assert hasattr(e, 'gr_mix_v2_int8_regrid'); assert hasattr(e, 'gr_mix_v2_regrid'); assert hasattr(e, 'exl3_moe_prefill_e3_det'); assert hasattr(e, 'gr_mix_v2_int8'); assert '/site-packages/' in e.__file__, e.__file__; print(e.__file__)" && \
+    python3 -c "import exllamav3.modules.hyperconnections as h; assert h.GatedResidual.STATE_REGRID is False, 'STATE_REGRID must default off'; print('STATE_REGRID default off')" && \
+    grep -q EXL3_GDN_BA_WARP1 /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/gdn.cu && \
+    grep -q EXL3_HC_APPLY_WARP1 /opt/venv/lib/python3.12/site-packages/exllamav3/exllamav3_ext/hc_mix.cu
