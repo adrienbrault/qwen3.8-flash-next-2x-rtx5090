@@ -1,0 +1,27 @@
+2026-09-19T20:39:19+00:00 [r569] building tabbyapi:mtpwin-r1 on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16
+2026-09-19T20:39:43+00:00 [r569] build OK: [0mmtp-kv-window r1 imports through /opt/venv/lib/python3.12/site-packages/exllamav3_ext.so
+2026-09-19T20:39:43+00:00 [r569] lock held; served at entry: <no answer>
+2026-09-19T20:40:06+00:00 [r569] UP OFF: split 30, 30 pool 966656 W 0; free at boot 2085/867; c1 f4add302e176d78e; no window line
+2026-09-19T20:40:06+00:00 [r569] floor (tightest OFF card - 32) = 835 MiB on both cards
+2026-09-19T20:40:29+00:00 [r569] UP W16: split 30, 30 pool 966656 W 16384; free at boot 1241/2751; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 966656)
+2026-09-19T20:40:29+00:00 [r569] W16 vs OFF free: cuda:0 -844 / cuda:1 1884 MiB
+2026-09-19T20:40:29+00:00 [r569] W16 moved placement at [30, 30]: ladder at [30, 30] (fingerprint compared against OFFS as the moved control)
+2026-09-19T20:40:49+00:00 [r569] NO BOOT OFFS (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T20:41:13+00:00 [r569] UP WS: split 30, 30 pool 966656 W 16384; free at boot 1241/2751; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 966656)
+2026-09-19T20:41:13+00:00 [r569] WS c1 18238d63065ee16c != OFFS none
+2026-09-19T20:41:13+00:00 [r569] WS vs OFFS free: cuda:0 1241 / cuda:1 2751 MiB
+[WS-966656]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 621.6, "per_stream_wall_tps": 78.3, "decode_tps": 83.5, "ttft_s": 0.741}
+2026-09-19T20:42:00+00:00 [r569] UP WS-983040: split 30, 30 pool 983040 W 16384; free at boot 1121/2671; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 983040)
+[WS-983040]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 632.5, "per_stream_wall_tps": 79.8, "decode_tps": 84.7, "ttft_s": 0.763}
+2026-09-19T20:42:23+00:00 [r569] ladder 983040: PASS
+2026-09-19T20:42:41+00:00 [r569] UP WS-999424: split 30, 30 pool 999424 W 16384; free at boot 1041/2531; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 999424)
+[WS-999424]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 628.2, "per_stream_wall_tps": 79.2, "decode_tps": 84.3, "ttft_s": 0.728}
+2026-09-19T20:43:04+00:00 [r569] ladder 999424: PASS
+2026-09-19T20:43:22+00:00 [r569] UP WS-1015808: split 30, 30 pool 1015808 W 16384; free at boot 901/2431; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1015808)
+[WS-1015808]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 640.9, "per_stream_wall_tps": 80.8, "decode_tps": 86.3, "ttft_s": 0.737}
+2026-09-19T20:43:45+00:00 [r569] ladder 1015808: PASS
+2026-09-19T20:44:03+00:00 [r569] UP WS-1032192: split 30, 30 pool 1032192 W 16384; free at boot 821/2311; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1032192)
+2026-09-19T20:44:03+00:00 [r569] ladder 1032192: free 821/2311 below floor 835
+2026-09-19T20:44:03+00:00 [r569] RESULT: k = 3 steps above 966,656 (top 1015808) with W16 at [30, 30]; decision threshold k >= 2
+2026-09-19T20:44:03+00:00 [r569] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T20:44:04+00:00 [r569] === R569 DONE ===

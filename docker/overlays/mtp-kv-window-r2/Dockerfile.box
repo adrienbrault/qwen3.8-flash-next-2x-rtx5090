@@ -1,0 +1,14 @@
+# mtp-kv-window r2 (= r1 rebased onto the R565 daily image tabbyapi:ngram-prefetch-r1-gdnbf16): windowed KV cache for the MTP
+# draft layer (EXL3_MTP_KV_WINDOW=<tokens>, default off). The r1 patch applies unchanged at fuzz 0; manifest baselines are the
+# R565 tree's (generator/generator.py differs from r1's baseline because ngram-prefetch r1 patches it too). Python only.
+# No heredocs (legacy builder). Build context = this directory. The flag is deliberately NOT set with ENV: unset =
+# off in code, and every EXL3_* variable present in the environment enters the NVMe tier namespace.
+ARG BASE=tabbyapi:ngram-prefetch-r1-gdnbf16
+FROM ${BASE}
+COPY served-source.patch overlay/install.py overlay/manifest.json /opt/mtp-kv-window-r2/
+COPY tests /opt/mtp-kv-window-r2/tests
+RUN python3 /opt/mtp-kv-window-r2/install.py && \
+    python3 -m py_compile /opt/mtp-kv-window-r2/tests/mtp_window_scenarios.py /opt/mtp-kv-window-r2/tests/stubs.py && \
+    env -u EXL3_MTP_KV_WINDOW python3 -c "from exllamav3.cache import mtp_window as w; assert w.MTP_KV_WINDOW == 0; print('EXL3_MTP_KV_WINDOW default off')" && \
+    EXL3_MTP_KV_WINDOW=4096 python3 -c "from exllamav3.cache import mtp_window as w; g = w.MTPWindow(w.MTP_KV_WINDOW, 8); assert (g.pages_per_slot, g.pool_tokens, g.scan_tokens) == (17, 34816, 4352); assert w.window_offsets(17, 40).tolist()[16:19] == [16, 1, 2]; print('selector reads EXL3_MTP_KV_WINDOW=4096:', g)" && \
+    python3 -c "import exllamav3.generator.generator as g, exllamav3.generator.job, exllamav3.generator.pagetable, exllamav3.modules.attention_fn.bc_attn as b, exllamav3.cache.cache as c; from exllamav3.cache.mtp_window import MTPWindow, MTPWindowSlots, release_tags; from exllamav3.ext import exllamav3_ext as e; assert all(hasattr(g.Generator, n) for n in ('draft_window_rows', 'draft_window_row', 'draft_window_slot', 'release_draft_window_slot', '_draft_window_clear')); assert 'qsa_scan_cap' in b.BCAttn.__init__.__code__.co_names and 'mtp_window' in c.Cache.__init__.__code__.co_names; print('mtp-kv-window r2 imports through', e.__file__)"

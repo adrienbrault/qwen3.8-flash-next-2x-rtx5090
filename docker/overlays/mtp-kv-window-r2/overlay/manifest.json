@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "round": "mtp-kv-window-r2",
+  "patch_sha256": "cc2253bb4a00023c873bfa83918d9b2632bc6edfe54f3dc4dd2e77c837ba0e87",
+  "selectors": {
+    "EXL3_MTP_KV_WINDOW": "cache/mtp_window.py"
+  },
+  "base_image": "tabbyapi:ngram-prefetch-r1-gdnbf16",
+  "stacks_on": [
+    "r1 rebased onto tabbyapi:ngram-prefetch-r1-gdnbf16 (R565 daily: ngram-prefetch r1 applied on the R561 tree). The r1 served-source.patch applies unchanged at fuzz 0; only generator/generator.py's baseline and post-patch hashes differ from r1 (the prefetch overlay also patches that file, in hunks that do not overlap this patch's)."
+  ],
+  "flag": "EXL3_MTP_KV_WINDOW=<tokens>, a multiple of 256; unset or 0 = off, byte-identical behaviour to the served tree",
+  "files": {
+    "cache/cache.py": {
+      "baseline_sha256": "b089cf18a672c1f6d7a6037bea57607b96c07ae1baba1214d1867e8faac1d8ab",
+      "overlay_sha256": "4a4abb7bdfb70ad03268e1897a2f2b9d00b2204c45a6223da43d75cdd4a2cd0f"
+    },
+    "cache/mtp_window.py": {
+      "baseline_sha256": null,
+      "overlay_sha256": "e92ab9ca8ba7d9370ae51f89a4d0c63d5d7348f4d951e7f3a2d6c125626b9717"
+    },
+    "generator/generator.py": {
+      "baseline_sha256": "e6f9be572acadb9fd24893e1cc23c69fb0320369e5c95da6b3a54be315a2fa05",
+      "overlay_sha256": "40cf10a7d045d7647d7ef01218a671258eda5044f5e78f446f4589561babc530"
+    },
+    "generator/job.py": {
+      "baseline_sha256": "5a780ca1598963dcdb87aac8a2bdd8558bc0fabd9ccd9bba131557142fbd05e4",
+      "overlay_sha256": "e63e869f37863e3f7cbc323709210b75676ea193465ec8b9f39630ddaded1049"
+    },
+    "generator/pagetable.py": {
+      "baseline_sha256": "00611bdf4fe691bf82229111f3433637fb76920e987d6512912d7a57fedd4ea0",
+      "overlay_sha256": "a8a3c7a00747d80a12bbf1d2d7af0b3dd5ca2679150bf512f3fde07c16c6aca0"
+    },
+    "modules/attention_fn/bc_attn.py": {
+      "baseline_sha256": "40ac14b35dc11311915ece78674c6c8fdf429001fe715a07d308098c73780350",
+      "overlay_sha256": "43faa008177875f1c19d229d13fa5f66aa9dbb40c4105db36a1b224a1d5aa2ad"
+    }
+  }
+}

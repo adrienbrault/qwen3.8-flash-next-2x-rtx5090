@@ -1,0 +1,1360 @@
+{
+  "model": "/models/qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+  "device": "cuda:0",
+  "seed": 20260919,
+  "torch": "2.9.0+cu128",
+  "gpu": "_CudaDeviceProperties(name='NVIDIA GeForce RTX 5090', major=12, minor=0, total_memory=32149MB, multi_processor_count=170, uuid=71cf1db5-b832-a6b6-ef8f-5e3d0a42d162, pci_bus_id=1, pci_device_id=0, pci_domain_id=0, L2_cache_size=96MB)",
+  "layers": [
+    {
+      "layer": "model.language_model.layers.12.mlp",
+      "device": "cuda:0",
+      "K": 2,
+      "topk": 10,
+      "rows32_wide_ok": null,
+      "cases": [
+        {
+          "rows": 1,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 2,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 3,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 4,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 5,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 6,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 7,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 8,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 9,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 10,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 11,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 12,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 13,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 14,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 15,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 16,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": false,
+          "v2_kernels": true
+        },
+        {
+          "rows": 17,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 18,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 19,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 20,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 21,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 22,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 23,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 24,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": true,
+          "v2_kernels": true
+        },
+        {
+          "rows": 25,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 26,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 27,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 28,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 29,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 30,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 31,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 32,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 1,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 2,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 3,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 4,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 5,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 6,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 7,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 8,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 9,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 10,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 11,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 12,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 13,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 14,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 15,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 16,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": false,
+          "v2_kernels": true
+        },
+        {
+          "rows": 17,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 18,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 19,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 20,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 21,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 22,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 23,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 24,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": true,
+          "v2_kernels": true
+        },
+        {
+          "rows": 25,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 26,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 27,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 28,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 29,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 30,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 31,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 32,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        }
+      ],
+      "timing": [
+        {
+          "rows": 1,
+          "coop_le16": {
+            "median_us": 59.59999933838844,
+            "min_us": 56.2559999525547,
+            "mean_us": 59.266879707574844
+          }
+        },
+        {
+          "rows": 4,
+          "coop_le16": {
+            "median_us": 126.39999389648438,
+            "min_us": 124.22399967908859,
+            "mean_us": 125.90143911540508
+          }
+        },
+        {
+          "rows": 8,
+          "coop_le16": {
+            "median_us": 185.95199286937714,
+            "min_us": 183.80799889564514,
+            "mean_us": 186.2540802359581
+          }
+        },
+        {
+          "rows": 16,
+          "coop_le16": {
+            "median_us": 236.56000196933746,
+            "min_us": 233.98399353027344,
+            "mean_us": 236.8521584570408
+          }
+        },
+        {
+          "rows": 17,
+          "rows32_split": {
+            "median_us": 280.0000011920929,
+            "min_us": 274.9119997024536,
+            "mean_us": 280.16735911369324
+          },
+          "reference_2xle16": {
+            "median_us": 285.2320075035095,
+            "min_us": 277.50399708747864,
+            "mean_us": 286.07807993888855
+          },
+          "fallback_forward": {
+            "median_us": 741.7920231819153,
+            "min_us": 730.5920124053955,
+            "mean_us": 744.5606422424316
+          }
+        },
+        {
+          "rows": 24,
+          "rows32_split": {
+            "median_us": 397.64800667762756,
+            "min_us": 390.49598574638367,
+            "mean_us": 397.40575909614563
+          },
+          "reference_2xle16": {
+            "median_us": 410.4959964752197,
+            "min_us": 398.6879885196686,
+            "mean_us": 409.31807965040207
+          },
+          "fallback_forward": {
+            "median_us": 863.968014717102,
+            "min_us": 858.4319949150085,
+            "mean_us": 865.2441596984863
+          }
+        },
+        {
+          "rows": 29,
+          "rows32_split": {
+            "median_us": 392.5119936466217,
+            "min_us": 385.6000006198883,
+            "mean_us": 392.0700788497925
+          },
+          "reference_2xle16": {
+            "median_us": 398.8800048828125,
+            "min_us": 395.58398723602295,
+            "mean_us": 399.4505599141121
+          },
+          "fallback_forward": {
+            "median_us": 958.0159783363342,
+            "min_us": 939.903974533081,
+            "mean_us": 957.818877696991
+          }
+        },
+        {
+          "rows": 32,
+          "rows32_split": {
+            "median_us": 443.88800859451294,
+            "min_us": 439.7760033607483,
+            "mean_us": 444.0009608864784
+          },
+          "reference_2xle16": {
+            "median_us": 454.0639966726303,
+            "min_us": 442.52800941467285,
+            "mean_us": 453.97120028734207
+          },
+          "fallback_forward": {
+            "median_us": 1070.7520246505737,
+            "min_us": 1063.2959604263306,
+            "mean_us": 1073.9878416061401
+          }
+        }
+      ],
+      "refuse_33": true
+    },
+    {
+      "layer": "model.language_model.layers.0.mlp",
+      "device": "cuda:0",
+      "K": 3,
+      "topk": 10,
+      "rows32_wide_ok": null,
+      "cases": [
+        {
+          "rows": 1,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 2,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 3,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 4,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 5,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 6,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 7,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 8,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 9,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 10,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 11,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 12,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 13,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 14,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 15,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true
+        },
+        {
+          "rows": 16,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_equal": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": false,
+          "v2_kernels": true
+        },
+        {
+          "rows": 17,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 18,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 19,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 20,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 21,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 22,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 23,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 24,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": true,
+          "v2_kernels": true
+        },
+        {
+          "rows": 25,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 26,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 27,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 28,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 29,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 30,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 31,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 32,
+          "pattern": "router",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "forward_matches_bc": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 1,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 2,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 3,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 4,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 5,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 6,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 7,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 8,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 9,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 10,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 11,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 12,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 13,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 14,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 15,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true
+        },
+        {
+          "rows": 16,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_equal": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": false,
+          "v2_kernels": true
+        },
+        {
+          "rows": 17,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 18,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 19,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 20,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 21,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 22,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 23,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 24,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true,
+          "kernels_flag_coop": true,
+          "kernels_off_fallback": true,
+          "v2_kernels": true
+        },
+        {
+          "rows": 25,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 26,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 27,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 28,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 29,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 30,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 31,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        },
+        {
+          "rows": 32,
+          "pattern": "hotspot",
+          "equal_split": true,
+          "finite": true,
+          "repeatable": true,
+          "off_refuses": true
+        }
+      ],
+      "timing": [
+        {
+          "rows": 1,
+          "coop_le16": {
+            "median_us": 64.17599692940712,
+            "min_us": 59.74400043487549,
+            "mean_us": 64.82527889311314
+          }
+        },
+        {
+          "rows": 4,
+          "coop_le16": {
+            "median_us": 140.86399972438812,
+            "min_us": 138.65600526332855,
+            "mean_us": 141.05664119124413
+          }
+        },
+        {
+          "rows": 8,
+          "coop_le16": {
+            "median_us": 185.95199286937714,
+            "min_us": 183.84000658988953,
+            "mean_us": 186.12608030438423
+          }
+        },
+        {
+          "rows": 16,
+          "coop_le16": {
+            "median_us": 234.8799929022789,
+            "min_us": 229.88800704479218,
+            "mean_us": 234.79615822434425
+          }
+        },
+        {
+          "rows": 17,
+          "rows32_split": {
+            "median_us": 296.4960038661957,
+            "min_us": 291.9360101222992,
+            "mean_us": 297.0352005958557
+          },
+          "reference_2xle16": {
+            "median_us": 302.4959862232208,
+            "min_us": 296.4160144329071,
+            "mean_us": 303.194240629673
+          },
+          "fallback_forward": {
+            "median_us": 730.2719950675964,
+            "min_us": 718.0160284042358,
+            "mean_us": 733.2492804527283
+          }
+        },
+        {
+          "rows": 24,
+          "rows32_split": {
+            "median_us": 402.7999937534332,
+            "min_us": 396.60799503326416,
+            "mean_us": 402.2598406672478
+          },
+          "reference_2xle16": {
+            "median_us": 415.74400663375854,
+            "min_us": 406.5600037574768,
+            "mean_us": 414.88927990198135
+          },
+          "fallback_forward": {
+            "median_us": 792.959988117218,
+            "min_us": 782.2080254554749,
+            "mean_us": 800.9164834022522
+          }
+        },
+        {
+          "rows": 29,
+          "rows32_split": {
+            "median_us": 431.8719953298569,
+            "min_us": 425.28000473976135,
+            "mean_us": 431.9030401110649
+          },
+          "reference_2xle16": {
+            "median_us": 444.41600143909454,
+            "min_us": 432.5760006904602,
+            "mean_us": 442.04543977975845
+          },
+          "fallback_forward": {
+            "median_us": 936.8640184402466,
+            "min_us": 919.4239974021912,
+            "mean_us": 937.6204776763916
+          }
+        },
+        {
+          "rows": 32,
+          "rows32_split": {
+            "median_us": 436.65599822998047,
+            "min_us": 433.3440065383911,
+            "mean_us": 436.9894388318062
+          },
+          "reference_2xle16": {
+            "median_us": 443.807989358902,
+            "min_us": 438.52800130844116,
+            "mean_us": 444.8969602584839
+          },
+          "fallback_forward": {
+            "median_us": 937.9199743270874,
+            "min_us": 927.7439713478088,
+            "mean_us": 940.371196269989
+          }
+        }
+      ],
+      "refuse_33": true
+    }
+  ],
+  "rows32_mode_binding": 1,
+  "free_mib_after_load": {
+    "0": 1566.6,
+    "1": 14508.6
+  },
+  "moe_layers_on_device": 32,
+  "failures": []
+}

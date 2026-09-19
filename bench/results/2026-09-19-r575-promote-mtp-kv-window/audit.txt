@@ -1,0 +1,68 @@
+2026-09-19T21:05:57+00:00 [r575] building tabbyapi:mtpwin-r2 on tabbyapi:ngram-prefetch-r1-gdnbf16 (python overlay, rebased manifest)
+2026-09-19T21:06:31+00:00 [r575] build OK: [0mmtp-kv-window r2 imports through /opt/venv/lib/python3.12/site-packages/exllamav3_ext.so
+71c71
+< CACHE=${CACHE:-966656}   # R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+---
+> CACHE=${CACHE:-1015808}   # R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+124c124
+< IMG=${IMG:-tabbyapi:ngram-prefetch-r1-gdnbf16}
+---
+> IMG=${IMG:-tabbyapi:mtpwin-r2}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384}
+215c215
+<   if [ "$IMG" = tabbyapi:ngram-prefetch-r1-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:mtpwin-r2 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T21:06:31+00:00 [r575] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 966656 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T21:06:33+00:00 [r575] === AB: 4 boots A B B A, A = live, B = candidate, tier off, pool 966656 x 8 ===
+2026-09-19T21:07:08+00:00 [r575] UP A1: tabbyapi:ngram-prefetch-r1-gdnbf16, window env 0, pool 966656; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9416 / 120k 10274
+2026-09-19T21:10:54+00:00 [r575] UP B2: tabbyapi:mtpwin-r2, window env 1, pool 1015808; boot free 901/2431; c1 18238d63065ee16c / 30k 4a255910dee2d9c5; cold prefill 60k 9880 / 120k 10660
+2026-09-19T21:14:35+00:00 [r575] UP B3: tabbyapi:mtpwin-r2, window env 1, pool 1015808; boot free 901/2431; c1 18238d63065ee16c / 30k 4a255910dee2d9c5; cold prefill 60k 9963 / 120k 10397
+2026-09-19T21:18:20+00:00 [r575] UP A4: tabbyapi:ngram-prefetch-r1-gdnbf16, window env 0, pool 966656; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5; cold prefill 60k 9871 / 120k 10050
+code c1: 24 prompts, per-request decode_tps A 202.2 / B 203.6; paired geo-mean B/A +0.52 %, 95 % CI [-2.40, +3.40] %; per-prompt range -11.2 .. +15.2 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 127.7 / B 129.7; paired geo-mean B/A +1.61 %, 95 % CI [-1.02, +4.36] %; per-prompt range -7.3 .. +18.3 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 200.9 / B 201.3; paired geo-mean B/A +0.22 %, 95 % CI [-1.42, +1.95] %; per-prompt range -7.9 .. +8.8 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 119.9 / B 121.5; paired geo-mean B/A +1.32 %, 95 % CI [-0.58, +3.53] %; per-prompt range -4.8 .. +18.5 %; short A 0 / B 0
+B fingerprints: 18238d63065ee16c / 4a255910dee2d9c5
+min B free cuda:0: 901 (floor 835)
+min B free cuda:1: 2431 (floor 835)
+prefill 60k: A 9644 B 9922 B/A 1.029
+prefill 120k: A 10162 B 10528 B/A 1.036
+shapes [0.52, 1.61, 0.22, 1.32]
+AB OK
+2026-09-19T21:21:26+00:00 [r575] === G1: candidate with the NVMe tier ON ===
+2026-09-19T21:21:53+00:00 [r575] G1: cache_size: 1015808 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; tier:  -- nvme tier: ON at /nvme-tier/ns-9a0cd1fd4e0d28a67f3fcf501f78cc8243b36c95a82114b2efd6fe9bbcd94048 (cap 64.0 GiB, on disk 0.00 GiB: 0 pages, 0 checkpoints, 0 torn, 0 stranded pruned, 1 stale namespac; VRAM free at boot 901/2431/; fingerprints c1 18238d63065ee16c / 30k 4a255910dee2d9c5
+2026-09-19T21:21:53+00:00 [r575] === PROMOTE (early): launch-flashnext.sh := launch-flashnext-r575.sh ===
+2026-09-19T21:21:53+00:00 [r575] promoted: live launcher = tabbyapi:mtpwin-r2 + EXL3_MTP_KV_WINDOW=16384 @ 1015808 (the G1 container is that launcher's boot); post-promotion gates follow
+2026-09-19T21:21:53+00:00 [r575] === GT: crash-restart restore ===
+fill 30000: prompt 29985 tok; cold b7db3ebc950ef3fc cached 0 4.079 s; warm b7db3ebc950ef3fc cached 29952 0.359 s
+drained 5.0 s after the marked request:  -- nvme tier: drained (224 pages, 6 ckpts, 1.09/64.0 GiB; wrote 224 pages + 6 ckpts (1.09 GiB); restored 0 pages + 0 ckpts; pending 0; skips queue 0 evict 0; refused mm 0 cap 0 free 0; evicted 0 page
+ -- nvme tier: open scan: 6/6 checkpoints intact in 0.6 s
+verify 30000: after restart b7db3ebc950ef3fc cached 29952 (0.589 s latency) | warm b7db3ebc950ef3fc cached 29952 (0.359 s) | cold b7db3ebc950ef3fc (4.079 s) -> PASS
+VERIFY PASS
+2026-09-19T21:22:21+00:00 [r575] GT PASS
+2026-09-19T21:22:21+00:00 [r575] === G2: agentic-edit ===
+[BR] agentic-edit greedy c1: 6/6 ok, 17672 tokens, per-request decode median 262.2 t/s (min 211.5, max 283.0), aggregate 234.8 t/s
+[BR] agentic-edit greedy c1 first full wave: aggregate 257.4 t/s, per stream 257.4 t/s
+[BR] agentic-edit greedy c4: 6/6 ok, 17696 tokens, per-request decode median 159.1 t/s (min 140.8, max 217.2), aggregate 443.9 t/s
+[BR] agentic-edit greedy c4 first full wave: aggregate 519.4 t/s, per stream 147.5 t/s
+[BR] agentic-edit sampled c1: 6/6 ok, 17660 tokens, per-request decode median 255.7 t/s (min 198.5, max 289.5), aggregate 238.4 t/s
+[BR] agentic-edit sampled c1 first full wave: aggregate 260.3 t/s, per stream 260.3 t/s
+[BR] agentic-edit sampled c4: 6/6 ok, 17203 tokens, per-request decode median 157.3 t/s (min 128.9, max 217.6), aggregate 391.6 t/s
+[BR] agentic-edit sampled c4 first full wave: aggregate 458.5 t/s, per stream 140.1 t/s
+2026-09-19T21:26:14+00:00 [r575] G2 PASS
+2026-09-19T21:26:14+00:00 [r575] === G3: needles ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-19T21:28:11+00:00 [r575] G3 PASS
+2026-09-19T21:28:11+00:00 [r575] === G4: tool-eval 69 x 4 ===
+BR tool-eval 69x4: 86.2 +- 2.9 CI [83.8, 89.0] points [119, 114, 119, 124] ['G:5/6', 'I:16/20', 'K:18/26', 'N:5/6']
+2026-09-19T21:36:58+00:00 [r575] G4 PASS (86.2)
+2026-09-19T21:36:58+00:00 [r575] === G5: GSM8K n=500 (nostop proxy) ===
+2026-09-19T21:41:07+00:00 [r575] GSM8K n=500 flexible: none
+2026-09-19T21:41:07+00:00 [r575] POST-PROMOTION GATE FAILED (G5 FAIL): rolling back to .pre-r575
+2026-09-19T21:41:07+00:00 [r575] not restoring: GPU queue continues (r515-queue-chain(pid 411889))
+2026-09-19T21:41:08+00:00 [r575] === R575 ROLLED-BACK (G5 FAIL) ===

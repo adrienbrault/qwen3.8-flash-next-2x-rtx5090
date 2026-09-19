@@ -1,0 +1,592 @@
+--- a/cache/cache.py
++++ b/cache/cache.py
+@@ -8,6 +8,7 @@
+     from ..model import Model, Config
+     from ..modules import Attention
+ import weakref
++from .mtp_window import MTP_KV_WINDOW as _MTP_KV_WINDOW
+ 
+ class CacheLayer(ABC):
+     """
+@@ -138,6 +139,15 @@
+         self.config = model.config
+         self.max_num_tokens = max_num_tokens
+ 
++        # EXL3_MTP_KV_WINDOW (cache/mtp_window.py): the cache of an MTP draft model becomes a small
++        # per-slot ring pool (max_batch_size slots) instead of a max_num_tokens twin of the main cache.
++        # Unset: None, and the cache is built exactly as served
++        self.mtp_window = None
++        if _MTP_KV_WINDOW and getattr(model, "caps", {}).get("mtp_draft"):
++            from .mtp_window import MTPWindow
++            self.mtp_window = MTPWindow(_MTP_KV_WINDOW, max_batch_size)
++            self.max_num_tokens = self.mtp_window.pool_tokens
++
+         from .fp16 import CacheLayer_fp16
+         self.layer_type = layer_type or CacheLayer_fp16
+         # self.recurrent_layer_type = recurrent_layer_type or RecurrentLayer_fp16
+@@ -156,6 +166,18 @@
+             for instance in self.model.get_layer_instances(attn.layer_idx):
+                 self.layers[instance] = \
+                     layer_type(self.config, attn, id(self), self.max_num_tokens, **layer_kwargs)
++                if self.mtp_window is not None:
++                    # Read by BC_Attention: the graph's sparse scan covers one ring cycle. It must
++                    # reach past the dense/sparse threshold, or regime 1 would scan fewer pools
++                    # than top-k selects
++                    idx = getattr(attn, "qsa_indexer", None)
++                    if idx is not None and self.mtp_window.scan_tokens <= idx.sparse_threshold():
++                        raise ValueError(
++                            f"EXL3_MTP_KV_WINDOW={self.mtp_window.window_tokens}: one ring cycle "
++                            f"({self.mtp_window.scan_tokens} tokens) must exceed the QSA sparse "
++                            f"threshold ({idx.sparse_threshold()}); use a larger window"
++                        )
++                    self.layers[instance].mtp_window_scan_tokens = self.mtp_window.scan_tokens
+ 
+         # Attach recurrent (SWA/linear-attn) layers
+         self.num_slots = max_batch_size
+@@ -174,7 +196,15 @@
+         self.recurrent_instances = {}
+         self.attach_to_model()
+ 
++        if self.mtp_window is not None:
++            print(
++                f" -- EXL3_MTP_KV_WINDOW: draft cache {self.mtp_window.slots} slots x "
++                f"{self.mtp_window.pages_per_slot} pages = {self.max_num_tokens} tokens "
++                f"(requested {max_num_tokens})",
++                flush = True,
++            )
+ 
++
+     def attach_to_model(self, model: Model = None):
+         """
+         Attach cache to model. Registering the cache with the model (done automatically by the Cache constructor)
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -5,13 +5,14 @@
+ from ..model.model import Model
+ from ..cache.cache import Cache
+ from ..cache.recurrent import RecurrentCache
++from ..cache.mtp_window import MTPWindowSlots, release_tags, window_offsets
+ from ..tokenizer.tokenizer import Tokenizer
+ from ..constants import PAGE_SIZE
+ from ..util import cuda_sync_active
+ 
+ logger = logging.getLogger(__name__)
+ from ..util.memory import malloc_trim
+-from .pagetable import PageTable, is_content_hash
++from .pagetable import PageTable, is_content_hash, tensor_hash_checksum
+ from .cpu_cache import CPUPageCache
+ from .draft_confidence import DraftConfidenceCalibrator
+ from .draft_overlap import (
+@@ -187,8 +188,15 @@
+                 "Cannot use both draft model and n-gram draft."
+             assert draft_cache is not None, \
+                 "Must supply cache for draft model"
+-            assert draft_cache.max_num_tokens == cache.max_num_tokens, \
+-                "Cache and draft cache must be same size"
++            # EXL3_MTP_KV_WINDOW (cache/mtp_window.py): a windowed MTP draft cache is a small per-slot
++            # ring pool, not a twin of the main cache (slot count checked below). Otherwise the served
++            # equal-size assert
++            if getattr(draft_cache, "mtp_window", None) is not None:
++                assert draft_model.caps.get("mtp_draft"), \
++                    "EXL3_MTP_KV_WINDOW: a windowed draft cache needs an MTP draft model"
++            else:
++                assert draft_cache.max_num_tokens == cache.max_num_tokens, \
++                    "Cache and draft cache must be same size"
+             assert not draft_model.caps.get("recurrent_states"), \
+                 "Speculative decoding with recurrent draft model not supported."
+             if num_draft_tokens:
+@@ -269,11 +277,20 @@
+                 dtype = torch.long,
+                 pin_memory = _DRAFT_PINNED_STAGING
+             )
++
++        # EXL3_MTP_KV_WINDOW: geometry of a windowed draft cache, None when the draft cache (if any)
++        # shares the main cache's page indices as served
++        self.draft_window = getattr(draft_cache, "mtp_window", None) if draft_cache is not None else None
++        self.draft_window_slots = None
++        self._draft_window_offsets = None
++        self._draft_window_memo = {}
+ 
+         # CPU page cache tier
+         self.cpu_page_cache = None
+         if cpu_cache_size:
+-            tier_caches = [cache] + ([draft_cache] if draft_cache is not None else [])
++            # EXL3_MTP_KV_WINDOW: windowed draft pages are not indexed by the page table, so the tier
++            # stores and restores the main cache only (a revived prefix leaves the draft window as is)
++            tier_caches = [cache] + ([draft_cache] if draft_cache is not None and self.draft_window is None else [])
+             self.cpu_page_cache = CPUPageCache(tier_caches, cpu_cache_size)
+             self.cpu_page_cache.attach(self.pagetable)
+             self.pagetable.cpu_tier = self.cpu_page_cache
+@@ -298,6 +315,16 @@
+             self.max_batch_size = min(self.max_batch_size, cache.num_slots)
+         else:
+             self.recurrent_cache = None
++
++        # EXL3_MTP_KV_WINDOW: every active job needs its own window slot (after the batch-size clamp)
++        if self.draft_window is not None:
++            if self.draft_window.slots < self.max_batch_size:
++                raise ValueError(
++                    f"EXL3_MTP_KV_WINDOW: the draft cache has {self.draft_window.slots} window slots but "
++                    f"max_batch_size is {self.max_batch_size}; build the draft Cache with "
++                    f"max_batch_size >= {self.max_batch_size}"
++                )
++            self.draft_window_slots = MTPWindowSlots(self.draft_window.slots, self.draft_window.pages_per_slot)
+         if recurrent_checkpoint_interval is None:
+             recurrent_checkpoint_interval = model.caps.get("default_recurrent_checkpoint_interval", 2048)
+ 
+@@ -311,7 +338,10 @@
+         self.disk_page_cache = None
+         if _NVME_TIER:
+             from .disk_cache import DiskPageCache
+-            self.disk_page_cache = DiskPageCache.install(self, cache, draft_cache, _NVME_TIER)
++            # EXL3_MTP_KV_WINDOW: as for the CPU tier, only the main cache has page images
++            self.disk_page_cache = DiskPageCache.install(
++                self, cache, draft_cache if self.draft_window is None else None, _NVME_TIER
++            )
+ 
+         # Drafting mode
+         if draft_model is not None and draft_model.caps.get("attach_target"):
+@@ -450,6 +480,7 @@
+ 
+         num_jobs = self.num_remaining_jobs()
+         for job in self.active_jobs + self.pending_jobs:
++            self.release_draft_window_slot(job)
+             job.deallocate_pages()
+         self.active_jobs.clear()
+         self.pending_jobs.clear()
+@@ -505,6 +536,7 @@
+         if job in self.pending_jobs:
+             self.pending_jobs.remove(job)
+         elif job in self.active_jobs:
++            self.release_draft_window_slot(job, keep = True)
+             job.deallocate_pages()
+             self.active_jobs.remove(job)
+         if num_jobs and not self.num_remaining_jobs():
+@@ -719,8 +751,102 @@
+         staged = self._staging(f"{name}_cache_seqlens_step_{step}", source.shape[0])
+         staged.copy_(source)
+         return staged
++
++
++    # EXL3_MTP_KV_WINDOW (cache/mtp_window.py) -------------------------------------------------------
++
++    def draft_window_slot(self, job) -> int:
++        """Window slot of an active job, granted on first use. Ring pages the slot does not hold for
++        this job's prompt (see MTPWindowSlots) are cleared before the job's first draft write."""
++        slots = self.draft_window_slots
++        key = id(job)
++        slot = slots.lookup(key)
++        if slot is None:
++            slot, stale = slots.grant(key, self._draft_window_matcher(job), alive = {id(j) for j in self.active_jobs})
++            if stale:
++                self._draft_window_clear(slot, stale)
++        return slot
++
++    def _draft_window_matcher(self, job):
++        """match(tag) for MTPWindowSlots.grant: the tagged page is this job's prompt page L (same
++        chained hash) followed by the same token."""
++        seq = job.sequences[0]
++        hashes = seq.page_hashes or ()
++        ids = seq.sequence_ids.torch()
++        def match(tag):
++            L, h, nt = tag
++            p = (L + 1) * PAGE_SIZE
++            return L < len(hashes) and hashes[L] == h and p < ids.shape[-1] and int(ids[0, p]) == nt
++        return match
+ 
++    def _draft_window_clear(self, slot: int, ring_pages: list):
++        """Zero the given ring pages of a slot in every draft-cache tensor (K/V, scales, QSA planes)."""
++        pps = self.draft_window.pages_per_slot
++        index = torch.tensor([slot * pps + r for r in ring_pages], dtype = torch.long)
++        for t in self.draft_cache.get_all_tensors():
++            t.index_fill_(0, index.to(t.device), 0)
+ 
++    def release_draft_window_slot(self, job, keep: bool = False) -> None:
++        """Return a job's window slot. keep: the job left in a consistent state (completed, requeued,
++        cancelled between iterations), so its whole committed pages stay reusable by a later job
++        with the same prompt prefix; otherwise the slot keeps nothing."""
++        if self.draft_window_slots is None:
++            return
++        tags = None
++        if keep and self.draft_window_slots.lookup(id(job)) is not None:
++            seq = job.sequences[0]
++            hashes = list(seq.page_hashes or ())
++            ids = seq.sequence_ids.torch()
++            n_full = seq.kv_position // PAGE_SIZE
++            # Chain the page hashes past the prompt over the committed generated tokens
++            while len(hashes) < n_full:
++                L = len(hashes)
++                prev = hashes[-1] if hashes else None
++                hashes.append(tensor_hash_checksum(ids[:, L * PAGE_SIZE:(L + 1) * PAGE_SIZE], prev))
++            def next_token(L):
++                p = (L + 1) * PAGE_SIZE
++                return int(ids[0, p]) if p < ids.shape[-1] else None
++            tags = release_tags(
++                self.draft_window.pages_per_slot, seq.kv_position,
++                lambda L: hashes[L] if L < len(hashes) else None, next_token,
++            )
++        self.draft_window_slots.release(id(job), tags)
++
++    def draft_window_rows(self, jobs: list, width: int, staging: str | None = None) -> torch.Tensor | None:
++        """
++        Draft block-table rows over the windowed draft cache for a compact batch: one row per entry of
++        `jobs` (one entry per batch row, in batch order). The width is padded to 16 pages like the
++        served tables; the padding columns hold valid slot pages and are never dereferenced beyond the
++        cache lengths. `staging` names a reusable pinned buffer, used where the served table is one.
++        None when the draft cache is not windowed.
++        """
++        if self.draft_window is None:
++            return None
++        width = (width + 15) // 16 * 16
++        offsets = self._draft_window_offsets
++        if offsets is None or offsets.shape[0] < width:
++            offsets = self._draft_window_offsets = window_offsets(self.draft_window.pages_per_slot, width)
++        slots = [self.draft_window_slot(job) for job in jobs]
++        pps = self.draft_window.pages_per_slot
++        if staging is None:
++            rows = torch.empty((len(jobs), width), dtype = torch.int32)
++        else:
++            # A named staging buffer keeps its rows between rounds: refill only when the slots, the
++            # width or the buffer itself changed (the decode loop calls this twice per step)
++            rows = self._staging(staging, len(jobs), width)
++            memo = (width, tuple(slots), rows.data_ptr())
++            if self._draft_window_memo.get(staging) == memo:
++                return rows
++            self._draft_window_memo[staging] = memo
++        for r, slot in enumerate(slots):
++            torch.add(offsets[:width], slot * pps, out = rows[r])
++        return rows
++
++    def draft_window_row(self, job, width: int) -> torch.Tensor | None:
++        """(1, width) draft block-table row of one sequence (prefill), or None when not windowed."""
++        return self.draft_window_rows([job], width)
++
++
+     @staticmethod
+     def _draft_params(params: dict):
+         if _DRAFT_PINNED_STAGING:
+@@ -888,13 +1014,22 @@
+             "mtp", batch_size, max_pages_batch
+         )
+         batch = 0
++        batch_row_jobs = []
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+             for seq in job.sequences:
+                 seq_block_index = seq.block_index_tensor[:, :max_pages_batch]
+                 block_index[batch:batch+1, :seq_block_index.shape[-1]].copy_(seq_block_index)
+                 cache_seqlens[batch] = seq.kv_position
++                batch_row_jobs.append(job)
+                 batch += 1
++        # EXL3_MTP_KV_WINDOW: the draft steps address the windowed draft cache through the jobs' slot
++        # rows (pinned staging exactly when the served table is); unset keeps block_index
++        draft_block_index = self.draft_window_rows(
++            batch_row_jobs, max_pages_batch, "mtp_window_draft" if _DRAFT_PINNED_STAGING else None
++        )
++        if draft_block_index is None:
++            draft_block_index = block_index
+ 
+         # Collect input IDs
+         input_ids_list = []
+@@ -952,7 +1087,7 @@
+             params = self._draft_params({
+                 "target_hidden": temp_hidden,
+                 "attn_mode": "flash_attn",
+-                "block_table": block_index,
++                "block_table": draft_block_index,
+                 "cache": self.draft_cache,
+                 "cache_seqlens": step_seqlens,
+             })
+@@ -1182,6 +1317,7 @@
+         batch = 0
+         use_offsets = "mrope" in self.model.caps
+         positions = self._staging("positions", batch_size) if use_offsets else None
++        batch_row_jobs = []
+         for job in self.active_jobs:
+             if not job.is_prefill_done(): continue
+             for seq in job.sequences:
+@@ -1190,7 +1326,14 @@
+                 cache_seqlens[batch] = seq.kv_position
+                 if use_offsets:
+                     positions[batch] = seq.kv_position + job.alt_rope_offset
++                batch_row_jobs.append(job)
+                 batch += 1
++        # EXL3_MTP_KV_WINDOW: the MTP accept prefill below writes the windowed draft cache through the
++        # jobs' slot rows (same pinned staging lifetime as block_index); unset keeps block_index
++        draft_block_index = self.draft_window_rows(batch_row_jobs, max_pages_batch, "mtp_window_verify") \
++            if self.mtp_draft else None
++        if draft_block_index is None:
++            draft_block_index = block_index
+ 
+         # Collect input IDs and indexed embeddings
+         # Jobs may contribute multiple sequence rows. logit_mapping records the slice of the model output that
+@@ -1663,7 +1806,7 @@
+                         accept_seqlens = p_cache_seqlens[a_idx:b_idx] + 1
+                     accept_params = {
+                         "attn_mode": "flash_attn",
+-                        "block_table": block_index[a_idx:b_idx],
++                        "block_table": draft_block_index[a_idx:b_idx],
+                         "cache": self.draft_cache,
+                         "cache_seqlens": accept_seqlens,
+                         "target_hidden": target_hidden[a_idx:b_idx, :accepted_length - 1, :],
+@@ -1687,6 +1830,9 @@
+         for job in completed_jobs + requeuing_jobs:
+             if job in requeuing_jobs and self.recurrent_cache is not None:
+                 job.maybe_stash_recurrent(self.recurrent_cache, PAGE_SIZE)
++            # EXL3_MTP_KV_WINDOW: return the window slot, keeping its committed pages for a later job
++            # with the same prefix (a requeued job is re-granted on restart and matches them)
++            self.release_draft_window_slot(job, keep = True)
+             job.deallocate_pages()
+             self.active_jobs.remove(job)
+ 
+@@ -1712,6 +1858,7 @@
+         the iteration task for every job.
+         """
+         try:
++            self.release_draft_window_slot(job)
+             job.deallocate_pages()
+         except Exception:
+             logger.error(
+--- a/generator/job.py
++++ b/generator/job.py
+@@ -1292,7 +1292,10 @@
+ 
+                 if best_match_page and best_match > 1:
+                     page = seq.allocated_pages[p0]
+-                    for c in [self.generator.cache] if not self.generator.draft_model else \
++                    # EXL3_MTP_KV_WINDOW: a windowed draft cache is not indexed by page, so only the
++                    # main cache takes the partial-page copy (this path never runs on recurrent models)
++                    for c in [self.generator.cache] if not self.generator.draft_model or \
++                            self.generator.draft_window is not None else \
+                             [self.generator.cache, self.generator.draft_cache]:
+                         c.copy_page(
+                             c,
+@@ -1431,12 +1434,15 @@
+                         self.mtp_last_hidden = seq.mtp_carry_hidden
+                     else:
+                         shifted_hidden = None
++                    # EXL3_MTP_KV_WINDOW: the draft layer writes this chunk through the job's window
++                    # slot row; unset keeps the served page-table row
++                    draft_block_table = self.generator.draft_window_row(self, seq.block_index_tensor.shape[1])
+                     self.generator.draft_model.prefill(
+                         input_ids = prefill_ids,
+                         params = {
+                             "target_hidden": shifted_hidden,
+                             "attn_mode": "flash_attn",
+-                            "block_table": seq.block_index_tensor,
++                            "block_table": draft_block_table if draft_block_table is not None else seq.block_index_tensor,
+                             "cache": self.generator.draft_cache,
+                             "cache_seqlens": torch.tensor([prefill_start], dtype = torch.int32),
+                             "indexed_embeddings": self.embeddings if self.generator.mtp_draft else None,
+--- a/generator/pagetable.py
++++ b/generator/pagetable.py
+@@ -1073,7 +1073,10 @@
+         # Every cache that shares this page table's block tables must move in lockstep
+         caches = [self.cache]
+         draft_cache = getattr(self.generator, "draft_cache", None)
+-        if draft_cache is not None and not os.environ.get("EXL3_DEBUG_NO_DRAFT_DEFRAG"):
++        # EXL3_MTP_KV_WINDOW: a windowed draft cache is addressed by window slot, not by page index,
++        # so it does not move with the page table
++        if draft_cache is not None and not os.environ.get("EXL3_DEBUG_NO_DRAFT_DEFRAG") and \
++                getattr(draft_cache, "mtp_window", None) is None:
+             caches.append(draft_cache)
+         # Dispatch per cache, not per main model: an MTP/DFlash draft model never loads TP, so its
+         # cache is not registered with the TP workers even when the main model is TP-loaded
+--- a/modules/attention_fn/bc_attn.py
++++ b/modules/attention_fn/bc_attn.py
+@@ -246,6 +246,15 @@
+             self.qsa_idx = idx
+             self.qsa_layer = qsa_layer
+             self.qsa_threshold = idx.sparse_threshold()
++            # EXL3_MTP_KV_WINDOW (cache/mtp_window.py): a windowed draft cache addresses a long context
++            # through an aliasing block table over a small page pool; its scores static (sized to the
++            # pool) cannot hold a scan over the logical context, and one ring cycle already maps every
++            # page of the slot once. 0 (served cache, flag off): no clamp
++            self.qsa_scan_cap = int(getattr(qsa_layer, "mtp_window_scan_tokens", 0) or 0)
++            if self.qsa_scan_cap:
++                cap_tokens = qsa_layer.pooled.shape[0] * qsa_layer.pooled.shape[1] * idx.compress_ratio
++                assert self.qsa_threshold < self.qsa_scan_cap <= cap_tokens, \
++                    "EXL3_MTP_KV_WINDOW: scan clamp must exceed the sparse threshold and fit the pooled plane"
+             self.bc.set_qsa(
+                 qk_proj = idx.index_qk_proj.inner.bc,
+                 q_norm_w = idx.q_layernorm.weight.data.half().contiguous(),
+@@ -582,6 +591,11 @@
+                 # caller's position sources; selection reads per-job device cache lengths.
+                 if bsz == 1:
+                     position = int(host_seqlens[0].item())
++                # EXL3_MTP_KV_WINDOW: scan one ring cycle of the windowed draft cache (regime and rope
++                # position above were decided on the true length; the tail block comes from the
++                # device cache lengths). Unset: qsa_scan_cap is 0 and t_total is untouched
++                if self.qsa_scan_cap and t_total > self.qsa_scan_cap:
++                    t_total = self.qsa_scan_cap
+ 
+         # The captured graph freezes the inv_freq table geometry (table flag, stride, partial
+         # head dim) and the causality of the attention kernels, so either changing means
+--- /dev/null
++++ b/cache/mtp_window.py
+@@ -0,0 +1,165 @@
++from __future__ import annotations
++import os
++import torch
++from ..constants import PAGE_SIZE
++
++# EXL3_MTP_KV_WINDOW=<tokens> (default unset = off): windowed KV cache for the MTP draft layer.
++#
++# Served layout: the draft cache is a full-size twin of the main cache (same max_num_tokens, same
++# page indices), so the MTP layer pays one attention layer's worth of the page pool. With the flag
++# set, a Cache built for an MTP draft model (caps "mtp_draft") holds only
++#     slots x pages_per_slot pages,  pages_per_slot = tokens / PAGE_SIZE + 1
++# i.e. one sink page (positions 0..255) plus tokens / PAGE_SIZE ring pages per concurrent sequence.
++# Slot s owns physical pages [s * P, (s + 1) * P). A sequence's draft block-table row maps logical
++# page q to s * P for q == 0 and to s * P + 1 + (q - 1) % (P - 1) otherwise: the identity over the
++# first P pages, then every newer page lands on the ring page that held the page P - 1 before it.
++# Positions stay absolute (rope, pooled-key rope, causal bounds and every plane address are what the
++# served kernels compute), so every write and read of the draft layer goes through the same kernels
++# with a different block table; nothing reads outside the slot's own pages.
++#
++# What the draft layer then sees: up to P * PAGE_SIZE tokens (exact below that), beyond it the sink
++# page plus the most recent (P - 1) pages, the page being written included; the graph-captured sparse
++# scan is clamped to one ring cycle (BC_Attention.qsa_scan_cap) so each ring page is scored once.
++# Only the draft layer's attention changes, so only draft proposals (and acceptance) can change:
++# verification runs the target model on the main cache, whose layout and bytes are untouched.
++
++
++def _parse_window(raw: str | None) -> int:
++    if raw is None or raw.strip() == "":
++        return 0
++    try:
++        tokens = int(raw)
++    except ValueError:
++        raise ValueError(f"EXL3_MTP_KV_WINDOW must be an integer token count, got {raw!r}")
++    if tokens < 0:
++        raise ValueError(f"EXL3_MTP_KV_WINDOW must be >= 0, got {tokens}")
++    if tokens % PAGE_SIZE:
++        raise ValueError(f"EXL3_MTP_KV_WINDOW must be a multiple of the page size {PAGE_SIZE}, got {tokens}")
++    if tokens and tokens < 2 * PAGE_SIZE:
++        raise ValueError(f"EXL3_MTP_KV_WINDOW must be 0 (off) or at least {2 * PAGE_SIZE}, got {tokens}")
++    return tokens
++
++
++MTP_KV_WINDOW = _parse_window(os.environ.get("EXL3_MTP_KV_WINDOW"))
++
++
++def window_pages(window_tokens: int) -> int:
++    """Pages per slot: the sink page plus window_tokens / PAGE_SIZE ring pages."""
++    assert window_tokens > 0 and window_tokens % PAGE_SIZE == 0
++    return window_tokens // PAGE_SIZE + 1
++
++
++def window_pool_tokens(window_tokens: int, slots: int) -> int:
++    """max_num_tokens of the windowed draft cache for `slots` concurrent sequences."""
++    return window_pages(window_tokens) * PAGE_SIZE * slots
++
++
++def window_offsets(pages_per_slot: int, width: int) -> torch.Tensor:
++    """(width,) int32 offsets of logical pages 0..width-1 inside a slot's page run."""
++    assert pages_per_slot >= 2
++    q = torch.arange(width, dtype = torch.int32)
++    return torch.where(q == 0, q, 1 + (q - 1) % (pages_per_slot - 1)).to(torch.int32)
++
++
++class MTPWindow:
++    """Geometry of a windowed draft cache (attached to the Cache as cache.mtp_window)."""
++
++    def __init__(self, window_tokens: int, slots: int):
++        assert slots >= 1
++        self.window_tokens = window_tokens
++        self.slots = slots
++        self.pages_per_slot = window_pages(window_tokens)
++        # One ring cycle: the widest logical span that maps every page of a slot exactly once
++        self.scan_tokens = self.pages_per_slot * PAGE_SIZE
++        self.pool_tokens = window_pool_tokens(window_tokens, slots)
++
++    def __repr__(self):
++        return (f"MTPWindow(window_tokens={self.window_tokens}, slots={self.slots}, "
++                f"pages_per_slot={self.pages_per_slot}, pool_tokens={self.pool_tokens})")
++
++
++def ring_page(q: int, pages_per_slot: int) -> int:
++    """Offset of logical page q inside its slot's page run (the scalar form of window_offsets)."""
++    return 0 if q == 0 else 1 + (q - 1) % (pages_per_slot - 1)
++
++
++def release_tags(pages_per_slot: int, kv_position: int, page_hash, next_token) -> list:
++    """
++    What a slot holds when its job leaves the active set with kv_position committed tokens: one tag
++    (logical page, chained page hash, first token of the next page) per ring page that holds a whole
++    committed page, None elsewhere. A draft K/V row at position p depends on the tokens up to p + 1
++    (the MTP input pairs the target state of p with the embedding of p + 1), hence the next token.
++    Left out: the page being written (partial) and the ring page it shares with, and the ring page
++    of the next logical page, which rejected draft steps may have written past the committed end.
++    page_hash(L) / next_token(L) return None when unknown (the tag is then dropped).
++    """
++    P = pages_per_slot
++    tags = [None] * P
++    c = kv_position // PAGE_SIZE
++    for L in range(c):
++        if L and L <= c + 2 - P:
++            continue
++        h = page_hash(L)
++        t = next_token(L)
++        if h is None or t is None:
++            continue
++        tags[ring_page(L, P)] = (L, h, t)
++    return tags
++
++
++class MTPWindowSlots:
++    """
++    Slot leases for active jobs. A job is granted a slot on its first draft-cache access and keeps it
++    until it leaves the active set (completion, requeue, cancel, failure, clear_queue). On release
++    the slot keeps tags of the whole committed pages it still holds (release_tags). A grant takes
++    the free slot with the most tags matching the new job's prompt (a follow-up turn, a requeued job
++    or a prefix revived from the prompt cache / CPU tier / NVMe tier skips the prefill of those pages
++    and has no other source of draft K/V for them), ties to the slot released longest ago, and
++    reports every ring page without a matching tag: the caller clears those pages, so a revived span
++    reads either its own draft K/V or zeros, never another sequence's.
++    """
++
++    def __init__(self, slots: int, pages_per_slot: int):
++        self.slots = slots
++        self.pages_per_slot = pages_per_slot
++        self.free = list(range(slots))                                # release order, oldest first
++        self.leases = {}                                              # job key -> slot
++        self.tags = [[None] * pages_per_slot for _ in range(slots)]  # per free slot, see release_tags
++
++    def lookup(self, key):
++        return self.leases.get(key)
++
++    def grant(self, key, match = None, alive = None) -> tuple[int, list[int]]:
++        """(slot, ring pages to clear). match(tag) -> bool tests a tag against the new job."""
++        slot = self.leases.get(key)
++        if slot is not None:
++            return slot, []
++        if not self.free and alive is not None:
++            # Reclaim leases of jobs that left the active set without an explicit release
++            for stale in [k for k in self.leases if k not in alive]:
++                self.release(stale)
++        if not self.free:
++            raise RuntimeError(
++                f"EXL3_MTP_KV_WINDOW: all {self.slots} draft window slots are leased; the draft cache "
++                f"must be built with at least max_batch_size slots"
++            )
++        def valid(tag):
++            return tag is not None and match is not None and match(tag)
++        best, best_n = 0, -1
++        for i, s in enumerate(self.free):
++            n = sum(1 for tag in self.tags[s] if valid(tag))
++            if n > best_n:
++                best, best_n = i, n
++        slot = self.free.pop(best)
++        stale = [r for r, tag in enumerate(self.tags[slot]) if not valid(tag)]
++        self.tags[slot] = [None] * self.pages_per_slot
++        self.leases[key] = slot
++        return slot, stale
++
++    def release(self, key, tags = None) -> None:
++        slot = self.leases.pop(key, None)
++        if slot is None:
++            return
++        assert tags is None or len(tags) == self.pages_per_slot
++        self.tags[slot] = list(tags) if tags is not None else [None] * self.pages_per_slot
++        self.free.append(slot)

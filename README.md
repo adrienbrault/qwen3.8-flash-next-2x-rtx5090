@@ -65,12 +65,15 @@ Read from the box on 2026-09-19; every number in this README was measured in thi
 
 ## In progress (2026-09-19)
 
-- R563: the served stack ported onto upstream ExLlamaV3 `dev` (`1d64111`). At the served 966,656 tokens × 8 slots it does not boot (`Insufficient VRAM in split for model and cache`, 2026-09-19 18:00 UTC); the run in progress finds the largest pool it boots at, then compares paired decode on 48 prompts, prefill and free VRAM against the served image, and upstream's fused shared-expert launch against our side-stream overlap.
-- R564: an instrument that records the MTP draft head's top 4 tokens per position and where the target's token ranks on a rejection, to decide whether two draft chains at 1 stream would pay.
-- R566: 17–32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows (bit-identical to running the rows in 16-row chunks), measured at 4 / 5 / 6 / 8 streams with depth 2 or 3 above 4 jobs; the same run measures depth 2 at exactly 5 jobs (15 rows, already on the fast kernels).
-- Kernel rounds: one fused hyper-connection mixer kernel per site, and fused GDN decode kernels ([R562][r562] counts about 1,570 kernel launches per 8-stream step, averaging 11.4 µs).
+- A windowed MTP draft cache ([R569][r569], [R573][r573]): a sink page plus the last 16,384 tokens per slot frees about 930 MiB on cuda:0, the loader moves a layer there, and cuda:1 — the card that bounds the page pool — gains 1,884 MiB, which laddered to 1,015,808 tokens. Decode gains 0.2 to 1.6 % at short context and 4.7 % on a cold 100k-token prompt, and needles stay 5/5. It was promoted and [rolled back][r575] the same evening: 901 MiB of free VRAM on cuda:0 is not enough to capture a decode graph for a batch size first seen under load. The next attempt ladders with a full 1-to-8-stream ramp at each pool.
+- A draft policy that keeps 5 streams inside the fast MoE decode path's 16-row limit: `[[4, 3], [5, 2], [8, 1]]` reads +17.3 % at 5 streams and −3.1 % on 6-stream prose ([R570][r570]); queued for promotion with that trade accepted.
+- Upstream's tiled hyper-connection prefill mix ([`825db5b`][exl3-825db5b]) ported onto this stack behind one flag: worth +14.0 % at 60k and +11.4 % at 120k where it was measured upstream ([R568][r568]), at 302 MiB per card there and a claimed 2.1 MiB here.
+- One fused kernel per layer for the GDN linear-attention decode block, claimed bit-exact; GDN is 0.80 ms of a 13.9 ms 1-stream step ([R519][r519]).
+- Mixed draft depth per job inside one verify batch, so 6 and 7 streams can fill the 16-row budget the way 5 streams would.
 
 ## Measured and not served
+
+17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, and −14.5 % at 8 streams against drafting one token ([R566][r566]). Draft depth 4 at 1 stream, with or without a controller: it costs 32,768 page-pool tokens and returns at most about +2 % ([R567][r567]). Two draft chains verified together: +5 to +6.5 % more accepted tokens for twice the verify rows, modelled at −10 to −13 % ([R564][r564]). A 4,096-token prefill chunk: does not boot beside the page pool ([R574][r574]). The served stack on upstream `dev`: −49,152 pool tokens and 1–3 % decode ([R563][r563]).
 
 Draft depth 2 above 4 jobs: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows leave the fast MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]). Prefill chunk 1,024 or 512 instead of 2,048: running streams get 1.5× the decode frames while another request prefills, but cold prefill runs at about half the rate and the new request waits 1.4–1.7× longer for its first token ([R553][r553]). The MTP draft's embedding copy on cuda:0: +16,384 pool tokens for −1.8 % code and −2.0 % prose at 1 stream ([R555][r555]). Adaptive MTP draft depth, round 2: −2.4 to −3.5 % prose at 1 stream, no gain on code ([R556][r556]). A deeper MTP draft for a single decoding job (depth 4 or 5 instead of 3), all arms at a 753,664-token pool: +4.8 / +5.2 % code and −5.4 / −8.2 % prose at 1 stream against depth 3, 16,384 / 49,152 fewer pool tokens than the served 819,200, and a different greedy output (2026-09-19, [R537][r537]). The K=3 MoE decode kernel without register spills: bit-exact, slower per call in 28 of 30 kernel cells, −0.37 % code at c1 over 8 boots with a 95 % interval of −0.83 to +0.09 % (2026-09-19, [R536][r536]). Recurrent checkpoints stored at the end of each reply are correct but save about 9k prefill tokens over a 120-call agent replay, below its run-to-run spread ([R524][r524]). A fused shared-expert kernel: after the side-stream overlap the shared expert's residual is 1.9 µs per layer at 4 rows, at most 0.6 % of a 1-stream step and 1.2 % at 4 streams ([R521][r521]); `EXL3_INT8_GEMV=0`, −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay, before bf16 GDN state halved the per-slot cost ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
 
@@ -127,6 +130,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [ckpt-250]: https://huggingface.co/r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw
 [ckpt-turbo]: https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3
 [exl3]: https://github.com/turboderp-org/exllamav3
+[exl3-825db5b]: https://github.com/turboderp-org/exllamav3/commit/825db5b
 [exl3-convert]: https://github.com/turboderp-org/exllamav3/blob/master/doc/convert.md
 [tabby]: https://github.com/theroyallab/tabbyAPI
 [llguidance]: https://github.com/guidance-ai/llguidance
@@ -242,6 +246,17 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r562]: bench/results/r562-profile-c8.md
 [r559]: bench/results/r559-ngram-prefetch.md
 [r565]: bench/results/r565-promote-ngram-prefetch.md
+[r563]: bench/results/r563-rebase-dev.md
+[r564]: bench/results/r564-draft-topk.md
+[r566]: bench/results/r566-moe-rows32.md
+[r567]: bench/results/r567-adaptive-draft-r3.md
+[r568]: bench/results/r568-rebase-prefill.md
+[r569]: bench/results/r569-mtp-kv-window.md
+[r570]: bench/results/r570-c5-draft-policy.md
+[r572]: bench/results/r572-mtp-acceptance.md
+[r573]: bench/results/r573-mtp-kv-window-screen.md
+[r574]: bench/results/r574-chunk4096.md
+[r575]: bench/results/r575-promote-mtp-kv-window.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md
 [r522]: bench/results/r522-mtp-pruned.md

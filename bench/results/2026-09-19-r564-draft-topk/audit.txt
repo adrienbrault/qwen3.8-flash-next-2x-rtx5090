@@ -1,0 +1,45 @@
+2026-09-19T19:50:55+00:00 [r564] building tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-topkstats on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (python only)
+2026-09-19T19:51:06+00:00 [r564] build OK: Step 5/5 : RUN python3 /opt/draft-topk-r1/install.py &&     python3 -m py_compile /opt/draft-topk-r1/tests/estimate_two_chain.py /opt/draft-topk-r1/tests/collect_topk.py &&     env -u EXL3_DRAFT_TOPK_STATS python3 -c "import exllamav3.gener
+2026-09-19T19:51:06+00:00 [r564] lock held; served at entry: <no answer>
+2026-09-19T19:51:33+00:00 [r564] UP A: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-topkstats, topk env: 0; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[A code]   c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[A code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 196.1, "per_stream_wall_tps": 196.1, "decode_tps": 198.7, "ttft_s": 0.137}
+[A code]   c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 196.2, "per_stream_wall_tps": 196.2, "decode_tps": 198.8, "ttft_s": 0.137}
+[A prose]   c=1 warm-up round ctx~0: 10.9 s (not recorded)
+[A prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 195.1, "per_stream_wall_tps": 195.1, "decode_tps": 197.4, "ttft_s": 0.131}
+[A prose]   c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 195.0, "per_stream_wall_tps": 195.0, "decode_tps": 197.4, "ttft_s": 0.131}
+2026-09-19T19:53:03+00:00 [r564] UP B: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16-topkstats, topk env: 1; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[B code]   c=1 warm-up round ctx~0: 11.0 s (not recorded)
+[B code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 192.7, "per_stream_wall_tps": 192.7, "decode_tps": 195.2, "ttft_s": 0.138}
+[B code]   c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 192.3, "per_stream_wall_tps": 192.3, "decode_tps": 194.7, "ttft_s": 0.138}
+[B prose]   c=1 warm-up round ctx~0: 11.1 s (not recorded)
+[B prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 191.4, "per_stream_wall_tps": 191.4, "decode_tps": 193.7, "ttft_s": 0.131}
+[B prose]   c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 191.4, "per_stream_wall_tps": 191.3, "decode_tps": 193.6, "ttft_s": 0.131}
+19:53:47.518 WARNING:  EXL3_DRAFT_TOPK_STATS: job #8 tokens=2048 rounds=804
+19:53:58.220 WARNING:  EXL3_DRAFT_TOPK_STATS: job #9 tokens=2048 rounds=804
+19:54:08.922 WARNING:  EXL3_DRAFT_TOPK_STATS: job #10 tokens=2048 rounds=804
+2026-09-19T19:54:08+00:00 [r564] JSONL before collect: 4962 lines (B screens)
+2026-09-19T19:54:08+00:00 [r564] collect: 24 code + 24 prose, c1, 512 forced
+2026-09-19T19:56:23+00:00 [r564] JSONL: 9690 lines, 48 requests; 0 writer failures
+== code: 4728 rounds
+  per-position accept/r2/r3/r4/miss: p0=3415/564/219/107/423 p1=2433/358/158/76/382 p2=1726/243/107/54/300
+  p0 calibration (bin acc/rej, 0.0->1.0): 0/10 44/150 158/271 234/263 270/207 280/153 270/118 292/64 317/47 1550/30
+  p1 calibration (bin acc/rej, 0.0->1.0): 0/5 27/90 102/188 120/176 165/133 157/141 165/79 186/62 237/45 1274/55
+  p2 calibration (bin acc/rej, 0.0->1.0): 0/4 13/79 59/122 85/122 97/104 96/78 117/62 118/34 118/43 1023/56
+  (b) two chains branch@1 depth3 (8 rows): E[tokens/step] 2.735 vs served 2.604 (+5.0 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.050 x the 4-row step (= 1.183 linear model) -> modelled throughput -11.2 %
+  (b-lo) two chains branch@1, zero continuation (8 rows): E[tokens/step] 2.680 vs served 2.604 (+2.9 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.029 x the 4-row step (= 1.183 linear model) -> modelled throughput -13.0 %
+  (c) two chains branch@0 @t0.5 (8 rows): E[tokens/step] 2.773 vs served 2.604 (+6.5 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.065 x the 4-row step (= 1.183 linear model) -> modelled throughput -10.0 %
+  (d) single chain depth 4 (5 rows, extrapolated): E[tokens/step] 2.865 vs served 2.604 (+10.0 % tokens), rows 5 (14.55 ms vs 13.91 ms modelled, 1.046 step ratio); pays iff the real 5-row step stays under 1.100 x the 4-row step (= 1.046 linear model) -> modelled throughput +5.2 %
+  (d) single chain depth 5 (6 rows, extrapolated): E[tokens/step] 3.050 vs served 2.604 (+17.1 % tokens), rows 6 (15.18 ms vs 13.91 ms modelled, 1.091 step ratio); pays iff the real 6-row step stays under 1.171 x the 4-row step (= 1.091 linear model) -> modelled throughput +7.3 %
+== prose: 4914 rounds
+  per-position accept/r2/r3/r4/miss: p0=3578/509/186/117/524 p1=2339/393/166/98/574 p2=1473/263/101/62/437
+  p0 calibration (bin acc/rej, 0.0->1.0): 0/2 13/62 43/147 76/217 168/212 213/205 227/142 277/128 359/112 2202/109
+  p1 calibration (bin acc/rej, 0.0->1.0): 1/7 9/83 28/144 78/190 94/170 118/165 148/140 158/109 246/106 1459/117
+  p2 calibration (bin acc/rej, 0.0->1.0): 1/5 5/46 20/85 40/103 59/124 84/106 85/97 100/100 125/89 954/108
+  (b) two chains branch@1 depth3 (8 rows): E[tokens/step] 2.639 vs served 2.506 (+5.3 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.053 x the 4-row step (= 1.183 linear model) -> modelled throughput -11.0 %
+  (b-lo) two chains branch@1, zero continuation (8 rows): E[tokens/step] 2.586 vs served 2.506 (+3.2 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.032 x the 4-row step (= 1.183 linear model) -> modelled throughput -12.8 %
+  (c) two chains branch@0 @t0.5 (8 rows): E[tokens/step] 2.588 vs served 2.506 (+3.3 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.033 x the 4-row step (= 1.183 linear model) -> modelled throughput -12.7 %
+  (d) single chain depth 4 (5 rows, extrapolated): E[tokens/step] 2.696 vs served 2.506 (+7.6 % tokens), rows 5 (14.55 ms vs 13.91 ms modelled, 1.046 step ratio); pays iff the real 5-row step stays under 1.076 x the 4-row step (= 1.046 linear model) -> modelled throughput +2.9 %
+  (d) single chain depth 5 (6 rows, extrapolated): E[tokens/step] 2.815 vs served 2.506 (+12.3 % tokens), rows 6 (15.18 ms vs 13.91 ms modelled, 1.091 step ratio); pays iff the real 6-row step stays under 1.123 x the 4-row step (= 1.091 linear model) -> modelled throughput +2.9 %
+2026-09-19T19:56:23+00:00 [r564] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T19:56:24+00:00 [r564] === R564 DONE ===

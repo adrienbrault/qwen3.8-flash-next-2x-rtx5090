@@ -1,0 +1,12 @@
+2026-09-19T21:00:36+00:00 [r574] lock held; served at entry: <no answer>
+2026-09-19T21:00:53+00:00 [r574] UP S: chunk 2048; free at boot 2085/867/; c1 f4add302e176d78e
+[S loaded]   c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 200.9, "per_stream_wall_tps": 50.7, "decode_tps": 51.8, "ttft_s": 0.463}
+2026-09-19T21:02:06+00:00 [r574] S loaded survival: alive
+2026-09-19T21:02:22+00:00 [r574] NO BOOT C4 (Restarting (1) Less than a second ago): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T21:02:22+00:00 [r574] NO BOOT C4
+pf-S-120000: 9976, 10067, 10038 mean 10027
+pf-S-30000: 9250, 9469, 9507 mean 9409
+pf-S-60000: 9931, 9962, 9548 mean 9814
+C4 NO: arm missing
+2026-09-19T21:02:22+00:00 [r574] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T21:02:22+00:00 [r574] === R574 DONE ===

@@ -1,0 +1,40 @@
+2026-09-19T19:12:52+00:00 [r567] EXTRA_ENV for every arm (live minus EXL3_NGRAM_PREFETCH2): EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1
+2026-09-19T19:12:52+00:00 [r567] prose criterion: ALTERNATIVE (point >= -1.0 % and CI upper >= 0), chosen before the first boot
+2026-09-19T19:12:52+00:00 [r567] building tabbyapi:adaptive-draft-r3-gdnbf16 on tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16 (before the lock)
+2026-09-19T19:12:52+00:00 [r567] build OK: image sha256:7793bd7633bb
+2026-09-19T19:12:52+00:00 [r567] lock held; served at entry: <no answer>
+2026-09-19T19:12:52+00:00 [r567] P = 933888 from try 1's ladder (pool cost 32,768)
+2026-09-19T19:13:10+00:00 [r567] UP S: draft_num_tokens_by_batch: [[4, 3], [8, 1]]; free at boot 2085/867, after first request 2079/859/; c1 f4add302e176d78e; no adaptive line
+2026-09-19T19:16:22+00:00 [r567] S done; VRAM free 2045/827/; new verify shapes: 
+2026-09-19T19:16:40+00:00 [r567] UP F4: draft_num_tokens_by_batch: [[1, 4], [4, 3], [8, 1]]; free at boot 2063/907, after first request 2059/897/; c1 c334067d7b89f20b; no adaptive line
+2026-09-19T19:19:53+00:00 [r567] F4 done; VRAM free 2025/867/; new verify shapes: 
+2026-09-19T19:20:11+00:00 [r567] UP R3: draft_num_tokens_by_batch: [[1, 4], [4, 3], [8, 1]]; free at boot 2063/905, after first request 2051/893/; c1 e3e01aa9339a3042; EXL3_ADAPTIVE_DRAFT3=1: cost 0.13, floor policy [[4, 3], [8, 1]] (floor 3 at 1 job), cap 4 (EXL3_ADAPTIVE_DRAFT3_MAX 4, history 4), max_batch 1, probe every 16, prior_n 4.0, context on, sweep on, log on
+2026-09-19T19:23:19+00:00 [r567] R3 done; VRAM free 2019/859/; new verify shapes: 
+2026-09-19T19:23:37+00:00 [r567] UP R3n: draft_num_tokens_by_batch: [[1, 4], [4, 3], [8, 1]]; free at boot 2063/905, after first request 2051/893/; c1 63be58f51c5eee01; EXL3_ADAPTIVE_DRAFT3=1: cost 0.13, floor policy [[4, 3], [8, 1]] (floor 3 at 1 job), cap 4 (EXL3_ADAPTIVE_DRAFT3_MAX 4, history 4), max_batch 1, probe every 16, prior_n 4.0, context off, sweep on, log on
+2026-09-19T19:26:45+00:00 [r567] R3n done; VRAM free 2019/859/; new verify shapes: 
+[Sx vs R3x] code c1: 24 prompts, per-request decode_tps Sx 197.0 / R3x 200.4; paired geo-mean R3x/Sx +1.70 %, 95 % CI [-2.03, +5.52] %; per-prompt range -12.8 .. +21.9 %; short Sx 0 / R3x 0
+[Sx vs R3x] code c4: 24 prompts, per-request decode_tps Sx 125.6 / R3x 126.3; paired geo-mean R3x/Sx +0.54 %, 95 % CI [-2.23, +3.42] %; per-prompt range -13.8 .. +16.2 %; short Sx 0 / R3x 0
+[Sx vs R3x] prose c1: 24 prompts, per-request decode_tps Sx 195.4 / R3x 200.4; paired geo-mean R3x/Sx +2.37 %, 95 % CI [+0.29, +4.29] %; per-prompt range -8.5 .. +8.2 %; short Sx 0 / R3x 0
+[Sx vs R3x] prose c4: 24 prompts, per-request decode_tps Sx 116.1 / R3x 119.8; paired geo-mean R3x/Sx +3.03 %, 95 % CI [+1.97, +4.00] %; per-prompt range -4.4 .. +7.5 %; short Sx 0 / R3x 0
+[Sx vs F4x] code c1: 24 prompts, per-request decode_tps Sx 197.0 / F4x 195.3; paired geo-mean F4x/Sx -0.83 %, 95 % CI [-4.60, +3.09] %; per-prompt range -22.2 .. +19.9 %; short Sx 0 / F4x 0
+[Sx vs F4x] code c4: 24 prompts, per-request decode_tps Sx 125.6 / F4x 127.9; paired geo-mean F4x/Sx +1.84 %, 95 % CI [-0.36, +4.27] %; per-prompt range -8.3 .. +14.8 %; short Sx 0 / F4x 0
+[Sx vs F4x] prose c1: 24 prompts, per-request decode_tps Sx 195.4 / F4x 191.9; paired geo-mean F4x/Sx -2.43 %, 95 % CI [-5.76, +1.12] %; per-prompt range -18.3 .. +12.8 %; short Sx 0 / F4x 0
+[Sx vs F4x] prose c4: 24 prompts, per-request decode_tps Sx 116.1 / F4x 121.4; paired geo-mean F4x/Sx +4.49 %, 95 % CI [+2.93, +5.89] %; per-prompt range -5.2 .. +9.7 %; short Sx 0 / F4x 0
+[F4x vs R3x] code c1: 24 prompts, per-request decode_tps F4x 195.3 / R3x 200.4; paired geo-mean R3x/F4x +2.56 %, 95 % CI [-1.26, +6.11] %; per-prompt range -18.4 .. +21.8 %; short F4x 0 / R3x 0
+[F4x vs R3x] code c4: 24 prompts, per-request decode_tps F4x 127.9 / R3x 126.3; paired geo-mean R3x/F4x -1.28 %, 95 % CI [-3.58, +0.69] %; per-prompt range -17.2 .. +4.0 %; short F4x 0 / R3x 0
+[F4x vs R3x] prose c1: 24 prompts, per-request decode_tps F4x 191.9 / R3x 200.4; paired geo-mean R3x/F4x +4.93 %, 95 % CI [+1.50, +8.36] %; per-prompt range -13.3 .. +24.6 %; short F4x 0 / R3x 0
+[F4x vs R3x] prose c4: 24 prompts, per-request decode_tps F4x 121.4 / R3x 119.8; paired geo-mean R3x/F4x -1.39 %, 95 % CI [-2.91, +0.17] %; per-prompt range -10.6 .. +7.1 %; short F4x 0 / R3x 0
+[Sx vs R3nx] code c1: 24 prompts, per-request decode_tps Sx 197.0 / R3nx 198.8; paired geo-mean R3nx/Sx +0.79 %, 95 % CI [-3.52, +4.98] %; per-prompt range -23.3 .. +21.1 %; short Sx 0 / R3nx 0
+[Sx vs R3nx] code c4: 24 prompts, per-request decode_tps Sx 125.6 / R3nx 129.9; paired geo-mean R3nx/Sx +3.40 %, 95 % CI [+0.98, +6.13] %; per-prompt range -6.8 .. +22.6 %; short Sx 0 / R3nx 0
+[Sx vs R3nx] prose c1: 24 prompts, per-request decode_tps Sx 195.4 / R3nx 200.1; paired geo-mean R3nx/Sx +2.32 %, 95 % CI [+0.29, +4.16] %; per-prompt range -12.0 .. +10.4 %; short Sx 0 / R3nx 0
+[Sx vs R3nx] prose c4: 24 prompts, per-request decode_tps Sx 116.1 / R3nx 121.7; paired geo-mean R3nx/Sx +4.71 %, 95 % CI [+3.35, +5.99] %; per-prompt range -2.6 .. +10.7 %; short Sx 0 / R3nx 0
+[R3x vs R3nx] code c1: 24 prompts, per-request decode_tps R3x 200.4 / R3nx 198.8; paired geo-mean R3nx/R3x -0.90 %, 95 % CI [-4.98, +3.37] %; per-prompt range -19.8 .. +19.7 %; short R3x 0 / R3nx 0
+[R3x vs R3nx] code c4: 24 prompts, per-request decode_tps R3x 126.3 / R3nx 129.9; paired geo-mean R3nx/R3x +2.85 %, 95 % CI [+1.08, +5.01] %; per-prompt range -4.7 .. +22.0 %; short R3x 0 / R3nx 0
+[R3x vs R3nx] prose c1: 24 prompts, per-request decode_tps R3x 200.4 / R3nx 200.1; paired geo-mean R3nx/R3x -0.05 %, 95 % CI [-1.80, +1.90] %; per-prompt range -7.6 .. +10.9 %; short R3x 0 / R3nx 0
+[R3x vs R3nx] prose c4: 24 prompts, per-request decode_tps R3x 119.8 / R3nx 121.7; paired geo-mean R3nx/R3x +1.63 %, 95 % CI [+0.31, +2.88] %; per-prompt range -5.2 .. +8.3 %; short R3x 0 / R3nx 0
+R3/S {'code c1': None, 'prose c1': None, 'code c4': None, 'prose c4': None}
+R3/F4 {'code c1': None, 'prose c1': None}
+R3 FAILS: missing R3/S rows -> promote nothing
+R3 per-request mean depth: n 98, mean 3.09, min 3.00, max 3.53
+2026-09-19T19:26:46+00:00 [r567] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T19:26:47+00:00 [r567] === R567 DONE ===

@@ -1,0 +1,31 @@
+2026-09-19T20:47:54+00:00 [r573] lock held; served at entry: <no answer>
+2026-09-19T20:47:54+00:00 [r573] === A: OFF vs W16 at [30, 30] @ 966,656 ===
+2026-09-19T20:48:12+00:00 [r573] UP A1: split 30, 30 pool 966656 W 0; free at boot 2085/867; c1 f4add302e176d78e; 
+[A1 deep c1]   c=1 run0 ctx~100000: {"conc": 1, "ctx_requested": 100000, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 134528, "aggregate_tps": 55.5, "per_stream_wall_tps": 55.6, "decode_tps": 205.4, "ttft_s": 13.427}
+[A1 c8@16k]   c=8 run0 ctx~16000: {"conc": 8, "ctx_requested": 16000, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 21608, "aggregate_tps": 219.4, "per_stream_wall_tps": 27.5, "decode_tps": 78.7, "ttft_s": 24.032}
+2026-09-19T20:52:37+00:00 [r573] UP B1: split 30, 30 pool 966656 W 16384; free at boot 1241/2751; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 966656)
+[B1 deep c1]   c=1 run0 ctx~100000: {"conc": 1, "ctx_requested": 100000, "n_ok": 1, "tokens_median": 1024, "prompt_tokens": 134528, "aggregate_tps": 58.1, "per_stream_wall_tps": 58.2, "decode_tps": 215.0, "ttft_s": 12.827}
+[B1 c8@16k]   c=8 run0 ctx~16000: {"conc": 8, "ctx_requested": 16000, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 21608, "aggregate_tps": 224.0, "per_stream_wall_tps": 28.2, "decode_tps": 81.1, "ttft_s": 23.861}
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+code c1: 24 prompts, per-request decode_tps A 197.9 / B 202.1; paired geo-mean B/A +1.89 %, 95 % CI [-1.00, +4.84] %; per-prompt range -9.7 .. +18.2 %; short A 0 / B 0
+code c4: 24 prompts, per-request decode_tps A 124.4 / B 127.1; paired geo-mean B/A +2.13 %, 95 % CI [-0.03, +4.55] %; per-prompt range -6.1 .. +20.8 %; short A 0 / B 0
+prose c1: 24 prompts, per-request decode_tps A 195.9 / B 199.0; paired geo-mean B/A +1.48 %, 95 % CI [-0.20, +3.18] %; per-prompt range -7.4 .. +9.1 %; short A 0 / B 0
+prose c4: 24 prompts, per-request decode_tps A 118.3 / B 120.0; paired geo-mean B/A +1.45 %, 95 % CI [-0.70, +3.72] %; per-prompt range -11.2 .. +14.3 %; short A 0 / B 0
+deep100k: OFF 205.4 W16 215.0 decode_tps per stream, W16/OFF 1.047
+c8ctx16k: OFF 79.4 W16 81.2 decode_tps per stream, W16/OFF 1.023
+2026-09-19T20:58:36+00:00 [r573] === B: split sweep with W16 ===
+2026-09-19T20:58:55+00:00 [r573] UP S29p5-1015808: split 29.5, 30.5 pool 1015808 W 16384; free at boot 901/2431; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1015808)
+[S29p5-1015808]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 621.4, "per_stream_wall_tps": 78.3, "decode_tps": 83.5, "ttft_s": 0.737}
+2026-09-19T20:59:18+00:00 [r573] [29.5, 30.5] 1015808: PASS
+2026-09-19T20:59:36+00:00 [r573] UP S29p5-1032192: split 29.5, 30.5 pool 1032192 W 16384; free at boot 821/2311; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1032192)
+2026-09-19T20:59:36+00:00 [r573] [29.5, 30.5] 1032192: free 821/2311 below floor 835
+2026-09-19T20:59:36+00:00 [r573] split [29.5, 30.5]: top pool 1015808
+2026-09-19T20:59:54+00:00 [r573] UP S29-1015808: split 29, 31 pool 1015808 W 16384; free at boot 901/2431; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1015808)
+[S29-1015808]   c=8 run0 ctx~0: {"conc": 8, "ctx_requested": 0, "n_ok": 8, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 628.4, "per_stream_wall_tps": 79.2, "decode_tps": 84.4, "ttft_s": 0.728}
+2026-09-19T21:00:17+00:00 [r573] [29, 31] 1015808: PASS
+2026-09-19T21:00:35+00:00 [r573] UP S29-1032192: split 29, 31 pool 1032192 W 16384; free at boot 821/2311; c1 18238d63065ee16c;  -- EXL3_MTP_KV_WINDOW: draft cache 8 slots x 65 pages = 133120 tokens (requested 1032192)
+2026-09-19T21:00:35+00:00 [r573] [29, 31] 1032192: free 821/2311 below floor 835
+2026-09-19T21:00:35+00:00 [r573] split [29, 31]: top pool 1015808
+2026-09-19T21:00:35+00:00 [r573] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T21:00:36+00:00 [r573] === R573 DONE ===

@@ -208,3 +208,14 @@ plausible value.
 
 **What it looks like:** the 30k greedy fingerprint differs between two requests in one boot.
 **What it is:** the second request reuses the first one's cached prefix, which changes the prefill shape. Gates take the first 30k request of a fresh boot only ([R511](../bench/results/r511-promote-2p50.md)).
+
+## Free VRAM at boot does not tell you a decode graph will fit
+
+A page pool that clears the boot-time headroom rule on both cards can still abort later with
+`GPU assert: out of memory exllamav3_ext/graph.cu 51`. CUDA graphs are captured per batch size, the first time that
+batch size decodes, and capture needs free VRAM at that moment. A round that measures 1, 4 and 8 streams never
+captures the 5-stream graph, so a gate that runs 5 concurrent requests is where it fails — which is what happened at
+1,015,808 tokens with 901 MiB free on cuda:0 (2026-09-19, [R575](../bench/results/r575-promote-mtp-kv-window.md)).
+
+Ladder each candidate pool with a full 1-to-8-stream ramp, one request per batch size, before trusting it.
+

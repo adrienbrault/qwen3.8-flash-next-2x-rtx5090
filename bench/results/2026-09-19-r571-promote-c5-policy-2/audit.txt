@@ -1,0 +1,120 @@
+142c142
+< DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [8, 1]]}
+---
+> DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [5, 2], [8, 1]]}
+2026-09-19T20:18:30+00:00 [r571] lock held; served at entry: <no answer> cache_size: 917504 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T20:18:30+00:00 [r571] === AB: 4 boots A B B A, A = live, B = candidate, tier off, pool 966656 x 8 ===
+2026-09-19T20:18:51+00:00 [r571] UP A1: draft_num_tokens_by_batch: [[4, 3], [8, 1]]; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[A1 c5 code]  c=5 warm-up round ctx~0: 11.0 s (not recorded)
+[A1 c5 code]  c=5 run0 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 483.1, "per_stream_wall_tps": 97.7, "decode_tps": 102.8, "ttft_s": 0.53}
+[A1 c5 code]  c=5 run1 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 473.3, "per_stream_wall_tps": 96.7, "decode_tps": 100.8, "ttft_s": 0.547}
+[A1 c5 code]  c=5 run2 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 492.8, "per_stream_wall_tps": 99.6, "decode_tps": 105.0, "ttft_s": 0.532}
+[A1 c5 code]  c=5 run3 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 472.4, "per_stream_wall_tps": 96.5, "decode_tps": 100.6, "ttft_s": 0.547}
+[A1 c6 code]  c=6 warm-up round ctx~0: 12.1 s (not recorded)
+[A1 c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 516.0, "per_stream_wall_tps": 86.0, "decode_tps": 90.7, "ttft_s": 0.605}
+[A1 c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 511.6, "per_stream_wall_tps": 85.3, "decode_tps": 90.3, "ttft_s": 0.663}
+[A1 c6 code]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 515.0, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.608}
+[A1 c6 code]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.5, "per_stream_wall_tps": 85.8, "decode_tps": 90.4, "ttft_s": 0.606}
+[A1 c6 prose]  c=6 warm-up round ctx~0: 12.1 s (not recorded)
+[A1 c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 533.5, "per_stream_wall_tps": 88.9, "decode_tps": 93.3, "ttft_s": 0.55}
+[A1 c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 510.7, "per_stream_wall_tps": 86.1, "decode_tps": 91.7, "ttft_s": 0.644}
+[A1 c6 prose]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 562.7, "per_stream_wall_tps": 93.8, "decode_tps": 99.0, "ttft_s": 0.585}
+[A1 c6 prose]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 514.6, "per_stream_wall_tps": 86.8, "decode_tps": 91.8, "ttft_s": 0.577}
+[A1 c7 code]  c=7 warm-up round ctx~0: 12.0 s (not recorded)
+[A1 c7 code]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 623.2, "per_stream_wall_tps": 89.5, "decode_tps": 94.2, "ttft_s": 0.646}
+[A1 c7 code]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 594.5, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.669}
+[A1 c7 code]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 602.0, "per_stream_wall_tps": 86.9, "decode_tps": 91.7, "ttft_s": 0.665}
+[A1 c7 code]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 628.7, "per_stream_wall_tps": 90.3, "decode_tps": 95.2, "ttft_s": 0.651}
+[A1 c7 prose]  c=7 warm-up round ctx~0: 12.2 s (not recorded)
+[A1 c7 prose]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 592.6, "per_stream_wall_tps": 86.0, "decode_tps": 90.7, "ttft_s": 0.628}
+[A1 c7 prose]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 586.1, "per_stream_wall_tps": 85.1, "decode_tps": 90.0, "ttft_s": 0.672}
+[A1 c7 prose]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 591.2, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.631}
+[A1 c7 prose]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 591.2, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.629}
+2026-09-19T20:24:07+00:00 [r571] UP B2: draft_num_tokens_by_batch: [[4, 3], [5, 2], [8, 1]]; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[B2 c5 code]  c=5 warm-up round ctx~0: 9.3 s (not recorded)
+[B2 c5 code]  c=5 run0 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 562.2, "per_stream_wall_tps": 112.7, "decode_tps": 119.7, "ttft_s": 0.547}
+[B2 c5 code]  c=5 run1 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 561.9, "per_stream_wall_tps": 112.6, "decode_tps": 119.7, "ttft_s": 0.551}
+[B2 c5 code]  c=5 run2 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 562.2, "per_stream_wall_tps": 112.6, "decode_tps": 119.8, "ttft_s": 0.554}
+[B2 c5 code]  c=5 run3 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 561.9, "per_stream_wall_tps": 112.6, "decode_tps": 119.7, "ttft_s": 0.548}
+[B2 c6 code]  c=6 warm-up round ctx~0: 11.9 s (not recorded)
+[B2 c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 509.6, "per_stream_wall_tps": 84.9, "decode_tps": 90.0, "ttft_s": 0.608}
+[B2 c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 515.0, "per_stream_wall_tps": 85.8, "decode_tps": 91.0, "ttft_s": 0.609}
+[B2 c6 code]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.1, "per_stream_wall_tps": 85.7, "decode_tps": 90.8, "ttft_s": 0.608}
+[B2 c6 code]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 513.5, "per_stream_wall_tps": 85.6, "decode_tps": 90.7, "ttft_s": 0.614}
+[B2 c6 prose]  c=6 warm-up round ctx~0: 12.0 s (not recorded)
+[B2 c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 509.8, "per_stream_wall_tps": 85.3, "decode_tps": 89.8, "ttft_s": 0.574}
+[B2 c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.4, "per_stream_wall_tps": 85.9, "decode_tps": 90.5, "ttft_s": 0.579}
+[B2 c6 prose]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.5, "per_stream_wall_tps": 86.0, "decode_tps": 90.4, "ttft_s": 0.572}
+[B2 c6 prose]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.5, "per_stream_wall_tps": 86.0, "decode_tps": 90.5, "ttft_s": 0.577}
+[B2 c7 code]  c=7 warm-up round ctx~0: 11.8 s (not recorded)
+[B2 c7 code]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 605.0, "per_stream_wall_tps": 87.5, "decode_tps": 92.6, "ttft_s": 0.666}
+[B2 c7 code]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 610.1, "per_stream_wall_tps": 88.2, "decode_tps": 93.5, "ttft_s": 0.675}
+[B2 c7 code]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 612.3, "per_stream_wall_tps": 88.5, "decode_tps": 94.7, "ttft_s": 0.649}
+[B2 c7 code]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 610.0, "per_stream_wall_tps": 88.2, "decode_tps": 93.5, "ttft_s": 0.673}
+[B2 c7 prose]  c=7 warm-up round ctx~0: 12.1 s (not recorded)
+[B2 c7 prose]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 591.2, "per_stream_wall_tps": 86.0, "decode_tps": 90.4, "ttft_s": 0.627}
+[B2 c7 prose]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 602.9, "per_stream_wall_tps": 87.8, "decode_tps": 91.7, "ttft_s": 0.612}
+[B2 c7 prose]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 578.5, "per_stream_wall_tps": 84.2, "decode_tps": 88.6, "ttft_s": 0.646}
+[B2 c7 prose]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 607.5, "per_stream_wall_tps": 88.5, "decode_tps": 92.5, "ttft_s": 0.618}
+2026-09-19T20:29:17+00:00 [r571] UP B3: draft_num_tokens_by_batch: [[4, 3], [5, 2], [8, 1]]; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[B3 c5 code]  c=5 warm-up round ctx~0: 9.1 s (not recorded)
+[B3 c5 code]  c=5 run0 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 563.7, "per_stream_wall_tps": 112.9, "decode_tps": 120.1, "ttft_s": 0.548}
+[B3 c5 code]  c=5 run1 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 563.1, "per_stream_wall_tps": 112.8, "decode_tps": 120.0, "ttft_s": 0.552}
+[B3 c5 code]  c=5 run2 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 564.0, "per_stream_wall_tps": 113.0, "decode_tps": 120.2, "ttft_s": 0.551}
+[B3 c5 code]  c=5 run3 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 563.2, "per_stream_wall_tps": 112.8, "decode_tps": 120.0, "ttft_s": 0.548}
+[B3 c6 code]  c=6 warm-up round ctx~0: 12.0 s (not recorded)
+[B3 c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 515.9, "per_stream_wall_tps": 86.0, "decode_tps": 91.1, "ttft_s": 0.61}
+[B3 c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.8, "per_stream_wall_tps": 85.8, "decode_tps": 90.9, "ttft_s": 0.608}
+[B3 c6 code]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 515.0, "per_stream_wall_tps": 85.8, "decode_tps": 91.0, "ttft_s": 0.608}
+[B3 c6 code]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.5, "per_stream_wall_tps": 85.8, "decode_tps": 91.0, "ttft_s": 0.619}
+[B3 c6 prose]  c=6 warm-up round ctx~0: 12.0 s (not recorded)
+[B3 c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 516.1, "per_stream_wall_tps": 86.4, "decode_tps": 90.9, "ttft_s": 0.573}
+[B3 c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 514.8, "per_stream_wall_tps": 86.2, "decode_tps": 90.7, "ttft_s": 0.572}
+[B3 c6 prose]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 516.2, "per_stream_wall_tps": 86.4, "decode_tps": 90.9, "ttft_s": 0.571}
+[B3 c6 prose]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 515.3, "per_stream_wall_tps": 86.3, "decode_tps": 90.8, "ttft_s": 0.577}
+[B3 c7 code]  c=7 warm-up round ctx~0: 11.8 s (not recorded)
+[B3 c7 code]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 616.5, "per_stream_wall_tps": 89.1, "decode_tps": 95.5, "ttft_s": 0.65}
+[B3 c7 code]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 611.7, "per_stream_wall_tps": 88.5, "decode_tps": 93.7, "ttft_s": 0.665}
+[B3 c7 code]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 613.1, "per_stream_wall_tps": 88.7, "decode_tps": 93.9, "ttft_s": 0.666}
+[B3 c7 code]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 611.6, "per_stream_wall_tps": 88.5, "decode_tps": 93.7, "ttft_s": 0.668}
+[B3 c7 prose]  c=7 warm-up round ctx~0: 12.1 s (not recorded)
+[B3 c7 prose]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 679.1, "per_stream_wall_tps": 98.1, "decode_tps": 104.8, "ttft_s": 0.674}
+[B3 c7 prose]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 599.7, "per_stream_wall_tps": 87.3, "decode_tps": 91.7, "ttft_s": 0.626}
+[B3 c7 prose]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 599.1, "per_stream_wall_tps": 87.2, "decode_tps": 91.7, "ttft_s": 0.632}
+[B3 c7 prose]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 608.9, "per_stream_wall_tps": 88.7, "decode_tps": 92.7, "ttft_s": 0.609}
+2026-09-19T20:34:24+00:00 [r571] UP A4: draft_num_tokens_by_batch: [[4, 3], [8, 1]]; boot free 2085/867; c1 f4add302e176d78e / 30k 4a255910dee2d9c5
+[A4 c5 code]  c=5 warm-up round ctx~0: 10.9 s (not recorded)
+[A4 c5 code]  c=5 run0 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 472.6, "per_stream_wall_tps": 96.5, "decode_tps": 100.6, "ttft_s": 0.548}
+[A4 c5 code]  c=5 run1 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 486.4, "per_stream_wall_tps": 98.3, "decode_tps": 103.5, "ttft_s": 0.531}
+[A4 c5 code]  c=5 run2 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 472.0, "per_stream_wall_tps": 96.4, "decode_tps": 100.5, "ttft_s": 0.547}
+[A4 c5 code]  c=5 run3 ctx~0: {"conc": 5, "ctx_requested": 0, "n_ok": 5, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 485.1, "per_stream_wall_tps": 98.1, "decode_tps": 103.2, "ttft_s": 0.53}
+[A4 c6 code]  c=6 warm-up round ctx~0: 12.0 s (not recorded)
+[A4 c6 code]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.9, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.607}
+[A4 c6 code]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 515.1, "per_stream_wall_tps": 85.8, "decode_tps": 90.5, "ttft_s": 0.605}
+[A4 c6 code]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 514.3, "per_stream_wall_tps": 85.7, "decode_tps": 90.4, "ttft_s": 0.611}
+[A4 c6 code]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 101, "aggregate_tps": 509.3, "per_stream_wall_tps": 84.9, "decode_tps": 89.4, "ttft_s": 0.606}
+[A4 c6 prose]  c=6 warm-up round ctx~0: 12.0 s (not recorded)
+[A4 c6 prose]  c=6 run0 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 589.8, "per_stream_wall_tps": 98.3, "decode_tps": 104.0, "ttft_s": 0.583}
+[A4 c6 prose]  c=6 run1 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.8, "per_stream_wall_tps": 86.6, "decode_tps": 91.6, "ttft_s": 0.572}
+[A4 c6 prose]  c=6 run2 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 513.8, "per_stream_wall_tps": 86.6, "decode_tps": 91.6, "ttft_s": 0.57}
+[A4 c6 prose]  c=6 run3 ctx~0: {"conc": 6, "ctx_requested": 0, "n_ok": 6, "tokens_median": 1024.0, "prompt_tokens": 89, "aggregate_tps": 529.0, "per_stream_wall_tps": 88.2, "decode_tps": 92.5, "ttft_s": 0.554}
+[A4 c7 code]  c=7 warm-up round ctx~0: 12.0 s (not recorded)
+[A4 c7 code]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 601.5, "per_stream_wall_tps": 86.8, "decode_tps": 91.7, "ttft_s": 0.665}
+[A4 c7 code]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 623.9, "per_stream_wall_tps": 89.7, "decode_tps": 94.4, "ttft_s": 0.65}
+[A4 c7 code]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 601.6, "per_stream_wall_tps": 86.9, "decode_tps": 91.7, "ttft_s": 0.665}
+[A4 c7 code]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 101, "aggregate_tps": 622.5, "per_stream_wall_tps": 89.5, "decode_tps": 94.1, "ttft_s": 0.646}
+[A4 c7 prose]  c=7 warm-up round ctx~0: 12.1 s (not recorded)
+[A4 c7 prose]  c=7 run0 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 592.2, "per_stream_wall_tps": 86.0, "decode_tps": 90.7, "ttft_s": 0.628}
+[A4 c7 prose]  c=7 run1 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 592.9, "per_stream_wall_tps": 86.1, "decode_tps": 90.8, "ttft_s": 0.633}
+[A4 c7 prose]  c=7 run2 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 610.7, "per_stream_wall_tps": 89.1, "decode_tps": 94.0, "ttft_s": 0.607}
+[A4 c7 prose]  c=7 run3 ctx~0: {"conc": 7, "ctx_requested": 0, "n_ok": 7, "tokens_median": 1024, "prompt_tokens": 89, "aggregate_tps": 586.6, "per_stream_wall_tps": 85.1, "decode_tps": 89.8, "ttft_s": 0.631}
+c5 code: A 479.7 (n 8) B 562.8 (n 8) B/A +17.3 %
+c6 code: A 513.8 (n 8) B 514.0 (n 8) B/A +0.0 %
+c6 prose: A 533.5 (n 8) B 514.1 (n 8) B/A -3.6 %
+c6 prose pooled with R570: A 530.2 (n 12) B 513.5 (n 12) B/A -3.1 %
+c7 code: A 612.2 (n 8) B 611.3 (n 8) B/A -0.2 %
+c7 prose: A 592.9 (n 8) B 608.3 (n 8) B/A +2.6 %
+AB STOP: c6 prose -3.1 % < -2 %
+2026-09-19T20:39:18+00:00 [r571] AB rule not met; not promoting
+2026-09-19T20:39:18+00:00 [r571] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T20:39:19+00:00 [r571] === R571 DONE ===

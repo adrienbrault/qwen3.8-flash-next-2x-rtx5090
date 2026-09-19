@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # R566 — moe-rows32 k3-r1 (Kimi K3 round, patches/exllamav3/moe-rows32/k3-r1): cooperative MoE decode for 17-32 verify rows,
 # EXL3_MOE_COOP_ROWS32=1 (default off = served bytes). split (default) = two <=16-row coop spans per layer, bit-identical to
+# try 2 (19:12 UTC): split bit-identical on both cards for 17..32 rows (router + hotspot); wide NOT repeatable (odd tails,
+# rel L2 0.7-1.4, a race) -> Q2w dropped, harness runs --skip-wide; the timing section's 2-D fallback forward crashed (fixed).
 # the chunked <=16-row path by construction; MODE=wide = one call (perf arm, not bit-identical for most tails). R560 / R562:
 # above 16 rows the MoE layers leave the coop kernels (2.4-2.9x kernel time, +6-10 ms non-kernel, 48 blocking syncs at 32
 # rows), which is why the served policy [[4, 3], [8, 1]] drops to depth 1 above 4 jobs (c6 513, c8 640 t/s).
@@ -18,7 +20,7 @@
 # over wide on a tie. A win -> promotion unit (replay + gates). Measurement only. GPU TIMEBOX 55 min. RUN (queued): r515-queue-chain.
 set -uo pipefail
 export HOME=$HOME PATH="$HOME/.local/bin:$PATH"
-R=/srv/qwen5090/results/2026-09-19-r566-moe-rows32; mkdir -p "$R"
+R=/srv/qwen5090/results/2026-09-19-r566-moe-rows32-try3; mkdir -p "$R"
 API=http://127.0.0.1:8022/v1
 NEWM=qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
 LIVE=/srv/qwen5090/launch-flashnext.sh
@@ -92,7 +94,7 @@ log "=== H: harness per card ==="
 hok=1
 for d in 0 1; do
   sudo timeout 900 docker run --rm --gpus all -e EXL3_MOE_COOP_V2=1 -v /srv/qwen5090/models:/models:ro -v "$R":/out --entrypoint python3 "$NIMG" \
-    /opt/moe-rows32-k3-r1/tests/gpu_rows32.py --device cuda:$d --json /out/harness-cuda$d.json > "$R/harness-cuda$d.log" 2>&1; hr=$?
+    /opt/moe-rows32-k3-r1/tests/gpu_rows32.py --device cuda:$d --json /out/harness-cuda$d.json --skip-wide > "$R/harness-cuda$d.log" 2>&1; hr=$?
   log "harness cuda:$d exit $hr: $(grep -aE 'PASS|FAIL|Error|equal' "$R/harness-cuda$d.log" | tail -2 | tr '\n' ' ' | cut -c1-240)"
   [ $hr = 0 ] || hok=0
 done
@@ -102,7 +104,7 @@ bench(){ local tag=$1 conc kind
     python3 "$FB" --url "$API" --model "$NEWM" --tag "$tag-c$conc-$kind" --kind $kind --tokens 1024 --warmup-runs 1 --conc $conc --runs 2 --out "$R/records.jsonl" 2>&1 \
       | grep -E "^  c=|FAILED|Traceback" | sed "s/^/[$tag c$conc $kind]/" | cut -c1-240 | tee -a "$R/audit.log"; done; done; }
 : > "$R/boots.tsv"
-for arm in P1 P5 Q2 Q3 Q2w; do
+for arm in P1 P5 Q2 Q3; do
   [ $(( END - $(date +%s) )) -lt 360 ] && { log "timebox: stopping before $arm"; break; }
   case $arm in
     P1) pol='[[4, 3], [8, 1]]'; ev="$LENV";;
@@ -136,7 +138,7 @@ m={t:st.mean(v) for t,v in agg.items()}
 for t in sorted(m): print(f"{t}: aggregate {m[t]:.1f} t/s (runs {len(agg[t])})")
 boots={l.split()[0]:l.split() for l in open(sys.argv[2]) if l.strip()}
 p1=boots.get("P1")
-for arm in ("Q2","Q3","Q2w"):
+for arm in ("Q2","Q3"):
     if arm not in boots or not p1: continue
     why=[]; rows=[]
     b=boots[arm]

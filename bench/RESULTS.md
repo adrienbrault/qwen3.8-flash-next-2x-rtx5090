@@ -4,6 +4,17 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-19
 
+- [R575: the windowed draft cache passed its A/B and four gates, then rolled back on a graph-capture out-of-memory](results/r575-promote-mtp-kv-window.md)
+- [R573: the windowed draft cache is faster at short and deep context, needles 5/5, best pool 1,015,808](results/r573-mtp-kv-window-screen.md)
+- [R574: a 4,096-token prefill chunk does not fit beside the page pool](results/r574-chunk4096.md)
+- [R572: what the MTP draft's acceptance rate depends on — 8-bit target KV costs 0.2 to 0.3 accepted drafts per round](results/r572-mtp-acceptance.md)
+- [R570 / R571: draft depth 2 at 5 streams, +17 % where the policy used to give up, −3 % on 6-stream prose](results/r570-c5-draft-policy.md)
+- [R569: a windowed draft cache frees the card that bounds the page pool; ladder 966,656 to 1,015,808](results/r569-mtp-kv-window.md)
+- [R568: the upstream rebase's prefill gain is one feature, +14 % at 60k](results/r568-rebase-prefill.md)
+- [R567: a deeper-draft controller gains too little for what draft depth 4 costs the page pool](results/r567-adaptive-draft-r3.md)
+- [R566: a draft policy fixes the 5-stream dip; 17–32 verify rows on the cooperative kernels do not](results/r566-moe-rows32.md)
+- [R564: two draft chains do not pay; the draft head's confidence is well calibrated](results/r564-draft-topk.md)
+- [R563: the served stack on upstream ExLlamaV3 `dev` costs pool and decode](results/r563-rebase-dev.md)
 - [R565: the n-gram row prefetch is served; +0.8 % code and +0.9 % prose at 1 stream over four boots, output unchanged](results/r565-promote-ngram-prefetch.md)
 - [R559: the n-gram embedding rows prefetched after the draft readback give byte-identical output; one boot per arm reads +0.7 to +2.0 % decode](results/r559-ngram-prefetch.md)
 - [R561: the daily serves 8 slots with a 966,656-token page pool](results/r561-promote-slots8.md)

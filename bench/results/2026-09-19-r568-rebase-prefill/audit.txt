@@ -1,0 +1,14 @@
+2026-09-19T20:15:32+00:00 [r568] lock held; served at entry: <no answer>
+2026-09-19T20:15:48+00:00 [r568] UP S: tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16; tiled env: 0 (1 = off); free at boot 2085/867/
+2026-09-19T20:16:49+00:00 [r568] UP T1: tabbyapi:rebase-dev-r1; tiled env: 0 (1 = off); free at boot 1943/773/
+2026-09-19T20:17:45+00:00 [r568] UP T0: tabbyapi:rebase-dev-r1; tiled env: 1 (1 = off); free at boot 2245/1075/
+pf-S-120000: 10208, 10038, 10020 mean 10088
+pf-S-60000: 9008, 9748, 9855 mean 9537
+pf-T0-120000: 10121, 9642, 10084 mean 9949
+pf-T0-60000: 9240, 9695, 9758 mean 9564
+pf-T1-120000: 11119, 11312, 11294 mean 11242
+pf-T1-60000: 10786, 10896, 10933 mean 10872
+60000: T1/S 1.140  T0/S 1.003  T1/T0 1.137
+120000: T1/S 1.114  T0/S 0.986  T1/T0 1.130
+2026-09-19T20:18:29+00:00 [r568] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T20:18:29+00:00 [r568] === R568 DONE ===

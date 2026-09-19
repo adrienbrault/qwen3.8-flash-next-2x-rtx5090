@@ -1,0 +1,40 @@
+2026-09-19T20:44:04+00:00 [r572] lock held; served at entry: <no answer>
+2026-09-19T20:44:22+00:00 [r572] UP S: cache_size: 966656 cache_mode: 8,8 draft_num_tokens_by_batch: [[4, 3], [8, 1]] draft_cache_mode: Q8 ; stats env 1; free 2079/859/; c1 f4add302e176d78e
+[S code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 187.5, "per_stream_wall_tps": 187.5, "decode_tps": 189.8, "ttft_s": 0.137}
+[S prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 184.5, "per_stream_wall_tps": 184.5, "decode_tps": 186.6, "ttft_s": 0.132}
+2026-09-19T20:45:04+00:00 [r572] UP D1: cache_size: 966656 cache_mode: 8,8 draft_num_tokens_by_batch: [[8, 1]] draft_cache_mode: Q8 ; stats env 1; free 2081/859/; c1 4705320b5eb2320b
+[D1 code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 168.6, "per_stream_wall_tps": 168.6, "decode_tps": 170.3, "ttft_s": 0.129}
+[D1 prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 167.3, "per_stream_wall_tps": 167.3, "decode_tps": 168.8, "ttft_s": 0.121}
+2026-09-19T20:45:48+00:00 [r572] UP H: cache_size: 966656 cache_mode: 8,8 draft_num_tokens_by_batch: [[4, 3], [8, 1]] draft_cache_mode: Q8 ; stats env 1; free 2079/1299/; c1 none
+[H code]   c=1 run0 ctx~0: FAILED all 1 requests (None)
+[H prose]   c=1 run0 ctx~0: FAILED all 1 requests (None)
+2026-09-19T20:46:07+00:00 [r572] NO BOOT M (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T20:46:26+00:00 [r572] UP DC: cache_size: 966656 cache_mode: 8,8 draft_num_tokens_by_batch: [[4, 3], [8, 1]] draft_cache_mode: FP16 ; stats env 1; free 1179/859/; c1 f4add302e176d78e
+[DC code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 171.0, "per_stream_wall_tps": 171.0, "decode_tps": 172.9, "ttft_s": 0.139}
+[DC prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 188.5, "per_stream_wall_tps": 188.5, "decode_tps": 190.7, "ttft_s": 0.131}
+2026-09-19T20:47:11+00:00 [r572] UP K16: cache_size: 393216 cache_mode: FP16 draft_num_tokens_by_batch: [[4, 3], [8, 1]] draft_cache_mode: FP16 ; stats env 1; free 749/5909/; c1 ae890c45d1000582
+[K16 code]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 195.5, "per_stream_wall_tps": 195.5, "decode_tps": 198.0, "ttft_s": 0.134}
+[K16 prose]   c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 204.5, "per_stream_wall_tps": 204.5, "decode_tps": 207.0, "ttft_s": 0.129}
+2026-09-19T20:47:51+00:00 [r572] UP V: cache_size: 655360 cache_mode: 8,8 draft_num_tokens_by_batch: [[4, 3], [8, 1]] draft_cache_mode: Q8 ; stats env 1; free 679/3323/; c1 none
+[V code]   c=1 run0 ctx~0: FAILED all 1 requests (None)
+[V prose]   c=1 run0 ctx~0: FAILED all 1 requests (None)
+S    code  c1 f4add302e176d78e: rounds 798, accepted drafts/round 1.566, per position [0.738, 0.504, 0.326]
+S    prose c1 f4add302e176d78e: rounds 804, accepted drafts/round 1.547, per position [0.746, 0.475, 0.328]
+D1   code  c1 4705320b5eb2320b: rounds 1156, accepted drafts/round 0.772, per position [0.773]
+D1   prose c1 4705320b5eb2320b: rounds 1173, accepted drafts/round 0.746, per position [0.748]
+H: 0 2,048-token requests recorded (want 2)
+DC   code  c1 f4add302e176d78e: rounds 803, accepted drafts/round 1.550, per position [0.727, 0.499, 0.326]
+DC   prose c1 f4add302e176d78e: rounds 805, accepted drafts/round 1.544, per position [0.742, 0.475, 0.332]
+K16  code  c1 ae890c45d1000582: rounds 739, accepted drafts/round 1.771, per position [0.77, 0.566, 0.44]
+K16  prose c1 ae890c45d1000582: rounds 723, accepted drafts/round 1.833, per position [0.798, 0.589, 0.448]
+V: 0 2,048-token requests recorded (want 2)
+D1 vs S code: -0.795 accepted drafts/round
+D1 vs S prose: -0.801 accepted drafts/round
+DC vs S code: -0.016 accepted drafts/round
+DC vs S prose: -0.003 accepted drafts/round
+K16 vs S code: +0.205 accepted drafts/round  <- MOVES
+K16 vs S prose: +0.285 accepted drafts/round  <- MOVES
+D1 p0 0.773 vs S p0 0.738 (code)
+D1 p0 0.748 vs S p0 0.746 (prose)
+2026-09-19T20:47:53+00:00 [r572] not restoring: GPU queue continues (r515-queue-chain(pid 674364))
+2026-09-19T20:47:54+00:00 [r572] === R572 DONE ===

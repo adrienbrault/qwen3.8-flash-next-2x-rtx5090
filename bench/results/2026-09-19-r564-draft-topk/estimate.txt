@@ -1,0 +1,20 @@
+== code: 4728 rounds
+  per-position accept/r2/r3/r4/miss: p0=3415/564/219/107/423 p1=2433/358/158/76/382 p2=1726/243/107/54/300
+  p0 calibration (bin acc/rej, 0.0->1.0): 0/10 44/150 158/271 234/263 270/207 280/153 270/118 292/64 317/47 1550/30
+  p1 calibration (bin acc/rej, 0.0->1.0): 0/5 27/90 102/188 120/176 165/133 157/141 165/79 186/62 237/45 1274/55
+  p2 calibration (bin acc/rej, 0.0->1.0): 0/4 13/79 59/122 85/122 97/104 96/78 117/62 118/34 118/43 1023/56
+  (b) two chains branch@1 depth3 (8 rows): E[tokens/step] 2.735 vs served 2.604 (+5.0 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.050 x the 4-row step (= 1.183 linear model) -> modelled throughput -11.2 %
+  (b-lo) two chains branch@1, zero continuation (8 rows): E[tokens/step] 2.680 vs served 2.604 (+2.9 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.029 x the 4-row step (= 1.183 linear model) -> modelled throughput -13.0 %
+  (c) two chains branch@0 @t0.5 (8 rows): E[tokens/step] 2.773 vs served 2.604 (+6.5 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.065 x the 4-row step (= 1.183 linear model) -> modelled throughput -10.0 %
+  (d) single chain depth 4 (5 rows, extrapolated): E[tokens/step] 2.865 vs served 2.604 (+10.0 % tokens), rows 5 (14.55 ms vs 13.91 ms modelled, 1.046 step ratio); pays iff the real 5-row step stays under 1.100 x the 4-row step (= 1.046 linear model) -> modelled throughput +5.2 %
+  (d) single chain depth 5 (6 rows, extrapolated): E[tokens/step] 3.050 vs served 2.604 (+17.1 % tokens), rows 6 (15.18 ms vs 13.91 ms modelled, 1.091 step ratio); pays iff the real 6-row step stays under 1.171 x the 4-row step (= 1.091 linear model) -> modelled throughput +7.3 %
+== prose: 4914 rounds
+  per-position accept/r2/r3/r4/miss: p0=3578/509/186/117/524 p1=2339/393/166/98/574 p2=1473/263/101/62/437
+  p0 calibration (bin acc/rej, 0.0->1.0): 0/2 13/62 43/147 76/217 168/212 213/205 227/142 277/128 359/112 2202/109
+  p1 calibration (bin acc/rej, 0.0->1.0): 1/7 9/83 28/144 78/190 94/170 118/165 148/140 158/109 246/106 1459/117
+  p2 calibration (bin acc/rej, 0.0->1.0): 1/5 5/46 20/85 40/103 59/124 84/106 85/97 100/100 125/89 954/108
+  (b) two chains branch@1 depth3 (8 rows): E[tokens/step] 2.639 vs served 2.506 (+5.3 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.053 x the 4-row step (= 1.183 linear model) -> modelled throughput -11.0 %
+  (b-lo) two chains branch@1, zero continuation (8 rows): E[tokens/step] 2.586 vs served 2.506 (+3.2 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.032 x the 4-row step (= 1.183 linear model) -> modelled throughput -12.8 %
+  (c) two chains branch@0 @t0.5 (8 rows): E[tokens/step] 2.588 vs served 2.506 (+3.3 % tokens), rows 8 (16.45 ms vs 13.91 ms modelled, 1.183 step ratio); pays iff the real 8-row step stays under 1.033 x the 4-row step (= 1.183 linear model) -> modelled throughput -12.7 %
+  (d) single chain depth 4 (5 rows, extrapolated): E[tokens/step] 2.696 vs served 2.506 (+7.6 % tokens), rows 5 (14.55 ms vs 13.91 ms modelled, 1.046 step ratio); pays iff the real 5-row step stays under 1.076 x the 4-row step (= 1.046 linear model) -> modelled throughput +2.9 %
+  (d) single chain depth 5 (6 rows, extrapolated): E[tokens/step] 2.815 vs served 2.506 (+12.3 % tokens), rows 6 (15.18 ms vs 13.91 ms modelled, 1.091 step ratio); pays iff the real 6-row step stays under 1.123 x the 4-row step (= 1.091 linear model) -> modelled throughput +2.9 %
