@@ -1,0 +1,161 @@
+{
+  "device": "cuda:0",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "ring_rows": 20,
+  "torch": "2.9.0+cu128",
+  "triton": "3.5.0",
+  "scenarios": [
+    {
+      "name": "prefill_chunks_then_decode",
+      "calls": 52,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "mtp_verify_rewind_depth3",
+      "calls": 297,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "mtp_verify_q16_graph",
+      "calls": 682,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "eager_verify_q17",
+      "calls": 41,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "rewind_replay",
+      "calls": 67,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "batched_bsz3",
+      "calls": 36,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "prefix_share_full_pages",
+      "calls": 44,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "mid_block_chunk_starts",
+      "calls": 7,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    },
+    {
+      "name": "rope_full_width",
+      "calls": 22,
+      "pooled_equal": true,
+      "first_mismatch_call": null,
+      "first_mismatch": null
+    }
+  ],
+  "controls": [
+    {
+      "name": "control_ring8_q16_graph",
+      "calls": 12,
+      "pooled_equal": false,
+      "first_mismatch_call": 2,
+      "first_mismatch": [
+        [
+          "a"
+        ],
+        [
+          301
+        ],
+        16,
+        "bc"
+      ]
+    },
+    {
+      "name": "control_eager_window_over_limit",
+      "calls": 4,
+      "pooled_equal": false,
+      "first_mismatch_call": 3,
+      "first_mismatch": [
+        [
+          "a"
+        ],
+        [
+          303
+        ],
+        1,
+        "bc"
+      ]
+    }
+  ],
+  "update_planes": {
+    "calls": 66,
+    "checks": 15,
+    "mismatch": [],
+    "guard": "raised",
+    "pass": true
+  },
+  "aot": {
+    "r64_q1": "ok",
+    "r64_q4": "ok",
+    "r64_q16": "ok",
+    "r128_q1": "ok",
+    "r128_q4": "ok",
+    "r128_q16": "ok",
+    "q17": "ok",
+    "q18": "refused",
+    "pass": true
+  },
+  "cache_layer": {
+    "default_selector": false,
+    "flag_0": {
+      "ring": 0,
+      "raw_shape": [
+        8,
+        256,
+        128
+      ],
+      "storage": 2883584
+    },
+    "flag_1": {
+      "ring": 20,
+      "raw_shape": [
+        8,
+        20,
+        128
+      ],
+      "storage": 2400256
+    },
+    "copy_block_aligned": true,
+    "copy_misaligned_refused": true,
+    "pass": true
+  },
+  "bench_us": {
+    "eager_2048_served": 18.54,
+    "eager_2048_ring_eager": 19.26,
+    "eager_2048_ring_bc": 1.28,
+    "q1_bsz4_served": 18.19,
+    "q1_bsz4_ring_eager": 19.04,
+    "q1_bsz4_ring_bc": 17.91,
+    "q4_bsz4_served": 18.35,
+    "q4_bsz4_ring_eager": 19.23,
+    "q4_bsz4_ring_bc": 18.01
+  },
+  "failures": [],
+  "pass": true
+}

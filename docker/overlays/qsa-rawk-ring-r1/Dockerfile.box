@@ -1,0 +1,14 @@
+# qsa-rawk-ring r1: raw-key ring for the QSA indexer planes (EXL3_QSA_RAWK_RING=1, default off) on the served chain
+# (tabbyapi:nvme-tier-r4-e3det, R535, or the same image with decode-kernels r6 / gdn-state-bf16 r1 stacked: those
+# touch disjoint files). Python only: no .cu/.cpp change, the prebuilt extension is kept as it is.
+# No heredocs (legacy builder). Build context = this directory. The selector is deliberately NOT set with ENV here:
+# unset = off in code, and every EXL3_* variable present in the environment enters the NVMe tier namespace.
+ARG BASE=tabbyapi:nvme-tier-r4-e3det
+FROM ${BASE}
+COPY served-source.patch overlay/install.py overlay/manifest.json /opt/qsa-rawk-ring-r1/
+COPY tests /opt/qsa-rawk-ring-r1/tests
+RUN python3 /opt/qsa-rawk-ring-r1/install.py && \
+    python3 -m py_compile /opt/qsa-rawk-ring-r1/tests/gpu_rawk_ring.py /opt/qsa-rawk-ring-r1/tests/rawk_scenarios.py && \
+    env -u EXL3_QSA_RAWK_RING python3 -c "import exllamav3.cache.qsa as q; assert q._rawk_ring is False; assert q.rawk_ring_rows(4) == 20; print('QSA raw-key ring default off, 20 rows when on')" && \
+    EXL3_QSA_RAWK_RING=1 python3 -c "import exllamav3.cache.qsa as q; assert q._rawk_ring is True; print('selector reads EXL3_QSA_RAWK_RING=1')" && \
+    python3 -c "from exllamav3.modules.attention_fn import qsa_triton as t, bc_attn as b; from exllamav3.ext import exllamav3_ext as e; assert hasattr(t, 'qsa_ring_plane_update') and hasattr(t, '_qsa_pool_update_ring_bc_kernel') and hasattr(b, '_qsa_ring_graph_kernels'); assert hasattr(e, 'exl3_moe_prefill_e3_det'); print(e.__file__)"

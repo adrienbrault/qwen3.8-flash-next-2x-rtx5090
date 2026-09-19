@@ -1,0 +1,191 @@
+2026-09-19T13:32:18+00:00 [r546] S1 building tabbyapi:nvme-tier-r4-e3det-r6-rawk on tabbyapi:nvme-tier-r4-e3det-r6 (live pool 819200, before the lock)
+2026-09-19T13:32:42+00:00 [r546] lock held; served at entry: <no answer> cache_size: 868352 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true 
+2026-09-19T13:32:48+00:00 [r546] [harness gpu0] } PASS 
+2026-09-19T13:32:54+00:00 [r546] [harness gpu1] } PASS 
+2026-09-19T13:32:54+00:00 [r546] === S0 reference: live launcher, tier off ===
+2026-09-19T13:33:20+00:00 [r546] REF @ 819200: VRAM free 1257/289/; fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5
+2026-09-19T13:33:20+00:00 [r546] === S2 ring on, ladder from 819200 ===
+2026-09-19T13:33:38+00:00 [r546] [L] 835584: moved placement (VRAM free 601/4337/), c1 e3e01aa9339a3042
+2026-09-19T13:34:02+00:00 [r546] [L] 851968: moved placement (VRAM free 1183/3473/), c1 4fad2dbfab9374a4
+2026-09-19T13:34:21+00:00 [r546] [L] 868352: moved placement (VRAM free 1063/3393/), c1 4fad2dbfab9374a4
+2026-09-19T13:34:39+00:00 [r546] [L] 884736: moved placement (VRAM free 963/3293/), c1 4fad2dbfab9374a4
+2026-09-19T13:34:57+00:00 [r546] [L] 901120: moved placement (VRAM free 823/3153/), c1 4fad2dbfab9374a4
+2026-09-19T13:35:15+00:00 [r546] [L] 917504: moved placement (VRAM free 683/3073/), c1 4fad2dbfab9374a4
+2026-09-19T13:35:34+00:00 [r546] [L] 933888: moved placement (VRAM free 563/2953/), c1 4fad2dbfab9374a4
+2026-09-19T13:36:21+00:00 [r546] [L] 950272: normal placement, fingerprints = REF, survives 120k + c4; VRAM free 1423/497/
+2026-09-19T13:37:08+00:00 [r546] [L] 966656: normal placement, fingerprints = REF, survives 120k + c4; VRAM free 1323/375/
+2026-09-19T13:37:55+00:00 [r546] [L] 983040: normal placement, fingerprints = REF, survives 120k + c4; VRAM free 1223/257/
+2026-09-19T13:38:11+00:00 [r546] NO BOOT L-999424 (restart loop): RuntimeError: Insufficient VRAM in split for model and cache
+2026-09-19T13:38:12+00:00 [r546] POOL_ON = 983040 (live 819200)
+71c71
+< CACHE=${CACHE:-819200}   # R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+---
+> CACHE=${CACHE:-983040}   # R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+124c124
+< IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6}
+---
+> IMG=${IMG:-tabbyapi:nvme-tier-r4-e3det-r6-rawk}
+206c206
+< EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1}
+---
+> EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1}
+215c215
+<   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+---
+>   if [ "$IMG" = tabbyapi:nvme-tier-r4-e3det-r6-rawk ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+2026-09-19T13:38:12+00:00 [r546] === AB: 8 boots, A = live @ 819200, B = candidate @ 983040, tier off ===
+2026-09-19T13:38:29+00:00 [r546] UP A1: VRAM free 1969/729/; c1 e7fb377c987d685c
+[A1]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[A1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.8, "per_stream_wall_tps": 224.8, "decode_tps": 228.1, "ttft_s": 0.139
+[A1]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.7, "per_stream_wall_tps": 222.7, "decode_tps": 226.0, "ttft_s": 0.137
+[A1]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.8, "per_stream_wall_tps": 224.8, "decode_tps": 228.1, "ttft_s": 0.137
+[A1]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[A1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.0, "per_stream_wall_tps": 141.7, "decode_tps": 146.4, "ttft_s": 0.4
+[A1]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 507.1, "per_stream_wall_tps": 141.1, "decode_tps": 145.7, "ttft_s": 0.4
+[A1]  c=1 warm-up round ctx~0: 10.6 s (not recorded)
+[A1]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.7, "per_stream_wall_tps": 199.7, "decode_tps": 202.1, "ttft_s": 0.129}
+[A1]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.5, "per_stream_wall_tps": 199.5, "decode_tps": 202.0, "ttft_s": 0.129}
+[A1]  c=4 warm-up round ctx~0: 17.7 s (not recorded)
+[A1]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.3, "per_stream_wall_tps": 122.0, "decode_tps": 125.1, "ttft_s": 0.41
+[A1]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.1, "per_stream_wall_tps": 122.7, "decode_tps": 125.9, "ttft_s": 0.42
+2026-09-19T13:41:54+00:00 [r546] UP B2: VRAM free 1969/729/; c1 e7fb377c987d685c
+[B2]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[B2]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.3, "per_stream_wall_tps": 225.3, "decode_tps": 228.6, "ttft_s": 0.138
+[B2]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.6, "per_stream_wall_tps": 224.6, "decode_tps": 228.0, "ttft_s": 0.138
+[B2]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.8, "per_stream_wall_tps": 224.8, "decode_tps": 228.2, "ttft_s": 0.139
+[B2]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[B2]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 506.5, "per_stream_wall_tps": 140.3, "decode_tps": 145.0, "ttft_s": 0.4
+[B2]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.6, "per_stream_wall_tps": 141.6, "decode_tps": 146.3, "ttft_s": 0.4
+[B2]  c=1 warm-up round ctx~0: 10.4 s (not recorded)
+[B2]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.2, "per_stream_wall_tps": 199.2, "decode_tps": 201.6, "ttft_s": 0.13}
+[B2]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.3, "per_stream_wall_tps": 199.3, "decode_tps": 201.8, "ttft_s": 0.13}
+[B2]  c=4 warm-up round ctx~0: 17.3 s (not recorded)
+[B2]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 482.3, "per_stream_wall_tps": 123.1, "decode_tps": 126.3, "ttft_s": 0.42
+[B2]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.9, "per_stream_wall_tps": 122.9, "decode_tps": 126.2, "ttft_s": 0.42
+2026-09-19T13:45:18+00:00 [r546] UP B3: VRAM free 1969/729/; c1 e7fb377c987d685c
+[B3]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[B3]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.8, "per_stream_wall_tps": 224.8, "decode_tps": 228.2, "ttft_s": 0.138
+[B3]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.7, "per_stream_wall_tps": 224.7, "decode_tps": 228.1, "ttft_s": 0.138
+[B3]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.4, "per_stream_wall_tps": 222.4, "decode_tps": 225.7, "ttft_s": 0.138
+[B3]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[B3]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.9, "per_stream_wall_tps": 141.7, "decode_tps": 146.4, "ttft_s": 0.4
+[B3]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.4, "per_stream_wall_tps": 141.9, "decode_tps": 146.5, "ttft_s": 0.4
+[B3]  c=1 warm-up round ctx~0: 10.4 s (not recorded)
+[B3]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.8, "per_stream_wall_tps": 199.8, "decode_tps": 202.2, "ttft_s": 0.13}
+[B3]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.4, "ttft_s": 0.129}
+[B3]  c=4 warm-up round ctx~0: 17.0 s (not recorded)
+[B3]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 483.1, "per_stream_wall_tps": 123.3, "decode_tps": 126.5, "ttft_s": 0.42
+[B3]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.8, "per_stream_wall_tps": 122.1, "decode_tps": 125.3, "ttft_s": 0.42
+2026-09-19T13:48:41+00:00 [r546] UP A4: VRAM free 1969/729/; c1 e7fb377c987d685c
+[A4]  c=1 warm-up round ctx~0: 9.3 s (not recorded)
+[A4]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.5, "per_stream_wall_tps": 224.5, "decode_tps": 228.1, "ttft_s": 0.148
+[A4]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.1, "per_stream_wall_tps": 225.1, "decode_tps": 228.5, "ttft_s": 0.137
+[A4]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.9, "per_stream_wall_tps": 224.9, "decode_tps": 228.2, "ttft_s": 0.137
+[A4]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[A4]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.0, "per_stream_wall_tps": 141.1, "decode_tps": 145.7, "ttft_s": 0.4
+[A4]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 505.4, "per_stream_wall_tps": 140.0, "decode_tps": 144.5, "ttft_s": 0.4
+[A4]  c=1 warm-up round ctx~0: 10.3 s (not recorded)
+[A4]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.3, "ttft_s": 0.129}
+[A4]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.6, "per_stream_wall_tps": 199.6, "decode_tps": 202.0, "ttft_s": 0.129}
+[A4]  c=4 warm-up round ctx~0: 17.2 s (not recorded)
+[A4]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.2, "per_stream_wall_tps": 122.8, "decode_tps": 126.0, "ttft_s": 0.42
+[A4]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 496.5, "per_stream_wall_tps": 124.1, "decode_tps": 127.2, "ttft_s": 0.41
+2026-09-19T13:52:05+00:00 [r546] UP B5: VRAM free 1969/729/; c1 e7fb377c987d685c
+[B5]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[B5]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.1, "per_stream_wall_tps": 225.1, "decode_tps": 228.5, "ttft_s": 0.139
+[B5]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.2, "per_stream_wall_tps": 225.2, "decode_tps": 228.6, "ttft_s": 0.138
+[B5]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.2, "per_stream_wall_tps": 225.2, "decode_tps": 228.5, "ttft_s": 0.137
+[B5]  c=4 warm-up round ctx~0: 15.5 s (not recorded)
+[B5]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.7, "per_stream_wall_tps": 141.3, "decode_tps": 146.0, "ttft_s": 0.4
+[B5]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 509.8, "per_stream_wall_tps": 141.4, "decode_tps": 146.0, "ttft_s": 0.4
+[B5]  c=1 warm-up round ctx~0: 10.3 s (not recorded)
+[B5]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.3, "ttft_s": 0.13}
+[B5]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.0, "per_stream_wall_tps": 198.0, "decode_tps": 200.5, "ttft_s": 0.13}
+[B5]  c=4 warm-up round ctx~0: 17.2 s (not recorded)
+[B5]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.6, "per_stream_wall_tps": 122.9, "decode_tps": 126.1, "ttft_s": 0.42
+[B5]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 501.0, "per_stream_wall_tps": 125.2, "decode_tps": 128.4, "ttft_s": 0.41
+2026-09-19T13:55:28+00:00 [r546] UP A6: VRAM free 1969/729/; c1 e7fb377c987d685c
+[A6]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[A6]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.7, "per_stream_wall_tps": 224.8, "decode_tps": 228.1, "ttft_s": 0.138
+[A6]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 222.4, "per_stream_wall_tps": 222.4, "decode_tps": 225.7, "ttft_s": 0.137
+[A6]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 224.7, "per_stream_wall_tps": 224.7, "decode_tps": 228.0, "ttft_s": 0.137
+[A6]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[A6]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.6, "per_stream_wall_tps": 141.6, "decode_tps": 146.2, "ttft_s": 0.4
+[A6]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 507.2, "per_stream_wall_tps": 141.3, "decode_tps": 145.9, "ttft_s": 0.4
+[A6]  c=1 warm-up round ctx~0: 10.3 s (not recorded)
+[A6]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.8, "per_stream_wall_tps": 199.8, "decode_tps": 202.2, "ttft_s": 0.129}
+[A6]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.4, "ttft_s": 0.129}
+[A6]  c=4 warm-up round ctx~0: 17.1 s (not recorded)
+[A6]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.0, "per_stream_wall_tps": 121.9, "decode_tps": 125.1, "ttft_s": 0.41
+[A6]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.5, "per_stream_wall_tps": 122.8, "decode_tps": 126.0, "ttft_s": 0.41
+2026-09-19T13:58:52+00:00 [r546] UP A7: VRAM free 1969/729/; c1 e7fb377c987d685c
+[A7]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[A7]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.1, "per_stream_wall_tps": 225.1, "decode_tps": 228.4, "ttft_s": 0.137
+[A7]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.0, "per_stream_wall_tps": 225.0, "decode_tps": 228.3, "ttft_s": 0.137
+[A7]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.2, "per_stream_wall_tps": 225.2, "decode_tps": 228.5, "ttft_s": 0.137
+[A7]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[A7]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 505.3, "per_stream_wall_tps": 140.0, "decode_tps": 144.5, "ttft_s": 0.4
+[A7]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.5, "per_stream_wall_tps": 141.8, "decode_tps": 146.5, "ttft_s": 0.4
+[A7]  c=1 warm-up round ctx~0: 10.3 s (not recorded)
+[A7]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.3, "ttft_s": 0.129}
+[A7]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 199.9, "per_stream_wall_tps": 199.9, "decode_tps": 202.3, "ttft_s": 0.129}
+[A7]  c=4 warm-up round ctx~0: 17.2 s (not recorded)
+[A7]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.4, "per_stream_wall_tps": 122.8, "decode_tps": 126.0, "ttft_s": 0.42
+[A7]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 481.0, "per_stream_wall_tps": 122.7, "decode_tps": 125.9, "ttft_s": 0.41
+2026-09-19T14:02:15+00:00 [r546] UP B8: VRAM free 1969/729/; c1 e7fb377c987d685c
+[B8]  c=1 warm-up round ctx~0: 9.1 s (not recorded)
+[B8]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.1, "per_stream_wall_tps": 225.1, "decode_tps": 228.5, "ttft_s": 0.139
+[B8]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 225.3, "per_stream_wall_tps": 225.3, "decode_tps": 228.7, "ttft_s": 0.138
+[B8]  c=1 run2 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 101, "aggregate_tps": 223.0, "per_stream_wall_tps": 223.0, "decode_tps": 226.2, "ttft_s": 0.137
+[B8]  c=4 warm-up round ctx~0: 15.4 s (not recorded)
+[B8]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 510.9, "per_stream_wall_tps": 141.7, "decode_tps": 146.4, "ttft_s": 0.4
+[B8]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 511.5, "per_stream_wall_tps": 141.9, "decode_tps": 146.6, "ttft_s": 0.4
+[B8]  c=1 warm-up round ctx~0: 10.3 s (not recorded)
+[B8]  c=1 run0 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 198.4, "per_stream_wall_tps": 198.4, "decode_tps": 200.8, "ttft_s": 0.129}
+[B8]  c=1 run1 ctx~0: {"conc": 1, "ctx_requested": 0, "n_ok": 1, "tokens_median": 2048, "prompt_tokens": 89, "aggregate_tps": 200.1, "per_stream_wall_tps": 200.1, "decode_tps": 202.6, "ttft_s": 0.13}
+[B8]  c=4 warm-up round ctx~0: 17.1 s (not recorded)
+[B8]  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 482.2, "per_stream_wall_tps": 123.0, "decode_tps": 126.2, "ttft_s": 0.42
+[B8]  c=4 run1 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 2048.0, "prompt_tokens": 89, "aggregate_tps": 478.4, "per_stream_wall_tps": 122.0, "decode_tps": 125.2, "ttft_s": 0.42
+c1: A 224.5, B 224.6 -> +0.06 %, 95 % CI [-0.48, +0.60] % (n 4+4 boots)
+c4: A 508.4, B 510.1 -> +0.34 %, 95 % CI [-0.14, +0.82] % (n 4+4 boots)
+p1: A 199.8, B 199.3 -> -0.22 %, 95 % CI [-0.53, +0.09] % (n 4+4 boots)
+p4: A 482.4, B 483.7 -> +0.27 %, 95 % CI [-1.96, +2.50] % (n 4+4 boots)
+prefill 60000: A 9,670 (n 8, range 9,536-9,832), B 9,607 (n 8, range 9,293-9,876) -> 0.993x
+prefill 120000: A 10,061 (n 4, range 9,972-10,200), B 10,038 (n 4, range 9,975-10,142) -> 0.998x
+AB OK
+2026-09-19T14:05:21+00:00 [r546] === G1: candidate with the NVMe tier ON ===
+2026-09-19T14:05:42+00:00 [r546] G1: cache_size: 983040 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; tier:  -- nvme tier: ON at /nvme-tier/ns-1f95512f311605ac6deee64f06b2a9786704c0108378bc73ac78a0152ff5291f (cap 64.0 GiB, on disk 0.00 GiB: 0 pages, 0 checkpoints, 0 torn, 0 stranded pruned, 1 stale namespac; VRAM free at boot 1973/737/; fingerprints c1 e7fb377c987d685c / 30k 4a255910dee2d9c5
+2026-09-19T14:05:48+00:00 [r546] cold prefill ctx 60000: 9626 tok/s (floor 9186 = 0.95 x the AB's A arm)
+2026-09-19T14:05:57+00:00 [r546] cold prefill ctx 120000: 9834 tok/s (floor 9557 = 0.95 x the AB's A arm)
+  c=4 run0 ctx~0: {"conc": 4, "ctx_requested": 0, "n_ok": 4, "tokens_median": 1954.5, "prompt_tokens": 101, "aggregate_tps": 494.9, "per_stream_wall_tps": 137.5, "decode_tps": 142.4, "ttft_s": 0.489}
+2026-09-19T14:06:14+00:00 [r546] G1b PASS
+2026-09-19T14:06:14+00:00 [r546] === GT: crash-restart restore ===
+fill 30000: prompt 30037 tok; cold 751f8dd1ad8e35a5 cached 0 3.814 s; warm 751f8dd1ad8e35a5 cached 29952 0.298 s
+drained 5.0 s after the marked request:  -- nvme tier: drained (751 pages, 14 ckpts, 4.25/64.0 GiB; wrote 751 pages + 14 ckpts (4.25 GiB); restored 0 pages + 0 ckpts; pending 0; skips queue 0 evict 0; refused mm 0 cap 0 free 0; evicted 0 pa
+ -- nvme tier: open scan: 14/14 checkpoints intact in 1.9 s
+verify 30000: after restart 751f8dd1ad8e35a5 cached 29952 (0.55 s latency) | warm 751f8dd1ad8e35a5 cached 29952 (0.298 s) | cold 751f8dd1ad8e35a5 (3.814 s) -> PASS
+VERIFY PASS
+2026-09-19T14:06:37+00:00 [r546] GT PASS
+2026-09-19T14:06:37+00:00 [r546] === G2: agentic-edit ===
+[RK] agentic-edit greedy c1: 6/6 ok, 17466 tokens, per-request decode median 249.5 t/s (min 204.7, max 281.7), aggregate 227.5 t/s
+[RK] agentic-edit greedy c1 first full wave: aggregate 252.2 t/s, per stream 252.2 t/s
+[RK] agentic-edit greedy c4: 6/6 ok, 17428 tokens, per-request decode median 156.4 t/s (min 136.2, max 210.2), aggregate 419.1 t/s
+[RK] agentic-edit greedy c4 first full wave: aggregate 492.3 t/s, per stream 145.4 t/s
+[RK] agentic-edit sampled c1: 6/6 ok, 18387 tokens, per-request decode median 233.0 t/s (min 203.5, max 287.5), aggregate 232.2 t/s
+[RK] agentic-edit sampled c1 first full wave: aggregate 256.1 t/s, per stream 256.1 t/s
+[RK] agentic-edit sampled c4: 6/6 ok, 18406 tokens, per-request decode median 144.7 t/s (min 121.3, max 208.2), aggregate 406.6 t/s
+[RK] agentic-edit sampled c4 first full wave: aggregate 474.6 t/s, per stream 131.0 t/s
+2026-09-19T14:10:40+00:00 [r546] G2 PASS
+2026-09-19T14:10:40+00:00 [r546] === G3: needles ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-19T14:12:41+00:00 [r546] G3 PASS
+2026-09-19T14:12:41+00:00 [r546] === G4: tool-eval 69 x 4 ===
+RK tool-eval 69x4: 86.5 +- 2.4 CI [85.0, 88.8] points [124, 117, 117, 118] ['C:6/8', 'G:5/6', 'I:15/20', 'K:18/26', 'L:7/8', 'N:5/6', 'O:10/12']
+2026-09-19T14:22:05+00:00 [r546] G4 PASS (86.5)
+2026-09-19T14:22:05+00:00 [r546] === G5: GSM8K n=500 (nostop proxy) ===
+2026-09-19T14:30:20+00:00 [r546] GSM8K n=500 flexible: 0.976
+2026-09-19T14:30:20+00:00 [r546] G5 PASS
+2026-09-19T14:30:20+00:00 [r546] === PROMOTE: launch-flashnext.sh := launch-flashnext-r546.sh ===
+2026-09-19T14:30:44+00:00 [r546] daily now: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 983040 cache_mode: 8,8 max_batch_size: 4 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; c1 e7fb377c987d685c (REF e7fb377c987d685c); VRAM free 1969/729/
+2026-09-19T14:30:44+00:00 [r546] === R546 PROMOTED ===

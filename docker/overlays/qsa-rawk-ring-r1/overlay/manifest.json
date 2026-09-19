@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "round": "qsa-rawk-ring-r1",
+  "patch_sha256": "b49b2a8c8d7830ebd72cbf88574cb1e30f0020f9c68021d588f4eebc81dd6477",
+  "selectors": {
+    "EXL3_QSA_RAWK_RING": "cache/qsa.py"
+  },
+  "base_image": "tabbyapi:nvme-tier-r4-e3det",
+  "ring_rows": 20,
+  "files": {
+    "cache/qsa.py": {
+      "baseline_sha256": "67b687d4964e8dfaa798ba4b0b18f400f473ec9fd877e89658f6cf9afba219d9",
+      "overlay_sha256": "cd67e4329731cb2c33be6e99f32470e49f5854298fb6d739d734bbd589d9e07e"
+    },
+    "modules/attention_fn/bc_attn.py": {
+      "baseline_sha256": "47d3e1d4dc17ba137f4dd304e3c0d8433a1a3ac5a52ff95850f406a8579e3357",
+      "overlay_sha256": "40ac14b35dc11311915ece78674c6c8fdf429001fe715a07d308098c73780350"
+    },
+    "modules/attention_fn/qsa_triton.py": {
+      "baseline_sha256": "cfc78bd9779a890edaa4259f23458902c0f1356f4e2d6bf76a45702d127fc797",
+      "overlay_sha256": "98d0106320fe50f57733120159e9851476f7c64d462a8f13da94c7f3b3ec2ebd"
+    },
+    "modules/qsa_indexer.py": {
+      "baseline_sha256": "6c60514ca5b8c2917dfb6784208eb3c0d07f04c7080c7fc7b9c6a6c37175a1c8",
+      "overlay_sha256": "af56c640d0b0a0a8c5f390d6a59df67e2343fee95d09e9b86567af25cba33479"
+    }
+  }
+}

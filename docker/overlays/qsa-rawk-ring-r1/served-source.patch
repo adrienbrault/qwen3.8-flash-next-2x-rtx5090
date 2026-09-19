@@ -1,0 +1,436 @@
+--- a/cache/qsa.py
++++ b/cache/qsa.py
+@@ -1,4 +1,5 @@
+ from __future__ import annotations
++import os
+ from typing_extensions import override
+ import numpy as np
+ import torch
+@@ -7,7 +8,24 @@
+ from .quant import CacheLayer_quant
+ from ..constants import PAGE_SIZE
+ 
++# EXL3_QSA_RAWK_RING=1 (default off): keep a ring of raw indexer keys per page instead of all
++# PAGE_SIZE rows. A raw key is only read by the pool-update kernels, for the blocks an append
++# touches, so a page only has to hold its most recent rows: the partial block before the next
++# append position and, in the graph-captured path (append first, then pool from the plane), every
++# row of one call. rawk_ring_rows() sizes the ring for the largest graph call, MAX_QLEN = 16
++# (bc_attn.MAX_QLEN, BC_Attention::MAX_QLEN), plus that partial block, in whole blocks: 20 rows
++# at compress ratio 4. Position t of physical page p lives in row p * rows + t % rows. The same
++# size covers speculative rewinds: a verify window of L tokens is followed by a start at most L
++# positions back, and L + 2 < rows (QSAIndexer.update_planes guards eager windows)
++_BC_MAX_QLEN = 16
++_rawk_ring = os.environ.get("EXL3_QSA_RAWK_RING", "0") == "1"
+ 
++
++def rawk_ring_rows(compress_ratio: int) -> int:
++    """Ring rows per page for a compress ratio: one graph call plus the partial block before it."""
++    return -(-(_BC_MAX_QLEN + compress_ratio - 1) // compress_ratio) * compress_ratio
++
++
+ class QSAPlanes:
+     """
+     Mixin adding the QSA indexer's side planes to a K/V cache layer: per-token RAW indexer keys
+@@ -25,7 +43,13 @@
+         self.compress_ratio = idx.compress_ratio
+         assert PAGE_SIZE % self.compress_ratio == 0
+         num_pages = max_num_tokens // PAGE_SIZE
+-        self.raw_k_shape = (num_pages, PAGE_SIZE, self.index_head_dim)
++        # 0 = full plane (served layout); > 0 = ring rows per page (EXL3_QSA_RAWK_RING)
++        self.raw_ring_rows = rawk_ring_rows(self.compress_ratio) if _rawk_ring else 0
++        if self.raw_ring_rows:
++            assert self.raw_ring_rows < PAGE_SIZE
++            self.raw_k_shape = (num_pages, self.raw_ring_rows, self.index_head_dim)
++        else:
++            self.raw_k_shape = (num_pages, PAGE_SIZE, self.index_head_dim)
+         self.pooled_shape = (num_pages, PAGE_SIZE // self.compress_ratio, self.index_head_dim)
+         self.raw_k = None
+         self.pooled = None
+@@ -44,8 +68,21 @@
+ 
+     @override
+     def copy_page(self, source, from_page: int, to_page: int, num_tokens: int):
+-        super().copy_page(source, from_page, to_page, num_tokens)
+-        self.raw_k[to_page, :num_tokens].copy_(source.raw_k[from_page, :num_tokens], non_blocking = True)
++        if self.raw_ring_rows or source.raw_ring_rows:
++            # A continuation from num_tokens reads the raw rows of the partial block before it,
++            # and the source ring holds them only if the source page stopped exactly there.
++            # Block-aligned copies need no raw rows (their pooled keys are final). The generator
++            # only copies partial pages for non-recurrent models (Job.prefill), never on the
++            # hybrid QSA models
++            if num_tokens % self.compress_ratio or self.raw_ring_rows != source.raw_ring_rows:
++                raise RuntimeError(
++                    "EXL3_QSA_RAWK_RING: partial-page copy of a QSA cache page must be block-aligned "
++                    f"(num_tokens {num_tokens}, compress ratio {self.compress_ratio})"
++                )
++            super().copy_page(source, from_page, to_page, num_tokens)
++        else:
++            super().copy_page(source, from_page, to_page, num_tokens)
++            self.raw_k[to_page, :num_tokens].copy_(source.raw_k[from_page, :num_tokens], non_blocking = True)
+         nb = (num_tokens + self.compress_ratio - 1) // self.compress_ratio
+         self.pooled[to_page, :nb].copy_(source.pooled[from_page, :nb], non_blocking = True)
+ 
+--- a/modules/attention_fn/bc_attn.py
++++ b/modules/attention_fn/bc_attn.py
+@@ -447,21 +447,30 @@
+             | {n: "constexpr" for n in ("eps", "H_i", "D")},
+             dict(eps = float(idx.q_layernorm.rms_norm_eps), H_i = Hi, D = Di), 2, 1)
+ 
+-        k_raw_append = _compile_kernel(dev, _mla_plane_update_kernel,
+-            {"rows_new": "*fp16", "plane_cache": "*fp16", "block_table": "*i32",
+-             "cache_seqlens": "*i32", "num_pages_per_seq": "i32", "append_len": "i32"}
+-            | {n: "constexpr" for n in ("page_size", "D", "DST_D", "DST_OFF")},
+-            dict(page_size = PAGE_SIZE, D = Di, DST_D = 0, DST_OFF = 0), 2, 2)
++        ring = getattr(self.qsa_layer, "raw_ring_rows", 0)
++        if ring:
++            # EXL3_QSA_RAWK_RING: ring forms of the append and pool kernels, same runtime
++            # arguments (the C++ launch and its graph patches are unchanged)
++            k_raw_append, k_pool_update = _qsa_ring_graph_kernels(
++                dev, Di, cr, rotate_dims, float(rope.attn_factor),
++                float(idx.k_layernorm.rms_norm_eps), q_len, ring,
++            )
++        else:
++            k_raw_append = _compile_kernel(dev, _mla_plane_update_kernel,
++                {"rows_new": "*fp16", "plane_cache": "*fp16", "block_table": "*i32",
++                 "cache_seqlens": "*i32", "num_pages_per_seq": "i32", "append_len": "i32"}
++                | {n: "constexpr" for n in ("page_size", "D", "DST_D", "DST_OFF")},
++                dict(page_size = PAGE_SIZE, D = Di, DST_D = 0, DST_OFF = 0), 2, 2)
+ 
+-        k_pool_update = _compile_kernel(dev, _qsa_pool_update_kernel,
+-            {"raw_plane": "*fp16", "pool_plane": "*fp16", "k_norm_w": "*fp16",
+-             "inv_freq": "*fp32", "block_table": "*i32", "cache_seqlens": "*i32",
+-             "num_pages_per_row": "i32", "append_len": "i32"}
+-            | {n: "constexpr" for n in (
+-                "page_size", "P", "D", "ROPE_R", "attn_factor", "eps", "MAXPOOLS")},
+-            dict(page_size = PAGE_SIZE, P = cr, D = Di, ROPE_R = rotate_dims,
+-                 attn_factor = float(rope.attn_factor),
+-                 eps = float(idx.k_layernorm.rms_norm_eps), MAXPOOLS = q_len // cr + 1), 2, 1)
++            k_pool_update = _compile_kernel(dev, _qsa_pool_update_kernel,
++                {"raw_plane": "*fp16", "pool_plane": "*fp16", "k_norm_w": "*fp16",
++                 "inv_freq": "*fp32", "block_table": "*i32", "cache_seqlens": "*i32",
++                 "num_pages_per_row": "i32", "append_len": "i32"}
++                | {n: "constexpr" for n in (
++                    "page_size", "P", "D", "ROPE_R", "attn_factor", "eps", "MAXPOOLS")},
++                dict(page_size = PAGE_SIZE, P = cr, D = Di, ROPE_R = rotate_dims,
++                     attn_factor = float(rope.attn_factor),
++                     eps = float(idx.k_layernorm.rms_norm_eps), MAXPOOLS = q_len // cr + 1), 2, 1)
+ 
+         wts = scores = pool_idx = indices = None
+         k_fewq = k_expand = k_sp_split = k_sp_combine = None
+@@ -591,6 +600,30 @@
+         self.bc.run(bsz, q_len, x, y, cache_seqlens, block_table, position, positions,
+                     position_ids, inv_freq, regime, t_total)
+         return y
++
++
++def _qsa_ring_graph_kernels(dev, head_dim: int, cr: int, rotate_dims: int, attn_factor: float,
++                            eps: float, q_len: int, ring: int):
++    """AOT-compiled raw-key ring kernels for one BC slot (EXL3_QSA_RAWK_RING): the ring append
++    and the ring pool update, with the runtime signatures of _mla_plane_update_kernel and
++    _qsa_pool_update_kernel. The graph appends before pooling, so one call's rows plus the
++    partial block before them must fit the ring without two positions sharing a row."""
++    from .qsa_triton import _qsa_raw_ring_append_kernel, _qsa_pool_update_ring_bc_kernel
++    assert q_len + cr - 1 <= ring, f"QSA raw-key ring of {ring} rows cannot hold a q_len {q_len} graph call"
++    k_raw_append = _compile_kernel(dev, _qsa_raw_ring_append_kernel,
++        {"rows_new": "*fp16", "plane_cache": "*fp16", "block_table": "*i32",
++         "cache_seqlens": "*i32", "num_pages_per_seq": "i32", "append_len": "i32"}
++        | {n: "constexpr" for n in ("page_size", "D", "RING")},
++        dict(page_size = PAGE_SIZE, D = head_dim, RING = ring), 2, 2)
++    k_pool_update = _compile_kernel(dev, _qsa_pool_update_ring_bc_kernel,
++        {"raw_plane": "*fp16", "pool_plane": "*fp16", "k_norm_w": "*fp16",
++         "inv_freq": "*fp32", "block_table": "*i32", "cache_seqlens": "*i32",
++         "num_pages_per_row": "i32", "append_len": "i32"}
++        | {n: "constexpr" for n in (
++            "page_size", "P", "D", "ROPE_R", "attn_factor", "eps", "MAXPOOLS", "RING")},
++        dict(page_size = PAGE_SIZE, P = cr, D = head_dim, ROPE_R = rotate_dims,
++             attn_factor = attn_factor, eps = eps, MAXPOOLS = q_len // cr + 1, RING = ring), 2, 1)
++    return k_raw_append, k_pool_update
+ 
+ 
+ def _qsa_module_eligible(m):
+--- a/modules/attention_fn/qsa_triton.py
++++ b/modules/attention_fn/qsa_triton.py
+@@ -144,6 +144,239 @@
+         tl.store(prow + offs_p, y_ps)
+ 
+ 
++# ---- raw-key ring (EXL3_QSA_RAWK_RING, cache/qsa.py) ------------------------------------------
++# The raw plane holds RING rows per page; position t of physical page p lives in row
++# p * RING + t % RING. The two pool kernels below repeat _qsa_pool_update_kernel's arithmetic line
++# for line (same loads, same accumulation order, same fp16 rounding points), so the pooled plane
++# is bit-identical to the full-plane path whenever the ring holds the rows a block reads.
++
++@triton.jit(do_not_specialize = ["num_pages_per_seq", "append_len"])
++def _qsa_raw_ring_append_kernel(
++    rows_new,            # (bsz, len, D)
++    plane_cache,         # (pages, RING, D)
++    block_table,
++    cache_seqlens,
++    num_pages_per_seq,
++    append_len,
++    page_size: tl.constexpr,
++    D: tl.constexpr,
++    RING: tl.constexpr,
++):
++    """Ring form of _mla_plane_update_kernel (same runtime arguments, so the BC graph launches
++    and patches it unchanged). Only the last RING rows of each sequence's append are stored:
++    they occupy distinct ring rows, and the earlier rows of a longer (prefill) append are never
++    read again, since the pooled keys of their blocks were built from the staged rows."""
++    row = tl.program_id(0)
++    batch = row // append_len
++    pos = row - batch * append_len
++    if pos + RING < append_len:
++        return
++
++    abs_pos = tl.load(cache_seqlens + batch) + pos
++    page = abs_pos // page_size
++    phys = tl.load(block_table + batch * num_pages_per_seq + page)
++    tok = phys * RING + abs_pos % RING
++
++    offs = tl.arange(0, D)
++    tl.store(plane_cache + tok * D + offs, tl.load(rows_new + row * D + offs))
++
++
++@triton.jit(do_not_specialize = ["num_pages_per_row", "append_len"])
++def _qsa_pool_update_ring_bc_kernel(
++    raw_plane,           # flat (pages * RING, D) fp16 raw-key ring
++    pool_plane,          # flat (pages * page_size // P, D) fp16 pooled keys
++    k_norm_w,            # (D,) fp16
++    inv_freq,            # (ROPE_R // 2,) fp32
++    block_table,         # (bsz, num_pages_per_row) i32
++    cache_seqlens,       # (bsz,) i32, pre-append counts
++    num_pages_per_row,
++    append_len,
++    page_size: tl.constexpr,
++    P: tl.constexpr,
++    D: tl.constexpr,
++    ROPE_R: tl.constexpr,
++    attn_factor: tl.constexpr,
++    eps: tl.constexpr,
++    MAXPOOLS: tl.constexpr,
++    RING: tl.constexpr,
++):
++    """_qsa_pool_update_kernel over the raw-key ring, for the BC graph (same runtime arguments;
++    the graph appends this call's rows to the ring first, so every row a block reads is in
++    the ring: the call's rows plus the partial block before it span at most MAX_QLEN + P - 1
++    <= RING positions)."""
++    b = tl.program_id(0)
++    pi = tl.program_id(1)
++    pos0 = tl.load(cache_seqlens + b)
++    t_end = pos0 + append_len
++    pool = pos0 // P + pi
++    if pool * P >= t_end:
++        return
++
++    HALF: tl.constexpr = ROPE_R // 2
++    PASS: tl.constexpr = D - ROPE_R
++    offs_h = tl.arange(0, HALF)
++    bt = block_table + b * num_pages_per_row
++
++    acc_lo = tl.zeros((HALF,), tl.float32)
++    acc_hi = tl.zeros((HALF,), tl.float32)
++    if PASS > 0:
++        acc_ps = tl.zeros((PASS,), tl.float32)
++        offs_p = ROPE_R + tl.arange(0, PASS)
++    cnt = 0.0
++    for j in range(P):
++        tok = pool * P + j
++        if tok < t_end:
++            phys = tl.load(bt + tok // page_size)
++            row = raw_plane + (phys * RING + tok % RING) * D
++            acc_lo += tl.load(row + offs_h).to(tl.float32)
++            acc_hi += tl.load(row + HALF + offs_h).to(tl.float32)
++            if PASS > 0:
++                acc_ps += tl.load(row + offs_p).to(tl.float32)
++            cnt += 1.0
++
++    # fp32 mean -> fp16 (the norm reads the rounded values, like the eager path)
++    m_lo = (acc_lo / cnt).to(tl.float16).to(tl.float32)
++    m_hi = (acc_hi / cnt).to(tl.float16).to(tl.float32)
++    ssq = tl.sum(m_lo * m_lo, axis = 0) + tl.sum(m_hi * m_hi, axis = 0)
++    if PASS > 0:
++        m_ps = (acc_ps / cnt).to(tl.float16).to(tl.float32)
++        ssq += tl.sum(m_ps * m_ps, axis = 0)
++    rstd = tl.rsqrt(ssq / D + eps)
++    y_lo = (m_lo * rstd * (tl.load(k_norm_w + offs_h).to(tl.float32) + 1.0)).to(tl.float16)
++    y_hi = (m_hi * rstd * (tl.load(k_norm_w + HALF + offs_h).to(tl.float32) + 1.0)).to(tl.float16)
++
++    # Partial NEOX rope at the block start: pair (d, d + HALF) shares frequency d
++    pos_f = (pool * P).to(tl.float32)
++    fr = tl.load(inv_freq + offs_h) * pos_f
++    cosv = (tl.cos(fr) * attn_factor).to(tl.float16)
++    sinv = (tl.sin(fr) * attn_factor).to(tl.float16)
++    r_lo = y_lo * cosv - y_hi * sinv
++    r_hi = y_hi * cosv + y_lo * sinv
++
++    phys0 = tl.load(bt + (pool * P) // page_size)
++    prow = pool_plane + (phys0 * (page_size // P) + pool % (page_size // P)) * D
++    tl.store(prow + offs_h, r_lo)
++    tl.store(prow + HALF + offs_h, r_hi)
++    if PASS > 0:
++        y_ps = (m_ps * rstd * (tl.load(k_norm_w + offs_p).to(tl.float32) + 1.0)).to(tl.float16)
++        tl.store(prow + offs_p, y_ps)
++
++
++@triton.jit(do_not_specialize = ["num_pages_per_row", "append_len"])
++def _qsa_pool_update_ring_kernel(
++    raw_plane,           # flat (pages * RING, D) fp16 raw-key ring
++    rows_new,            # (bsz * append_len, D) fp16 raw keys of this append (staged)
++    pool_plane,          # flat (pages * page_size // P, D) fp16 pooled keys
++    k_norm_w,            # (D,) fp16
++    inv_freq,            # (ROPE_R // 2,) fp32
++    block_table,         # (bsz, num_pages_per_row) i32
++    cache_seqlens,       # (bsz,) i32, pre-append counts
++    num_pages_per_row,
++    append_len,
++    page_size: tl.constexpr,
++    P: tl.constexpr,
++    D: tl.constexpr,
++    ROPE_R: tl.constexpr,
++    attn_factor: tl.constexpr,
++    eps: tl.constexpr,
++    MAXPOOLS: tl.constexpr,
++    RING: tl.constexpr,
++):
++    """Eager form of _qsa_pool_update_ring_bc_kernel, for appends of any length: rows at or
++    after pos0 are read from the staged new rows, the partial block before pos0 from the ring.
++    Runs BEFORE the ring append of the same call (qsa_ring_plane_update)."""
++    b = tl.program_id(0)
++    pi = tl.program_id(1)
++    pos0 = tl.load(cache_seqlens + b)
++    t_end = pos0 + append_len
++    pool = pos0 // P + pi
++    if pool * P >= t_end:
++        return
++
++    HALF: tl.constexpr = ROPE_R // 2
++    PASS: tl.constexpr = D - ROPE_R
++    offs_h = tl.arange(0, HALF)
++    bt = block_table + b * num_pages_per_row
++
++    acc_lo = tl.zeros((HALF,), tl.float32)
++    acc_hi = tl.zeros((HALF,), tl.float32)
++    if PASS > 0:
++        acc_ps = tl.zeros((PASS,), tl.float32)
++        offs_p = ROPE_R + tl.arange(0, PASS)
++    cnt = 0.0
++    for j in range(P):
++        tok = pool * P + j
++        if tok < t_end:
++            if tok >= pos0:
++                row = rows_new + (b * append_len + (tok - pos0)) * D
++            else:
++                phys = tl.load(bt + tok // page_size)
++                row = raw_plane + (phys * RING + tok % RING) * D
++            acc_lo += tl.load(row + offs_h).to(tl.float32)
++            acc_hi += tl.load(row + HALF + offs_h).to(tl.float32)
++            if PASS > 0:
++                acc_ps += tl.load(row + offs_p).to(tl.float32)
++            cnt += 1.0
++
++    # fp32 mean -> fp16 (the norm reads the rounded values, like the eager path)
++    m_lo = (acc_lo / cnt).to(tl.float16).to(tl.float32)
++    m_hi = (acc_hi / cnt).to(tl.float16).to(tl.float32)
++    ssq = tl.sum(m_lo * m_lo, axis = 0) + tl.sum(m_hi * m_hi, axis = 0)
++    if PASS > 0:
++        m_ps = (acc_ps / cnt).to(tl.float16).to(tl.float32)
++        ssq += tl.sum(m_ps * m_ps, axis = 0)
++    rstd = tl.rsqrt(ssq / D + eps)
++    y_lo = (m_lo * rstd * (tl.load(k_norm_w + offs_h).to(tl.float32) + 1.0)).to(tl.float16)
++    y_hi = (m_hi * rstd * (tl.load(k_norm_w + HALF + offs_h).to(tl.float32) + 1.0)).to(tl.float16)
++
++    # Partial NEOX rope at the block start: pair (d, d + HALF) shares frequency d
++    pos_f = (pool * P).to(tl.float32)
++    fr = tl.load(inv_freq + offs_h) * pos_f
++    cosv = (tl.cos(fr) * attn_factor).to(tl.float16)
++    sinv = (tl.sin(fr) * attn_factor).to(tl.float16)
++    r_lo = y_lo * cosv - y_hi * sinv
++    r_hi = y_hi * cosv + y_lo * sinv
++
++    phys0 = tl.load(bt + (pool * P) // page_size)
++    prow = pool_plane + (phys0 * (page_size // P) + pool % (page_size // P)) * D
++    tl.store(prow + offs_h, r_lo)
++    tl.store(prow + HALF + offs_h, r_hi)
++    if PASS > 0:
++        y_ps = (m_ps * rstd * (tl.load(k_norm_w + offs_p).to(tl.float32) + 1.0)).to(tl.float16)
++        tl.store(prow + offs_p, y_ps)
++
++
++def qsa_ring_plane_update(
++    kraw,                # (bsz, seqlen, D) fp16 staged raw keys of this append, contiguous
++    raw_ring,            # (pages, RING, D) fp16
++    pooled,              # (pages, page_size // P, D) fp16
++    k_norm_w,            # (D,) fp16
++    inv_freq,            # (ROPE_R // 2,) fp32
++    attn_factor: float,
++    eps: float,
++    block_table,         # (bsz, pages_per_row) i32, contiguous
++    cache_seqlens,       # (bsz,) i32 device, pre-append counts
++    P: int,
++):
++    """Eager plane upkeep with the raw-key ring: pool update first (it reads the partial block
++    before each sequence's pos0 from the ring and everything after from kraw), then the ring
++    append. The caller sets the current device."""
++    bsz, seqlen, dk = kraw.shape
++    ring = raw_ring.shape[1]
++    page_size = pooled.shape[1] * P
++    npr = block_table.shape[1]
++    _qsa_pool_update_ring_kernel[(bsz, seqlen // P + 1)](
++        raw_ring.view(-1, dk), kraw, pooled.view(-1, dk), k_norm_w,
++        inv_freq, block_table, cache_seqlens, npr, seqlen,
++        page_size = page_size, P = P, D = dk, ROPE_R = 2 * inv_freq.numel(),
++        attn_factor = float(attn_factor), eps = float(eps), MAXPOOLS = 1, RING = ring,
++    )
++    _qsa_raw_ring_append_kernel[(bsz * seqlen,)](
++        kraw, raw_ring, block_table, cache_seqlens, npr, seqlen,
++        page_size = page_size, D = dk, RING = ring,
++    )
++
++
+ @triton.jit(do_not_specialize = ["k_len", "num_pages_per_seq", "num_splits", "split_len"])
+ def _qsa_sparse_split_kernel(
+     q,                   # (bsz, 1, n_q_heads, head_dim) fp16, normed + roped
+--- a/modules/qsa_indexer.py
++++ b/modules/qsa_indexer.py
+@@ -487,6 +487,23 @@
+                 eps = float(self.q_layernorm.rms_norm_eps), H_i = H, D = dk,
+             )
+             rope.apply(q, None, 0, seqlens, None, True)
++            if getattr(layer, "raw_ring_rows", 0):
++                # EXL3_QSA_RAWK_RING (cache/qsa.py): pool from the staged rows and the ring, then
++                # keep the last ring rows. A verify window may be rewound into, so its rows must
++                # stay recoverable: window + 2 < ring rows (the graph path is bounded by MAX_QLEN)
++                ring = layer.raw_ring_rows
++                if params.get("recurrent_history") and seqlen > ring - cr + 1:
++                    raise RuntimeError(
++                        f"EXL3_QSA_RAWK_RING: verify window of {seqlen} tokens exceeds the "
++                        f"{ring - cr + 1} the raw-key ring can rewind into"
++                    )
++                from .attention_fn.qsa_triton import qsa_ring_plane_update
++                qsa_ring_plane_update(
++                    kraw, layer.raw_k, layer.pooled, self._norm_w_half("k", dev),
++                    rope.inv_freq, rope.attn_factor, self.k_layernorm.rms_norm_eps,
++                    bt, seqlens, cr,
++                )
++                return q
+             _mla_plane_update_kernel[(R,)](
+                 kraw, layer.raw_k, bt, seqlens, npr, seqlen,
+                 page_size = page_size, D = dk, DST_D = 0, DST_OFF = 0,
+@@ -512,6 +529,7 @@
+         params: dict,
+     ) -> torch.Tensor:
+         """Torch reference of update_planes (tests): writes only the completed pools."""
++        assert not getattr(layer, "raw_ring_rows", 0), "update_planes_ref needs a full raw_k plane"
+         bsz, seqlen, _ = x.shape
+         dev = x.device
+         cr = self.compress_ratio
+@@ -595,8 +613,8 @@
+         cr = self.compress_ratio
+         dk = self.head_dim
+         dev = q_idx.device
+-        page_sz = layer.raw_k.shape[1]
+         bpp = layer.pooled.shape[1]
++        page_sz = bpp * cr
+         pooled_flat = layer.pooled.view(-1, dk)
+         bt = block_table.long()
+         pos0 = cache_seqlens_cpu.long().to(dev)
