@@ -1,0 +1,5068 @@
+{
+ "families": {
+  "GDN": {
+   "layers": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    6,
+    8,
+    9
+   ],
+   "info": {
+    "rank0": {
+     "plan": [
+      0,
+      8,
+      "K-heads"
+     ],
+     "norm_gate_activation_fixed": true,
+     "gate_activation": "sigmoid",
+     "num_k_heads": 8,
+     "num_v_heads": 24,
+     "fdim_qkv": 5120,
+     "bc_split": true,
+     "qkvz_bundle": true
+    },
+    "rank1": {
+     "plan": [
+      8,
+      16,
+      "K-heads"
+     ],
+     "norm_gate_activation_fixed": true,
+     "gate_activation": "sigmoid",
+     "num_k_heads": 8,
+     "num_v_heads": 24,
+     "fdim_qkv": 5120,
+     "bc_split": true,
+     "qkvz_bundle": true
+    },
+    "full": {
+     "num_k_heads": 16,
+     "num_v_heads": 48,
+     "fdim_qkv": 10240,
+     "bc_split": true,
+     "K_qkv_z_o": [
+      4,
+      4,
+      4
+     ],
+     "gate_activation": "sigmoid"
+    }
+   },
+   "shapes": {
+    "1x4": {
+     "full": {
+      "median_us": 70.639,
+      "min_us": 70.475,
+      "max_us": 70.782,
+      "host_us": 4.433,
+      "host_ahead": true,
+      "samples_us": [
+       70.639,
+       70.639,
+       70.475,
+       70.721,
+       70.66,
+       70.557,
+       70.782
+      ]
+     },
+     "rank0": {
+      "median_us": 51.623,
+      "min_us": 51.5,
+      "max_us": 51.766,
+      "host_us": 4.446,
+      "host_ahead": true,
+      "samples_us": [
+       51.5,
+       51.664,
+       51.603,
+       51.582,
+       51.766,
+       51.664,
+       51.623
+      ]
+     },
+     "rank1": {
+      "median_us": 51.46,
+      "min_us": 51.152,
+      "max_us": 51.541,
+      "host_us": 4.44,
+      "host_ahead": true,
+      "samples_us": [
+       51.46,
+       51.172,
+       51.541,
+       51.152,
+       51.541,
+       51.172,
+       51.541
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7308
+    },
+    "4x2": {
+     "full": {
+      "median_us": 78.831,
+      "min_us": 78.769,
+      "max_us": 79.015,
+      "host_us": 5.654,
+      "host_ahead": true,
+      "samples_us": [
+       78.892,
+       78.81,
+       78.851,
+       78.831,
+       78.81,
+       79.015,
+       78.769
+      ]
+     },
+     "rank0": {
+      "median_us": 57.562,
+      "min_us": 57.501,
+      "max_us": 57.685,
+      "host_us": 5.631,
+      "host_ahead": true,
+      "samples_us": [
+       57.562,
+       57.583,
+       57.603,
+       57.562,
+       57.521,
+       57.685,
+       57.501
+      ]
+     },
+     "rank1": {
+      "median_us": 57.501,
+      "min_us": 57.296,
+      "max_us": 57.665,
+      "host_us": 5.582,
+      "host_ahead": true,
+      "samples_us": [
+       57.501,
+       57.296,
+       57.624,
+       57.296,
+       57.665,
+       57.296,
+       57.562
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7302
+    },
+    "4x4": {
+     "full": {
+      "median_us": 96.863,
+      "min_us": 96.802,
+      "max_us": 96.904,
+      "host_us": 5.577,
+      "host_ahead": true,
+      "samples_us": [
+       96.904,
+       96.843,
+       96.884,
+       96.884,
+       96.863,
+       96.802,
+       96.863
+      ]
+     },
+     "rank0": {
+      "median_us": 71.765,
+      "min_us": 71.765,
+      "max_us": 71.806,
+      "host_us": 5.581,
+      "host_ahead": true,
+      "samples_us": [
+       71.765,
+       71.786,
+       71.806,
+       71.765,
+       71.765,
+       71.765,
+       71.765
+      ]
+     },
+     "rank1": {
+      "median_us": 71.724,
+      "min_us": 71.642,
+      "max_us": 71.745,
+      "host_us": 5.585,
+      "host_ahead": true,
+      "samples_us": [
+       71.724,
+       71.745,
+       71.704,
+       71.684,
+       71.724,
+       71.724,
+       71.642
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7409
+    }
+   },
+   "kernels": {
+    "1x4": {
+     "full": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 21.8719,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.48,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 1.0431999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.4063999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 4, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 11.1104,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3152,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 16.896,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 15.814700000000002,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.4512000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 0.9568,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.3872000000000004,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 4, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 7.651400000000001,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.2545,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.009799999999998,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank1": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 15.9392,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.3968000000000007,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 0.9312000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.3808,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 4, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 7.638400000000001,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.2640000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.086400000000001,
+       "launches": 0.9999999999999999
+      }
+     }
+    },
+    "4x2": {
+     "full": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 23.1779,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.5183999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 1.0015999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.6814,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 17.660999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3600000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 17.5169,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 16.1056,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.3871000000000007,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 0.9217000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.2079,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 12.550400000000003,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3152999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.169400000000001,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank1": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 16.096,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.3968000000000003,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 0.9343000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.2048,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 12.4289,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3055000000000003,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.140799999999999,
+       "launches": 0.9999999999999999
+      }
+     }
+    },
+    "4x4": {
+     "full": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 24.8796,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 3.4110999999999994,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 1.5649,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 3.0367,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 32.6974,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.4398999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 17.7502,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 16.8767,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.4448,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 1.0369,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.4353000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 24.1758,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3473000000000004,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.5679,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank1": {
+      "void exl3_mgemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 16.9856,
+       "launches": 0.9999999999999999
+      },
+      "gdn_ba_gemv_kernel(__half const*, __half const*, __half const*, float*, int, int)": {
+       "us": 2.4607999999999994,
+       "launches": 0.9999999999999999
+      },
+      "void gated_delta_net_fused_op_3_kernel<__nv_bfloat16>(float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float*, int, int, int, int, float)": {
+       "us": 1.0111999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void conv1d_update_kernel<true, true>(__nv_bfloat16 const*, __nv_bfloat16*, int const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, int, int, int, int)": {
+       "us": 2.4576000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false>(__nv_bfloat16 const*, float const*, __nv_bfloat16 const*, float*, __nv_bfloat16*, int, int, int, int, int, int, float, int const*, int, float const*)": {
+       "us": 24.148100000000007,
+       "launches": 0.9999999999999999
+      },
+      "void gated_rms_norm_kernel<32, __half, __nv_bfloat16, float>(__nv_bfloat16 const*, __nv_bfloat16 const*, __half*, float const*, float, int, int, float, int, bool, int)": {
+       "us": 1.3568000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.5904,
+       "launches": 0.9999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1x4": {
+     "rel_maxabs": 6.795256206340062e-06,
+     "cos": 1.0000000275606453,
+     "max_abs_full": 1.2293816804885864,
+     "ok": true,
+     "family": "GDN",
+     "shape": "1x4"
+    },
+    "4x2": {
+     "rel_maxabs": 0.0002193207249848027,
+     "cos": 0.9999999195115845,
+     "max_abs_full": 0.6675333976745605,
+     "ok": true,
+     "family": "GDN",
+     "shape": "4x2"
+    },
+    "4x4": {
+     "rel_maxabs": 7.599984455289527e-05,
+     "cos": 1.0000000094748758,
+     "max_abs_full": 1.4263969659805298,
+     "ok": true,
+     "family": "GDN",
+     "shape": "4x4"
+    }
+   },
+   "working_set_bytes": 235761248,
+   "l2_bytes": 100663296,
+   "complete": true
+  },
+  "ATTN": {
+   "keys": [
+    "model.language_model.layers.3.self_attn",
+    "model.language_model.layers.7.self_attn",
+    "model.language_model.layers.11.self_attn",
+    "model.language_model.layers.15.self_attn",
+    "model.language_model.layers.19.self_attn",
+    "model.language_model.layers.23.self_attn",
+    "model.language_model.layers.27.self_attn",
+    "model.language_model.layers.31.self_attn",
+    "model.language_model.layers.35.self_attn",
+    "model.language_model.layers.39.self_attn",
+    "model.language_model.layers.43.self_attn",
+    "model.language_model.layers.47.self_attn"
+   ],
+   "info": {
+    "rank0": {
+     "plan": [
+      0,
+      1,
+      "heads"
+     ],
+     "num_q_heads": 12,
+     "num_kv_heads": 1,
+     "q_out": 6144,
+     "kv_out": 256,
+     "o_in": 3072,
+     "qkv_bundle": true
+    },
+    "rank1": {
+     "plan": [
+      1,
+      2,
+      "heads"
+     ],
+     "num_q_heads": 12,
+     "num_kv_heads": 1,
+     "q_out": 6144,
+     "kv_out": 256,
+     "o_in": 3072,
+     "qkv_bundle": true
+    },
+    "full": {
+     "num_q_heads": 24,
+     "num_kv_heads": 2,
+     "head_dim": 256,
+     "q_out": 12288,
+     "K_q_k_v_o": [
+      4,
+      4,
+      4,
+      4
+     ],
+     "indexer": true,
+     "sparse_threshold": 2051,
+     "cache_tokens": 6144,
+     "ctx": 1024
+    }
+   },
+   "shapes": {
+    "1x4": {
+     "full": {
+      "median_us": 90.231,
+      "min_us": 89.986,
+      "max_us": 90.354,
+      "host_us": 10.737,
+      "host_ahead": true,
+      "samples_us": [
+       90.272,
+       90.272,
+       90.068,
+       90.231,
+       90.158,
+       90.354,
+       89.986
+      ]
+     },
+     "rank0": {
+      "median_us": 78.493,
+      "min_us": 78.444,
+      "max_us": 78.566,
+      "host_us": 10.421,
+      "host_ahead": true,
+      "samples_us": [
+       78.505,
+       78.484,
+       78.493,
+       78.444,
+       78.484,
+       78.514,
+       78.566
+      ]
+     },
+     "rank1": {
+      "median_us": 78.298,
+      "min_us": 78.236,
+      "max_us": 78.461,
+      "host_us": 10.701,
+      "host_ahead": true,
+      "samples_us": [
+       78.42,
+       78.287,
+       78.246,
+       78.236,
+       78.461,
+       78.298,
+       78.298
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8699
+    },
+    "4x2": {
+     "full": {
+      "median_us": 90.493,
+      "min_us": 90.371,
+      "max_us": 90.555,
+      "host_us": 10.341,
+      "host_ahead": true,
+      "samples_us": [
+       90.493,
+       90.514,
+       90.493,
+       90.453,
+       90.555,
+       90.412,
+       90.371
+      ]
+     },
+     "rank0": {
+      "median_us": 79.243,
+      "min_us": 79.202,
+      "max_us": 79.387,
+      "host_us": 10.294,
+      "host_ahead": true,
+      "samples_us": [
+       79.387,
+       79.243,
+       79.202,
+       79.223,
+       79.325,
+       79.243,
+       79.243
+      ]
+     },
+     "rank1": {
+      "median_us": 79.304,
+      "min_us": 79.16,
+      "max_us": 79.447,
+      "host_us": 10.355,
+      "host_ahead": true,
+      "samples_us": [
+       79.447,
+       79.222,
+       79.304,
+       79.16,
+       79.304,
+       79.263,
+       79.345
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8764
+    },
+    "4x4": {
+     "full": {
+      "median_us": 100.656,
+      "min_us": 100.533,
+      "max_us": 100.86,
+      "host_us": 10.144,
+      "host_ahead": true,
+      "samples_us": [
+       100.656,
+       100.738,
+       100.533,
+       100.697,
+       100.533,
+       100.86,
+       100.615
+      ]
+     },
+     "rank0": {
+      "median_us": 84.016,
+      "min_us": 83.955,
+      "max_us": 84.057,
+      "host_us": 10.18,
+      "host_ahead": true,
+      "samples_us": [
+       83.995,
+       84.016,
+       84.016,
+       83.955,
+       84.057,
+       83.996,
+       84.036
+      ]
+     },
+     "rank1": {
+      "median_us": 83.996,
+      "min_us": 83.688,
+      "max_us": 84.057,
+      "host_us": 10.113,
+      "host_ahead": true,
+      "samples_us": [
+       84.016,
+       83.77,
+       84.016,
+       83.688,
+       84.057,
+       83.77,
+       83.996
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8347
+    },
+    "1x1": {
+     "full": {
+      "median_us": 83.913,
+      "min_us": 83.893,
+      "max_us": 83.995,
+      "host_us": 10.233,
+      "host_ahead": true,
+      "samples_us": [
+       83.995,
+       83.913,
+       83.954,
+       83.893,
+       83.934,
+       83.893,
+       83.913
+      ]
+     },
+     "rank0": {
+      "median_us": 73.428,
+      "min_us": 73.346,
+      "max_us": 73.509,
+      "host_us": 10.159,
+      "host_ahead": true,
+      "samples_us": [
+       73.428,
+       73.346,
+       73.428,
+       73.448,
+       73.448,
+       73.346,
+       73.509
+      ]
+     },
+     "rank1": {
+      "median_us": 73.243,
+      "min_us": 73.018,
+      "max_us": 73.305,
+      "host_us": 10.183,
+      "host_ahead": true,
+      "samples_us": [
+       73.284,
+       73.038,
+       73.243,
+       73.038,
+       73.305,
+       73.018,
+       73.264
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.875
+    },
+    "4x1": {
+     "full": {
+      "median_us": 90.17,
+      "min_us": 90.108,
+      "max_us": 90.272,
+      "host_us": 10.344,
+      "host_ahead": true,
+      "samples_us": [
+       90.272,
+       90.19,
+       90.17,
+       90.149,
+       90.108,
+       90.17,
+       90.211
+      ]
+     },
+     "rank0": {
+      "median_us": 78.793,
+      "min_us": 78.67,
+      "max_us": 78.916,
+      "host_us": 10.256,
+      "host_ahead": true,
+      "samples_us": [
+       78.793,
+       78.773,
+       78.896,
+       78.916,
+       78.732,
+       78.67,
+       78.875
+      ]
+     },
+     "rank1": {
+      "median_us": 78.769,
+      "min_us": 78.502,
+      "max_us": 78.851,
+      "host_us": 10.435,
+      "host_ahead": true,
+      "samples_us": [
+       78.81,
+       78.625,
+       78.81,
+       78.543,
+       78.851,
+       78.502,
+       78.769
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8738
+    }
+   },
+   "kernels": {
+    "1x4": {
+     "full": {
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 20.963100000000004,
+       "launches": 0.9999999999999999
+      },
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0463000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3678,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4527999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 9.9871,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8992000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8576000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 2.0031999999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.9198,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2622,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.752,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 16.8993,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.796800000000001,
+       "launches": 0.9999999999999999
+      },
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9855999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3327999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4272,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.0704,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9376000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8544,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 2.0736000000000003,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.638099999999998,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2173,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7712,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.812499999999998,
+       "launches": 0.9999999999999999
+      }
+     },
+     "rank1": {
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.6943,
+       "launches": 0.9999999999999999
+      },
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9984,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3104,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4145,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.9408,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.896,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8575000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.9775999999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.379099999999998,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2047,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7710999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.057399999999998,
+       "launches": 0.9999999999999999
+      }
+     }
+    },
+    "4x2": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0623,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3777,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.5009000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.2625,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9441,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8832000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.7215999999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.939399999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.265599999999999,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7679999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 16.9473,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 18.6592,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0080000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3487999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4911,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.2785,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9216000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8641000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.7408,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.6833,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2496,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7711999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.8352,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.312199999999997,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0176,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3552,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4784,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.88,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9184000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8704000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.7375999999999998,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.5456,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2624,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7647999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.8064,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.414399999999999,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x4": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0624000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3903999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.5039,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 11.375999999999998,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9439,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8962,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 2.0,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 27.756600000000006,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.3774999999999995,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7775999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 17.8014,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 19.414300000000004,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0301,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3613999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4945,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 11.3152,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9312,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8895000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 2.0639000000000003,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.8048,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.3328999999999995,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7679999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.6128,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.916599999999999,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0368000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3743999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.5329000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 11.3184,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9504,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.9217,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 2.0446999999999997,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.7665,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.329500000000001,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7521,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.654399999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.894400000000001,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "1x1": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.008,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3233,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.488,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.6943,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8928000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8800000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6224,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.395199999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 5.9808,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7393,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 9.12,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 18.368,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9185000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.1792999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4783999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.4862,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9023000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8641000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6350999999999998,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 17.6735,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 5.885,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7394,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.6945,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.084700000000002,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9184000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.1664,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4303999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.1632,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8832000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8544000000000003,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6127000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 17.692700000000002,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 5.792000000000001,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7391,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.6336,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.1296,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x1": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0401,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3712999999999997,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4976,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.032,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8992000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8704000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6064000000000003,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.7282,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.230300000000001,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7646999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 16.988799999999998,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 18.3841,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9886999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3329,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4207,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.086400000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9152000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8351999999999997,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6033000000000004,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.5841,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.1505,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7615999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.5951,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.273600000000002,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9918999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.2943,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4016,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.860800000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9025000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8351999999999997,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.6096000000000004,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.3568,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.127999999999999,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7550999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 10.3294,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 13.1905,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1x4": {
+     "rel_maxabs": 1.1292297275597774e-07,
+     "cos": 0.9999999305788336,
+     "max_abs_full": 4.2226762771606445,
+     "ok": true,
+     "family": "ATTN",
+     "shape": "1x4"
+    },
+    "4x2": {
+     "rel_maxabs": 1.304666249738822e-07,
+     "cos": 1.000000004304123,
+     "max_abs_full": 3.6548593044281006,
+     "ok": true,
+     "family": "ATTN",
+     "shape": "4x2"
+    },
+    "4x4": {
+     "rel_maxabs": 5.294382490757068e-07,
+     "cos": 1.0000000724736775,
+     "max_abs_full": 4.503236770629883,
+     "ok": true,
+     "family": "ATTN",
+     "shape": "4x4"
+    },
+    "1x1": {
+     "rel_maxabs": 1.836822381528875e-07,
+     "cos": 1.0000000911025706,
+     "max_abs_full": 2.4337401390075684,
+     "ok": true,
+     "family": "ATTN",
+     "shape": "1x1"
+    },
+    "4x1": {
+     "rel_maxabs": 2.2319510488495966e-07,
+     "cos": 1.0000000866322751,
+     "max_abs_full": 4.272828102111816,
+     "ok": true,
+     "family": "ATTN",
+     "shape": "4x1"
+    }
+   },
+   "working_set_bytes": 309482736,
+   "l2_bytes": 100663296,
+   "complete": true
+  },
+  "MOE_K2": {
+   "key": "model.language_model.layers.24.mlp",
+   "info": {
+    "rank0": {
+     "plan": {
+      "model.language_model.layers.24.mlp": [
+       0,
+       384,
+       "channels"
+      ],
+      "model.language_model.layers.24.mlp.shared_expert": [
+       0,
+       384,
+       "channels"
+      ]
+     },
+     "intermediate_size": 384,
+     "num_local_experts": 512,
+     "shared_interm": 384,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "rank1": {
+     "plan": {
+      "model.language_model.layers.24.mlp": [
+       384,
+       640,
+       "channels"
+      ],
+      "model.language_model.layers.24.mlp.shared_expert": [
+       384,
+       640,
+       "channels"
+      ]
+     },
+     "intermediate_size": 256,
+     "num_local_experts": 512,
+     "shared_interm": 256,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "full": {
+     "K_gate_up_down": [
+      2,
+      2,
+      2
+     ],
+     "intermediate_size": 640,
+     "num_experts": 512,
+     "topk": 10,
+     "bc_sh_exp": true,
+     "shared_interm": 640,
+     "shared_K_gate_up_down": [
+      4,
+      4,
+      4
+     ]
+    },
+    "split": {
+     "unit_channels": 128,
+     "moe_intermediate": 640,
+     "moe": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "shared_intermediate": 640,
+     "shared": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "critical_rank": "rank0",
+     "critical_share": 0.6
+    }
+   },
+   "rows": {
+    "1": {
+     "full": {
+      "median_us": 43.889,
+      "min_us": 43.643,
+      "max_us": 44.012,
+      "host_us": 9.241,
+      "host_ahead": true,
+      "samples_us": [
+       44.012,
+       43.786,
+       43.889,
+       43.909,
+       43.643,
+       43.909,
+       43.807
+      ]
+     },
+     "rank0": {
+      "median_us": 38.932,
+      "min_us": 38.851,
+      "max_us": 39.055,
+      "host_us": 9.2,
+      "host_ahead": true,
+      "samples_us": [
+       39.055,
+       38.932,
+       38.851,
+       38.973,
+       38.932,
+       38.912,
+       38.891
+      ]
+     },
+     "rank1": {
+      "median_us": 37.048,
+      "min_us": 36.987,
+      "max_us": 37.13,
+      "host_us": 9.218,
+      "host_ahead": true,
+      "samples_us": [
+       37.089,
+       36.987,
+       37.028,
+       36.987,
+       37.13,
+       37.048,
+       37.048
+      ]
+     },
+     "routed": {
+      "median_us": 32.85,
+      "min_us": 32.829,
+      "max_us": 32.911,
+      "host_us": 4.993,
+      "host_ahead": true,
+      "samples_us": [
+       32.85,
+       32.829,
+       32.85,
+       32.85,
+       32.829,
+       32.911,
+       32.829
+      ]
+     },
+     "shared": {
+      "median_us": 18.504,
+      "min_us": 18.503,
+      "max_us": 18.504,
+      "host_us": 4.719,
+      "host_ahead": true,
+      "samples_us": [
+       18.504,
+       18.504,
+       18.504,
+       18.504,
+       18.504,
+       18.504,
+       18.503
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8871
+    },
+    "4": {
+     "full": {
+      "median_us": 95.263,
+      "min_us": 95.119,
+      "max_us": 95.386,
+      "host_us": 10.831,
+      "host_ahead": true,
+      "samples_us": [
+       95.386,
+       95.263,
+       95.365,
+       95.242,
+       95.345,
+       95.263,
+       95.119
+      ]
+     },
+     "rank0": {
+      "median_us": 72.049,
+      "min_us": 71.905,
+      "max_us": 72.09,
+      "host_us": 10.82,
+      "host_ahead": true,
+      "samples_us": [
+       71.987,
+       72.008,
+       72.049,
+       72.049,
+       71.905,
+       72.049,
+       72.09
+      ]
+     },
+     "rank1": {
+      "median_us": 66.99,
+      "min_us": 66.929,
+      "max_us": 67.031,
+      "host_us": 10.831,
+      "host_ahead": true,
+      "samples_us": [
+       67.011,
+       66.99,
+       66.97,
+       67.031,
+       66.99,
+       66.929,
+       67.011
+      ]
+     },
+     "routed": {
+      "median_us": 93.235,
+      "min_us": 93.153,
+      "max_us": 93.276,
+      "host_us": 6.582,
+      "host_ahead": true,
+      "samples_us": [
+       93.174,
+       93.153,
+       93.235,
+       93.256,
+       93.276,
+       93.215,
+       93.256
+      ]
+     },
+     "shared": {
+      "median_us": 20.552,
+      "min_us": 20.531,
+      "max_us": 20.552,
+      "host_us": 4.765,
+      "host_ahead": true,
+      "samples_us": [
+       20.531,
+       20.552,
+       20.552,
+       20.552,
+       20.552,
+       20.531,
+       20.551
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7563
+    },
+    "8": {
+     "full": {
+      "median_us": 151.88,
+      "min_us": 151.593,
+      "max_us": 152.351,
+      "host_us": 10.797,
+      "host_ahead": true,
+      "samples_us": [
+       151.859,
+       151.88,
+       151.9,
+       151.593,
+       152.351,
+       151.982,
+       151.736
+      ]
+     },
+     "rank0": {
+      "median_us": 123.494,
+      "min_us": 123.331,
+      "max_us": 123.843,
+      "host_us": 10.804,
+      "host_ahead": true,
+      "samples_us": [
+       123.331,
+       123.494,
+       123.515,
+       123.412,
+       123.843,
+       123.638,
+       123.413
+      ]
+     },
+     "rank1": {
+      "median_us": 100.628,
+      "min_us": 100.465,
+      "max_us": 100.936,
+      "host_us": 10.781,
+      "host_ahead": true,
+      "samples_us": [
+       100.936,
+       100.465,
+       100.71,
+       100.547,
+       100.628,
+       100.485,
+       100.649
+      ]
+     },
+     "routed": {
+      "median_us": 144.742,
+      "min_us": 144.66,
+      "max_us": 144.804,
+      "host_us": 6.589,
+      "host_ahead": true,
+      "samples_us": [
+       144.742,
+       144.66,
+       144.742,
+       144.742,
+       144.722,
+       144.804,
+       144.722
+      ]
+     },
+     "shared": {
+      "median_us": 21.719,
+      "min_us": 21.432,
+      "max_us": 22.149,
+      "host_us": 4.754,
+      "host_ahead": true,
+      "samples_us": [
+       22.026,
+       22.149,
+       21.719,
+       21.534,
+       21.432,
+       21.555,
+       21.719
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8131
+    },
+    "16": {
+     "full": {
+      "median_us": 194.253,
+      "min_us": 193.556,
+      "max_us": 195.666,
+      "host_us": 10.815,
+      "host_ahead": true,
+      "samples_us": [
+       193.556,
+       193.987,
+       195.277,
+       194.376,
+       194.253,
+       193.905,
+       195.666
+      ]
+     },
+     "rank0": {
+      "median_us": 135.69,
+      "min_us": 135.404,
+      "max_us": 136.858,
+      "host_us": 10.795,
+      "host_ahead": true,
+      "samples_us": [
+       135.67,
+       135.485,
+       136.714,
+       135.69,
+       136.223,
+       135.404,
+       136.858
+      ]
+     },
+     "rank1": {
+      "median_us": 105.871,
+      "min_us": 105.441,
+      "max_us": 106.844,
+      "host_us": 10.789,
+      "host_ahead": true,
+      "samples_us": [
+       105.974,
+       105.871,
+       105.994,
+       105.851,
+       106.844,
+       105.461,
+       105.441
+      ]
+     },
+     "routed": {
+      "median_us": 186.235,
+      "min_us": 185.927,
+      "max_us": 186.808,
+      "host_us": 6.569,
+      "host_ahead": true,
+      "samples_us": [
+       186.685,
+       185.927,
+       186.235,
+       186.235,
+       186.808,
+       185.989,
+       186.132
+      ]
+     },
+     "shared": {
+      "median_us": 24.084,
+      "min_us": 23.542,
+      "max_us": 24.289,
+      "host_us": 4.525,
+      "host_ahead": true,
+      "samples_us": [
+       24.289,
+       24.289,
+       24.187,
+       23.982,
+       24.084,
+       24.064,
+       23.542
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.6985
+    }
+   },
+   "kernels": {
+    "1": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7297,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 5.3219,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 21.2773,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 13.933000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.4609,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7487,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 4.976,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 12.393600000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 12.934500000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.1409,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7201000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 4.6398,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 9.801400000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 11.993299999999998,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.0608,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.1583999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.553700000000001,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.5105,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 47.5648,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 41.644800000000004,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.934500000000002,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7807999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.6001,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4718999999999993,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 28.717000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 36.8642,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.9344,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7871999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.376,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4208,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 27.8144,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 34.035199999999996,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.848,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "8": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.3376000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.687899999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.751999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 63.7281,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 73.5937,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.347399999999999,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.1839000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.0254,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.7455,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 47.6545,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 65.955,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.0784,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7776,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.8016000000000005,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.704000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 28.9408,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)": {
+       "us": 60.937599999999996,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.767999999999999,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "16": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.5584,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.208,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.76,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 108.6336,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 69.83999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.265600000000001,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.2447000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.753599999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.6865,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 72.1028,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 52.9569,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.0224,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.4271000000000003,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.4337,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.6545000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 48.4261,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)": {
+       "us": 42.352500000000006,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.596899999999998,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1": {
+     "rel_maxabs": 0.0036088985546992984,
+     "cos": 0.999991990072653,
+     "max_abs_full": 0.23276647925376892,
+     "ok": true,
+     "family": "MOE_K2",
+     "shape": "1"
+    },
+    "4": {
+     "rel_maxabs": 0.000706312811467524,
+     "cos": 0.9999997340576909,
+     "max_abs_full": 0.17009547352790833,
+     "ok": true,
+     "family": "MOE_K2",
+     "shape": "4"
+    },
+    "8": {
+     "rel_maxabs": 0.0008142504254823204,
+     "cos": 0.9999997331652936,
+     "max_abs_full": 0.2239382117986679,
+     "ok": true,
+     "family": "MOE_K2",
+     "shape": "8"
+    },
+    "16": {
+     "rel_maxabs": 0.0009434956454738973,
+     "cos": 0.9999997297605212,
+     "max_abs_full": 0.4804718792438507,
+     "ok": true,
+     "family": "MOE_K2",
+     "shape": "16"
+    }
+   },
+   "overlap": {
+    "1": {
+     "hidden_us": 7.465,
+     "residual_us": 11.039
+    },
+    "4": {
+     "hidden_us": 18.524,
+     "residual_us": 2.028
+    },
+    "8": {
+     "hidden_us": 14.581,
+     "residual_us": 7.138
+    },
+    "16": {
+     "hidden_us": 16.066,
+     "residual_us": 8.018
+    }
+   },
+   "working_set_bytes": 644085516,
+   "l2_bytes": 100663296,
+   "allocator": {
+    "segments": 2,
+    "expandable": true,
+    "side_stream_segments": 0,
+    "side_stream_bytes": 0
+   },
+   "complete": true
+  },
+  "MOE_K3": {
+   "key": "model.language_model.layers.0.mlp",
+   "info": {
+    "rank0": {
+     "plan": {
+      "model.language_model.layers.0.mlp": [
+       0,
+       384,
+       "channels"
+      ],
+      "model.language_model.layers.0.mlp.shared_expert": [
+       0,
+       384,
+       "channels"
+      ]
+     },
+     "intermediate_size": 384,
+     "num_local_experts": 512,
+     "shared_interm": 384,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "rank1": {
+     "plan": {
+      "model.language_model.layers.0.mlp": [
+       384,
+       640,
+       "channels"
+      ],
+      "model.language_model.layers.0.mlp.shared_expert": [
+       384,
+       640,
+       "channels"
+      ]
+     },
+     "intermediate_size": 256,
+     "num_local_experts": 512,
+     "shared_interm": 256,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "full": {
+     "K_gate_up_down": [
+      3,
+      3,
+      3
+     ],
+     "intermediate_size": 640,
+     "num_experts": 512,
+     "topk": 10,
+     "bc_sh_exp": true,
+     "shared_interm": 640,
+     "shared_K_gate_up_down": [
+      4,
+      4,
+      4
+     ]
+    },
+    "split": {
+     "unit_channels": 128,
+     "moe_intermediate": 640,
+     "moe": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "shared_intermediate": 640,
+     "shared": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "critical_rank": "rank0",
+     "critical_share": 0.6
+    }
+   },
+   "rows": {
+    "1": {
+     "full": {
+      "median_us": 48.835,
+      "min_us": 48.773,
+      "max_us": 48.957,
+      "host_us": 9.289,
+      "host_ahead": true,
+      "samples_us": [
+       48.957,
+       48.876,
+       48.773,
+       48.773,
+       48.916,
+       48.835,
+       48.835
+      ]
+     },
+     "rank0": {
+      "median_us": 41.349,
+      "min_us": 41.247,
+      "max_us": 41.431,
+      "host_us": 9.282,
+      "host_ahead": true,
+      "samples_us": [
+       41.431,
+       41.39,
+       41.39,
+       41.247,
+       41.247,
+       41.349,
+       41.308
+      ]
+     },
+     "rank1": {
+      "median_us": 38.113,
+      "min_us": 37.97,
+      "max_us": 38.256,
+      "host_us": 9.291,
+      "host_ahead": true,
+      "samples_us": [
+       38.256,
+       38.093,
+       38.175,
+       37.97,
+       37.99,
+       38.113,
+       38.134
+      ]
+     },
+     "routed": {
+      "median_us": 39.588,
+      "min_us": 39.547,
+      "max_us": 39.67,
+      "host_us": 5.061,
+      "host_ahead": true,
+      "samples_us": [
+       39.588,
+       39.588,
+       39.547,
+       39.588,
+       39.67,
+       39.629,
+       39.649
+      ]
+     },
+     "shared": {
+      "median_us": 18.504,
+      "min_us": 18.483,
+      "max_us": 18.504,
+      "host_us": 4.79,
+      "host_ahead": true,
+      "samples_us": [
+       18.483,
+       18.504,
+       18.504,
+       18.483,
+       18.504,
+       18.483,
+       18.504
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8467
+    },
+    "4": {
+     "full": {
+      "median_us": 107.53,
+      "min_us": 107.407,
+      "max_us": 107.571,
+      "host_us": 10.92,
+      "host_ahead": true,
+      "samples_us": [
+       107.53,
+       107.51,
+       107.571,
+       107.448,
+       107.407,
+       107.551,
+       107.571
+      ]
+     },
+     "rank0": {
+      "median_us": 79.585,
+      "min_us": 79.524,
+      "max_us": 79.729,
+      "host_us": 10.841,
+      "host_ahead": true,
+      "samples_us": [
+       79.729,
+       79.585,
+       79.524,
+       79.544,
+       79.585,
+       79.606,
+       79.687
+      ]
+     },
+     "rank1": {
+      "median_us": 67.994,
+      "min_us": 67.891,
+      "max_us": 68.116,
+      "host_us": 10.919,
+      "host_ahead": true,
+      "samples_us": [
+       68.116,
+       68.035,
+       68.076,
+       67.891,
+       67.932,
+       67.912,
+       67.994
+      ]
+     },
+     "routed": {
+      "median_us": 103.782,
+      "min_us": 103.741,
+      "max_us": 103.905,
+      "host_us": 6.673,
+      "host_ahead": true,
+      "samples_us": [
+       103.844,
+       103.782,
+       103.741,
+       103.823,
+       103.905,
+       103.762,
+       103.762
+      ]
+     },
+     "shared": {
+      "median_us": 20.552,
+      "min_us": 20.531,
+      "max_us": 20.552,
+      "host_us": 4.905,
+      "host_ahead": true,
+      "samples_us": [
+       20.552,
+       20.552,
+       20.531,
+       20.552,
+       20.552,
+       20.531,
+       20.552
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7401
+    },
+    "8": {
+     "full": {
+      "median_us": 166.564,
+      "min_us": 166.318,
+      "max_us": 167.076,
+      "host_us": 10.992,
+      "host_ahead": true,
+      "samples_us": [
+       166.318,
+       166.42,
+       166.994,
+       166.564,
+       166.789,
+       166.4,
+       167.076
+      ]
+     },
+     "rank0": {
+      "median_us": 134.604,
+      "min_us": 134.461,
+      "max_us": 134.789,
+      "host_us": 10.928,
+      "host_ahead": true,
+      "samples_us": [
+       134.461,
+       134.604,
+       134.789,
+       134.482,
+       134.768,
+       134.564,
+       134.687
+      ]
+     },
+     "rank1": {
+      "median_us": 101.325,
+      "min_us": 101.12,
+      "max_us": 101.448,
+      "host_us": 10.951,
+      "host_ahead": true,
+      "samples_us": [
+       101.12,
+       101.448,
+       101.304,
+       101.284,
+       101.325,
+       101.427,
+       101.407
+      ]
+     },
+     "routed": {
+      "median_us": 156.897,
+      "min_us": 156.795,
+      "max_us": 157.02,
+      "host_us": 6.691,
+      "host_ahead": true,
+      "samples_us": [
+       156.856,
+       156.999,
+       156.795,
+       156.897,
+       156.959,
+       156.815,
+       157.02
+      ]
+     },
+     "shared": {
+      "median_us": 21.453,
+      "min_us": 21.371,
+      "max_us": 21.678,
+      "host_us": 4.963,
+      "host_ahead": true,
+      "samples_us": [
+       21.412,
+       21.514,
+       21.371,
+       21.453,
+       21.412,
+       21.678,
+       21.555
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8081
+    },
+    "16": {
+     "full": {
+      "median_us": 194.806,
+      "min_us": 194.478,
+      "max_us": 195.113,
+      "host_us": 10.905,
+      "host_ahead": true,
+      "samples_us": [
+       194.785,
+       194.478,
+       195.011,
+       194.744,
+       194.806,
+       194.949,
+       195.113
+      ]
+     },
+     "rank0": {
+      "median_us": 136.878,
+      "min_us": 136.202,
+      "max_us": 137.062,
+      "host_us": 10.916,
+      "host_ahead": true,
+      "samples_us": [
+       137.042,
+       136.366,
+       136.878,
+       137.062,
+       136.796,
+       136.202,
+       137.021
+      ]
+     },
+     "rank1": {
+      "median_us": 113.562,
+      "min_us": 113.213,
+      "max_us": 113.746,
+      "host_us": 10.956,
+      "host_ahead": true,
+      "samples_us": [
+       113.377,
+       113.562,
+       113.746,
+       113.5,
+       113.644,
+       113.582,
+       113.213
+      ]
+     },
+     "routed": {
+      "median_us": 189.266,
+      "min_us": 189.164,
+      "max_us": 189.737,
+      "host_us": 6.689,
+      "host_ahead": true,
+      "samples_us": [
+       189.266,
+       189.164,
+       189.532,
+       189.204,
+       189.737,
+       189.286,
+       189.245
+      ]
+     },
+     "shared": {
+      "median_us": 23.654,
+      "min_us": 23.214,
+      "max_us": 23.859,
+      "host_us": 4.593,
+      "host_ahead": true,
+      "samples_us": [
+       23.214,
+       23.859,
+       23.654,
+       23.276,
+       23.798,
+       23.818,
+       23.276
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7026
+    }
+   },
+   "kernels": {
+    "1": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7329,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 5.0912999999999995,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 23.9876,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 16.172900000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.4931,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7297,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 4.848,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 13.497499999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 13.887799999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.0704,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7713,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 4.6209,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 11.158399999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 12.268900000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.022300000000001,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.8639000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.766399999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4431,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 43.8327,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 47.125499999999995,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.026999999999997,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7903999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.196800000000001,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4817,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 32.8352,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 39.686400000000006,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.9472,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7839999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.884600000000001,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.3248,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 26.1081,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 34.2842,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.732599999999998,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "8": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.344,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.822299999999998,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.6975999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 75.318,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 84.76740000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.1456,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.1328,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.964999999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.771199999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 57.3611,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 70.0239,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.1073,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7968,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.745599999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 4.6913,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 34.0001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)": {
+       "us": 60.202000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.7521,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "16": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 2.0289,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.2495,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.7090000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 118.2057,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 77.5207,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.253,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.3855000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.7472,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.648000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 74.224,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 60.092800000000004,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.201599999999997,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.3567,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<4, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.446400000000001,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 7.6640999999999995,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 58.44179999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, true>(MoeCoopParams)": {
+       "us": 49.6866,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<4, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.7345,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1": {
+     "rel_maxabs": 0.009579841259495044,
+     "cos": 0.9999965123823958,
+     "max_abs_full": 0.21535179018974304,
+     "ok": true,
+     "family": "MOE_K3",
+     "shape": "1"
+    },
+    "4": {
+     "rel_maxabs": 0.0003054586447669627,
+     "cos": 0.9999999417946519,
+     "max_abs_full": 0.4615838825702667,
+     "ok": true,
+     "family": "MOE_K3",
+     "shape": "4"
+    },
+    "8": {
+     "rel_maxabs": 0.0014954386828288219,
+     "cos": 0.9999998137494794,
+     "max_abs_full": 0.4486175775527954,
+     "ok": true,
+     "family": "MOE_K3",
+     "shape": "8"
+    },
+    "16": {
+     "rel_maxabs": 0.0007039870557087383,
+     "cos": 0.9999999042069485,
+     "max_abs_full": 0.8779146671295166,
+     "ok": true,
+     "family": "MOE_K3",
+     "shape": "16"
+    }
+   },
+   "overlap": {
+    "1": {
+     "hidden_us": 9.257,
+     "residual_us": 9.247
+    },
+    "4": {
+     "hidden_us": 16.804,
+     "residual_us": 3.748
+    },
+    "8": {
+     "hidden_us": 11.786,
+     "residual_us": 9.667
+    },
+    "16": {
+     "hidden_us": 18.114,
+     "residual_us": 5.54
+    }
+   },
+   "working_set_bytes": 958658316,
+   "l2_bytes": 100663296,
+   "allocator": {
+    "segments": 2,
+    "expandable": true,
+    "side_stream_segments": 0,
+    "side_stream_bytes": 0
+   },
+   "complete": true
+  },
+  "MTP_ATTN": {
+   "keys": [
+    "mtp.layers.0.self_attn"
+   ],
+   "info": {
+    "rank0": {
+     "plan": [
+      0,
+      1,
+      "heads"
+     ],
+     "num_q_heads": 12,
+     "num_kv_heads": 1,
+     "q_out": 6144,
+     "kv_out": 256,
+     "o_in": 3072,
+     "qkv_bundle": true
+    },
+    "rank1": {
+     "plan": [
+      1,
+      2,
+      "heads"
+     ],
+     "num_q_heads": 12,
+     "num_kv_heads": 1,
+     "q_out": 6144,
+     "kv_out": 256,
+     "o_in": 3072,
+     "qkv_bundle": true
+    },
+    "full": {
+     "num_q_heads": 24,
+     "num_kv_heads": 2,
+     "head_dim": 256,
+     "q_out": 12288,
+     "K_q_k_v_o": [
+      6,
+      6,
+      6,
+      6
+     ],
+     "indexer": true,
+     "sparse_threshold": 2051,
+     "cache_tokens": 6144,
+     "ctx": 1024
+    }
+   },
+   "shapes": {
+    "1x1": {
+     "full": {
+      "median_us": 73.277,
+      "min_us": 73.216,
+      "max_us": 73.318,
+      "host_us": 9.726,
+      "host_ahead": true,
+      "samples_us": [
+       73.236,
+       73.277,
+       73.277,
+       73.216,
+       73.216,
+       73.318,
+       73.277
+      ]
+     },
+     "rank0": {
+      "median_us": 64.502,
+      "min_us": 64.276,
+      "max_us": 64.584,
+      "host_us": 9.742,
+      "host_ahead": true,
+      "samples_us": [
+       64.502,
+       64.481,
+       64.502,
+       64.563,
+       64.276,
+       64.584,
+       64.522
+      ]
+     },
+     "rank1": {
+      "median_us": 63.683,
+      "min_us": 63.642,
+      "max_us": 63.785,
+      "host_us": 9.717,
+      "host_ahead": true,
+      "samples_us": [
+       63.642,
+       63.744,
+       63.642,
+       63.683,
+       63.785,
+       63.683,
+       63.724
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8802
+    },
+    "4x1": {
+     "full": {
+      "median_us": 82.125,
+      "min_us": 82.084,
+      "max_us": 82.207,
+      "host_us": 9.729,
+      "host_ahead": true,
+      "samples_us": [
+       82.166,
+       82.084,
+       82.207,
+       82.125,
+       82.104,
+       82.104,
+       82.145
+      ]
+     },
+     "rank0": {
+      "median_us": 73.83,
+      "min_us": 73.81,
+      "max_us": 73.851,
+      "host_us": 9.73,
+      "host_ahead": true,
+      "samples_us": [
+       73.81,
+       73.83,
+       73.83,
+       73.851,
+       73.83,
+       73.83,
+       73.83
+      ]
+     },
+     "rank1": {
+      "median_us": 73.81,
+      "min_us": 73.789,
+      "max_us": 73.851,
+      "host_us": 9.748,
+      "host_ahead": true,
+      "samples_us": [
+       73.81,
+       73.81,
+       73.851,
+       73.789,
+       73.851,
+       73.83,
+       73.81
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.899
+    }
+   },
+   "kernels": {
+    "1x1": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9727999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.2656000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4367999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.368,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8608000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8415999999999997,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.5488000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.276799999999998,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.0384,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7488,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.441600000000001,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 18.6432,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9184000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.1344999999999996,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4433999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.3392,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8802000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8576000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.5936,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 17.375800000000005,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 5.7664,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7328,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.8252999999999995,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.611099999999999,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9087000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.1185,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4048,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 0, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.5249,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8641000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8319999999999999,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.504,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 17.293,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 5.830499999999999,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7519,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.768099999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.5569,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x1": {
+     "full": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.008,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.3295,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4111,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.7456,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8831000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8319999999999999,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.5615,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.5103,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.2239,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7616999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 16.8126,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 18.9343,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 0.9885999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.2847,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4144,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.787199999999999,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.9122,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8480000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.5710000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.257799999999996,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.1698,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7615999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.622499999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.7361,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "deinterleave_qg_kernel(uint4 const*, uint4*, uint4*, int, unsigned long)": {
+       "us": 1.0047,
+       "launches": 0.9999999999999999
+      },
+      "void rope_kernel<2, true>(__half const*, __half*, __half const*, __half*, float const*, int, int, int, int, int, int, int, int, int, unsigned int const*, unsigned int const*, float, void const*, void const*, float, float, bool, int, float, int, int, int, int)": {
+       "us": 2.2817,
+       "launches": 0.9999999999999999
+      },
+      "void quant_cache_paged_kernel<8, 8>(__half const*, unsigned int*, __half*, __half const*, unsigned int*, __half*, unsigned int const*, unsigned int const*, int, int, float, int)": {
+       "us": 1.4177000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_kernel<4, false, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 8.748800000000001,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_stage_kernel": {
+       "us": 0.8896000000000001,
+       "launches": 0.9999999999999999
+      },
+      "_mla_plane_update_kernel": {
+       "us": 0.8287999999999998,
+       "launches": 0.9999999999999999
+      },
+      "_qsa_pool_update_kernel": {
+       "us": 1.5104000000000002,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_split_kernel": {
+       "us": 19.309,
+       "launches": 0.9999999999999999
+      },
+      "_paged_attn_decode_combine_kernel": {
+       "us": 6.150600000000001,
+       "launches": 0.9999999999999999
+      },
+      "mul_sigmoid_kernel_h(__half*, __half const*, unsigned long)": {
+       "us": 0.7647999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 13.635299999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 14.703899999999999,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1x1": {
+     "rel_maxabs": 0.007817964094887013,
+     "cos": 0.9999571913979788,
+     "max_abs_full": 6.446876525878906,
+     "ok": true,
+     "family": "MTP_ATTN",
+     "shape": "1x1"
+    },
+    "4x1": {
+     "rel_maxabs": 0.006273695137122713,
+     "cos": 0.9999891304968868,
+     "max_abs_full": 8.141854286193848,
+     "ok": true,
+     "family": "MTP_ATTN",
+     "shape": "4x1"
+    }
+   },
+   "working_set_bytes": 38242068,
+   "l2_bytes": 100663296,
+   "complete": true
+  },
+  "MTP_MOE": {
+   "key": "mtp.layers.0.mlp",
+   "info": {
+    "rank0": {
+     "plan": {
+      "mtp.layers.0.mlp": [
+       0,
+       384,
+       "channels"
+      ],
+      "mtp.layers.0.mlp.shared_expert": [
+       0,
+       384,
+       "channels"
+      ]
+     },
+     "intermediate_size": 384,
+     "num_local_experts": 512,
+     "shared_interm": 384,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "rank1": {
+     "plan": {
+      "mtp.layers.0.mlp": [
+       384,
+       640,
+       "channels"
+      ],
+      "mtp.layers.0.mlp.shared_expert": [
+       384,
+       640,
+       "channels"
+      ]
+     },
+     "intermediate_size": 256,
+     "num_local_experts": 512,
+     "shared_interm": 256,
+     "bc_built": true,
+     "bc_sh_exp": true,
+     "min_max_expert": [
+      -1,
+      -1
+     ]
+    },
+    "full": {
+     "K_gate_up_down": [
+      4,
+      4,
+      4
+     ],
+     "intermediate_size": 640,
+     "num_experts": 512,
+     "topk": 10,
+     "bc_sh_exp": true,
+     "shared_interm": 640,
+     "shared_K_gate_up_down": [
+      6,
+      6,
+      6
+     ]
+    },
+    "split": {
+     "unit_channels": 128,
+     "moe_intermediate": 640,
+     "moe": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "shared_intermediate": 640,
+     "shared": {
+      "rank0": [
+       0,
+       384
+      ],
+      "rank1": [
+       384,
+       640
+      ]
+     },
+     "critical_rank": "rank0",
+     "critical_share": 0.6
+    }
+   },
+   "rows": {
+    "1": {
+     "full": {
+      "median_us": 49.244,
+      "min_us": 49.203,
+      "max_us": 49.367,
+      "host_us": 9.23,
+      "host_ahead": true,
+      "samples_us": [
+       49.367,
+       49.306,
+       49.203,
+       49.244,
+       49.244,
+       49.244,
+       49.265
+      ]
+     },
+     "rank0": {
+      "median_us": 43.459,
+      "min_us": 43.315,
+      "max_us": 43.54,
+      "host_us": 9.208,
+      "host_ahead": true,
+      "samples_us": [
+       43.459,
+       43.336,
+       43.315,
+       43.418,
+       43.54,
+       43.52,
+       43.52
+      ]
+     },
+     "rank1": {
+      "median_us": 40.899,
+      "min_us": 40.857,
+      "max_us": 40.94,
+      "host_us": 9.232,
+      "host_ahead": true,
+      "samples_us": [
+       40.94,
+       40.899,
+       40.899,
+       40.919,
+       40.899,
+       40.899,
+       40.857
+      ]
+     },
+     "routed": {
+      "median_us": 37.601,
+      "min_us": 37.54,
+      "max_us": 37.683,
+      "host_us": 5.026,
+      "host_ahead": true,
+      "samples_us": [
+       37.622,
+       37.601,
+       37.56,
+       37.54,
+       37.601,
+       37.601,
+       37.683
+      ]
+     },
+     "shared": {
+      "median_us": 20.531,
+      "min_us": 20.511,
+      "max_us": 20.552,
+      "host_us": 4.754,
+      "host_ahead": true,
+      "samples_us": [
+       20.531,
+       20.531,
+       20.531,
+       20.531,
+       20.552,
+       20.531,
+       20.511
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8825
+    },
+    "4": {
+     "full": {
+      "median_us": 103.578,
+      "min_us": 103.455,
+      "max_us": 103.721,
+      "host_us": 10.881,
+      "host_ahead": true,
+      "samples_us": [
+       103.639,
+       103.578,
+       103.578,
+       103.721,
+       103.68,
+       103.557,
+       103.455
+      ]
+     },
+     "rank0": {
+      "median_us": 76.595,
+      "min_us": 76.472,
+      "max_us": 76.636,
+      "host_us": 10.813,
+      "host_ahead": true,
+      "samples_us": [
+       76.636,
+       76.472,
+       76.595,
+       76.575,
+       76.636,
+       76.534,
+       76.595
+      ]
+     },
+     "rank1": {
+      "median_us": 69.1,
+      "min_us": 68.956,
+      "max_us": 69.222,
+      "host_us": 10.855,
+      "host_ahead": true,
+      "samples_us": [
+       69.202,
+       69.161,
+       69.222,
+       68.956,
+       69.059,
+       69.1,
+       68.956
+      ]
+     },
+     "routed": {
+      "median_us": 101.816,
+      "min_us": 101.775,
+      "max_us": 101.816,
+      "host_us": 6.598,
+      "host_ahead": true,
+      "samples_us": [
+       101.816,
+       101.796,
+       101.816,
+       101.775,
+       101.775,
+       101.816,
+       101.816
+      ]
+     },
+     "shared": {
+      "median_us": 22.579,
+      "min_us": 22.559,
+      "max_us": 22.6,
+      "host_us": 4.794,
+      "host_ahead": true,
+      "samples_us": [
+       22.579,
+       22.579,
+       22.6,
+       22.579,
+       22.559,
+       22.579,
+       22.6
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7395
+    }
+   },
+   "kernels": {
+    "1": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.736,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.1311,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 23.5647,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 14.8446,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.251199999999999,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7552,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 5.871999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 12.703999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 13.184,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.116800000000001,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7455,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemv_int8_sq_kernel<6, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 5.593599999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 10.217899999999998,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 12.336200000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 10.9889,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4": {
+     "full": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 1.2928000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 7.8016,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4144000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, true>(MoeCoopParams)": {
+       "us": 58.4534,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 45.7888,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 11.843,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7871999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.860799999999999,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4591000000000003,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, true>(MoeCoopParams)": {
+       "us": 33.0592,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 38.8063,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.2783,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank1": {
+      "void act_mul_kernel_h<0>(__half const*, __half const*, __half*, float, unsigned long)": {
+       "us": 0.7807,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_gemm_kernel<6, true, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 6.08,
+       "launches": 0.9999999999999999
+      },
+      "exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)": {
+       "us": 3.4878,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<4, 2, true>(MoeCoopParams)": {
+       "us": 29.951800000000002,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<4, 2, false>(MoeCoopParams)": {
+       "us": 35.1261,
+       "launches": 0.9999999999999999
+      },
+      "void exl3_mgemm_kernel<6, false, 2, 16, 32, 128, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)": {
+       "us": 12.044599999999999,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "1": {
+     "rel_maxabs": 0.00372562926280745,
+     "cos": 0.9999953701613623,
+     "max_abs_full": 0.48554182052612305,
+     "ok": true,
+     "family": "MTP_MOE",
+     "shape": "1"
+    },
+    "4": {
+     "rel_maxabs": 0.000877907538800201,
+     "cos": 0.9999997280833484,
+     "max_abs_full": 0.7521975040435791,
+     "ok": true,
+     "family": "MTP_MOE",
+     "shape": "4"
+    }
+   },
+   "overlap": {
+    "1": {
+     "hidden_us": 8.888,
+     "residual_us": 11.643
+    },
+    "4": {
+     "hidden_us": 20.817,
+     "residual_us": 1.762
+    }
+   },
+   "working_set_bytes": 1274459916,
+   "l2_bytes": 100663296,
+   "allocator": {
+    "segments": 2,
+    "expandable": true,
+    "side_stream_segments": 0,
+    "side_stream_bytes": 0
+   },
+   "complete": true
+  },
+  "HC": {
+   "info": {
+    "hc_mult": 4,
+    "hidden": 2560,
+    "rank": 320,
+    "half_hidden": 1280,
+    "mix_v2": true,
+    "mix_v2_min_r": 1
+   },
+   "shapes": {
+    "1x4": {
+     "full": {
+      "median_us": 13.342,
+      "min_us": 13.302,
+      "max_us": 13.363,
+      "host_us": 22.702,
+      "host_ahead": true,
+      "samples_us": [
+       13.342,
+       13.322,
+       13.343,
+       13.363,
+       13.343,
+       13.322,
+       13.302
+      ]
+     },
+     "rank0": {
+      "median_us": 10.373,
+      "min_us": 10.353,
+      "max_us": 10.373,
+      "host_us": 22.608,
+      "host_ahead": true,
+      "samples_us": [
+       10.373,
+       10.373,
+       10.373,
+       10.373,
+       10.373,
+       10.353,
+       10.373
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7775
+    },
+    "4x2": {
+     "full": {
+      "median_us": 19.2,
+      "min_us": 19.179,
+      "max_us": 19.2,
+      "host_us": 22.726,
+      "host_ahead": true,
+      "samples_us": [
+       19.179,
+       19.2,
+       19.2,
+       19.18,
+       19.18,
+       19.2,
+       19.2
+      ]
+     },
+     "rank0": {
+      "median_us": 14.326,
+      "min_us": 14.326,
+      "max_us": 14.346,
+      "host_us": 22.711,
+      "host_ahead": true,
+      "samples_us": [
+       14.326,
+       14.346,
+       14.346,
+       14.326,
+       14.326,
+       14.326,
+       14.326
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7461
+    },
+    "4x4": {
+     "full": {
+      "median_us": 26.522,
+      "min_us": 26.521,
+      "max_us": 26.542,
+      "host_us": 22.919,
+      "host_ahead": true,
+      "samples_us": [
+       26.522,
+       26.522,
+       26.521,
+       26.522,
+       26.522,
+       26.542,
+       26.542
+      ]
+     },
+     "rank0": {
+      "median_us": 18.422,
+      "min_us": 18.401,
+      "max_us": 18.442,
+      "host_us": 22.954,
+      "host_ahead": true,
+      "samples_us": [
+       18.401,
+       18.422,
+       18.422,
+       18.401,
+       18.422,
+       18.401,
+       18.442
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.6946
+    },
+    "1x1": {
+     "full": {
+      "median_us": 8.735,
+      "min_us": 8.714,
+      "max_us": 8.735,
+      "host_us": 22.577,
+      "host_ahead": true,
+      "samples_us": [
+       8.735,
+       8.735,
+       8.735,
+       8.735,
+       8.735,
+       8.735,
+       8.714
+      ]
+     },
+     "rank0": {
+      "median_us": 7.444,
+      "min_us": 7.444,
+      "max_us": 7.465,
+      "host_us": 22.545,
+      "host_ahead": true,
+      "samples_us": [
+       7.444,
+       7.444,
+       7.444,
+       7.465,
+       7.444,
+       7.444,
+       7.444
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.8522
+    },
+    "4x1": {
+     "full": {
+      "median_us": 13.343,
+      "min_us": 13.322,
+      "max_us": 13.343,
+      "host_us": 22.645,
+      "host_ahead": true,
+      "samples_us": [
+       13.322,
+       13.322,
+       13.343,
+       13.342,
+       13.343,
+       13.343,
+       13.343
+      ]
+     },
+     "rank0": {
+      "median_us": 10.373,
+      "min_us": 10.373,
+      "max_us": 10.373,
+      "host_us": 22.585,
+      "host_ahead": true,
+      "samples_us": [
+       10.373,
+       10.373,
+       10.373,
+       10.373,
+       10.373,
+       10.373,
+       10.373
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.7774
+    }
+   },
+   "kernels": {
+    "1x4": {
+     "full": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2192,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<4, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 4.2624,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.2257,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<4>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 5.689600000000001,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2098,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<4, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 3.5809,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.104,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<4>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 3.8111000000000006,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x2": {
+     "full": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2479,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 5.894500000000001,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.248,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 9.856200000000001,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2479,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 4.6815999999999995,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.1360999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 6.4512,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x4": {
+     "full": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2223000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 9.209599999999998,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.2864,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 13.2096,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.232,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<8, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 5.993600000000001,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.1232000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<8>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 8.8128,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "1x1": {
+     "full": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2127000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<1, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 2.8992999999999998,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.1584999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<1>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 2.8578,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2159000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<1, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 2.5664,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.0368000000000002,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<1>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 2.1279999999999997,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "4x1": {
+     "full": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2129999999999999,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<4, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 4.2559000000000005,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.2288000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<4>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 5.7056000000000004,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "gr_v2_state_kernel(float const*, float*, float*, int, int, float)": {
+       "us": 1.2192,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_up_i8_kernel<4, true>(float const*, float const*, signed char const*, float const*, __half const*, void*, int, int, int)": {
+       "us": 3.581,
+       "launches": 0.9999999999999999
+      },
+      "void hc_apply_kernel<4, float, false>(float*, float const*, float const*, float const*, int, int)": {
+       "us": 1.1137000000000001,
+       "launches": 0.9999999999999999
+      },
+      "void gr_v2_dots_i8_kernel<4>(float const*, signed char const*, float const*, float*, int, int, int)": {
+       "us": 3.7824000000000004,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "complete": true
+  },
+  "HEAD": {
+   "info": {
+    "vocab": 248320,
+    "K": 6,
+    "half_cols": [
+     0,
+     124160
+    ],
+    "draft_head_n": 65536,
+    "draft_half_cols": [
+     0,
+     32768
+    ]
+   },
+   "rows": {
+    "lm_4": {
+     "full": {
+      "median_us": 305.183,
+      "min_us": 304.937,
+      "max_us": 305.469,
+      "host_us": 6.071,
+      "host_ahead": true,
+      "samples_us": [
+       305.183,
+       305.347,
+       305.121,
+       305.469,
+       305.101,
+       304.937,
+       305.326
+      ]
+     },
+     "rank0": {
+      "median_us": 167.936,
+      "min_us": 167.813,
+      "max_us": 168.141,
+      "host_us": 6.012,
+      "host_ahead": true,
+      "samples_us": [
+       168.141,
+       167.875,
+       167.916,
+       167.977,
+       167.936,
+       167.813,
+       167.936
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.5503
+    },
+    "lm_16": {
+     "full": {
+      "median_us": 310.446,
+      "min_us": 310.385,
+      "max_us": 310.63,
+      "host_us": 6.034,
+      "host_ahead": true,
+      "samples_us": [
+       310.569,
+       310.63,
+       310.467,
+       310.426,
+       310.446,
+       310.385,
+       310.426
+      ]
+     },
+     "rank0": {
+      "median_us": 170.793,
+      "min_us": 170.568,
+      "max_us": 171.059,
+      "host_us": 6.113,
+      "host_ahead": true,
+      "samples_us": [
+       170.793,
+       170.568,
+       171.059,
+       170.772,
+       170.711,
+       170.875,
+       170.895
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.5502
+    },
+    "draft_1": {
+     "full": {
+      "median_us": 90.47,
+      "min_us": 90.388,
+      "max_us": 90.654,
+      "host_us": 4.847,
+      "host_ahead": true,
+      "samples_us": [
+       90.654,
+       90.511,
+       90.47,
+       90.409,
+       90.45,
+       90.388,
+       90.47
+      ]
+     },
+     "rank0": {
+      "median_us": 18.647,
+      "min_us": 18.442,
+      "max_us": 18.668,
+      "host_us": 4.82,
+      "host_ahead": true,
+      "samples_us": [
+       18.647,
+       18.463,
+       18.668,
+       18.442,
+       18.647,
+       18.442,
+       18.668
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.2061
+    },
+    "draft_4": {
+     "full": {
+      "median_us": 87.562,
+      "min_us": 87.501,
+      "max_us": 87.705,
+      "host_us": 5.982,
+      "host_ahead": true,
+      "samples_us": [
+       87.583,
+       87.521,
+       87.705,
+       87.501,
+       87.501,
+       87.582,
+       87.562
+      ]
+     },
+     "rank0": {
+      "median_us": 32.972,
+      "min_us": 32.829,
+      "max_us": 32.993,
+      "host_us": 6.044,
+      "host_ahead": true,
+      "samples_us": [
+       32.973,
+       32.85,
+       32.993,
+       32.829,
+       32.972,
+       32.85,
+       32.973
+      ]
+     },
+     "_sleep_ms": 10.0,
+     "s": 0.3766
+    }
+   },
+   "kernels": {
+    "lm_4": {
+     "full": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 274.0113,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 149.3961,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "lm_16": {
+     "full": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 277.4225,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 152.54899999999998,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "draft_1": {
+     "full": {
+      "void exl3_gemv_int8_sq_kernel<6, 1, false, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 81.5459,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_gemv_int8_sq_kernel<6, 1, false, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 17.229,
+       "launches": 0.8999999999999999
+      }
+     }
+    },
+    "draft_4": {
+     "full": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 77.5621,
+       "launches": 0.8999999999999999
+      }
+     },
+     "rank0": {
+      "void exl3_gemm_kernel<6, false, 2, 16, 16, 512, 4, 3>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)": {
+       "us": 28.416199999999993,
+       "launches": 0.8999999999999999
+      }
+     }
+    }
+   },
+   "equality": {
+    "lm_4": {
+     "rel_maxabs": 0.0005681818181818182,
+     "cos": 0.9999999964815477,
+     "max_abs_full": 3.4375,
+     "ok": true
+    },
+    "lm_16": {
+     "rel_maxabs": 0.0009689922480620155,
+     "cos": 1.000000034358582,
+     "max_abs_full": 4.03125,
+     "ok": true
+    },
+    "draft_1": {
+     "rel_maxabs": 0.0061520655270655275,
+     "cos": 0.9999771894991177,
+     "max_abs_full": 3.427734375,
+     "ok": true
+    },
+    "draft_4": {
+     "rel_maxabs": 0.001256281407035176,
+     "cos": 0.9999999896403718,
+     "max_abs_full": 3.109375,
+     "ok": true
+    }
+   },
+   "complete": true
+  }
+ },
+ "errors": [],
+ "path_problems": [],
+ "equality_failures": [],
+ "steps": {
+  "GDN": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 8.3
+  },
+  "ATTN": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 18.7
+  },
+  "MOE_K2": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 4.4
+  },
+  "MOE_K3": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 3.3
+  },
+  "MTP": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 10.0
+  },
+  "HC": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 0.7
+  },
+  "HEAD": {
+   "status": "ok",
+   "pid": 119,
+   "elapsed_s": 1.4
+  }
+ },
+ "respawns": [],
+ "step_s": {
+  "GDN": 8.3,
+  "ATTN": 18.7,
+  "MOE_K2": 4.4,
+  "MOE_K3": 3.3,
+  "MTP": 10.0,
+  "HC": 0.7,
+  "HEAD": 1.4
+ },
+ "args": {
+  "model": "/model",
+  "out": "/results/tp_bound_scaling.json",
+  "device": "cuda:0",
+  "ctx": 1024,
+  "iters": 100,
+  "rounds": 7,
+  "warmup": 8,
+  "sleep_ms_min": 10.0,
+  "profile_calls": 10,
+  "gdn_layers": "0,1,2,4,5,6,8,9",
+  "attn_layers": "3,7,11,15,19,23,27,31,35,39,43,47",
+  "moe_candidates": "0,47,1,46,2,45,3,44,4,43,24,23,25,12,36",
+  "routing_sets": 16,
+  "max_bsz": 4,
+  "max_history": 4,
+  "families": "GDN,ATTN,MOE_K2,MOE_K3,MTP,HC,HEAD",
+  "seed": 1234,
+  "budget_s": 550.0,
+  "deadline_at": 0.0,
+  "retried": "",
+  "no_respawn": false,
+  "argv": [
+   "--model",
+   "/model",
+   "--out",
+   "/results/tp_bound_scaling.json"
+  ]
+ },
+ "pid": 119,
+ "deadline_at": 1789792764.740578,
+ "device": "NVIDIA GeForce RTX 5090",
+ "torch": "2.9.0+cu128",
+ "env": {
+  "EXL3_BATCH_VERIFY": "1",
+  "EXL3_MOE_PREFILL_E3": "1",
+  "EXL3_DRAFT_PINNED_STAGING": "1",
+  "EXL3_HC_MIX_V2": "1",
+  "EXL3_DECODE_OVERLAP": "0",
+  "EXL3_LS_PREFILL_PIPELINE": "1",
+  "EXL3_MOE_COOP_V2": "1",
+  "EXL3_HC_MIX_V2_INT8": "1",
+  "EXL3_HC_MIX_V2_MIN_R": "1",
+  "CUDA_VERSION": "12.8.1",
+  "EXL3_MTP_DEVICE_DRAFT": "1",
+  "EXLLAMAV3_TUNE_CACHE": "/tunecache",
+  "TRITON_CACHE_DIR": "/tunecache",
+  "EXL3_MTP_HEAD_N": "65536",
+  "EXL3_DECODE_FUSE": "0",
+  "EXL3_SHARED_EXPERT_OVERLAP": "1",
+  "EXL3_HOST_GAP_REWIND": "1",
+  "EXL3_EMBED_GPU": "1",
+  "EXL3_EMBED_GPU_PRUNED": "1"
+ },
+ "sources": {
+  "checked": true,
+  "root": "/opt/venv/lib/python3.12/site-packages/exllamav3",
+  "mismatch": [
+   "architecture/qwen4_exp_mtp.py"
+  ]
+ },
+ "served_kernel_names": 96,
+ "model": {
+  "hidden_size": 2560,
+  "num_hidden_layers": 48,
+  "layer_types": [
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention",
+   "linear_attention",
+   "linear_attention",
+   "linear_attention",
+   "full_attention"
+  ]
+ },
+ "elapsed_s": 47.7,
+ "partial": false,
+ "requested_steps": [
+  "GDN",
+  "ATTN",
+  "MOE_K2",
+  "MOE_K3",
+  "MTP",
+  "HC",
+  "HEAD"
+ ],
+ "missing_primary_families": [],
+ "incomplete_steps": [],
+ "ok": true,
+ "unprofiled_template_instances": {
+  "ATTN 1x1 full": [
+   "void exl3_gemv_int8_sq_kernel<4, 1, true, false>"
+  ],
+  "MOE 1 full": [
+   "void exl3_gemv_int8_sq_kernel<4, 1, true, false>",
+   "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, false>"
+  ]
+ },
+ "moe_layers_tried": {
+  "K2": [
+   [
+    0,
+    3
+   ],
+   [
+    47,
+    3
+   ],
+   [
+    1,
+    3
+   ],
+   [
+    46,
+    3
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    45,
+    3
+   ],
+   [
+    3,
+    3
+   ],
+   [
+    44,
+    3
+   ],
+   [
+    4,
+    3
+   ],
+   [
+    43,
+    3
+   ],
+   [
+    24,
+    2
+   ]
+  ],
+  "K3": [
+   [
+    0,
+    3
+   ]
+  ]
+ }
+}

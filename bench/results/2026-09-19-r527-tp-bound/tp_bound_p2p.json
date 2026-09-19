@@ -1,0 +1,251 @@
+{
+ "ok": true,
+ "results": [
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 1,
+   "width": 2560,
+   "dtype": "fp32",
+   "median_us": 57.091,
+   "min_us": 56.931,
+   "max_us": 57.753,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 4,
+   "width": 2560,
+   "dtype": "fp32",
+   "median_us": 57.116,
+   "min_us": 56.73,
+   "max_us": 57.226,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 8,
+   "width": 2560,
+   "dtype": "fp32",
+   "median_us": 56.961,
+   "min_us": 56.65,
+   "max_us": 58.602,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 16,
+   "width": 2560,
+   "dtype": "fp32",
+   "median_us": 57.61,
+   "min_us": 57.078,
+   "max_us": 58.022,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 1,
+   "width": 10240,
+   "dtype": "fp32",
+   "median_us": 56.732,
+   "min_us": 56.514,
+   "max_us": 57.239,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 4,
+   "width": 10240,
+   "dtype": "fp32",
+   "median_us": 63.409,
+   "min_us": 57.063,
+   "max_us": 73.305,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 8,
+   "width": 10240,
+   "dtype": "fp32",
+   "median_us": 58.422,
+   "min_us": 57.75,
+   "max_us": 74.625,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 16,
+   "width": 10240,
+   "dtype": "fp32",
+   "median_us": 73.78,
+   "min_us": 72.772,
+   "max_us": 74.416,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 1,
+   "width": 2560,
+   "dtype": "fp16",
+   "median_us": 56.926,
+   "min_us": 56.782,
+   "max_us": 60.252,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 4,
+   "width": 2560,
+   "dtype": "fp16",
+   "median_us": 56.991,
+   "min_us": 56.744,
+   "max_us": 69.149,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 8,
+   "width": 2560,
+   "dtype": "fp16",
+   "median_us": 56.867,
+   "min_us": 56.816,
+   "max_us": 57.423,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 16,
+   "width": 2560,
+   "dtype": "fp16",
+   "median_us": 56.945,
+   "min_us": 56.711,
+   "max_us": 65.27,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 1,
+   "width": 10240,
+   "dtype": "fp16",
+   "median_us": 56.732,
+   "min_us": 56.679,
+   "max_us": 56.822,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 4,
+   "width": 10240,
+   "dtype": "fp16",
+   "median_us": 56.544,
+   "min_us": 56.382,
+   "max_us": 66.139,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 8,
+   "width": 10240,
+   "dtype": "fp16",
+   "median_us": 57.164,
+   "min_us": 56.909,
+   "max_us": 59.405,
+   "valid": true
+  },
+  {
+   "method": "peer_copy_add",
+   "mode": "eager",
+   "rows": 16,
+   "width": 10240,
+   "dtype": "fp16",
+   "median_us": 57.884,
+   "min_us": 57.5,
+   "max_us": 58.049,
+   "valid": true
+  }
+ ],
+ "device_count": 2,
+ "devices": [
+  "NVIDIA GeForce RTX 5090",
+  "NVIDIA GeForce RTX 5090"
+ ],
+ "can_access_peer": {
+  "0->1": true,
+  "1->0": true
+ },
+ "copies": [
+  {
+   "bytes": 4096,
+   "src": "cuda:0",
+   "dst": "cuda:1",
+   "exact": true
+  },
+  {
+   "bytes": 4096,
+   "src": "cuda:1",
+   "dst": "cuda:0",
+   "exact": true
+  },
+  {
+   "bytes": 65536,
+   "src": "cuda:0",
+   "dst": "cuda:1",
+   "exact": true
+  },
+  {
+   "bytes": 65536,
+   "src": "cuda:1",
+   "dst": "cuda:0",
+   "exact": true
+  },
+  {
+   "bytes": 1048576,
+   "src": "cuda:0",
+   "dst": "cuda:1",
+   "exact": true
+  },
+  {
+   "bytes": 1048576,
+   "src": "cuda:1",
+   "dst": "cuda:0",
+   "exact": true
+  },
+  {
+   "bytes": 33554432,
+   "src": "cuda:0",
+   "dst": "cuda:1",
+   "exact": true
+  },
+  {
+   "bytes": 33554432,
+   "src": "cuda:1",
+   "dst": "cuda:0",
+   "exact": true
+  }
+ ],
+ "bandwidth": {
+  "0->1": {
+   "GBps": 28.17,
+   "ms": 1.191
+  },
+  "1->0": {
+   "GBps": 28.13,
+   "ms": 1.1926
+  }
+ },
+ "elapsed_s": 0.7
+}

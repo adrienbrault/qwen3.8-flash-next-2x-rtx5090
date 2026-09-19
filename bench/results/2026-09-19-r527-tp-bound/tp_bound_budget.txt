@@ -1,0 +1,65 @@
+=== c1d3 (trunk 1x4, MoE rows 4, draft 1x1) ===
+R519 profiler step E = 14.990 ms, kernel K = 12.342 ms, host/gap E-K = 2.648 ms (kept as-is under TP: ASSUMPTION)
+family        R519 ms      s    TP ms  source
+GDN             2.624  0.731    1.918  GDN 1x4
+MOE_K3          2.478  0.740    1.834  MOE_K3 rows 4
+MOE_K2          2.262  0.756    1.711  MOE_K2 rows 4
+HC              1.785  1.000    1.785  replicated (design v1)
+ATTN            1.404  0.870    1.221  ATTN 1x4
+HEAD            0.634  1.000    0.634  replicated
+ROUTER          0.473  1.000    0.473  replicated
+MTP_BLOCK       0.451  0.881    0.398  MTP attn 1x1 + MTP MoE rows 1
+OTHER           0.164  1.000    0.164  replicated / unsplit
+GDN_REWIND      0.065  0.500    0.033  ASSUMED (state halves with the heads)
+kernels        12.342          10.171
+MoE tensor split (128-channel units): experts 640 -> rank0 [0, 384), rank1 [384, 640); shared expert 640 -> rank0 [0, 384), rank1 [384, 640); critical rank0 holds 0.60 (structural floor of s_MOE)
+  MOE_K2 rows 4: full 95.3 us, rank0 72.0 us, rank1 67.0 us -> s = max(rank0, rank1) / full = 0.7563  (model.language_model.layers.24.mlp)
+  MOE_K3 rows 4: full 107.5 us, rank0 79.6 us, rank1 68.0 us -> s = max(rank0, rank1) / full = 0.7401  (model.language_model.layers.0.mlp)
+all-reduce: 96 x 12.57 us (nccl graph, rows 4) + 6 x 8.27 us (rows 1) = 1.257 ms
+  validated all-reduce candidates at the trunk rows (fp32 x 2560): nccl/eager 8.55 us, nccl/graph 12.57 us, peer_copy_add/eager 57.12 us
+host/gap 2.648 ms + shared-overlap correction (1 - s_MOE 0.748) x O 0.875 = 0.221 ms
+PROJECTED TP step (head replicated) = 14.296 ms -> speedup 1.049x
+  variant vocab-sharded head (+ argmax gather per head call) = 13.952 ms -> 1.074x
+  sensitivity sharded HC mixer (+2 exchanges per site) = 16.412 ms -> 0.913x
+BEST projection (head_sharded) = 13.952 ms -> 1.074x
+  wall-mode view: R519 wall 13.914 ms -> projected 12.951 ms (wall step scales like the profiler-mode step (ratio E_wall / E_profiler))
+ceiling s = 0.5 everywhere, AR = 0      : 9.256 ms -> 1.619x
+ceiling s = 0.5 everywhere, measured AR : 10.513 ms -> 1.426x
+structural (GDN/ATTN/MTP 0.5, MoE 0.6, replicated 1.0), measured AR: 12.427 ms -> 1.206x
+measured s, AR = 0 (free all-reduce)    : 13.039 ms -> 1.150x
+measured s with t_AR = R184 vLLM custom all-reduce, graph, 1 row: 1.107x
+measured s with t_AR = R185 pcie_ipc slab, 1 row: 1.132x
+
+=== c4d3 (trunk 4x4, MoE rows 16, draft 4x1) ===
+R519 profiler step E = 23.617 ms, kernel K = 19.185 ms, host/gap E-K = 4.432 ms (kept as-is under TP: ASSUMPTION)
+family        R519 ms      s    TP ms  source
+MOE_K3          4.331  0.703    3.043  MOE_K3 rows 16
+MOE_K2          3.908  0.699    2.730  MOE_K2 rows 16
+GDN             3.670  0.741    2.719  GDN 4x4
+HC              2.992  1.000    2.992  replicated (design v1)
+ATTN            1.850  0.835    1.545  ATTN 4x4
+MTP_BLOCK       0.799  0.810    0.647  MTP attn 4x1 + MTP MoE rows 4
+HEAD            0.641  1.000    0.641  replicated
+ROUTER          0.443  1.000    0.443  replicated
+GDN_REWIND      0.305  0.500    0.153  ASSUMED (state halves with the heads)
+OTHER           0.245  1.000    0.245  replicated / unsplit
+kernels        19.185          15.158
+MoE tensor split (128-channel units): experts 640 -> rank0 [0, 384), rank1 [384, 640); shared expert 640 -> rank0 [0, 384), rank1 [384, 640); critical rank0 holds 0.60 (structural floor of s_MOE)
+  MOE_K2 rows 16: full 194.3 us, rank0 135.7 us, rank1 105.9 us -> s = max(rank0, rank1) / full = 0.6985  (model.language_model.layers.24.mlp)
+  MOE_K3 rows 16: full 194.8 us, rank0 136.9 us, rank1 113.6 us -> s = max(rank0, rank1) / full = 0.7026  (model.language_model.layers.0.mlp)
+all-reduce: 96 x 23.92 us (nccl graph, rows 16) + 6 x 12.57 us (rows 4) = 2.372 ms
+  validated all-reduce candidates at the trunk rows (fp32 x 2560): nccl/eager 18.58 us, nccl/graph 23.92 us, peer_copy_add/eager 57.61 us
+host/gap 4.432 ms + shared-overlap correction (1 - s_MOE 0.701) x O 0.883 = 0.264 ms
+PROJECTED TP step (head replicated) = 22.226 ms -> speedup 1.063x
+  variant vocab-sharded head (+ argmax gather per head call) = 21.950 ms -> 1.076x
+  sensitivity sharded HC mixer (+2 exchanges per site) = 26.055 ms -> 0.906x
+BEST projection (head_sharded) = 21.950 ms -> 1.076x
+  wall-mode view: R519 wall 21.535 ms -> projected 20.015 ms (wall step scales like the profiler-mode step (ratio E_wall / E_profiler))
+ceiling s = 0.5 everywhere, AR = 0      : 14.466 ms -> 1.633x
+ceiling s = 0.5 everywhere, measured AR : 16.838 ms -> 1.403x
+structural (GDN/ATTN/MTP 0.5, MoE 0.6, replicated 1.0), measured AR: 19.734 ms -> 1.197x
+measured s, AR = 0 (free all-reduce)    : 19.854 ms -> 1.190x
+measured s with t_AR = R184 vLLM custom all-reduce, graph, 1 row: 1.160x
+measured s with t_AR = R185 pcie_ipc slab, 1 row: 1.178x
+
+DECISION: NO-GO -- projected c1 d3 speedup 1.074x (threshold 1.25x); c4 d3 1.076x; TP is closed for this model on this box
