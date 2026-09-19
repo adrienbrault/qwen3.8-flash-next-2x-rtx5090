@@ -1,0 +1,51 @@
+2026-09-19T00:55:13+00:00 [r519] lock held; timebox ends 2026-09-19T01:10:13+00:00; env: EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1
+2026-09-19T00:55:17+00:00 [r519] shape set c1d3-wall: --contexts 1024 --batch 1 --draft 3 --capture-mode wall (timeout 896s)
+2026-09-19T00:55:47+00:00 [r519] shape set c1d3-wall exit 0
+2026-09-19T00:55:47+00:00 [r519] shape set c4d3-wall: --contexts 1024 --batch 4 --draft 3 --capture-mode wall (timeout 866s)
+2026-09-19T00:56:17+00:00 [r519] shape set c4d3-wall exit 0
+2026-09-19T00:56:17+00:00 [r519] shape set c6d1-wall: --contexts 1024 --batch 6 --draft 1 --capture-mode wall (timeout 836s)
+2026-09-19T00:56:49+00:00 [r519] shape set c6d1-wall exit 0
+2026-09-19T00:56:49+00:00 [r519] shape set c1d3-profiler: --contexts 1024 --batch 1 --draft 3 --capture-mode profiler (timeout 804s)
+2026-09-19T00:57:20+00:00 [r519] shape set c1d3-profiler exit 0
+2026-09-19T00:57:20+00:00 [r519] shape set c4d3-profiler: --contexts 1024 --batch 4 --draft 3 --capture-mode profiler (timeout 773s)
+2026-09-19T00:57:56+00:00 [r519] shape set c4d3-profiler exit 0
+2026-09-19T00:57:56+00:00 [r519] shape set c6d1-profiler: --contexts 1024 --batch 6 --draft 1 --capture-mode profiler (timeout 737s)
+2026-09-19T00:58:33+00:00 [r519] shape set c6d1-profiler exit 0
+c1d3-profiler/ctx1024_b1_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c1d3-profiler/ctx1024_b1_d0/kernels.json: status=None wall_ms_per_step=8.856068172462983 kernel_ms=518.9507410000003
+c1d3-profiler/ctx1024_b1_d3/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c1d3-profiler/ctx1024_b1_d3/kernels.json: status=None wall_ms_per_step=14.989628358307527 kernel_ms=789.8916599999994
+c1d3-profiler/summary.json: status=ok wall_ms_per_step=14.989628358307527 kernel_ms=789.8916599999994
+c1d3-profiler/summary.json: status=ok wall_ms_per_step=8.856068172462983 kernel_ms=518.9507410000003
+c1d3-wall/ctx1024_b1_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c1d3-wall/ctx1024_b1_d0/kernels.json: status=None wall_ms_per_step=8.447425734630087 kernel_ms=None
+c1d3-wall/ctx1024_b1_d3/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c1d3-wall/ctx1024_b1_d3/kernels.json: status=None wall_ms_per_step=13.914204231696203 kernel_ms=None
+c1d3-wall/summary.json: status=ok wall_ms_per_step=13.914204231696203 kernel_ms=None
+c1d3-wall/summary.json: status=ok wall_ms_per_step=8.447425734630087 kernel_ms=None
+c4d3-profiler/ctx1024_b4_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c4d3-profiler/ctx1024_b4_d0/kernels.json: status=None wall_ms_per_step=12.652639466978144 kernel_ms=738.5722189999997
+c4d3-profiler/ctx1024_b4_d3/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c4d3-profiler/ctx1024_b4_d3/kernels.json: status=None wall_ms_per_step=23.61737318642554 kernel_ms=1227.8416680000007
+c4d3-profiler/summary.json: status=ok wall_ms_per_step=23.61737318642554 kernel_ms=1227.8416680000007
+c4d3-profiler/summary.json: status=ok wall_ms_per_step=12.652639466978144 kernel_ms=738.5722189999997
+c4d3-wall/ctx1024_b4_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c4d3-wall/ctx1024_b4_d0/kernels.json: status=None wall_ms_per_step=12.15996042083134 kernel_ms=None
+c4d3-wall/ctx1024_b4_d3/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c4d3-wall/ctx1024_b4_d3/kernels.json: status=None wall_ms_per_step=21.535308063903358 kernel_ms=None
+c4d3-wall/summary.json: status=ok wall_ms_per_step=21.535308063903358 kernel_ms=None
+c4d3-wall/summary.json: status=ok wall_ms_per_step=12.15996042083134 kernel_ms=None
+c6d1-profiler/ctx1024_b6_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c6d1-profiler/ctx1024_b6_d0/kernels.json: status=None wall_ms_per_step=14.524034420901444 kernel_ms=874.4799420000005
+c6d1-profiler/ctx1024_b6_d1/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c6d1-profiler/ctx1024_b6_d1/kernels.json: status=None wall_ms_per_step=21.795947781356517 kernel_ms=1183.0481879999993
+c6d1-profiler/summary.json: status=ok wall_ms_per_step=21.795947781356517 kernel_ms=1183.0481879999993
+c6d1-profiler/summary.json: status=ok wall_ms_per_step=14.524034420901444 kernel_ms=874.4799420000005
+c6d1-wall/ctx1024_b6_d0/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c6d1-wall/ctx1024_b6_d0/kernels.json: status=None wall_ms_per_step=14.194316452631028 kernel_ms=None
+c6d1-wall/ctx1024_b6_d1/events.json: status=None wall_ms_per_step=None kernel_ms=None
+c6d1-wall/ctx1024_b6_d1/kernels.json: status=None wall_ms_per_step=20.112138205149677 kernel_ms=None
+c6d1-wall/summary.json: status=ok wall_ms_per_step=20.112138205149677 kernel_ms=None
+c6d1-wall/summary.json: status=ok wall_ms_per_step=14.194316452631028 kernel_ms=None
+2026-09-19T00:58:33+00:00 [r519] not restoring: GPU queue continues (r515-queue-chain(pid 3471011))
+2026-09-19T00:58:33+00:00 [r519] === R519 DONE ===

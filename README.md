@@ -47,7 +47,6 @@ GSM8K figures published by this project before 2026-09-18 evening (0.9158 at n=1
 
 ## In progress (queued on the box 2026-09-19)
 
-- The first decode profile of the 2.50 bpw pack: [`scripts/r519-profile-2p50.sh`][r519-driver].
 - `EXL3_INT8_GEMV=0`, the fp16 kernel instead of the int8-activation one for single-row linears: [`scripts/r520-int8gemv.sh`][r520-driver].
 - How much of the shared expert's time is still on the critical path after [R490][r490] moved it to a side stream, per layer and row count: [`scripts/r521-shared-bound.sh`][r521-driver]. A fused shared-expert kernel cannot be bit-identical, so it is built only if this number is large.
 - The MTP draft chain kept on the GPU, with a 320 MiB copy of only the 65,536 embedding rows the draft head can emit instead of the full 1.27 GB table: [`scripts/r522-mtp-pruned.sh`][r522-driver].
@@ -134,7 +133,6 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [launcher]: scripts/launch-flashnext.sh
 [launchers]: scripts/launchers/
 [scripts]: scripts/
-[r519-driver]: scripts/r519-profile-2p50.sh
 [r520-driver]: scripts/r520-int8gemv.sh
 [r521-driver]: scripts/r521-shared-bound.sh
 [r522-driver]: scripts/r522-mtp-pruned.sh

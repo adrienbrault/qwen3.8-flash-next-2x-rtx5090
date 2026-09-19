@@ -1,0 +1,5 @@
+b=1 context=1024 draft=0: iterates 10..73 (64 decode steps)
+ CUDA ms   ms/step   kernel %   elapsed %  launches  kernel
+Top three: 
+wall: 540.635247 ms capture, 8.447426 ms/iterate
+Kernel busy is UNMEASURED. events.json contains wall times and optional stream spans, not kernel unions.

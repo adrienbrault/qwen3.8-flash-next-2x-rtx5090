@@ -1,0 +1,932 @@
+[
+  {
+    "shape": "ctx1024_b1_d3",
+    "exit_code": 0,
+    "status": "ok",
+    "top_three": [
+      {
+        "name": "void exl3_gemv_kernel<4, true, 2, 1, 0, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)",
+        "total_cuda_us": 80897.15899999955,
+        "launches": 6144,
+        "devices": {
+          "0": {
+            "total_cuda_us": 58716.03099999981,
+            "launches": 4480
+          },
+          "1": {
+            "total_cuda_us": 22181.128000000062,
+            "launches": 1664
+          }
+        },
+        "total_cuda_ms": 80.89715899999955,
+        "cuda_ms_per_step": 1.264018109374993,
+        "kernel_time_share_pct": 10.241551227417643,
+        "elapsed_window_share_pct": 8.43261806870916
+      },
+      {
+        "name": "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)",
+        "total_cuda_us": 64595.217999999964,
+        "launches": 1472,
+        "devices": {
+          "0": {
+            "total_cuda_us": 36142.29299999998,
+            "launches": 768
+          },
+          "1": {
+            "total_cuda_us": 28452.925000000032,
+            "launches": 704
+          }
+        },
+        "total_cuda_ms": 64.59521799999996,
+        "cuda_ms_per_step": 1.0093002812499994,
+        "kernel_time_share_pct": 8.177731361285673,
+        "elapsed_window_share_pct": 6.733324250101415
+      },
+      {
+        "name": "void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)",
+        "total_cuda_us": 64265.42799999993,
+        "launches": 1472,
+        "devices": {
+          "0": {
+            "total_cuda_us": 34188.520000000004,
+            "launches": 768
+          },
+          "1": {
+            "total_cuda_us": 30076.90800000002,
+            "launches": 704
+          }
+        },
+        "total_cuda_ms": 64.26542799999993,
+        "cuda_ms_per_step": 1.004147312499999,
+        "kernel_time_share_pct": 8.13598006592448,
+        "elapsed_window_share_pct": 6.69894735544582
+      }
+    ],
+    "capture": {
+      "first_iterate": 10,
+      "last_iterate": 73,
+      "iterations": 64,
+      "elapsed_ms": 959.3362149316818,
+      "elapsed_ms_per_step": 14.989628358307527,
+      "streamed_before_per_job": [
+        30
+      ],
+      "streamed_after_per_job": [
+        219
+      ],
+      "streamed_during_per_job": [
+        189
+      ],
+      "steps": [
+        {
+          "iterate": 10,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 11,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 12,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 13,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 14,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 15,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 16,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 17,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 18,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 19,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 20,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 21,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 22,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 23,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 24,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 25,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 26,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 27,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 28,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 29,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 30,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 31,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 32,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 33,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 34,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 35,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 36,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 37,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 38,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 39,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 40,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 41,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 42,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 43,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 44,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 45,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 46,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 47,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 48,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 49,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 50,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 51,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 52,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 53,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 54,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 55,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 56,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 57,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 58,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 59,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 60,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 61,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 62,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 63,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 64,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 65,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 66,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 67,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 68,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 69,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 70,
+          "streamed_tokens_per_job": [
+            4
+          ]
+        },
+        {
+          "iterate": 71,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        },
+        {
+          "iterate": 72,
+          "streamed_tokens_per_job": [
+            3
+          ]
+        },
+        {
+          "iterate": 73,
+          "streamed_tokens_per_job": [
+            2
+          ]
+        }
+      ]
+    },
+    "total_kernel_ms": 789.8916599999994
+  },
+  {
+    "shape": "ctx1024_b1_d0",
+    "exit_code": 0,
+    "status": "ok",
+    "top_three": [
+      {
+        "name": "void exl3_gemv_int8_sq_kernel<4, 1, true, false>(__half const*, unsigned short const*, void*, int, int, int, int*, __half const*, __half*, __half const*)",
+        "total_cuda_us": 60168.89500000002,
+        "launches": 6144,
+        "devices": {
+          "0": {
+            "total_cuda_us": 44776.33400000002,
+            "launches": 4608
+          },
+          "1": {
+            "total_cuda_us": 15392.561000000003,
+            "launches": 1536
+          }
+        },
+        "total_cuda_ms": 60.16889500000002,
+        "cuda_ms_per_step": 0.9401389843750003,
+        "kernel_time_share_pct": 11.594336465163652,
+        "elapsed_window_share_pct": 10.615760471427535
+      },
+      {
+        "name": "void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, false>(MoeCoopParams)",
+        "total_cuda_us": 41454.352999999915,
+        "launches": 1472,
+        "devices": {
+          "0": {
+            "total_cuda_us": 21395.542000000027,
+            "launches": 768
+          },
+          "1": {
+            "total_cuda_us": 20058.810999999994,
+            "launches": 704
+          }
+        },
+        "total_cuda_ms": 41.45435299999991,
+        "cuda_ms_per_step": 0.6477242656249986,
+        "kernel_time_share_pct": 7.9881094148008716,
+        "elapsed_window_share_pct": 7.313903337363972
+      },
+      {
+        "name": "void exl3_mgemm_kernel<4, true, 2, 16, 32, 256, 4, 3>(__half const*, unsigned short const**, void*, int, int, int, int*, __half const**, __half*, __half const**, long*, __half*, int, int, int, int, int, int const*, void**, int const*, int const*, int)",
+        "total_cuda_us": 41015.48300000012,
+        "launches": 1728,
+        "devices": {
+          "0": {
+            "total_cuda_us": 41015.48300000012,
+            "launches": 1728
+          }
+        },
+        "total_cuda_ms": 41.01548300000012,
+        "cuda_ms_per_step": 0.6408669218750018,
+        "kernel_time_share_pct": 7.903540694626369,
+        "elapsed_window_share_pct": 7.236472319259131
+      }
+    ],
+    "capture": {
+      "first_iterate": 10,
+      "last_iterate": 73,
+      "iterations": 64,
+      "elapsed_ms": 566.7883630376309,
+      "elapsed_ms_per_step": 8.856068172462983,
+      "streamed_before_per_job": [
+        9
+      ],
+      "streamed_after_per_job": [
+        73
+      ],
+      "streamed_during_per_job": [
+        64
+      ],
+      "steps": [
+        {
+          "iterate": 10,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 11,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 12,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 13,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 14,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 15,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 16,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 17,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 18,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 19,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 20,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 21,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 22,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 23,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 24,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 25,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 26,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 27,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 28,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 29,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 30,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 31,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 32,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 33,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 34,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 35,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 36,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 37,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 38,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 39,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 40,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 41,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 42,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 43,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 44,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 45,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 46,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 47,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 48,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 49,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 50,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 51,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 52,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 53,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 54,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 55,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 56,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 57,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 58,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 59,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 60,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 61,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 62,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 63,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 64,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 65,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 66,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 67,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 68,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 69,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 70,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 71,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 72,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        },
+        {
+          "iterate": 73,
+          "streamed_tokens_per_job": [
+            1
+          ]
+        }
+      ]
+    },
+    "total_kernel_ms": 518.9507410000003
+  }
+]
