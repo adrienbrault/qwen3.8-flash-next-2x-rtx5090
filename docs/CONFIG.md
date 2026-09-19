@@ -83,6 +83,8 @@ values. Verified in the log: a greedy probe still reads `temperature: 0, greedy 
 
 ## Memory
 
+KV page pool cost: 14,144 B per token, so 1.41 GB of VRAM per 100k tokens and 11.1 GB for the 786,432-token pool. Per token that is 13 attention layers (the checkpoint's 12 full-attention layers plus the MTP block's 1, whose draft cache is `Q8` at the same size), each with 2 KV heads × 256 dims for K and for V at 8 bits (1,024 B) plus fp16 scales per 32 values (64 B). Layout from `exllamav3/cache/quant.py`. The 36 linear-attention layers keep no per-token KV: each slot holds a fixed fp32 recurrent state (36 × 48 heads × 128 × 128, 108 MiB per sequence) at any context length.
+
 | setting | value | why |
 | --- | --- | --- |
 | `sysmem_recurrent_cache` | 4096 (MiB) | host-tier cache for GDN recurrent checkpoints; hybrid prefix reuse needs both the KV pages and a matching stashed checkpoint |
