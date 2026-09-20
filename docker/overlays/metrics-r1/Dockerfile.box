@@ -1,0 +1,21 @@
+# metrics-r1: a Prometheus /metrics endpoint for TabbyAPI, fed from log_metrics.
+# Build context: flan/patches/tabbyapi/metrics/r1/  (legacy builder compatible: no heredocs)
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:mtpwin-r2 -t tabbyapi:mtpwin-r2-metrics1 .
+#
+# Any daily image works as BASE: they share the same /app TabbyAPI files, and install.py refuses to
+# build if a baseline hash differs. The overlay is pure stdlib -- no new dependency is installed, which
+# is the point: prometheus_client is not in this venv and the build has no package-install step.
+ARG BASE=tabbyapi:mtpwin-r2
+FROM ${BASE}
+
+COPY overlay /tmp/metrics-r1/overlay
+COPY manifest.json install.py /tmp/metrics-r1/
+
+RUN python3 /tmp/metrics-r1/install.py --root /app \
+        --manifest /tmp/metrics-r1/manifest.json \
+        --overlay /tmp/metrics-r1/overlay \
+    && cd /app \
+    && python3 -m unittest -v tests.test_metrics_exposition tests.test_metrics_record \
+    && python3 -c "import sys; sys.path.insert(0, '/app'); from common.metrics import record_completion, render_metrics; record_completion('#1.1 chat/completions (stream)', {'gen_tokens': 3000, 'gen_time': 45.0, 'prompt_tokens': 9800, 'cached_tokens': 9000, 'prompt_time': 0.9, 'queue_time': 0.02}, 9800, 262144); out = render_metrics(); assert 'tabby_generated_tokens_total' in out and 'tabby_generate_seconds_total' in out, out[:400]; print('render OK', len(out), 'bytes', file=sys.stderr)" \
+    && rm -rf /tmp/metrics-r1

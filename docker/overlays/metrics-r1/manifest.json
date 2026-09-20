@@ -1,0 +1,32 @@
+{
+  "name": "metrics-r1",
+  "root": "/app",
+  "note": "paths relative to /app; baseline_sha256 null = new file",
+  "files": [
+    {
+      "path": "common/gen_logging.py",
+      "baseline_sha256": "c4c58279b368e839918e0aab199ccb9b5ade3c903ab7e623ce381eea00a0148f",
+      "overlay_sha256": "7959c09a74a798fcb497d70223f0c2eb43f7a7ab53fb98defedd5eef45e88cc4"
+    },
+    {
+      "path": "common/metrics.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "e018ac792da5110a39b0e5b229d4b6a1f3315d504bd5053626ca4b207ad336cf"
+    },
+    {
+      "path": "endpoints/core/router.py",
+      "baseline_sha256": "100427688dbf1508123d9753a6b0677ccffe8ae54a593eae87c910fce6eb7ac4",
+      "overlay_sha256": "0f2a75217fce15b907ed5d2a0597c85e8aff6fec1dde0ad45b1de7647732006a"
+    },
+    {
+      "path": "tests/test_metrics_exposition.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "26b865ac1e850e4c55bc4f6a9060c87bd2e9a01b214c5d7dab83f1fce8f6eca8"
+    },
+    {
+      "path": "tests/test_metrics_record.py",
+      "baseline_sha256": null,
+      "overlay_sha256": "d36f5764c6f7ce257348a1a3a61f6ef84e2b43b60db4d921c8ccf915d22449f5"
+    }
+  ]
+}

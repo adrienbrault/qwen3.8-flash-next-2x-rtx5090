@@ -121,7 +121,10 @@ DRAFT=${DRAFT:-3}
 # (4 rows); multi-prompt paired ON/OFF code c1 +6.3 %, code c4 +5.5 %, prose c1 +2.7 %, prose c4 +6.9 %.
 # ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 and drop the flag
 # (= flan/launch-flashnext-r481-s4.sh).
-IMG=${IMG:-tabbyapi:mtpwin-r2}
+# R587 2026-09-20: Prometheus /metrics (docker/overlays/metrics-r1), two added lines in gen_logging and an
+# unauthenticated route beside /health. No math changed: c1 and 30k greedy fingerprints canonical on the
+# candidate. ROLLBACK: IMG=tabbyapi:mtpwin-r2 (= launch-flashnext.sh.pre-r587).
+IMG=${IMG:-tabbyapi:mtpwin-r2-metrics1}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
