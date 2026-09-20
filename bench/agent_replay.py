@@ -1,175 +1,258 @@
 #!/usr/bin/env python3
-"""Agent-shaped serving probe: replay recorded mini-SWE-agent conversations against an OpenAI-compatible endpoint.
+"""Replay the SHAPE of real agent traffic, so a decode number means something for the way the box is used.
 
-Each of --agents workers takes conversations from a fixed, hash-ordered list and walks them call by call: the prompt for call k
-is the recorded messages before the k-th assistant turn (system, user, assistant turns with their reasoning and tool calls, tool
-results), sent with the mini-SWE-agent bash tool, greedy, max_tokens = the recorded turn's length (estimated, capped). The
-server's own generation is discarded, so call k+1 shares a prefix with call k up to the end of call k's prompt -- the cache
-reuse an agent gets when its re-rendered turn differs from what the server generated. --tool-gap seconds of sleep between calls
-stand in for tool execution. Same conversations, same order, same budget in every arm.
+Every probe in this repo so far measures one of two regimes: a single stream that owns the box, or N streams
+started together with unique salted prompts. Production is neither. R585 showed the gap is arrival shape --
+prefill interleaving with in-flight decode -- and R586 showed what the real shape is, over 9,926 requests and
+7.03 hours:
 
---echo instead sends the server's own previous answers back, as an agent loop does: call k+1's history is call k's history,
-the recorded messages between the two assistant turns (tool results re-keyed to the server's tool-call ids; if the server made
-no call, the recorded tool output goes in as a user message), and the server's answer (content, reasoning, tool calls as
-returned). The conversation drifts from the recording after the first call; what it exercises is prefix reuse of generated
-tokens (recurrent tip checkpoints).
+    prompts      median 26,032 tokens, p90 64,648        97 % prefix-cached
+    concurrency  4.21 mean streams decoding
+    aggregate    306.3 t/s          per stream 72.8 t/s
+    acceptance   72 % MTP
 
-Writes one JSON line per call and a summary line; the TabbyAPI log (prompt N tokens, X cached, Y new) gives the cache side.
+The 97 % is the part no existing probe reproduces, and it is not an incidental detail: it is the difference
+between a prompt costing a full prefill and costing a few hundred new tokens. It happens because an agent
+session resends a GROWING conversation -- step i's prompt is step i-1's prompt plus the model's reply plus the
+tool output. Every request shares a long prefix with the previous one from the same session. A probe that
+salts its prompts to be unique, which every probe here does deliberately so that pool tests measure footprint
+rather than reuse, produces 0 % cached and therefore the wrong prefill cost, the wrong interleaving, and the
+wrong decode rate.
+
+So this replays sessions, not requests:
+
+    session s:  base context (a synthetic repo blob, ~BASE tokens, unique per session)
+                step 0: prompt = base + task          -> force G tokens out
+                step 1: prompt = base + task + reply0 + tool_output0   -> force G tokens
+                step k: ... and so on, the prompt growing by (G + TOOL) tokens per step
+
+    sessions start staggered, and between steps a session sleeps THINK seconds to stand in for tool execution,
+    which is what makes concurrency fluctuate instead of sitting at a constant.
+
+This file only GENERATES the traffic. It deliberately does not compute the headline throughput: that is done
+server-side by probes/tabby_log_agg.py, reading the container log, which is the same instrument that produced
+the production numbers above. Measuring both sides with one instrument is the whole point -- a replay scored
+by a different method could not be compared to the thing it is replaying.
+
+  agent_replay.py --url http://127.0.0.1:8022/v1 --model <m> --sessions 6 --steps 12 --out replay.jsonl
 """
-import argparse
-import glob
-import hashlib
-import json
-import os
-import queue
-import statistics
-import threading
-import time
-import urllib.request
+import argparse, itertools, json, math, random, sys, threading, time, urllib.request
 
-BASH_TOOL = {"type": "function", "function": {
-    "name": "bash", "description": "Execute a bash command",
-    "parameters": {"type": "object", "properties": {"command": {"type": "string", "description": "The bash command to execute"}},
-                   "required": ["command"]}}}
+PROSE = ("The maintainers agreed that the loader should verify every shard before the model is placed, because a "
+         "silent mismatch costs more than a refused boot. The change touches the manifest reader, the placement "
+         "planner and the two tests that cover them. ")
+CODE = ("def resolve(self, name, *, strict=True):\n    entry = self._index.get(name)\n    if entry is None:\n"
+        "        if strict:\n            raise KeyError(name)\n        return None\n    return entry.load()\n\n")
 
 
-def load(path):
-    d = json.load(open(path))
-    msgs, calls = [], []
-    for m in d["messages"]:
-        role = m.get("role")
-        if role in ("system", "user"):
-            msgs.append({"role": role, "content": m.get("content") or ""})
-        elif role == "assistant":
-            calls.append(len(msgs))
-            a = {"role": "assistant", "content": m.get("content") or ""}
-            if m.get("reasoning_content"):
-                a["reasoning_content"] = m["reasoning_content"]
-            tcs = [{"id": t.get("id"), "type": "function",
-                    "function": {"name": t["function"]["name"], "arguments": t["function"]["arguments"]}}
-                   for t in (m.get("tool_calls") or [])]
-            if tcs:
-                a["tool_calls"] = tcs
-            est = len(a["content"]) + len(a.get("reasoning_content", "")) + sum(len(t["function"]["arguments"]) for t in tcs)
-            a["_est_tokens"] = est // 3
-            msgs.append(a)
-        elif role == "tool":
-            msgs.append({"role": "tool", "tool_call_id": m.get("tool_call_id"), "content": m.get("content") or ""})
-    return d.get("instance_id") or os.path.basename(os.path.dirname(path)), msgs, calls
+# Tokens per whitespace-separated word, MEASURED from R597's records rather than assumed. The old code used
+# fn_bench's 1/1.6 for both kinds and was wrong by 30 % in opposite directions: R597's ten sessions realized
+# exactly 0.703x the requested base on even session ids and 1.13x on odd ones, because `kind` is chosen by
+# `sid % 2` and the two corpora tokenize differently -- CODE is punctuation-dense, PROSE is ordinary English.
+# The error was deterministic, not random, so it did not average out; it split every round into two populations
+# and made `--base` mean two different things depending on which session you looked at.
+TOK_PER_WORD = {"prose": 1.125, "code": 1.80}
 
 
-def clean(msgs):
-    return [{k: v for k, v in m.items() if not k.startswith("_")} for m in msgs]
+def filler(tokens, kind, rng):
+    """Roughly `tokens` tokens of padding, drawn from rng so each session's base is its own token sequence."""
+    unit = (CODE if kind == "code" else PROSE).split()
+    if tokens <= 0:
+        return ""
+    return " ".join(rng.choice(unit) for _ in range(int(tokens / TOK_PER_WORD[kind]))) + " "
 
 
-def between(msgs, calls, k):
-    return msgs[(calls[k - 1] + 1) if k else 0:calls[k]]
+def post(url, model, prompt, ntok, timeout, temp):
+    """One forced-length completion. Returns (ok, ttft, wall, gen_tokens, prompt_tokens, text, sse_frames)."""
+    body = {"model": model, "prompt": prompt, "max_tokens": ntok, "min_tokens": ntok,
+            "temperature": temp, "stream": True, "stream_options": {"include_usage": True}}
+    req = urllib.request.Request(url + "/completions", json.dumps(body).encode(),
+                                 {"Content-Type": "application/json"})
+    t0 = time.time(); tf = None; n = 0; text = []; usage = None
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            for raw in r:
+                line = raw.decode("utf-8", "replace").strip()
+                if not line.startswith("data:"):
+                    continue
+                d = line[5:].strip()
+                if d == "[DONE]":
+                    break
+                try:
+                    c = json.loads(d)
+                except Exception:
+                    continue
+                if c.get("usage"):
+                    usage = c["usage"]
+                for ch in c.get("choices") or []:
+                    piece = ch.get("text") or (ch.get("delta") or {}).get("content") or ""
+                    if piece:
+                        if tf is None:
+                            tf = time.time()
+                        n += 1
+                        text.append(piece)
+    except Exception as e:
+        return False, None, time.time() - t0, 0, None, f"ERROR {e}", 0
+    pt = (usage or {}).get("prompt_tokens")
+    # Count generated tokens from the usage block, NOT from SSE frames. With MTP the server emits several
+    # accepted tokens in one frame, so frames undercount by the acceptance factor: R593's client reported a
+    # median of 202 where the server's own log said 608, almost exactly 3x, and a reader comparing the client
+    # record against the forced length would conclude min_tokens was being ignored when it was being honoured.
+    ct = (usage or {}).get("completion_tokens")
+    return True, (tf - t0 if tf else None), time.time() - t0, (ct if ct else n), pt, "".join(text), n
 
 
-def adapt(seg, prev):
-    """Recorded messages that follow an assistant turn, re-keyed to the server's own answer `prev`."""
-    ids = [t.get("id") for t in (prev or {}).get("tool_calls") or []]
-    tools = [m for m in seg if m["role"] == "tool"]
-    rest = [m for m in seg if m["role"] != "tool"]
-    if prev is None:
-        return seg
-    if not ids:
-        body = "\n\n".join(m["content"] for m in tools)
-        return ([{"role": "user", "content": "Tool output:\n" + body}] if tools else []) + rest
-    out = [{"role": "tool", "tool_call_id": ids[i], "content": tools[i]["content"] if i < len(tools) else "(no output)"}
-           for i in range(len(ids))]
-    return out + rest
+def draw(sid, a, rng):
+    """(base tokens, step count) for one session instance.
+
+    WITH `--ladder` THIS IS DETERMINISTIC, AND THAT IS THE POINT. Two rounds were spent tuning a random draw
+    against a single 10-session sample, which cannot work: resampling R597's own generator 400 times at n=10
+    gives medians spanning 29.4k-35.1k and p90s spanning 50.6k-60.5k (p10-p90), and R597's actual draw --
+    27.1k / 43.3k -- fell below the p10 of BOTH. Its parameters were not wrong; its sample was. Chasing that
+    with a new distribution is the same error as R588's single-boot A/B, one level up.
+
+    A fixed ladder removes the draw entirely. The enumerated set {base_i + k*G} over the ladder has whatever
+    median and p90 you solve it for -- the shipped default matches production to 0.04 % and 0.01 % -- and it is
+    IDENTICAL in every arm of every round, so a prompt-distribution difference can no longer masquerade as an
+    effect. The random draw is kept behind --dist for the record, not because it should be used.
+    """
+    if a.ladder:
+        return a.ladder[sid % len(a.ladder)]
+    spread = max(0.0, a.spread)
+    if a.dist == "lognormal":
+        return (max(4000, int(a.base * math.exp(rng.gauss(0.0, spread)))),
+                max(2, int(round(a.steps * math.exp(rng.gauss(0.0, spread * 0.6))))))
+    return (max(4000, int(a.base * rng.uniform(1 - spread, 1 + spread))),
+            max(2, int(round(a.steps * rng.uniform(1 - spread, 1 + spread)))))
+
+
+def session(sid, a, rng, sink, lock, stop, inst=0):
+    """One agent session: a growing conversation, with think time between steps."""
+    base_t, nsteps = draw(sid, a, rng)
+    base = filler(base_t, "code" if sid % 2 else "prose", rng)
+    convo = base + "\n\nTask: find why the loader refuses the shard and propose a patch.\n"
+    print(f"[s{sid}#{inst}] base ~{base_t} tokens, {nsteps} steps", flush=True)
+    for step in range(nsteps):
+        if stop.is_set():
+            return
+        gen = max(64, int(rng.gauss(a.gen, a.gen * 0.5)))
+        t_sub = time.time()
+        ok, ttft, wall, n, pt, text, frames = post(a.url, a.model, convo, gen, a.timeout, a.temp)
+        rec = {"session": sid, "inst": inst, "step": step, "steps_asked": nsteps, "base_asked": base_t,
+               "ok": ok, "t_submit": t_sub, "ttft_s": ttft,
+               "wall_s": wall, "gen_tokens": n, "asked_tokens": gen, "prompt_tokens": pt,
+               "sse_frames": frames, "prompt_chars": len(convo)}
+        with lock:
+            sink.write(json.dumps(rec) + "\n"); sink.flush()
+        if not ok:
+            print(f"[s{sid}#{inst} step{step}] {text[:120]}", flush=True)
+            return
+        print(f"[s{sid}#{inst} step{step}/{nsteps}] prompt~{pt or '?'} gen {n} "
+              f"ttft {ttft if ttft is None else round(ttft,2)} wall {wall:.1f}s", flush=True)
+        # The reply and a synthetic tool result both become part of the next prompt. This is what makes the
+        # next request share a long prefix with this one, and it is the whole reason this probe exists.
+        convo += text + "\n\n[tool output]\n" + filler(a.tool, "code", rng) + "\n"
+        if stop.wait(max(0.0, rng.gauss(a.think, a.think * 0.4))):
+            return
+
+
+# Solved against production (median 26,032, p90 64,648, 97 % cached) using the per-step growth MEASURED from
+# R597's records: a step adds 2,703 prompt tokens (median over 140 consecutive pairs, mean 2,688, range
+# 2,045-3,534). Under --respawn this ladder gives median 26,015, p90 64,560 and 93 % cached.
+#
+# IT IS SOLVED FOR --respawn, WHICH WEIGHTS SLOTS DIFFERENTLY FROM ONE PASS. Left to run once each, a slot
+# contributes n_i requests, so deep sessions dominate; restarted on completion, every slot delivers requests at
+# about the same RATE, so each contributes equally and the deep sessions lose weight. The same ladder read the
+# wrong way is 15 % low on p90 -- solving for one regime and running the other is its own calibration bug.
+#
+# It is solved for G = 2703, so it is only valid while a step actually adds that much: --gen 700 --tool 2020
+# reproduce it with the calibrated filler above. The 93 % against production's 97 % is the one target that does
+# not fit: a slot spends one uncached prefill per pass, so the cached share is bounded by the session depths
+# that the median and the p90 already fix. It is reported, not hidden -- the replay generates somewhat more
+# fresh prefill work than production does, which makes it conservative for anything prefill-side.
+LADDER_PROD = "3500:9,4000:9,5000:28,6000:23,7000:16,9000:28,9500:7,10500:23,12500:30,20500:19"
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--url", required=True)
-    p.add_argument("--model", required=True)
-    p.add_argument("--trajs", nargs="+", required=True, help="globs of *.traj.json; later globs override earlier per instance")
-    p.add_argument("--agents", type=int, default=8)
-    p.add_argument("--convs", type=int, default=16)
-    p.add_argument("--calls", type=int, default=24, help="first N calls of each conversation")
-    p.add_argument("--cap", type=int, default=2048, help="max_tokens cap per call")
-    p.add_argument("--tool-gap", type=float, default=2.0)
-    p.add_argument("--echo", action="store_true", help="send the server's own answers back (agent loop), not the recording")
-    p.add_argument("--tag", required=True)
+    p.add_argument("--url", required=True); p.add_argument("--model", required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--sessions", type=int, default=6)
+    p.add_argument("--steps", type=int, default=12)
+    p.add_argument("--base", type=int, default=22000, help="starting context per session, tokens")
+    p.add_argument("--gen", type=int, default=700, help="mean forced generation length")
+    p.add_argument("--tool", type=int, default=900, help="synthetic tool output appended per step, tokens")
+    p.add_argument("--think", type=float, default=6.0, help="mean seconds between a session's steps")
+    p.add_argument("--dist", choices=("lognormal","uniform"), default="lognormal",
+                   help="shape of the per-session draw. lognormal is the default because production's prompt "
+                        "distribution is skewed (median 26k, p90 65k) and a symmetric draw cannot hit both.")
+    p.add_argument("--spread", type=float, default=0.5,
+                   help="per-session variation in base size and step count, as a fraction (0 = every session "
+                        "identical, which is what made R593's prompt p90 far too low)")
+    p.add_argument("--ladder", default="",
+                   help="fixed session shapes, 'base:steps,base:steps,...'. Overrides --base/--steps/--dist/"
+                        "--spread and makes the prompt distribution identical in every arm. The default in "
+                        "LADDER_PROD matches production's median and p90 to better than 0.1 %%.")
+    p.add_argument("--prod-ladder", action="store_true", help="use the solved production ladder")
+    p.add_argument("--respawn", action="store_true",
+                   help="restart a session slot when it finishes, so concurrency does not decay as "
+                        "the shallow ladder entries retire")
+    p.add_argument("--stagger", type=float, default=4.0, help="seconds between session starts")
+    p.add_argument("--temp", type=float, default=0.6, help="real clients sample; 0 would be the probe regime")
+    p.add_argument("--timeout", type=float, default=1800)
+    p.add_argument("--seed", type=int, default=None)
+    p.add_argument("--max-seconds", type=float, default=900)
     a = p.parse_args()
 
-    files = {}
-    for g in a.trajs:
-        for f in sorted(glob.glob(g)):
-            files[os.path.basename(os.path.dirname(f))] = f
-    order = sorted(files, key=lambda i: hashlib.sha1(i.encode()).hexdigest())[:a.convs]
-    work = queue.Queue()
-    for i in order:
-        work.put(load(files[i]))
-    lock = threading.Lock()
-    rows = []
-    out = open(a.out, "a")
+    if a.prod_ladder and not a.ladder:
+        a.ladder = LADDER_PROD
+    if a.ladder:
+        a.ladder = [tuple(int(x) for x in e.split(":")) for e in a.ladder.split(",") if e.strip()]
+        a.sessions = len(a.ladder)
 
-    def agent(n):
-        while True:
-            try:
-                iid, msgs, calls = work.get_nowait()
-            except queue.Empty:
+    # TWO SEEDS, DELIBERATELY. The ladder fixes the SHAPE of every round; the filler CONTENT must still be
+    # unique per invocation or the NVMe prefix tier turns a fixed shape into a fixed cache hit. That is the
+    # failure benchmark-seed-uniqueness records: a re-run served from the previous run's pages reads as a
+    # speedup. So structure is deterministic and content is nonced, and the acceptance check is that step-0
+    # prompts show ~0 % cached in both arms.
+    seed = a.seed if a.seed is not None else int(time.time())
+    nonce = int(time.time() * 1000) % 100000 if a.seed is None else seed
+    shape = ("ladder " + ",".join(f"{b}:{s}" for b, s in a.ladder)) if a.ladder else \
+            f"{a.sessions} sessions x {a.steps} steps, base {a.base}, {a.dist} spread {a.spread}"
+    print(f"agent_replay: {shape}, gen ~{a.gen}, tool {a.tool}, think ~{a.think}s, stagger {a.stagger}s, "
+          f"temp {a.temp}, seed {seed}, content nonce {nonce}", flush=True)
+    sink = open(a.out, "a"); lock = threading.Lock(); stop = threading.Event()
+    t0 = time.time(); deadline = t0 + a.max_seconds
+
+    # A worker owns one ladder slot and RESTARTS it when it finishes. Without this the round decays: the solved
+    # ladder has six sessions of <=9 steps and three of >=22, so the shallow ones retire in the first minutes
+    # and the expensive tail prompts -- the whole object of study -- would arrive beside two streams instead of
+    # production's four. Restarting keeps mean concurrency flat AND keeps the distribution exactly the ladder's,
+    # because a restart replays the same slot.
+    def worker(sid):
+        for inst in itertools.count():
+            if stop.is_set() or time.time() > deadline:
                 return
-            hist, prev = [], None
-            for k, idx in enumerate(calls[:a.calls]):
-                max_tokens = max(64, min(a.cap, msgs[idx]["_est_tokens"]))
-                if a.echo:
-                    hist += adapt(clean(between(msgs, calls, k)), prev)
-                sent = hist if a.echo else clean(msgs[:idx])
-                body = {"model": a.model, "messages": sent, "tools": [BASH_TOOL], "temperature": 0,
-                        "max_tokens": max_tokens}
-                t0 = time.time()
-                err = None
-                try:
-                    r = json.loads(urllib.request.urlopen(urllib.request.Request(
-                        a.url + "/chat/completions", data=json.dumps(body).encode(),
-                        headers={"Content-Type": "application/json"}), timeout=1800).read())
-                    u = r.get("usage") or {}
-                    fin = r["choices"][0].get("finish_reason")
-                    m = r["choices"][0]["message"]
-                    prev = {"role": "assistant", "content": m.get("content") or ""}
-                    if m.get("reasoning_content"):
-                        prev["reasoning_content"] = m["reasoning_content"]
-                    if m.get("tool_calls"):
-                        prev["tool_calls"] = [{"id": t.get("id"), "type": "function", "function": {
-                            "name": t["function"]["name"], "arguments": t["function"]["arguments"]}} for t in m["tool_calls"]]
-                except Exception as e:  # keep walking: a failed call is a result
-                    u, fin, err = {}, None, repr(e)[:200]
-                    prev = {"role": "assistant", "content": ""}
-                t1 = time.time()
-                if a.echo:
-                    hist.append(prev)
-                row = {"tag": a.tag, "agent": n, "instance": iid, "call": k, "t0": t0, "latency_s": round(t1 - t0, 3),
-                       "max_tokens": max_tokens, "prompt_tokens": u.get("prompt_tokens"),
-                       "completion_tokens": u.get("completion_tokens"), "finish": fin, "error": err,
-                       "tool_calls": len((prev or {}).get("tool_calls") or []) if a.echo else None}
-                with lock:
-                    rows.append(row)
-                    out.write(json.dumps(row) + "\n")
-                    out.flush()
-                time.sleep(a.tool_gap)
+            session(sid, a, random.Random(seed + sid * 7919 + inst * 104729 + nonce), sink, lock, stop, inst)
+            if not a.respawn:
+                return
 
-    start = time.time()
-    threads = [threading.Thread(target=agent, args=(n,)) for n in range(a.agents)]
+    threads = []
+    for s in range(a.sessions):
+        th = threading.Thread(target=worker, args=(s,), daemon=True)
+        threads.append(th); th.start()
+        if stop.wait(a.stagger):
+            break
+    while any(t.is_alive() for t in threads):
+        if time.time() > deadline:
+            print("max-seconds reached, stopping sessions", flush=True)
+            stop.set(); break
+        time.sleep(1)
     for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
-    wall = time.time() - start
-    lat = sorted(r["latency_s"] for r in rows if not r["error"])
-    comp = sum(r["completion_tokens"] or 0 for r in rows)
-    prm = sum(r["prompt_tokens"] or 0 for r in rows)
-    q = lambda f: lat[min(len(lat) - 1, int(f * (len(lat) - 1)))] if lat else None
-    s = {"tag": a.tag, "summary": True, "convs": len(order), "calls": len(rows), "errors": sum(1 for r in rows if r["error"]),
-         "wall_s": round(wall, 1), "completion_tokens": comp, "prompt_tokens": prm, "gen_tps": round(comp / wall, 1),
-         "calls_per_min": round(len(rows) / wall * 60, 1), "lat_p50": q(0.5), "lat_p90": q(0.9),
-         "lat_mean": round(statistics.mean(lat), 2) if lat else None}
-    out.write(json.dumps(s) + "\n")
-    print(json.dumps(s))
+        t.join(timeout=120)
+    stop.set()
+    print(f"agent_replay: {time.time()-t0:.0f} s wall. Score this with probes/tabby_log_agg.py over the "
+          f"container log for this window -- not from this file.", flush=True)
 
 
 if __name__ == "__main__":

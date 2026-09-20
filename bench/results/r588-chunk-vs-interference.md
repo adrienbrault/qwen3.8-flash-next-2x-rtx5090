@@ -4,6 +4,9 @@ Results directory on the serving host: `results/2026-09-20-r588-chunk-vs-interfe
 
 Measurement only. Nothing was promoted.
 
+> **RETRACTED and CLOSED, 2026-09-20.** The `+17.5 %` for chunk 512 reported below is noise: a later round with two boots per arm read `−14.2 %` with an 18.2 % same-configuration boot gap, and a separate round measured a **19.5 % boot-to-boot swing at conc 1** on an unchanged configuration — larger than the effect. Two further harnesses failed on a confound described in [`prefill-exposure-bound.md`](prefill-exposure-bound.md). The question is now closed for a different and better reason: the same document bounds the entire prefill-interference mechanism at **3.0 % of decode on real traffic**, because production's uncached prefills are a median of 743 tokens rather than the ~49,000 every one of these harnesses fired. The arms below remain a correct record of what was measured; the conclusion drawn from them does not stand.
+
+
 ## Configuration correction, read this before the numbers
 
 The raw `analysis.txt` in this directory prints the header `NVMe tier on`. That label is wrong for all three arms. The driver copied it as a constant from [R585](r585-prefill-interference.md) and did not read the running configuration. **All three arms ran with the NVMe prefix tier off**, because the launcher enabled the tier only when `IMG` matched a literal image name, and [R587](r587-tabby-metrics.md) had changed the promoted image the day these arms ran. The launcher now tests `IMG` against a `DAILY_IMG` variable that the promotion edits, so the two cannot desync.
