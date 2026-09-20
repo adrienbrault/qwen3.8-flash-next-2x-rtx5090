@@ -1,0 +1,12 @@
+victim: greedy, 3,000 forced tokens at ~9.8k context, 1 stream, NVMe tier on, cache_size pinned 999424
+interference: fresh ~45k-token prompts, 64 tokens out, one every 8 s (= R585 arm B)
+
+ chunk     alone  under noise     B/A    noise TTFT s
+   512     269.5        134.8   0.50x            12.6
+  1024     275.2        116.1   0.42x             8.9
+  2048     275.4        114.7   0.42x             6.1
+
+R585 at the served chunk 2048 read 236.4 alone and 154.5 under this exact noise (0.65x).
+This round's 2048 arm: 275.4 alone, 114.7 under noise (0.42x) — the
+reproduction check. A 2048 arm far from 0.65x means something else moved and the sweep is not readable.
+chunk 512 BEATS the served 2048 under interference: 134.8 vs 114.7 t/s, alone-rate intact (269.5 vs 275.4). Candidate for the daily; check the TTFT column first.

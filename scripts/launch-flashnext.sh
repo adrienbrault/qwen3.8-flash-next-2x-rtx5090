@@ -124,7 +124,12 @@ DRAFT=${DRAFT:-3}
 # R587 2026-09-20: Prometheus /metrics (docker/overlays/metrics-r1), two added lines in gen_logging and an
 # unauthenticated route beside /health. No math changed: c1 and 30k greedy fingerprints canonical on the
 # candidate. ROLLBACK: IMG=tabbyapi:mtpwin-r2 (= launch-flashnext.sh.pre-r587).
-IMG=${IMG:-tabbyapi:mtpwin-r2-metrics1}
+# DAILY_IMG is the promoted image, and the NVMe tier condition below tests against it rather than against a
+# literal. R587 moved IMG here and left that condition naming the previous image, which silently served the
+# daily with no prefix tier: nothing in the promotion gates looks at the tier, so it passed clean. Promotions
+# edit this one line now and the tier follows.
+DAILY_IMG=tabbyapi:mtpwin-r2-metrics1
+IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
@@ -215,7 +220,7 @@ EV=()
 # Daily default (R534): the tier below when IMG is the served tier image and NVME_TIER is unset. Any other image, or an
 # explicit NVME_TIER= (empty), gets no tier, so experiment boots reusing this launcher never open the daily's directory.
 if [ -z "${NVME_TIER+x}" ]; then
-  if [ "$IMG" = tabbyapi:ngram-prefetch-r1-gdnbf16 ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+  if [ "$IMG" = "$DAILY_IMG" ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
 fi
 NT=()
 if [ -n "$NVME_TIER" ]; then
