@@ -1,0 +1,19 @@
+victim: greedy, 3,000 forced tokens at ~9.8k context, 1 stream, 3 runs, cache_size 999424
+
+ tier   decode t/s  vs tier OFF
+   ON        211.5        0.74x
+  OFF        287.5        1.00x
+
+The same ~45k-token prompt, submitted once and then again on a fresh boot (TTFT seconds):
+ tier      cold  after restart  prompt tokens
+   ON      4.56           4.75         45,170
+  OFF      4.42           4.47         45,086
+
+Decode tax of the tier: 26.4 % (211.5 against 287.5 t/s).
+Prefill saved after a restart: -0.29 s on a ~45k-token prompt (4.75 against 4.47 s TTFT).
+
+Read the trade per long generation: the tier costs 76.0 t/s of decode, so a 3,000-token reply
+pays 3.7 s more, against -0.29 s saved on a cold ~45k prompt. Production
+prompts were 97 % cached (R586), but most of that is the in-VRAM cache, which both arms have.
+
+Reference points at this victim shape: R583 tier OFF 283, R585 tier ON 236.4, R588 tier OFF 275.4.

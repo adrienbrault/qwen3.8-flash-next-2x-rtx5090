@@ -1,0 +1,17 @@
+victim: greedy, 3,000 forced tokens at ~9.8k context, 2 runs, cache_size 999424, daily namespace
+
+     arm     c1 t/s   vs off      c4 t/s   vs off
+    BASE      251.1    1.00x       150.5    1.00x
+ SCANOFF      277.5    1.11x       164.5    1.09x
+
+Tier tax with the open scan OFF: -10.5 % at c1.
+R589 measured 26.4 % with the scan on, and R590's FULL arm is the paired same-namespace number.
+If this is near zero the scan was the tax and EXL3_NVME_TIER_SCAN=0 is the fix. If it is still ~26 %
+the scan is not the tax and the cap or the tier itself is.
+
+The same ~45,130-token prompt across a GRACEFUL restart (R589 used a hard kill):
+  cold 4.42 s TTFT -> after restart 4.52 s   (-0.10 s)
+  Still no benefit with a graceful stop, so the hard kill was not the explanation.
+
+Read the tier counter lines in audit.log around the restart: pages and checkpoints before the stop and
+at the next boot say whether the prompt was durable at all, which is prior to whether it was fast.

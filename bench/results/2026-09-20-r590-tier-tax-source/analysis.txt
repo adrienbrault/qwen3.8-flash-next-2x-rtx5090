@@ -1,0 +1,14 @@
+victim: greedy, 3,000 forced tokens at ~9.8k context, 2 runs, cache_size 999424
+
+   arm     c1 t/s   vs off      c4 t/s   vs off   configuration
+   OFF      284.3    1.00x       160.6    1.00x   tier off (control)
+  FULL      203.1    0.71x       156.2    0.97x   tier on, daily namespace at its 64 GiB cap
+ FRESH      228.5    0.80x       142.4    0.89x   tier on, empty namespace
+
+Tax of the tier as production runs it: 28.6 % at c1.
+Tax of the tier with nothing to prune:  19.6 % at c1.
+
+FRESH sits with FULL, so the tax is INHERENT to having the tier attached, not the pruning. Keeping it
+then costs about a quarter of decode for a prefix cache whose benefit R589 could not measure above 0.
+
+Reference points at this victim shape, c1: R583 off 283, R588 off 275.4, R589 off 287.5; R585 on 236.4, R589 on 211.5.
