@@ -1,0 +1,19 @@
+per-request decode t/s, greedy, tier off
+
+-- filler budget 13000 --
+  tokens   A window ON   B window OFF      B/A   prompt tokens
+     512         279.8          292.4    1.04x   9,816
+    1024         300.5          291.8    0.97x   9,811
+    2048         261.4          250.3    0.96x   9,786
+    3000         284.6          278.4    0.98x   9,839
+
+-- filler budget 66000 --
+  tokens   A window ON   B window OFF      B/A   prompt tokens
+     512         281.1          282.7    1.01x   49,391
+    1024         201.4          190.1    0.94x   49,713
+    2048         208.8          225.1    1.08x   49,689
+    3000         209.0          205.4    0.98x   49,755
+
+3 streams x 3,000 tokens at ~10k ctx: A 171.7 vs B 194.0 per stream (1.13x)
+A ctx13000: 3,000 tokens runs 1.02x the 512-token rate (1.00 = length is innocent)
+A ctx66000: 3,000 tokens runs 0.74x the 512-token rate (1.00 = length is innocent)

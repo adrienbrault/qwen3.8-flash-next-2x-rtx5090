@@ -45,6 +45,10 @@ ASK_CODE = ("\n\nNow write the complete source of a production-quality Python mo
 NOFORCE = [False]
 UNIQUE = [False]
 SALT = [0]
+# Sampling temperature. 0 (the default) is greedy, which is what every published number in this repo was measured
+# at. Real client traffic is sampled -- the desktop harness sends 0.6 -- and MTP draft acceptance is not the same
+# under sampling as under argmax, so a greedy-only suite cannot see a sampling-dependent slowdown (R583).
+TEMP = [0.0]
 
 
 def filler(ctx_tokens, kind, salt=None):
@@ -74,7 +78,7 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
         # Threads must not share a prefix: with the paged cache, identical prompts collapse onto the same pages
         # and an admission test then measures prefix reuse instead of concurrent context footprint.
         prompt = prompt + f"\n\n[variant {idx}: treat this document as section {idx} of a series.]"
-    body = {"model": model, "max_tokens": ntok, "temperature": 0, "stream": True,
+    body = {"model": model, "max_tokens": ntok, "temperature": TEMP[0], "stream": True,
             "stream_options": {"include_usage": True}}
     # Length is forced here. Without min_tokens this measures whatever length the model felt like producing.
     if not no_force:
@@ -87,7 +91,7 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
         path = "/completions"
     req = urllib.request.Request(url + path, json.dumps(body).encode(),
                                  {"Content-Type": "application/json"})
-    rec = {"i": idx, "ok": False, "max_tokens": ntok, "min_tokens": ntok}
+    rec = {"i": idx, "ok": False, "max_tokens": ntok, "min_tokens": ntok, "temperature": TEMP[0]}
     t0 = time.time()
     t_first = t_last = None
     frames = 0
@@ -202,18 +206,23 @@ def main():
                     help="offset for the --unique filler seed. The seed is otherwise 1000 + request index, identical on every run and"
                          " invocation, so a repeated 'cold' prefill hits the prefix cache and a longer context shares the shorter"
                          " one's opening (R507, 2026-09-18). Give each cold measurement its own salt.")
+    ap.add_argument("--temp", type=float, default=0.0,
+                    help="sampling temperature; 0 (default) is greedy, which is what every published number here "
+                         "was measured at. Pass the client's real value (the desktop harness uses 0.6) to measure "
+                         "the regime the user actually runs in.")
     ap.add_argument("--out", required=True, help="JSONL: one line per request, never a summary")
     a = ap.parse_args()
     NOFORCE[0] = a.no_force
     UNIQUE[0] = a.unique
     SALT[0] = a.salt
+    TEMP[0] = a.temp
 
     fill = filler(a.ctx[0], a.kind)
     ask = ASK_CODE if a.kind == "code" else ASK_PROSE
     prompt = (fill + ("\n\n" + ask if fill else ask.strip() + " Begin now."))
     log = open(a.out, "a", buffering=1)
     print(f"tag={a.tag} url={a.url} conc={a.conc} forced_tokens={a.tokens} ctx~{a.ctx} kind={a.kind} "
-          f"endpoint={'completions' if a.completions else 'chat'} runs={a.runs}", flush=True)
+          f"endpoint={'completions' if a.completions else 'chat'} runs={a.runs} temp={a.temp}", flush=True)
 
     for ctx in a.ctx:
         fill = filler(ctx, a.kind)
