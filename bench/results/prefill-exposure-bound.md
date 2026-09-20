@@ -1,4 +1,6 @@
-# The ceiling on prefill-interference work: 3.1 % of decode
+# What prefill/decode overlap actually costs, measured on real traffic
+
+> **CORRECTION, 2026-09-20, same day as first publication.** This page first claimed "the ceiling on prefill-interference work: 3.1 % of decode" and used it to close decode-priority scheduling. **That bound was wrong and is withdrawn.** It composed production's exposure share with R585's 14 % loss as though the 14 % were a loss *per exposed second*. It was not: R585's ~750-token arm was resident only about **4 %** of its window (≈0.3 s of prefill per ~8.6 s arrival), so a 4 % dose produced a 14 % loss, and scaling that *down* to a 22 % dose is only valid if the dose-response decreases with dose. It does not. The exposure measurement below stands; the pricing has been replaced with the dose-response measured directly from the same log. Decode-priority scheduling is reopened.
 
 Measured 2026-09-20 from the container log of the 7.02-hour agent run in [`swebench-agent-cost.md`](swebench-agent-cost.md). Probe: [`bench/prefill_exposure.py`](../prefill_exposure.py). No GPU time was spent; the log already contained the measurement.
 
@@ -37,19 +39,34 @@ The mechanism is real. The exposure is not there.
 
 Every harness reproduced R585's 45,000-token arrival because that is where the effect is large. Production's arrivals are the other size — median 757 uncached tokens, and the largest single prefill in seven hours is 10,224, about a fifth of what the harnesses fired every 8 to 10 seconds. Pricing production's exposure against the **size-matched** loss:
 
-```
-22.0 % of decode exposed  ×  14 % loss at that arrival size  =  3.1 % of decode
-```
+### The dose-response, measured rather than composed
 
-and the damaging regime prices at `0.3 % × 35 % = 0.11 %`. Both figures assume a lever recovers *all* of the loss on *all* exposed decode, which none will.
+Every completion line carries its own decode rate, so the log prices the lever directly. Each request's exposed fraction is computed, and requests are compared **inside cells matched on both the number of peer decode streams and generation length** — concurrency is the confound, since exposure concentrates in busy stretches and per-stream decode falls with batch size regardless of any prefill.
+
+| peer decode streams | low-exposure | high-exposure | delta |
+| --- | --- | --- | --- |
+| 0 | 193.8–197.5 t/s (exp 0 %) | 185.9–221.7 (exp 4–10 %) | **+7 to +15 %** |
+| 1 | 150.0–162.4 | 96.1–128.4 (exp 17–34 %) | −20 to −36 % |
+| 2 | 123.6–133.5 | 75.8–96.3 (exp 22–43 %) | −22 to −40 % |
+| 3 | 99.2–118.4 | 60.7–78.4 (exp 25–53 %) | −23 to −49 % |
+| 4 | 89.4–101.7 | 39.5–64.4 (exp 28–65 %) | −32 to −61 % |
+| 5 | 68.0–76.3 | 40.5–53.7 (exp 30–59 %) | −21 to −47 % |
+| 6 | 61.1–76.2 | 45.5–52.2 (exp 30–45 %) | −15 to −40 % |
+
+**Pooled, controlling peers and generation length: 105.2 t/s at 5 % mean exposure against 80.0 t/s at 40 % — −23.9 %.** The `peers = 0` row is the negative control and it is clean: with nothing else in the batch, exposure costs nothing, which is what rules out the comparison being an artefact of busy periods alone.
+
+Fitting `rate = r₀(1 − k·exp)` to the pooled contrast gives `k ≈ 0.66`. At production's mean exposure of 22.0 %, decode therefore runs about **14.6 % below its unexposed rate**, and removing the overlap entirely would be worth **roughly +15 % of decode** (10–17 % depending on how the residual confound is treated).
+
+**Limits, stated plainly.** This is observational, not an A/B. Controlling *mean* peers over a request's window does not remove burstiness *within* it, so some of the 24 % may be micro-period load rather than prefill. The mechanism is not attributed: it is consistent with prefill chunks displacing decode steps, and also with the batch-composition transient of a request joining mid-flight.
 
 The cause is the 97 % prefix-cache hit rate. An agent session resends a growing conversation, so each request shares a long prefix with the previous one and costs a few hundred new tokens rather than a full prefill. The interference lever therefore only reaches session starts and cache misses.
 
 ## What this closes
 
-`chunk_size` as an anti-interference lever, and decode-priority scheduling and admission shaping with it — they target the same exposure and cannot beat the same ceiling. Chunk 512 was separately undeployable at this pool: it leaves 337 MiB free on cuda:0 against a 1,041 MiB reference, failing the headroom rule, and it doubles the arriving request's TTFT from 6.1 s to 12.6 s.
+Splitting exposure by prefill size (small < 1,500 new tokens against ≥ 1,500) at matched peers, generation length and arrival rate — 0.86/s against 0.91/s, so not an admission-count difference — the cells whose total exposure is close read only −1 % to −10 %, while the cells with large exposure gaps read −23 % to −33 %. The harm tracks **exposure-seconds**, roughly independent of how large the prefill is per second. That separates the two levers:
 
-Reopen only if the traffic mix changes — long uncached prompts, cold sessions, or a cache regression. Re-running the probe is free.
+- **`chunk_size` stays closed.** Smaller chunks trade severity-per-second against longer residency, and the product is what matters — to first order the decode loss is the prefill compute share of the engine, which is chunk-invariant. Four rounds of nulls are consistent with that. The deployability kills stand on their own anyway: chunk 512 leaves 337 MiB free on cuda:0 against a 1,041 MiB reference, failing the headroom rule, and takes the arriving request's TTFT from 6.1 s to 12.6 s. Worth noting the exposure measurement says nothing about *tail latency*, where smaller chunks shorten each decode-stall event — if decode smoothness is ever the goal, that question is still open.
+- **Deferral-style scheduling is reopened.** It removes the overlap rather than reshaping it, so the ~15 % is its prize rather than its ceiling. Its cost is TTFT on the arriving request, which nothing here prices. One caveat before building it: an overlay that skips prefill "while any peer sequence is decoding" cannot work at 4.21 mean streams, where that condition is almost always true — pure deferral would starve every arrival. The shape that can work at this concurrency is a priority weight, with decode scheduled first and prefill taking the remainder.
 
 ## Method note
 

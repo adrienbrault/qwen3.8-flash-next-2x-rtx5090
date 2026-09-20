@@ -183,6 +183,57 @@ def main():
     print(f"    The damaging ~45k regime every chunk harness reproduced covers {ov_sub*100:.1f}% of decode here,")
     print(f"    so pricing it against R585's 0.65x gives {ov_sub*0.35*100:.2f}%.")
     print(f"    Both assume a lever recovers ALL of the loss on ALL exposed decode, which none will.")
+
+    # ---- THE DOSE-RESPONSE, MEASURED, which is what replaces the argument ----
+    # Exposure alone does not price a lever: it says how often decode runs beside a prefill, not what that
+    # costs. Composing it with a loss measured in a harness requires assuming the harness's dose equals
+    # production's, and R585's ~750-token arm was resident only about 4 % of its window, so that assumption is
+    # false in the optimistic direction. The log already contains the answer: every completion carries its own
+    # decode rate, and this pass computes each request's own exposed fraction. Regress one on the other.
+    #
+    # CONCURRENCY IS THE CONFOUND AND IT MUST BE HELD. Exposure concentrates in busy stretches, and per-stream
+    # decode falls with batch size regardless of any prefill, so an uncontrolled regression would read ordinary
+    # batch sharing as interference damage. Requests are therefore bucketed by how many OTHER streams decoded
+    # beside them, and exposed is compared against unexposed INSIDE each bucket.
+    print("\n\nDOSE-RESPONSE: what exposure actually costs, per request, at matched concurrency")
+    dm = sorted(dec)
+    rows = []
+    for d0, d1, g in dec:
+        w = d1 - d0
+        if w <= 0.5 or g < 32:          # too short to carry a meaningful rate
+            continue
+        exp = overlap(d0, d1, m_all) / w
+        co = sum(min(d1, b) - max(d0, a_) for a_, b, _ in dec if b > d0 and a_ < d1) / w - 1.0
+        rows.append((co, exp, g / w, g))
+    if not rows:
+        print("  no usable requests")
+        return 0
+    buckets = {}
+    for co, exp, rate, g in rows:
+        buckets.setdefault(min(6, max(0, int(round(co)))), []).append((exp, rate, g))
+    print(f"  {'peers':>5}  {'n':>5}   {'low-exposure t/s':>17}   {'high-exposure t/s':>18}   {'delta':>7}")
+    tot_lo = tot_hi = 0.0
+    wn_lo = wn_hi = 0.0
+    for b in sorted(buckets):
+        v = sorted(buckets[b])
+        if len(v) < 40:
+            continue
+        k = len(v) // 4
+        lo, hi = v[:k], v[-k:]                      # bottom vs top quartile of exposure, same concurrency
+        rlo = sum(r for _, r, _ in lo) / len(lo)
+        rhi = sum(r for _, r, _ in hi) / len(hi)
+        elo = sum(e for e, _, _ in lo) / len(lo)
+        ehi = sum(e for e, _, _ in hi) / len(hi)
+        tot_lo += rlo * len(lo); wn_lo += len(lo)
+        tot_hi += rhi * len(hi); wn_hi += len(hi)
+        print(f"  {b:>5}  {len(v):>5}   {rlo:>8.1f} (exp {elo*100:>4.0f}%)   {rhi:>9.1f} (exp {ehi*100:>4.0f}%)   "
+              f"{(rhi-rlo)/rlo*100:>+6.1f}%")
+    if wn_lo and wn_hi:
+        a_, b_ = tot_lo / wn_lo, tot_hi / wn_hi
+        print(f"\n  pooled over matched-concurrency buckets: {a_:.1f} t/s at low exposure vs {b_:.1f} at high, "
+              f"{(b_-a_)/a_*100:+.1f}%")
+        print(f"  THIS is the production dose-response. A lever that removed ALL exposure could recover at most")
+        print(f"  what this gap represents, and only on the exposed share ({ov_all*100:.1f}% of decode).")
     print(f"\n  Window aggregate {gen/span:.0f} t/s counts idle wall; the decode-busy figure comparable to")
     print(f"  R586's 306.3 t/s is in tabby_log_agg.py, not here.")
     return 0
