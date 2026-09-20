@@ -1,4 +1,4 @@
-# The ceiling on prefill-interference work: 3.0 % of decode
+# The ceiling on prefill-interference work: 3.1 % of decode
 
 Measured 2026-09-20 from the container log of the 7.02-hour agent run in [`swebench-agent-cost.md`](swebench-agent-cost.md). Probe: [`bench/prefill_exposure.py`](../prefill_exposure.py). No GPU time was spent; the log already contained the measurement.
 
@@ -17,28 +17,28 @@ The server logs both halves of it per request:
      520 new in 0.22 s (2,364 T/s) · first token 0.24 s, total 2.09 s · draft 67/82 accepted (82%)
 ```
 
-`520 new in 0.22 s` is the **measured** uncached work and the **measured** wall it was resident for, contention included — no prefill-rate model is involved. With the line's own timestamp, `first token` and `total`, each request yields a prefill interval and a decode interval, and exposure is the share of decode-stream-seconds overlapping some other request's prefill. 9,705 requests parse out of the run's 9,926.
+`520 new in 0.22 s` is the **measured** uncached work and the **measured** wall it was resident for, contention included — no prefill-rate model is involved. With the line's own timestamp, `first token` and `total`, each request yields a prefill interval and a decode interval, and exposure is the share of decode-stream-seconds overlapping some other request's prefill. All 9,926 requests parse. A first pass read only 9,705, because the regex matched `N% cached` while the server prints `none cached` for a request that hit no prefix at all — so the 221 it dropped were exactly the fully-uncached ones, the fresh prefills this measurement exists to count, biasing the exposure downward. The figures below are the complete set.
 
 ## What production's prefills actually look like
 
 | | real traffic, 7.02 h | what the interference rounds used |
 | --- | --- | --- |
-| uncached tokens per request | median **743**, p90 1,699, p99 3,201, max **10,224** | ~49,000 |
-| requests with ≥ 4,000 uncached | **34 of 9,705 (0.4 %)**, 2 % of all uncached tokens | every one |
-| prefix cached | median **97 %**, p10 84 % | 0 % (salted per request) |
-| decode exposed to any prefill | **21.6 %** of decode-seconds, 17.6 % of tokens | ~100 % |
+| uncached tokens per request | median **757**, p90 1,734, p99 3,216, max **10,224** | ~49,000 |
+| requests with ≥ 4,000 uncached | **35 of 9,926 (0.4 %)**, 2 % of all uncached tokens | every one |
+| prefix cached | median **97 %**, p10 81 % | 0 % (salted per request) |
+| decode exposed to any prefill | **22.0 %** of decode-seconds, 17.9 % of tokens | ~100 % |
 | decode exposed to a ≥ 4,000-token prefill | **0.3 %** | ~100 % |
 
-Total uncached prefill work across the window is 3,527 seconds summed over concurrent requests, against a 25,257-second window: 14 % duty.
+Total uncached prefill work across the window is 3,667 seconds summed over concurrent requests, against a 25,303-second window: 14.5 % duty.
 
 ## The bound
 
 The mechanism is real. The exposure is not there.
 
-Every harness reproduced R585's 45,000-token arrival because that is where the effect is large. Production's arrivals are the other size — median 743 uncached tokens, and the largest single prefill in seven hours is 10,224, about a fifth of what the harnesses fired every 8 to 10 seconds. Pricing production's exposure against the **size-matched** loss:
+Every harness reproduced R585's 45,000-token arrival because that is where the effect is large. Production's arrivals are the other size — median 757 uncached tokens, and the largest single prefill in seven hours is 10,224, about a fifth of what the harnesses fired every 8 to 10 seconds. Pricing production's exposure against the **size-matched** loss:
 
 ```
-21.6 % of decode exposed  ×  14 % loss at that arrival size  =  3.0 % of decode
+22.0 % of decode exposed  ×  14 % loss at that arrival size  =  3.1 % of decode
 ```
 
 and the damaging regime prices at `0.3 % × 35 % = 0.11 %`. Both figures assume a lever recovers *all* of the loss on *all* exposed decode, which none will.

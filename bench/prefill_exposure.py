@@ -37,9 +37,15 @@ import argparse, re, statistics as st, sys
 # the timestamp boundary before matching. Fields are optional in the regex on purpose: a request that produced
 # no draft block, or hit an error, should be skipped rather than crash the pass.
 TS = re.compile(r"^(\d\d):(\d\d):(\d\d)\.(\d+)\s")
+# THE CACHED FIELD HAS TWO SPELLINGS AND THE SECOND ONE IS THE IMPORTANT ONE. A request that hit no prefix at
+# all prints "none cached", not "0% cached". Matching only the percent form silently dropped 221 of 9,926
+# requests here -- and they are not a random 221: they are precisely the fully-uncached ones, the fresh prefills
+# this whole measurement exists to count. Dropping them biases the exposure DOWN, which for a bound used to
+# close lines of work is the dangerous direction. Found 2026-09-20 by checking the reject list instead of
+# trusting a 98 % parse rate.
 DONE = re.compile(
     r"#(\d+)\s+\S+:\s+([\d,]+)\s+tokens generated at\s+([\d.]+)\s+T/s.*?"
-    r"prompt\s+([\d,]+)\s+tokens,\s+(\d+)%\s+cached,\s+([\d,]+)\s+new in\s+([\d.]+)\s*s.*?"
+    r"prompt\s+([\d,]+)\s+tokens,\s+(?:(\d+)%|(none))\s+cached,\s+([\d,]+)\s+new in\s+([\d.]+)\s*s.*?"
     r"first token\s+([\d.]+)\s*s,\s+total\s+([\d.]+)\s*s", re.S)
 
 
@@ -76,8 +82,9 @@ def parse(path):
         m = DONE.search(body)
         if not m:
             continue
-        out.append((ts, num(m.group(2)), num(m.group(4)), float(m.group(5)), num(m.group(6)),
-                    float(m.group(7)), float(m.group(8)), float(m.group(9))))
+        cached = 0.0 if m.group(6) else float(m.group(5))   # "none cached" -> 0 %
+        out.append((ts, num(m.group(2)), num(m.group(4)), cached, num(m.group(7)),
+                    float(m.group(8)), float(m.group(9)), float(m.group(10))))
     return out
 
 
