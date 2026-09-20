@@ -18,6 +18,8 @@ Both lines are flat: prefill holds its rate to the top of the window (199,844 to
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
+**The regime these numbers describe.** Every decode figure above is a steady-state batch on an otherwise idle server: greedy, uncached prompts, a fixed output length, and all streams starting at the same instant. A real agent session is not that shape, and the difference is large. Measured against the same server, one 3,000-token generation at ~10k context runs at 236 tokens/s alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running. Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). A three-agent session measured from the server's own request log delivered 65.6 tokens/s per stream. What costs the throughput is prefill interleaving with decode — a 45k-token prompt is 22 chunks of 2,048, and every chunk is a forward pass the decoder does not get — not context depth ([R583][r583]) and not generation length ([R583][r583]).
+
 | | value | source |
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
@@ -270,6 +272,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r576]: bench/results/r576-promote-c5-policy.md
 [r579]: bench/results/r579-promote-mtp-kv-window.md
 [r580]: bench/results/r580-decode-curve.md
+[r583]: bench/results/r583-long-generation.md
+[r585]: bench/results/r585-prefill-interference.md
 [r581]: bench/results/r581-split-rebalance.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md

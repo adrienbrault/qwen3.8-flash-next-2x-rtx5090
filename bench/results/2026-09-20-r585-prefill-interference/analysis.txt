@@ -1,0 +1,17 @@
+victim: greedy, 3,000 forced tokens at ~9.8k context, 1 stream, NVMe tier on
+
+ arm  decode t/s  vs alone   background
+   A       236.4     1.00x   alone
+   B       154.5     0.65x   + ~45k prompt arrivals /8 s
+   C       202.4     0.86x   + ~750-token arrivals /8 s
+   D       141.1     0.60x   + 2 staggered long generations
+
+background requests, for the record:
+  r585-noise-ctx1000           n=  5  mean 217.0 t/s
+  r585-noise-ctx60000          n=  4  mean 194.2 t/s
+  r585-noise-long1             n=  3  mean 164.0 t/s
+  r585-noise-long2             n=  3  mean 181.2 t/s
+
+Reference points: R583 measured 283 t/s alone and 181 at three SYNCHRONIZED streams, both greedy at this
+shape. Production delivered 65.6 per stream, and a greedy probe run alongside that traffic read 88.9.
+Arm D reproduces the production regime: 141.1 t/s against 236.4 alone.

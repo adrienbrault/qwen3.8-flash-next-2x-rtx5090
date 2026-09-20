@@ -1,0 +1,14 @@
+per-request decode t/s at ~9.8k context, 3,000 forced tokens, NVMe tier off
+
+  kind  streams    greedy   temp 0.6   sampled/greedy
+ prose        1     284.1      215.6            0.76x
+ prose        3     160.0      162.0            1.01x
+  code        1     223.4      212.2            0.95x
+  code        3     140.7      131.5            0.93x
+
+512 tokens, prose, 1 stream: greedy 205.7 -> sampled 243.6 (1.18x)
+3,000 tokens, prose, 1 stream: greedy 284.1 -> sampled 215.6 (0.76x)
+
+sampling penalty at 3,000 tokens vs at 512: 0.64x (1.00 = sampling costs the same whatever the length, below 1 = the two compound)
+
+The user's regime (sampled, 3,000 tokens, ~10k ctx, 1 stream) measures 215.6 t/s. Production delivered 65.6 t/s per stream; the README headline is 213.
