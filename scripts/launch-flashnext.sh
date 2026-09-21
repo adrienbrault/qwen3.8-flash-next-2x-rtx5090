@@ -213,6 +213,12 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
 EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384}
 EV=()
+# EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
+# been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
+# which silently dropped all 22 tuned keys (`:-` only expands when EXTRA_ENV is unset) and produced a
+# fictional 74 % pool cut. A warning in a comment is not a guard. Turning one flag on is EXTRA_ENV_ADD;
+# EXTRA_ENV stays the full override for an arm that really wants a different set.
+[ -n "${EXTRA_ENV_ADD:-}" ] && EXTRA_ENV="$EXTRA_ENV $EXTRA_ENV_ADD"
 [ -n "$AUTOSPLIT_MARGIN_MB" ] && EXTRA_ENV="$EXTRA_ENV EXL3_AUTOSPLIT_MARGIN_MB=$AUTOSPLIT_MARGIN_MB"
 # NVMe prefix tier (nvme-tier-r4, opt-in): NVME_TIER=<host directory on the dedicated fast filesystem> mounts it at
 # /nvme-tier and sets EXL3_NVME_TIER=/nvme-tier; NVME_TIER_GB caps the bytes the tier keeps there (default 128).
@@ -231,6 +237,9 @@ fi
 for kv in $EXTRA_ENV; do
   case "$kv" in *=*) EV+=(-e "$kv");; *) log "WARN: ignoring EXTRA_ENV entry without '=': $kv";; esac
 done
+# Log the RESOLVED set, not what was passed in. R614's audit log recorded the caller's EXTRA_ENV and
+# so agreed with a wrong boot; the count here is what the container actually gets.
+log "env keys ($(echo $EXTRA_ENV | wc -w)): $EXTRA_ENV"
 # R498 (2026-09-18): CKPT_NAME selects another checkpoint directory under /srv/qwen5090/models (the served model id follows it),
 # e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 3.05bpw.
 CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab}   # R511 (was qwen3.8-flash-next-exl3-3.05bpw)
