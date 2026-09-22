@@ -131,7 +131,17 @@ DRAFT=${DRAFT:-3}
 # literal. R587 moved IMG here and left that condition naming the previous image, which silently served the
 # daily with no prefix tier: nothing in the promotion gates looks at the tier, so it passed clean. Promotions
 # edit this one line now and the tier follows.
-DAILY_IMG=tabbyapi:mtpwin-r2-metrics1
+# PROMOTED 2026-09-22 (R646): + the verifybatch overlay (patches/exllamav3/verifybatch,
+#   image = mtpwin-r2-metrics1 + a 3-file Python patch). R645 py-spy found the EXL3_BATCH_VERIFY
+#   round-4 verifier had never run under TabbyAPI: reqs_past_ids was OR-ed over pre-alt() input
+#   steps, so the unconditionally-appended neutral SS_RepP/SS_PresFreqP poisoned it, and the
+#   device_logit_mask veto rejected every min_tokens request. The fix aggregates the flags over
+#   the surviving steps and forwards the per-iterate mask into the batched sampler call.
+#   Canonical gate vs metrics1, same salt/shapes: c1 +3.4%, c4/4k +0.8%, c8 +3.9%, c4/26k +3.5%;
+#   acceptance unchanged; py-spy mechanism check: job.py:622 leaf 43.3% -> ~0, one batched
+#   readback sync per iterate (streams.py:231 = 49.4%). Sampled+min_tokens and greedy smoke
+#   tests clean. ROLLBACK: IMG=tabbyapi:mtpwin-r2-metrics1
+DAILY_IMG=tabbyapi:bverify-r1
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of

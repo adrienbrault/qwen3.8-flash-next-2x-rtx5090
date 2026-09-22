@@ -1,0 +1,50 @@
+--- a/exllamav3/generator/draft_overlap.py
++++ b/exllamav3/generator/draft_overlap.py
+@@ -57,7 +57,10 @@
+         return None
+     if job.new_tokens < 0 or job.forced_ids is not None:
+         return None
+-    if job.filters or job.device_logit_mask is not None:
++    # device_logit_mask is admissible: the round-4 verifier forwards it to the sampler, which
++    # applies the same per-iterate mask the serial path would (blocked tokens, healing allow-list).
++    # Filters stay vetoed: their masks are stateful across positions.
++    if job.filters:
+         return None
+     if job.return_probs or job.return_top_tokens > 0:
+         return None
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -1592,7 +1592,7 @@
+                         None,
+                         draw_sampling_seed(job),
+                         self.tokenizer,
+-                        logit_mask = None,
++                        logit_mask = job.device_logit_mask,
+                     ).reshape(-1)
+                     draft_row_ids = draft_tokens[row, :q_verify - 1]
+                     draft_row_ids = draft_row_ids.to(
+--- a/exllamav3/generator/sampler/custom.py
++++ b/exllamav3/generator/sampler/custom.py
+@@ -1133,8 +1133,6 @@
+         # path.
+         simplified = []
+         for step in steps:
+-            self.reqs_past_ids = self.reqs_past_ids or step.reqs_past_ids()
+-            self.reqs_torch_seed = self.reqs_torch_seed or step.reqs_torch_seed()
+             alt = step.alt()
+             if alt:
+                 step = alt
+@@ -1165,6 +1163,13 @@
+                         self.steps.append(prep_step())
+                 self.steps.append(step)
+ 
++        # Resource requirements aggregate over the steps that actually run. OR-ing them over the
++        # input stack let steps that alt() reduced to SS_NoOp -- e.g. the neutral SS_RepP and
++        # SS_PresFreqP that API frontends append unconditionally -- poison reqs_past_ids, which
++        # vetoed every request from batched verification.
++        self.reqs_past_ids = any(s.reqs_past_ids() for s in self.steps)
++        self.reqs_torch_seed = any(s.reqs_torch_seed() for s in self.steps)
++
+         # A lone argmax is row-independent: flattening (batch, verification position) into one
+         # sampler batch produces the same token for every row. Any leading penalty/filter step
+         # makes the sampler depend on serially updated history and is intentionally ineligible.

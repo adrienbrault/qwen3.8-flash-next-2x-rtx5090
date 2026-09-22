@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-22
 
+- [R646: the batched draft-verify path had never run; enabling it gains ~1–4 % decode](results/r646-verifybatch.md)
 - [The canonical gate on the current daily: 1,024 forced tokens, every row `length`](results/2026-09-22-canonical-gate.md)
 
 ## 2026-09-20

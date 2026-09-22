@@ -91,3 +91,9 @@ Measured and not promoted in the same period: a deeper single-job draft ([R537](
 | 11:04 | Prometheus `/metrics` endpoint, image `tabbyapi:mtpwin-r2-metrics1` | c1 and 30k greedy fingerprints identical to the reference; counter deltas verified against driven traffic | 999,424 | [R587](../bench/results/r587-tabby-metrics.md) |
 
 The same overlay one pool step higher, 1,015,808, passed its A/B and four gates on 2026-09-19 and then ran out of memory capturing a decode graph at 5 concurrent, and rolled back ([R575](../bench/results/r575-promote-mtp-kv-window.md)). Every boot now runs a 1-to-8-stream decode ramp before the gates, so no graph is first captured under load.
+
+## 2026-09-22: the batched draft verifier begins running
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 12:10 | image `tabbyapi:bverify-r1` = `mtpwin-r2-metrics1` + verifybatch-r1.patch: the round-4 batched MTP verifier was unreachable — `reqs_past_ids` was aggregated over pre-simplification sampler steps (the frontend appends neutral penalty steps to every stack), and `device_logit_mask` vetoed every `min_tokens` request | canonical gate vs `mtpwin-r2-metrics1`, same salt/shapes: c1 +3.4 %, c4/4k +0.8 %, c8 +3.9 %, c4/26k +3.5 % decode t/s; acceptance per verify unchanged; py-spy leaf `job.py:622` 43.3 % → ~0 | 999,424 | [R646](../bench/results/r646-verifybatch.md) |
