@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-22
 
+- [R653: the launch-sweep stack is promoted — +4.4 % decode at c8, byte-identical output](results/r653-stack.md)
+- [R652: batching the per-job MTP accept-prefills gains +4.4 % decode at c8](results/r652-prefbatch.md)
 - [R651: fused int8 state-in-up mixer kernel is bitwise-exact and flat-to-+1.7 % at gate resolution](results/r651-mixstate.md)
 - [R650: MoE coop L2-prefetch is refuted — +7..+15 % slower per kernel, end-to-end flat](results/r650-moepf.md)
 - [R649: MTP input-norm fusion is decode-neutral at gate resolution; acceptance parity proven via tokens-per-frame](results/r649-mtpnorm.md)

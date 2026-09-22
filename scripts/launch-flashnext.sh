@@ -141,7 +141,13 @@ DRAFT=${DRAFT:-3}
 #   acceptance unchanged; py-spy mechanism check: job.py:622 leaf 43.3% -> ~0, one batched
 #   readback sync per iterate (streams.py:231 = 49.4%). Sampled+min_tokens and greedy smoke
 #   tests clean. ROLLBACK: IMG=tabbyapi:mtpwin-r2-metrics1
-DAILY_IMG=tabbyapi:bverify-r1
+# R653 (2026-09-22): stack-r1 = bverify-r1 + mtpnorm (MTP input-norm chain -> fused rms_norm) + mixstate
+#   (gr_v2_up_i8_state_kernel folds the state row into the up kernel: 3->2 launches x ~107 sites/step,
+#   EXL3_GR_STATE_IN_UP=1 below) + prefbatch (per-job MTP accept-prefills grouped by accepted length into
+#   one call per group, ~140 fewer launches/step at c8). Greedy byte-identical on all 6 prompts vs
+#   bverify-r1; canonical gate: c1 +1.2%, c4/4k +3.8%, c8 +4.4%, c4/26k -0.1%; acceptance parity.
+#   ROLLBACK: IMG=tabbyapi:bverify-r1 and drop EXL3_GR_STATE_IN_UP from EXTRA_ENV below.
+DAILY_IMG=tabbyapi:stack-r1
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -239,7 +245,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,

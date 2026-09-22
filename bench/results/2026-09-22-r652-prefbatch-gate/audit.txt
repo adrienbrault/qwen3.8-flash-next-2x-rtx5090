@@ -1,0 +1,20 @@
+2026-09-22T17:43:47+00:00 [r652] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-22T17:43:47+00:00 [r652] greedy reference capture on daily (qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab)
+GREEDY ref short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY ref short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY ref short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY ref short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY ref short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY ref long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+2026-09-22T17:44:18+00:00 [r652] booted tabbyapi:prefbatch-r1, served id OK
+2026-09-22T17:44:18+00:00 [r652] greedy capture on candidate
+GREEDY prefbatch short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY prefbatch short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY prefbatch short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY prefbatch short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY prefbatch short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY prefbatch long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+GREEDY prefbatch vs ref: 6 identical, IDENTICAL
+GREEDY-SUMMARY reference=ref divergences=0
+2026-09-22T17:44:32+00:00 [r652] canonical gate
+2026-09-22T17:46:45+00:00 [r652] === R652 DONE ===

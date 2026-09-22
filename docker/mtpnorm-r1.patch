@@ -1,0 +1,66 @@
+--- orig/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
++++ new/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
+@@ -4,7 +4,8 @@
+ from ...util.device_copy import to_device
+ from ...model.config import Config
+ from ...modules import Module, Linear, RMSNorm
+-from ...util.tensor import get_for_device, to2
++from ...util.tensor import get_for_device, to2, g_tensor_cache
++from ...ext import exllamav3_ext as ext
+ 
+ """
+ MTP input layer for Qwen3.8-Flash-Next.
+@@ -77,6 +78,7 @@
+ 
+         self.norm_hidden_w_raw = None
+         self.norm_hidden_w = None
++        self.norm_hidden_w_h = None
+ 
+         # Populated by attach_to()
+         self.attached_model = None
+@@ -93,11 +95,12 @@
+         w = self.config.stc.get_tensor(f"{self.key}.pre_fc_norm_hidden.weight", device, no_defer = True)
+         self.norm_hidden_w_raw = w
+         self.norm_hidden_w = (w.float() + 1.0).view(self.hc_mult, self.hidden_size).contiguous()
++        self.norm_hidden_w_h = self.norm_hidden_w.flatten().half().contiguous()
+ 
+     @override
+     def unload(self):
+         super().unload()
+-        self.norm_hidden_w_raw = self.norm_hidden_w = None
++        self.norm_hidden_w_raw = self.norm_hidden_w = self.norm_hidden_w_h = None
+ 
+     @override
+     def get_tensors(self):
+@@ -145,10 +148,18 @@
+             f"Qwen4Exp MTP token/state shape mismatch: {tuple(x.shape)} vs {tuple(target_hidden.shape)}"
+         bsz, seq = x.shape
+         y = get_for_device(params, "target_hidden", self.device)
+-        stack = y.view(bsz, seq, self.hc_mult, self.hidden_size).float()
+-        normed = stack * torch.rsqrt(stack.pow(2).mean(-1, keepdim = True) + self.rms_eps) \
+-            * self.norm_hidden_w
+-        h = self.fc_hidden.forward(normed.half().contiguous(), params)         # (b, s, H, D)
++        H, D, R = self.hc_mult, self.hidden_size, bsz * seq
++        if self.stream_tap and y.dtype == torch.half and y.is_contiguous():
++            normed = g_tensor_cache.get_bucketed(
++                y.device, R * H * D, torch.half, "mtp_normed").view(R * H, D)
++            ext.rms_norm(y.view(R * H, D), self.norm_hidden_w_h, normed,
++                         self.rms_eps, 0.0, 1.0, False, False, H)
++            h = self.fc_hidden.forward(normed.view(bsz, seq, H, D), params)    # (b, s, H, D)
++        else:
++            stack = y.view(bsz, seq, H, D).float()
++            normed = stack * torch.rsqrt(stack.pow(2).mean(-1, keepdim = True) + self.rms_eps) \
++                * self.norm_hidden_w
++            h = self.fc_hidden.forward(normed.half().contiguous(), params)     # (b, s, H, D)
+ 
+         # Token embedding via the attached model
+         emb = self.attached_model().modules[0].forward(x, params, out_dtype = torch.half)
+@@ -156,7 +167,7 @@
+         emb = self.fc_embedding.forward(emb, params)                           # (b, s, D)
+ 
+         if self.stream_tap:
+-            streams = h.float() + emb.float().unsqueeze(-2)
++            streams = h.float().add_(emb.unsqueeze(-2))
+         else:
+             streams = (h.float().mean(dim = -2) + emb.float()) \
+                 .unsqueeze(-2).expand(-1, -1, self.hc_mult, -1)

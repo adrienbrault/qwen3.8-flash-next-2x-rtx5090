@@ -1,0 +1,138 @@
+# patch-01 — batched MTP accept-prefill (generator/generator.py, iterate_gen)
+#
+# What: replace the per-job `draft_model.prefill` calls in the MTP accept path
+#   (one call per job with accepted_length > 1, ~6-8 calls/step at c8/d1, ~24
+#   launches each) with one batched prefill over all such jobs. Rows keep their
+#   own block table and start position (cache_seqlens = pre-verify kv_position
+#   + 1), which the paged attention path already supports per row, so no layout
+#   change is needed.
+#
+#   - Served (non-windowed) draft cache: a single call whose width is the widest
+#     accepted length. Shorter rows are padded with their own rejected draft
+#     columns; the extra K/V lands at positions at/past the row's committed end
+#     (dead slots, overwritten before any read can reach them -- the same
+#     lifecycle the verify pass's rejected-position K/V already follows).
+#   - EXL3_MTP_KV_WINDOW: the slot block-table row is a ring that aliases
+#     positions one cycle apart, so padding past a row's committed end could
+#     evict a still-readable committed row. Rows are grouped by accepted length
+#     instead and each group runs at its exact width; the written positions are
+#     identical to the per-job calls'. Worst case equals today's call count,
+#     never worse.
+#
+#   Rewound (banned-string) jobs are excluded from the batch exactly as they are
+#   excluded today, and mtp_last_hidden updates are unchanged. Initial job-join
+#   prefill (job.py) and trunk prefill are untouched.
+#
+# Apply: `patch -p2` from the package dir (the directory containing
+#   `exllamav3_ext/`). Verified to apply cleanly against this tree and to
+#   produce exactly the intended file.
+#
+# Estimated saving: ~(J-1) * ~24 launches per decode step where J is the number
+#   of jobs with accepted_length > 1 (~-120..-170 launches/step at c8/d1 with
+#   typical acceptance), plus ~4-6 small host-side gathers/copies and one
+#   device-side row gather on target_hidden.
+
+--- orig/exllamav3/generator/generator.py
++++ new/exllamav3/generator/generator.py
+@@ -1832,6 +1832,8 @@
+         if self.mtp_draft:
+             target_hidden = p_export_states[-1]
+             accepted_idx = 0
++            accept_groups = {}              # accepted_length -> [verify batch row, ...]
++            accept_len_max = 0
+             for job, a_idx, b_idx in zip(self.active_jobs, logit_mapping[:-1], logit_mapping[1:]):
+                 if a_idx == b_idx:
+                     continue
+@@ -1844,35 +1846,76 @@
+                 if id(job) in rewound_jobs:
+                     continue
+ 
+-                # Position K was drafted from the last target state already. Replace accepted
+-                # speculative positions K+1..K+A-1 with the corresponding target-state inputs.
+                 if accepted_length > 1:
+-                    if _DRAFT_PINNED_STAGING:
+-                        accept_seqlens = self._staging(
+-                            f"mtp_accept_cache_seqlens_{accepted_idx}", b_idx - a_idx
++                    accept_groups.setdefault(accepted_length, []).extend(range(a_idx, b_idx))
++                    accept_len_max = max(accept_len_max, accepted_length)
++
++                # The next unprocessed token is paired with the preceding target hidden state.
++                job.mtp_last_hidden = target_hidden[
++                    a_idx:b_idx, accepted_length - 1:accepted_length, :
++                ].clone()
++
++            # Position K was drafted from the last target state already; the accepted speculative
++            # positions K+1..K+A-1 are re-run through the draft model with the corresponding
++            # target-state inputs. One batched prefill replaces the per-job calls: every row keeps
++            # its own block table and its own start position (cache_seqlens = pre-verify
++            # kv_position + 1), so a single rectangular call already covers different cache
++            # lengths, different pages and different accepted counts.
++            #
++            # Served (non-windowed) draft cache: all rows share one call padded to the widest
++            # accepted length. The padding columns carry the row's own rejected draft tokens and
++            # target states, and write positions at/past that row's committed end. Those slots are
++            # dead -- a position is only read after a later write commits it, which also overwrites
++            # the padding (the same lifecycle the verify pass's rejected-position K/V follows), so
++            # the extra writes are equivalent to the per-job calls' absent writes.
++            #
++            # Windowed draft cache (EXL3_MTP_KV_WINDOW): the slot's block-table row is a ring that
++            # aliases positions one cycle apart, so a write at a not-yet-committed position could
++            # evict a committed row that is still inside the readable window. Rows are therefore
++            # grouped by accepted length and each group prefills at its exact width -- no padding,
++            # and the written positions are identical to the per-job calls'.
++            if accept_groups:
++                if self.draft_window is None:
++                    prefill_groups = [
++                        (accept_len_max, [r for grp in accept_groups.values() for r in grp])
++                    ]
++                else:
++                    prefill_groups = sorted(accept_groups.items())
++                for g, (group_len, group_rows) in enumerate(prefill_groups):
++                    seq_w = group_len - 1
++                    rows = torch.tensor(group_rows, dtype = torch.long)
++                    if _DRAFT_PINNED_STAGING:
++                        accept_seqlens = self._staging(
++                            f"mtp_accept_cache_seqlens_{g}", len(group_rows)
+                         )
+-                        accept_seqlens.copy_(p_cache_seqlens[a_idx:b_idx])
++                        torch.index_select(p_cache_seqlens, 0, rows, out = accept_seqlens)
+                         accept_seqlens.add_(1)
++                        accept_table = self._staging(
++                            f"mtp_accept_block_index_{g}", len(group_rows),
++                            draft_block_index.shape[-1]
++                        )
++                        torch.index_select(draft_block_index, 0, rows, out = accept_table)
++                        accept_ids = self._staging(
++                            f"mtp_accept_ids_{g}", len(group_rows), seq_w, torch.long
++                        )
++                        torch.index_select(batch_ids[:, 1:group_len], 0, rows, out = accept_ids)
+                     else:
+-                        accept_seqlens = p_cache_seqlens[a_idx:b_idx] + 1
++                        accept_seqlens = p_cache_seqlens[rows] + 1
++                        accept_table = draft_block_index[rows]
++                        accept_ids = batch_ids[rows, 1:group_len]
+                     accept_params = {
+                         "attn_mode": "flash_attn",
+-                        "block_table": draft_block_index[a_idx:b_idx],
++                        "block_table": accept_table,
+                         "cache": self.draft_cache,
+                         "cache_seqlens": accept_seqlens,
+-                        "target_hidden": target_hidden[a_idx:b_idx, :accepted_length - 1, :],
++                        "target_hidden": target_hidden[group_rows, :seq_w],
+                     }
+                     if _DRAFT_PINNED_STAGING:
+-                        accept_params["pinned_staging_slot"] = f"mtp_accept_{accepted_idx}"
++                        accept_params["pinned_staging_slot"] = f"mtp_accept_{g}"
+                     self.draft_model.prefill(
+-                        batch_ids[a_idx:b_idx, 1:accepted_length],
++                        accept_ids,
+                         self._draft_params(accept_params),
+                     )
+-
+-                # The next unprocessed token is paired with the preceding target hidden state.
+-                job.mtp_last_hidden = target_hidden[
+-                    a_idx:b_idx, accepted_length - 1:accepted_length, :
+-                ].clone()
+ 
+         # Release pages for completed jobs. Finished and requeued jobs no longer need their active page references.
+         # Requeued recurrent jobs may stash the last checkpoint first so the next queued job can resume from cached

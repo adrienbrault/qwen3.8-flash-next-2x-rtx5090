@@ -6,7 +6,7 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2-metrics1` (the `mtpwin-r2` image plus a Prometheus `/metrics` endpoint, promoted 2026-09-20 11:04 CEST, [R587][r587]), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
+Served since 2026-09-22 20:00 CEST ([R653][r653]): image `tabbyapi:stack-r1` (`bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching; greedy output byte-identical to `bverify-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
@@ -286,3 +286,5 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r519]: bench/results/r519-profile-2p50.md
 [r520]: bench/results/r520-int8gemv.md
 [r520b]: bench/results/r520b-int8gemv-precise.md
+[r646]: bench/results/r646-verifybatch.md
+[r653]: bench/results/r653-stack.md
