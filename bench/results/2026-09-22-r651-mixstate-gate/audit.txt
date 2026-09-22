@@ -1,0 +1,20 @@
+2026-09-22T17:39:05+00:00 [r651] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-22T17:39:05+00:00 [r651] greedy reference capture on daily (qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab)
+GREEDY ref short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY ref short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY ref short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY ref short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY ref short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY ref long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+2026-09-22T17:39:37+00:00 [r651] booted tabbyapi:mixstate-r1, served id OK
+2026-09-22T17:39:37+00:00 [r651] greedy capture on candidate
+GREEDY statein short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY statein short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY statein short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY statein short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY statein short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY statein long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+GREEDY statein vs ref: 6 identical, IDENTICAL
+GREEDY-SUMMARY reference=ref divergences=0
+2026-09-22T17:39:50+00:00 [r651] canonical gate
+2026-09-22T17:42:04+00:00 [r651] === R651 DONE ===
