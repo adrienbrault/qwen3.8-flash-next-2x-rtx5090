@@ -239,3 +239,11 @@ Ladder each candidate pool with a full 1-to-8-stream ramp, one request per batch
 **What it looks like:** "72.8 t/s per stream" as the production decode rate.
 **What it is:** the mean over requests of wildly different weights — sub-50 t/s requests were 21 % of the tokens but 59 % of the decode-seconds, and the median request ran 85–95 t/s. Per-request rates are summarised as medians, or time-weighted as total tokens over decode-busy seconds; `fn_gate.sh` reports per-request medians and the finish-reason histogram so a tail cannot hide.
 
+
+## 23. An env flag being set is not evidence the code path runs (2026-09-22)
+
+**What it looks like:** `EXL3_BATCH_VERIFY=1` in the resolved env keys, so the batched draft verify is on.
+
+**What it is:** the eligibility veto compared `reqs_past_ids` aggregated over the sampler's *input* step stack — before `alt()` turned the frontend's unconditionally-appended neutral penalty steps into no-ops. Every request reported `reqs_past_ids=True` and took the serial per-token `.cpu()` accept loop (43 % of c4 wall time in a py-spy profile). A second veto on `device_logit_mask` covered every `min_tokens` request. The fix is `verifybatch-r1` ([R646](../bench/results/r646-verifybatch.md)).
+
+**The fix for the measurement habit:** verify the path itself, not the flag — a profiler sample under its sync point (`ready.synchronize()` was absent from 27,498 samples), or a counter it increments.
