@@ -6,7 +6,7 @@ Every number here was measured on one machine, on the date given, and each links
 
 ## Numbers
 
-Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2`, 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
+Served since 2026-09-20 00:29 CEST ([R579][r579]): image `tabbyapi:mtpwin-r2-metrics1` (the `mtpwin-r2` image plus a Prometheus `/metrics` endpoint, promoted 2026-09-20 11:04 CEST, [R587][r587]), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
@@ -272,6 +272,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r576]: bench/results/r576-promote-c5-policy.md
 [r579]: bench/results/r579-promote-mtp-kv-window.md
 [r580]: bench/results/r580-decode-curve.md
+[r587]: bench/results/r587-tabby-metrics.md
 [r583]: bench/results/r583-long-generation.md
 [r585]: bench/results/r585-prefill-interference.md
 [r581]: bench/results/r581-split-rebalance.md

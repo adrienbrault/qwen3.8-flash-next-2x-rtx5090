@@ -219,3 +219,23 @@ captures the 5-stream graph, so a gate that runs 5 concurrent requests is where 
 
 Ladder each candidate pool with a full 1-to-8-stream ramp, one request per batch size, before trusting it.
 
+## 19. The first ~1,024 generated tokens read fast (2026-09-22)
+
+**What it looks like:** a length effect — acceptance 3.710 tokens per verify step at 256 forced tokens falling to 2.562 at 3,072, written up as acceptance decaying with generation length.
+**What it is:** a start-of-generation transient — the warm first steps amortise over a short generation, so a 256-token row reads high. The same table's own middle points said so: 1,024 → 2.586 against 3,072 → 2.562 is −0.9 %. Gates that feed published numbers force at least 1,024 tokens per request ([`bench/fn_gate.sh`](../bench/fn_gate.sh) refuses less); 256-token rows are legal only for same-shape A/B screening, where the transient inflates both arms equally.
+
+## 20. `EXTRA_ENV=<one flag>` boots a different stack, not a flag flip (2026-09-22)
+
+**What it looks like:** `EXTRA_ENV=EXL3_SOMETHING=1 ./scripts/launch-flashnext.sh` turns one feature on for an arm.
+**What it is:** a full override — the launcher expands `${EXTRA_ENV:-<the tuned set>}` only when the variable is unset, so the boot drops every tuned key. The arm measures a different stack and reports it as a flag flip. `EXTRA_ENV_ADD=` appends to the tuned set, and the launcher logs the resolved set as `env keys (N): ...` — assert the count; `assert_env_keys` in [`scripts/lib/serve-ctl.sh`](../scripts/lib/serve-ctl.sh) does.
+
+## 21. A restart-looping container survives every name-grep wait (2026-09-22)
+
+**What it looks like:** a boot wait on `docker ps` sees the container vanish when the config fails.
+**What it is:** `docker ps` lists a `Restarting` container as present, so under `--restart unless-stopped` a config the schema rejects in 0.4 s keeps the wait alive for the whole timeout while nothing serves. The launcher validates the generated config inside the image (`config.load()`, the same path boot uses) before the old container is stopped, and the wait reads `.State.Status`, which fails in seconds on `restarting`, `exited` or `dead`. `DRAFT_MODE` emits the whole draft block from one knob so the illegal `disabled` + policy combination cannot be written.
+
+## 22. A mean over a bimodal population is a wrong denominator (2026-09-22)
+
+**What it looks like:** "72.8 t/s per stream" as the production decode rate.
+**What it is:** the mean over requests of wildly different weights — sub-50 t/s requests were 21 % of the tokens but 59 % of the decode-seconds, and the median request ran 85–95 t/s. Per-request rates are summarised as medians, or time-weighted as total tokens over decode-busy seconds; `fn_gate.sh` reports per-request medians and the finish-reason histogram so a tail cannot hide.
+

@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-22
+
+- [The canonical gate on the current daily: 1,024 forced tokens, every row `length`](results/2026-09-22-canonical-gate.md)
+
 ## 2026-09-20
 
 - [R581: `gpu_split` does not move the layer boundary, and 999,424 is the ceiling for this layout](results/r581-split-rebalance.md)

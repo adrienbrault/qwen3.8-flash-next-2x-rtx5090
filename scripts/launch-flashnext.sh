@@ -21,7 +21,7 @@
 # engine's default; the reasons are in docs/CONFIG.md and the measurements in bench/RESULTS.md.
 #
 #   VARIANTS
-#     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022 (the Mac reaches it at <host>:8022)
+#     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022
 #     DRAFT=1 ./launch-flashnext.sh         # draft depth 1 at EVERY concurrency, by deriving the policy (see below)
 #     PORT=8023 ./launch-flashnext.sh
 #     STOP=1 ./launch-flashnext.sh          # stop the server
@@ -48,6 +48,9 @@
 # visible answer. The same request with a sampler runs coherent and calls its tool (see R338). The preset
 # below supplies FALLBACKS only (force: false), so a client that sends its own sampler keeps it.
 set -uo pipefail
+# systemd-run and other minimal environments do not set HOME; `set -u` then dies on the next line
+# before anything has run (r399, 2026-09-16). Default it rather than requiring every caller to.
+export HOME=${HOME:-$(getent passwd "$(id -un)" | cut -d: -f6)}
 export PATH="$HOME/.local/bin:$PATH"
 
 NAME=flashnext
@@ -147,6 +150,14 @@ IMG=${IMG:-$DAILY_IMG}
 # and the policy act as the ceiling); the confidence target comes from EXL3_DRAFT_CONFIDENCE in EXTRA_ENV (image tabbyapi:draftconf).
 DYN=${DYN:-false}
 case "$DYN" in true|false) ;; *) echo "DYN must be true|false"; exit 3;; esac
+# DRAFT_MODE is the SCHEMA literal, one of model|disabled|mtp|ngram. `disabled` boots the engine with
+# no draft at all — the arm r397 claimed and never ran: its launcher copy wrote `none` (rejected by
+# pydantic) and, once that was fixed, would still have been rejected for keeping the policy line, which
+# the schema forbids when drafting is off. The block below is emitted consistently from this one knob so
+# the illegal combination cannot be written. Anything not in the case list fails before docker is touched.
+DRAFT_MODE=${DRAFT_MODE:-mtp}
+case "$DRAFT_MODE" in model|disabled|mtp|ngram) ;; *) echo "ABORT: DRAFT_MODE must be model|disabled|mtp|ngram (got $DRAFT_MODE)"; exit 3;; esac
+DRAFT_POLICY_SET=${DRAFT_POLICY+set}
 DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [5, 2], [8, 1]]}
 # DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
 # the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
@@ -157,8 +168,11 @@ DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [5, 2], [8, 1]]}
 # So a caller who sets DRAFT explicitly and leaves the policy alone gets that depth at EVERY concurrency, which is
 # what the header's "DRAFT=1 ... better at 4 concurrent requests" has always meant. Setting the policy explicitly
 # still wins -- that is the knob for non-uniform depth.
+# The derive used to compare DRAFT_POLICY against the literal '[[2, 3], [8, 1]]' — when the default moved
+# to [[4, 3], [5, 2], [8, 1]] the comparison stopped matching, so DRAFT=1 silently fell into the
+# "overridden" note and changed nothing. "Was it set" is a question about the variable, not its value.
 if [ -n "${DRAFT+set}" ] && [ "${DRAFT:-3}" != 3 ]; then
-  if [ "$DRAFT_POLICY" = '[[2, 3], [8, 1]]' ]; then
+  if [ -z "$DRAFT_POLICY_SET" ]; then
     DRAFT_POLICY="[[8, $DRAFT]]"
     DRAFT_DERIVED=1
   else
@@ -166,6 +180,10 @@ if [ -n "${DRAFT+set}" ] && [ "${DRAFT:-3}" != 3 ]; then
     log "NOTE: DRAFT=$DRAFT is overridden by the explicit DRAFT_POLICY=$DRAFT_POLICY"
   fi
 fi
+# Drafting off means no policy, anywhere — applied AFTER the derive so a stray DRAFT= cannot put one
+# back: the schema rejects draft_num_tokens_by_batch under `disabled`, and a surviving policy in the
+# log line would report a draft the engine does not run.
+[ "$DRAFT_MODE" = disabled ] && DRAFT_POLICY=
 # HOST KV TIER (R358). 0 keeps every page in VRAM. A nonzero value puts a second-tier KV cache in host RAM, which
 # can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
 # admission test is the one to read it against. Same units as the config: MiB.
@@ -279,6 +297,32 @@ top_p:
 YML
 
 # --- config -----------------------------------------------------------------------------------------
+# The draft block is built HERE, from DRAFT_MODE, so the emitted combination is always schema-legal:
+# `draft_num_tokens_by_batch` is REJECTED when drafting is disabled (pydantic, verified 2026-09-22 —
+# r407 v2 crash-looped on exactly that), and the mode literal itself must be one of
+# model|disabled|mtp|ngram (r407 v1 wrote `none`). Emitting both from one knob makes the illegal
+# combination unwritable rather than merely warned about.
+#   THE SCHEMA FIELD IS `draft_num_tokens`. `num_draft_tokens` is not a schema field and is silently
+#   ignored, which would run the default depth while the config appeared to say otherwise.
+#   draft_cache_mode accepts only FP16/Q8/Q6/Q4 -- pair syntax like "8,8" is rejected by the draft schema.
+DRAFT_BLOCK="  draft_mode: $DRAFT_MODE"
+case "$DRAFT_MODE" in
+  disabled) ;;  # nothing else: the policy line is a validation error here, and the rest is inert
+  model) [ -n "${DRAFT_MODEL_DIR:-}" ] || { echo "ABORT: DRAFT_MODE=model needs DRAFT_MODEL_DIR=<name under /srv/qwen5090/models>"; exit 3; }
+    [ -d "/srv/qwen5090/models/$DRAFT_MODEL_DIR" ] || { echo "ABORT: DRAFT_MODEL_DIR /srv/qwen5090/models/$DRAFT_MODEL_DIR missing"; exit 3; }
+    DRAFT_BLOCK="$DRAFT_BLOCK
+  draft_model_dir: /models/$DRAFT_MODEL_DIR
+  draft_num_tokens: $DRAFT
+  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
+  draft_cache_mode: Q8
+  dynamic_draft: $DYN";;
+  *) DRAFT_BLOCK="$DRAFT_BLOCK
+  draft_num_tokens: $DRAFT
+  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
+  draft_cache_mode: Q8
+  dynamic_draft: $DYN";;
+esac
+
 # CTX = 262,144 tokens (the model's max_position_embeddings). At 256-token pages that is 1024 pages. Sizing note
 # for a seeded page pool: a 32k-token prompt costs 131 pages and a 256-token output a couple more, so roughly
 # seven such jobs coexist; short agent turns cost ~2 pages each and the page count is not the binding limit.
@@ -348,14 +392,8 @@ model:
   # vision_offload stays false: the tower is small enough to sit in VRAM. Set true only if free VRAM gets
   # tight, at the cost of streaming vision weights from host RAM on every image.
 draft_model:
-  draft_mode: mtp
-  # THE SCHEMA FIELD IS \`draft_num_tokens\`. \`num_draft_tokens\` is not a schema field and is silently ignored,
-  # which would run the default depth while the config appeared to say otherwise.
-  draft_num_tokens: $DRAFT
-  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
-  # draft_cache_mode accepts only FP16/Q8/Q6/Q4 -- pair syntax like "8,8" is rejected by the draft schema.
-  draft_cache_mode: Q8
-  dynamic_draft: $DYN       # R497 knob (default false). measured loss at confidence 0.4: 184 vs 191 t/s at c1, 229 vs 258 at c4
+$DRAFT_BLOCK
+  # dynamic_draft: R497 knob (default false). measured loss at confidence 0.4: 184 vs 191 t/s at c1, 229 vs 258 at c4
 memory:
   sysmem_recurrent_cache: 4096
   sysmem_kv_cache: $SYS_KV
@@ -364,6 +402,21 @@ sampling:
   # boot and serves every such request at temperature 1.0 with no truncation (R338).
   override_preset: $SAMP_PRESET
 YML
+
+# --- config preflight, BEFORE anything is destroyed -------------------------------------------------
+# Validate the generated file inside the image that will run it, while the old container still serves.
+# `config.load()` is the same code path boot uses (file -> merge -> model_validate), so a rejection here
+# is the rejection that otherwise becomes a crash-loop under `--restart unless-stopped`: the container
+# then shows "Restarting" in `docker ps` for the whole health wait and looks alive, which is how r407f
+# held :8022 down on 2026-09-16 while the session moved on. ~0.4 s, measured. Two failure modes it makes
+# impossible: a wrong literal (`draft_mode: none`, r407 v1 / r397) and a legal literal with an illegal
+# combination (the policy line under `disabled`, r407 v2).
+if ! sudo docker run --rm -v "$CFG":/app/config.yml:ro -w /app --entrypoint python3 "$IMG" \
+    -c "from common.tabby_config import config; config.load({})" > "$LOG.preflight" 2>&1; then
+  log "ABORT: config failed validation inside $IMG — served container untouched:"
+  tail -8 "$LOG.preflight" | cut -c1-200 | sed 's/^/  /' | tee -a "$LOG"
+  exit 3
+fi
 
 # --- memory hygiene ---------------------------------------------------------------------------------
 # A killed vLLM leaves a multi-GB /dev/shm/vllm_offload_*.mmap behind. On 2026-09-15 one 16 GB orphan left the box
@@ -383,7 +436,15 @@ if sudo docker ps --format '{{.Names}}' | grep -qx vllm-27b; then
 fi
 sudo docker rm -f "$NAME" >/dev/null 2>&1
 for i in $(seq 24); do busy=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | awk '$1>1024{c++} END{print c+0}'); [ "$busy" = 0 ] && break; sleep 5; done
-log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
+# The wait used to just end: after 120 s the script ran `docker run` over GPUs that were still occupied,
+# which fails on VRAM anyway — or worse, boots alongside a unit that still owns them. Refuse unless the
+# caller explicitly accepts it (ALLOW_BUSY=1, e.g. a deliberate co-residency experiment).
+if [ "${busy:-1}" != 0 ]; then
+  used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | tr '\n' '/')
+  [ "${ALLOW_BUSY:-0}" = 1 ] && log "ALLOW_BUSY=1: booting over occupied GPUs (${used} MiB used)" \
+    || { log "ABORT: GPUs still busy after 120s (${used} MiB used) — refusing to boot over another unit. ALLOW_BUSY=1 overrides."; exit 3; }
+fi
+log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], draft_mode $DRAFT_MODE, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
 # Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
 # the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
 HV=()
@@ -406,13 +467,30 @@ sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart
   || { log "docker run FAILED — docker said:"; tail -5 "$LOG.docker" | tee -a "$LOG"; exit 1; }
 
 up=0
-for i in $(seq 90); do
+st=""
+for i in $(seq 225); do
   curl -sf -m 3 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 && { up=1; break; }
-  sudo docker ps --format '{{.Names}}' | grep -qx "$NAME" || break
-  sleep 5
+  # `docker ps` lists a restart-looping container as present, so the old name-grep kept the wait alive
+  # for the whole 450 s on a config the schema had already rejected (r407f). .State.Status is the
+  # field that can actually fail: a container that is Restarting/Exited/Dead/stuck-Created is not
+  # "coming up", it is dead — fail in seconds, with its log. (Inspecting a stopped container is only
+  # wrong when you read .Config from it as a liveness check, GOTCHAS 14; .State is exactly what it is for.)
+  st=$(sudo docker inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null || echo gone)
+  case "$st" in running) ;; *) break ;; esac
+  sleep 2
 done
 sudo docker logs "$NAME" > "$LOG.docker" 2>&1
-[ "$up" = 1 ] || { log "NO BOOT -- tail:"; tail -15 "$LOG.docker" | cut -c1-180 | sed 's/^/  /' | tee -a "$LOG"; exit 1; }
+[ "$up" = 1 ] || { log "NO BOOT (container state: ${st:-gone}) -- tail:"; tail -15 "$LOG.docker" | cut -c1-180 | sed 's/^/  /' | tee -a "$LOG"; exit 1; }
+
+# /health answering is not the serve contract. Assert the API reports THE model this launcher was told
+# to serve — a boot that comes up on a stale checkpoint, or with the draft absent when one was asked
+# for, is a wrong serving at full apparent health (the draft-less engine serves happily at half rate).
+SID=$(curl -s -m 8 "http://127.0.0.1:$PORT/v1/model" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])' 2>/dev/null)
+[ "$SID" = "$MODEL" ] || { log "NO BOOT: /v1/model reports '$SID', expected '$MODEL'"; exit 1; }
+if [ "$DRAFT_MODE" != disabled ]; then
+  sudo docker logs "$NAME" 2>&1 | grep -aqiE "draft" \
+    || { log "NO BOOT: draft_mode=$DRAFT_MODE but nothing about a draft in the engine log — serving undrafted"; exit 1; }
+fi
 
 # Warm the kernels OUTSIDE any measurement: the first inference is the expensive one, and a client that
 # happens to be first would otherwise pay it. Logged so the cost is visible rather than folklore.

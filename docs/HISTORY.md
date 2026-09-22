@@ -88,5 +88,6 @@ Measured and not promoted in the same period: a deeper single-job draft ([R537](
 | promoted (CEST) | change | gate evidence | page pool | results |
 | --- | --- | --- | --- | --- |
 | 00:29 | windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), image `tabbyapi:mtpwin-r2` | new c1 fingerprint (a layer moves cards), 30k unchanged; decode +0.3 to +2.0 % on 24 paired prompts; restart restore 29,952 tokens in 0.567 s against 3.967 s cold; needles 5/5 and 5/5, tool-eval 85.8, GSM8K 0.976 at 5 concurrent | 999,424 | [R579](../bench/results/r579-promote-mtp-kv-window.md) |
+| 11:04 | Prometheus `/metrics` endpoint, image `tabbyapi:mtpwin-r2-metrics1` | c1 and 30k greedy fingerprints identical to the reference; counter deltas verified against driven traffic | 999,424 | [R587](../bench/results/r587-tabby-metrics.md) |
 
 The same overlay one pool step higher, 1,015,808, passed its A/B and four gates on 2026-09-19 and then ran out of memory capturing a decode graph at 5 concurrent, and rolled back ([R575](../bench/results/r575-promote-mtp-kv-window.md)). Every boot now runs a 1-to-8-stream decode ramp before the gates, so no graph is first captured under load.

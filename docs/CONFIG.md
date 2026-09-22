@@ -51,12 +51,15 @@ is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 
 | knob | default | what it does |
 | --- | --- | --- |
-| `IMG=` | `tabbyapi:nvme-tier-r4-e3det-r6-rawk-gdnbf16` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
+| `IMG=` | `tabbyapi:mtpwin-r2-metrics1` | which image to serve; a patch variant is A/B'd without editing the launcher. The chain is in [`docker/README.md`](../docker/README.md) |
 | `NVME_TIER=` | `/srv/qwen5090/fast/exl3-nvme-daily` when `IMG` is the served image and the variable is unset; otherwise off | host directory for the NVMe prefix tier, mounted at `/nvme-tier`; `NVME_TIER=` (empty) turns it off. Experiments that launch another image never open the daily's directory ([R534](../bench/results/r534-promote-nvme-tier.md)) |
 | `NVME_TIER_GB=` | `64` with the daily default | byte cap for the tier; above it the tier evicts leaf-first on its radix tree, superseded interior checkpoints first |
-| `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each |
+| `EXTRA_ENV=` | `EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384` | the engine patches, each opt-in and default-off in the image; the table below says which result admitted each. A wholesale override, not additive — `EXTRA_ENV=EXL3_X=1` alone boots without the other 22 keys ([GOTCHAS 20](GOTCHAS.md)) |
+| `EXTRA_ENV_ADD=` | empty | appends keys to the tuned `EXTRA_ENV` set — the way to add one flag for an arm; the launcher logs the resolved set as `env keys (N)` |
 | `CACHE=`, `MAXBS=`, `CACHE_MODE=`, `GPU_SPLIT=`, `CKPT_NAME=` | 999424, 8, `8,8`, `[30, 30]`, the 2.50 bpw pack | pool, slots, KV bits, split and checkpoint for experiments; the defaults are the served values |
-| `DRAFT_POLICY=` | empty | expands into `draft_model.draft_num_tokens_by_batch` only when set, so the unpatched path stays byte-identical |
+| `DRAFT_MODE=` | `mtp` | the `draft_model.draft_mode` literal, one of `model`, `disabled`, `mtp`, `ngram`; the launcher emits the whole draft block from it, so `disabled` never carries the policy line the schema rejects ([GOTCHAS 21](GOTCHAS.md)) |
+| `DRAFT_POLICY=` | `[[4, 3], [5, 2], [8, 1]]` | expands into `draft_model.draft_num_tokens_by_batch`; omitted entirely when `DRAFT_MODE=disabled` |
+| `ALLOW_BUSY=` | 0 | with 0 the launcher refuses to boot while the GPUs are still occupied after its wait; 1 is for deliberate co-residency experiments |
 | `SYS_KV=` | 0 | the host KV tier: flat at 8 slots ([R358](../bench/results/r358-hostkv.md)); turns a 12.7 s re-prefill of an evicted 105k session into 0.5–0.7 s for 16 GiB of host RAM ([R493](../bench/results/r493-host-kv-tier.md)); not served |
 
 ## Sampling — the preset, not the config
