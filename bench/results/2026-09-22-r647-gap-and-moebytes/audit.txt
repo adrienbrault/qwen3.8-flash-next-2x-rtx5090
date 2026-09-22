@@ -1,0 +1,68 @@
+2026-09-22T12:44:51+00:00 [r647] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; MTP window 8192
+0, 2 MiB
+1, 2 MiB
+2026-09-22T12:44:56+00:00 [r647] A profile c8d1-26k-wall: --contexts 26000 --batch 8 --draft 1 --capture-mode wall
+2026-09-22T12:46:31+00:00 [r647]   c8d1-26k-wall exit 0
+2026-09-22T12:46:31+00:00 [r647] A profile c8d1-26k-prof: --contexts 26000 --batch 8 --draft 1 --capture-mode profiler
+2026-09-22T12:48:11+00:00 [r647]   c8d1-26k-prof exit 0
+2026-09-22T12:48:11+00:00 [r647] A profile c4d3-26k-wall: --contexts 26000 --batch 4 --draft 3 --capture-mode wall
+2026-09-22T12:49:16+00:00 [r647]   c4d3-26k-wall exit 0
+2026-09-22T12:49:16+00:00 [r647] A profile c4d3-26k-prof: --contexts 26000 --batch 4 --draft 3 --capture-mode profiler
+2026-09-22T12:50:26+00:00 [r647]   c4d3-26k-prof exit 0
+PHASE A -- residual gap on bverify-r1 (R644/metrics1: c8d1 2.03ms, c4d3 1.70ms)
+  ctx26000_b8_d0     wall  12.776  kernel  12.354  GAP  0.422 ms
+  ctx26000_b8_d1     wall  19.549  kernel  17.106  GAP  2.442 ms
+  ctx26000_b4_d0     wall  10.396  kernel  10.225  GAP  0.171 ms
+  ctx26000_b4_d3     wall  20.203  kernel  18.097  GAP  2.106 ms
+2026-09-22T12:50:26+00:00 [r647] B ncu shape c4d0-26k: --contexts 26000 --batch 4 --draft 0
+2026-09-22T12:51:10+00:00 [r647]   ncu c4d0-26k exit 0; 1 counter rows, 2400 probe lines
+2026-09-22T12:51:10+00:00 [r647] B ncu shape c8d1-26k: --contexts 26000 --batch 8 --draft 1
+2026-09-22T12:52:59+00:00 [r647]   ncu c8d1-26k exit 0; 1 counter rows, 4850 probe lines
+PHASE B c4d0-26k: 2400 probe calls, 192 ncu launches
+  probe coverage: 2400 calls = 50.0 steps x48 (1 worker cell(s), boundaries at [])
+  alignment check: probe call 0 total=1 (expect 1); ncu row0 kernel=a
+  band K2 (50 calls): median implied   24.3 reads | slots  40.0 runs  24.0 distinct  24.0 | implied/slots 0.608 implied/runs 1.013 implied/distinct 1.013
+    regression implied ~ distinct: slope 0.992 intercept    0.5 (dedup: slope~1 icept~0; slot-proportional: slope~0 icept~slots)
+    call 12 model.language_model.layers. slots  40 dist  15 runs  15 bexp 1.248MB ->  19.21MB implied   15.4
+    call 13 model.language_model.layers. slots  40 dist  17 runs  17 bexp 1.248MB ->  21.68MB implied   17.4
+    call 14 model.language_model.layers. slots  40 dist  18 runs  18 bexp 1.248MB ->  22.95MB implied   18.4
+    call 15 model.language_model.layers. slots  40 dist  25 runs  25 bexp 1.248MB ->  31.58MB implied   25.3
+    call 16 model.language_model.layers. slots  40 dist  27 runs  27 bexp 1.248MB ->  34.06MB implied   27.3
+    call 17 model.language_model.layers. slots  40 dist  24 runs  24 bexp 1.248MB ->  30.35MB implied   24.3
+  band K3 (46 calls): median implied   13.9 reads | slots  40.0 runs  13.5 distinct  13.5 | implied/slots 0.348 implied/runs 1.031 implied/distinct 1.031
+    regression implied ~ distinct: slope 1.006 intercept    0.3 (dedup: slope~1 icept~0; slot-proportional: slope~0 icept~slots)
+    call 0 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+    call 1 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+    call 2 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+    call 3 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+    call 4 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+    call 5 model.language_model.layers. slots  40 dist  10 runs  10 bexp 1.862MB ->  19.37MB implied   10.4
+  ALL: median implied   20.9 vs slots 40.0 distinct 20.5 -> implied/slots 0.522
+PHASE B c8d1-26k: 4850 probe calls, 192 ncu launches
+  probe coverage: 4850 calls = 101.0 steps x48 (2 worker cell(s), boundaries at [2450])
+  alignment check: probe call 0 total=1 (expect 1); ncu row0 kernel=a
+  band K2 (50 calls): median implied   58.8 reads | slots 160.0 runs  59.0 distinct  57.5 | implied/slots 0.368 implied/runs 0.997 implied/distinct 1.023
+    regression implied ~ distinct: slope 0.992 intercept    1.8 (dedup: slope~1 icept~0; slot-proportional: slope~0 icept~slots)
+    call 13 model.language_model.layers. slots 160 dist  32 runs  35 bexp 1.248MB ->  41.83MB implied   33.5
+    call 14 model.language_model.layers. slots 160 dist  34 runs  40 bexp 1.248MB ->  44.32MB implied   35.5
+    call 15 model.language_model.layers. slots 160 dist  38 runs  42 bexp 1.248MB ->  49.26MB implied   39.5
+    call 16 model.language_model.layers. slots 160 dist  49 runs  52 bexp 1.248MB ->  62.88MB implied   50.4
+    call 17 model.language_model.layers. slots 160 dist  49 runs  52 bexp 1.248MB ->  62.88MB implied   50.4
+    call 18 model.language_model.layers. slots 160 dist  53 runs  55 bexp 1.248MB ->  67.84MB implied   54.4
+  band K3 (44 calls): median implied   31.4 reads | slots 160.0 runs  32.5 distinct  30.0 | implied/slots 0.196 implied/runs 0.966 implied/distinct 1.046
+    regression implied ~ distinct: slope 0.999 intercept    1.4 (dedup: slope~1 icept~0; slot-proportional: slope~0 icept~slots)
+    call 1 model.language_model.layers. slots 160 dist  19 runs  20 bexp 1.862MB ->  37.82MB implied   20.3
+    call 2 model.language_model.layers. slots 160 dist  18 runs  20 bexp 1.862MB ->  35.97MB implied   19.3
+    call 3 model.language_model.layers. slots 160 dist  18 runs  20 bexp 1.862MB ->  35.97MB implied   19.3
+    call 4 model.language_model.layers. slots 160 dist  18 runs  21 bexp 1.862MB ->  35.99MB implied   19.3
+    call 5 model.language_model.layers. slots 160 dist  20 runs  22 bexp 1.862MB ->  39.71MB implied   21.3
+    call 6 model.language_model.layers. slots 160 dist  20 runs  21 bexp 1.862MB ->  39.69MB implied   21.3
+  band K4 (2 calls): median implied   11.9 reads | slots  80.0 runs  11.5 distinct  11.5 | implied/slots 0.149 implied/runs 1.037 implied/distinct 1.037
+    regression implied ~ distinct: slope 0.996 intercept    0.5 (dedup: slope~1 icept~0; slot-proportional: slope~0 icept~slots)
+    call 0 mtp.layers.0.mlp             slots  80 dist  11 runs  11 bexp 2.477MB ->  28.30MB implied   11.4
+    call 49 mtp.layers.0.mlp             slots  80 dist  12 runs  12 bexp 2.477MB ->  30.76MB implied   12.4
+  ALL: median implied   49.4 vs slots 160.0 distinct 48.0 -> implied/slots 0.308
+2026-09-22T12:52:59+00:00 [r647] done; restoring daily
+2026-09-22T12:52:59+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-22T12:53:17+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-22T12:53:17+00:00 [r647] === R647 DONE ===
