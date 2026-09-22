@@ -1,0 +1,22 @@
+2026-09-22T18:12:06+00:00 [r655] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-22T18:12:09+00:00 [r655] probe exit 1
+Traceback (most recent call last):
+  File "/probe/ep-p2p-probe.py", line 37, in <module>
+    torch.cuda._C._cuda_enablePeerMemoryAccess(dev, peer) if hasattr(torch.cuda._C, "_cuda_enablePeerMemoryAccess") else None
+                                                                     ^^^^^^^^^^^^^
+AttributeError: module 'torch.cuda' has no attribute '_C'
+2026-09-22T18:12:09+00:00 [r655] === R655 DONE ===
+2026-09-22T18:12:26+00:00 [r655] queued behind: r656-bctrace(pid 142542)
+2026-09-22T18:12:39+00:00 [r655] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-22T18:12:43+00:00 [r655] probe exit 0
+can_device_access_peer(0->1) = True
+can_device_access_peer(1->0) = True
+copy out 80.5KB d0->d1           med=    28.3us  min=    28.0us  max=    35.7us
+copy back 160KB d1->d0           med=    30.6us  min=    23.1us  max=    35.0us
+event roundtrip only             med=     6.6us  min=     6.5us  max=    10.3us
+FULL EXCHANGE wall               med=    53.7us  min=    52.3us  max=    68.5us
+
+estimated per-layer wall = exchange 53.4us + kernel 65-85us = 118-138us
+kill criterion: exchange >= 35us -> per-layer >= ~110us -> net gain < ~0.7ms -> KILL
+verdict: KILL (exchange 53.4us)
+2026-09-22T18:12:59+00:00 [r655] === R655 DONE ===

@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-22
 
+- [R655: expert parallelism across the two GPUs is refuted — the P2P exchange alone eats the prize](results/r655-ep-p2p.md)
+- [R654: per-step API inventory on the served image — ~762 eager launches and ~117 graph replays](results/r654-e0-graphprobe.md)
 - [R653: the launch-sweep stack is promoted — +4.4 % decode at c8, byte-identical output](results/r653-stack.md)
 - [R652: batching the per-job MTP accept-prefills gains +4.4 % decode at c8](results/r652-prefbatch.md)
 - [R651: fused int8 state-in-up mixer kernel is bitwise-exact and flat-to-+1.7 % at gate resolution](results/r651-mixstate.md)

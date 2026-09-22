@@ -1,0 +1,13 @@
+2026-09-22T18:05:36+00:00 [r654] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; MTP window 8192
+2026-09-22T18:05:38+00:00 [r654] A nsys capture: c8d1/26k on tabbyapi:stack-r1
+2026-09-22T18:07:23+00:00 [r654]   nsys exit 0; 94415204 /srv/qwen5090/results/2026-09-22-r654-e0-graphprobe/step-trace.nsys-rep
+2026-09-22T18:07:31+00:00 [r654]   stats exit 0
+2026-09-22T18:07:31+00:00 [r654] B boot tabbyapi:stack-r1 with EXL3_BC_ATTN_TRACE=1
+2026-09-22T18:07:51+00:00 [r654] booted tabbyapi:stack-r1 with trace flag
+usage: fn_bench.py [-h] --url URL --model MODEL [--tag TAG]
+                   [--conc CONC [CONC ...]] [--tokens TOKENS] [--runs RUNS]
+                   [--warmup-runs WARMUP_RUNS] [--ctx CTX [CTX ...]]
+                   [--kind {prose,code}] [--completions] [--no-force]
+                   [--unique] [--distinct] [--timeout TIMEOUT] [--salt SALT]
+                   [--temp TEMP] --out OUT
+fn_bench.py: error: unrecognized arguments: --min-tokens 256
