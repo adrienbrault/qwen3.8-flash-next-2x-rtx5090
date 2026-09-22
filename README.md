@@ -2,23 +2,23 @@
 
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf], served as [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250] by [TabbyAPI][tabby] on [ExLlamaV3][exl3] v1.5.0 across two RTX 5090 cards. The window is 262,144 tokens, the KV cache is 8-bit, and vision, reasoning, tool calls, structured output and the checkpoint's own MTP draft head are all on.
 
-Every number here was measured on one machine, on the date given, and each links the write-up that names its raw results directory. Nothing is a projection. The index of experiments is [`bench/RESULTS.md`][results], newest first.
+Every number here was measured on one machine on the date given, and each links the write-up that names its raw results directory. None is an estimate. The index of experiments is [`bench/RESULTS.md`][results], newest first.
 
 ## Numbers
 
-Served since 2026-09-22 20:00 CEST ([R653][r653]): image `tabbyapi:stack-r1` (`bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching; greedy output byte-identical to `bverify-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table is everything the figures do not show.
+Served since 2026-09-22 20:00 CEST ([R653][r653]): image `tabbyapi:stack-r1` (`bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching; greedy output byte-identical to `bverify-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]`, MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table after the figures lists the measurements they do not show.
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
-Aggregate throughput dips at 6 streams, where the draft policy drops to one draft token; per-stream rate is flat from 6 to 8. Until R576 the dip sat at 5 streams.
+Aggregate throughput dips at 6 streams, where the draft policy drops to one draft token; the per-stream rate is flat from 6 to 8 streams. Before R576 the dip was at 5 streams.
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
 
-Both lines are flat: prefill holds its rate to the top of the window (199,844 tokens in 18.8 s, 240,047 in 22.8 s, [R580][r580]) and decode on top of an already-prefilled context holds its rate too ([R554][r554]). Depth costs latency, not throughput.
+Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 s, 240,047 in 22.8 s ([R580][r580]). Decode on an already-prefilled context keeps its rate at every depth measured ([R554][r554]). A longer prompt adds time to the first token and does not lower the token rate.
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
-**The regime these numbers describe.** Every decode figure above is a steady-state batch on an otherwise idle server: greedy, uncached prompts, a fixed output length, and all streams starting at the same instant. A real agent session is not that shape, and the difference is large. Measured against the same server, one 3,000-token generation at ~10k context runs at 236 tokens/s alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running. Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). A three-agent session measured from the server's own request log delivered 65.6 tokens/s per stream. What costs the throughput is prefill interleaving with decode — a 45k-token prompt is 22 chunks of 2,048, and every chunk is a forward pass the decoder does not get — not context depth ([R583][r583]) and not generation length ([R583][r583]).
+**Decode figures are for a steady-state batch on an otherwise idle server, and agent traffic runs slower.** Every decode figure above is greedy, on uncached prompts, at a fixed output length, with all streams starting at the same instant. On the same server, one 3,000-token generation at ~10k context runs at 236 tokens/s alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running. Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). A three-agent session measured from the server's own request log delivered 65.6 tokens/s per stream ([R583][r583]). The loss comes from prefill interleaved with decode: a 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode. Context depth and generation length do not account for it ([R583][r583]).
 
 | | value | source |
 | --- | --- | --- |
@@ -37,13 +37,13 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 
 Also passing: structured output (`json_schema`, `response_format`, `regex_pattern`, thinking on and off, [R453][r453]); `tool_choice` `required` 48/48, named 4/4, 8/8 concurrent ([R529][r529]); a long prompt prefilled twice gives identical output ([R535][r535]).
 
-Insights behind these numbers:
+Conditions behind the figures and the table:
 
-- The aggregate dip is at 6 streams, not 5: the draft policy drops to one draft token there, because a deeper draft would exceed the 16 verify rows the fast MoE kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip one place right and is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
-- Code decodes faster than prose at 1 stream because draft acceptance tracks how predictable the text is ([R572][r572]).
-- 8 slots beat 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
+- The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the aggregate dip from 5 to 6 streams; it is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
+- Code decodes faster than prose at 1 stream because draft acceptance follows how predictable the text is ([R572][r572]).
+- 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
-- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moves the boundary layer across and bought 32,768 pool tokens ([R579][r579]); it also inverted which card is the tight one. The `gpu_split` budget does not move it, and the decode graphs themselves cost 790 MiB on the bounding card ([R581][r581]).
+- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moved the boundary layer to the other card, added 32,768 pool tokens and made that other card the bounding one ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
 - GSM8K figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
 
 ## What the stack is
@@ -62,8 +62,10 @@ Insights behind these numbers:
   - a 20-row ring for the QSA indexer's raw keys, bit-exact, +20 % page pool ([R546][r546]).
   - GDN recurrent state stored in bf16 with fp32 math, +5 % page pool, GSM8K 0.974 and tool-eval 86.8 ([R548][r548]).
   - a windowed MTP draft cache, a sink page plus the last 16,384 tokens per slot, +3.4 % page pool ([R579][r579]).
-- **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at c1 (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before building it: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
-- **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 1 above (`[[4, 3], [8, 1]]`). Confidence-gated dynamic depth crashes at c4 ([R497][r497]).
+  - a batched draft verifier, one verify call for all jobs, +1 to +4 % decode ([R646][r646]).
+  - the MTP input-norm fusion, a fused int8 state-in-up mixer kernel and grouped MTP accept-prefill batching, +4.4 % decode at 8 streams, byte-identical output ([R653][r653]).
+- **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
+- **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs, depth 2 at 5 and depth 1 above (`[[4, 3], [5, 2], [8, 1]]`, since [R576][r576]). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
 - **Guard rails**: the launcher refuses to start without the checkpoint or the image, stops any other engine holding the cards, waits for them to drain and mounts the kernel caches. Every promotion re-runs the gates in [`docs/PROMOTION.md`][promotion] on the exact launcher.
 
@@ -84,9 +86,30 @@ Read from the box on 2026-09-19; every number in this README was measured in thi
 
 ## Measured and not served
 
-17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, and −14.5 % at 8 streams against drafting one token ([R566][r566]). Draft depth 4 at 1 stream, with or without a controller: it costs 32,768 page-pool tokens and returns at most about +2 % ([R567][r567]). Two draft chains verified together: +5 to +6.5 % more accepted tokens for twice the verify rows, modelled at −10 to −13 % ([R564][r564]). A 4,096-token prefill chunk: does not boot beside the page pool ([R574][r574]). The served stack on upstream `dev`: −49,152 pool tokens and 1–3 % decode ([R563][r563]).
+Each entry names the change and the number that kept it out of the served configuration. c1, c4 and c6 mean 1, 4 and 6 concurrent streams.
 
-Draft depth 2 above 4 jobs: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows leave the fast MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]). Prefill chunk 1,024 or 512 instead of 2,048: running streams get 1.5× the decode frames while another request prefills, but cold prefill runs at about half the rate and the new request waits 1.4–1.7× longer for its first token ([R553][r553]). The MTP draft's embedding copy on cuda:0: +16,384 pool tokens for −1.8 % code and −2.0 % prose at 1 stream ([R555][r555]). Adaptive MTP draft depth, round 2: −2.4 to −3.5 % prose at 1 stream, no gain on code ([R556][r556]). A deeper MTP draft for a single decoding job (depth 4 or 5 instead of 3), all arms at a 753,664-token pool: +4.8 / +5.2 % code and −5.4 / −8.2 % prose at 1 stream against depth 3, 16,384 / 49,152 fewer pool tokens than the served 819,200, and a different greedy output (2026-09-19, [R537][r537]). The K=3 MoE decode kernel without register spills: bit-exact, slower per call in 28 of 30 kernel cells, −0.37 % code at c1 over 8 boots with a 95 % interval of −0.83 to +0.09 % (2026-09-19, [R536][r536]). Recurrent checkpoints stored at the end of each reply are correct but save about 9k prefill tokens over a 120-call agent replay, below its run-to-run spread ([R524][r524]). A fused shared-expert kernel: after the side-stream overlap the shared expert's residual is 1.9 µs per layer at 4 rows, at most 0.6 % of a 1-stream step and 1.2 % at 4 streams ([R521][r521]); `EXL3_INT8_GEMV=0`, −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]); 6 decode slots, +17 % at c6 and 9 % slower on an 8-agent replay, before bf16 GDN state halved the per-slot cost ([R518][r518]); chunk 1024 for pool ([R483][r483], [R485][r485]); split [30, 31] at 393,216 ([R487][r487]); the n-gram table in host RAM, +1–2 % for 30.5 GiB ([R484][r484]); the host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); prompt lookup, +3–4 % on code at c1 and flat at c4 ([R501][r501]); K8V4, +18 % pool for −11 % code at c1 ([R480][r480]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]); [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); our own 32-row MoE decode envelope ([R366][r366]). The same checkpoint on vLLM through [vllm-exl3][vllm-exl3] read 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18; work on that route stopped the same day ([vLLM route][vllm-route]).
+- 17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, −14.5 % at 8 streams against drafting one token ([R566][r566]).
+- Draft depth 2 above 4 jobs: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows fall off the cooperative MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]).
+- Draft depth 4 at 1 stream, with or without a controller: costs 32,768 page-pool tokens and returns at most about +2 % ([R567][r567]).
+- A deeper MTP draft for a single decoding job (depth 4 or 5 instead of 3), all arms at a 753,664-token pool: +4.8 / +5.2 % code and −5.4 / −8.2 % prose at 1 stream against depth 3, 16,384 / 49,152 fewer pool tokens than the served 819,200 of that date, and a different greedy output (2026-09-19, [R537][r537]).
+- Adaptive MTP draft depth, round 2: −2.4 to −3.5 % prose at 1 stream, no gain on code ([R556][r556]).
+- Two draft chains verified together: +5 to +6.5 % accepted tokens for twice the verify rows, modelled at −10 to −13 % ([R564][r564]).
+- A 4,096-token prefill chunk: does not boot beside the page pool ([R574][r574]).
+- Prefill chunk 1,024 or 512 instead of 2,048: running streams get 1.5× the decode frames while another request prefills, but cold prefill runs at about half the rate and the new request waits 1.4–1.7× longer for its first token ([R553][r553]). Chunk 1,024 for pool size: [R483][r483], [R485][r485].
+- The served stack on upstream `dev`: −49,152 pool tokens and 1–3 % decode ([R563][r563]).
+- The MTP draft's embedding copy on cuda:0: +16,384 pool tokens for −1.8 % code and −2.0 % prose at 1 stream ([R555][r555]).
+- The K=3 MoE decode kernel without register spills: bit-exact, slower per call in 28 of 30 kernel cells, −0.37 % code at c1 over 8 boots with a 95 % interval of −0.83 to +0.09 % (2026-09-19, [R536][r536]).
+- Recurrent checkpoints stored at the end of each reply: correct, but they save about 9k prefill tokens over a 120-call agent replay, below its run-to-run spread ([R524][r524]).
+- A fused shared-expert kernel: after the side-stream overlap the shared expert's residual is 1.9 µs per layer at 4 rows, at most 0.6 % of a 1-stream step and 1.2 % at 4 streams ([R521][r521]).
+- `EXL3_INT8_GEMV=0`: −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]).
+- 6 decode slots: +17 % at c6 and 9 % slower on an 8-agent replay, measured before the bf16 GDN state halved the per-slot cost ([R518][r518]).
+- Split [30, 31] at 393,216 ([R487][r487]).
+- The n-gram table in host RAM: +1–2 % for 30.5 GiB ([R484][r484]).
+- The host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]).
+- Prompt lookup: +3–4 % on code at c1, flat at c4 ([R501][r501]).
+- K8V4: +18 % pool for −11 % code at c1 ([R480][r480]).
+- [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); a 32-row MoE decode envelope written for this stack ([R366][r366]).
+- The same checkpoint on vLLM through [vllm-exl3][vllm-exl3]: 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18. Work on that route stopped the same day ([vLLM route][vllm-route]).
 
 ## Reproducing a boot
 
