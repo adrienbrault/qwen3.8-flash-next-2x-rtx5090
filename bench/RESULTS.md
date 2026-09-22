@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-22
 
+- [R650: MoE coop L2-prefetch is refuted — +7..+15 % slower per kernel, end-to-end flat](results/r650-moepf.md)
 - [R649: MTP input-norm fusion is decode-neutral at gate resolution; acceptance parity proven via tokens-per-frame](results/r649-mtpnorm.md)
 - [R648: the accept loop is 0.32 % of decode; the residual is ~1691 launches/step plus GPU serialization](results/r648-attrib-consume.md)
 - [R647: MoE reads sit at the dedup floor; the residual host gap is real, ~2.1–2.4 ms/iterate](results/r647-moebytes.md)

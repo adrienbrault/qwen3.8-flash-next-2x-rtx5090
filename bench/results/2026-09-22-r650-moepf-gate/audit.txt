@@ -1,0 +1,15 @@
+2026-09-22T16:24:13+00:00 [r650] ABORT: missing /srv/qwen5090/probes/profile_decode_events.py
+2026-09-22T16:24:54+00:00 [r650] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; MTP window 8192
+2026-09-22T16:24:56+00:00 [r650] A ncu arm off (): --contexts 26000 --batch 8 --draft 1
+2026-09-22T16:34:37+00:00 [r650]   ncu off exit 0; 1 rows
+2026-09-22T16:34:37+00:00 [r650] A ncu arm on (-e EXL3_MOE_PREFETCH_L2=1): --contexts 26000 --batch 8 --draft 1
+2026-09-22T16:43:57+00:00 [r650]   ncu on exit 0; 1 rows
+PHASE A — coop kernel A/B at c8d1/26k (ncu)
+  off a-K?: n=20 dur_med=68512.0us GB=0.03 regs_max=64.0
+  off b-K?: n=21 dur_med=67696.0us GB=0.01 regs_max=64.0
+  on a-K?: n=20 dur_med=79136.0us GB=0.03 regs_max=64.0
+  on b-K?: n=21 dur_med=72656.0us GB=0.01 regs_max=64.0
+  DELTA a-K?: dur 68512.0 -> 79136.0us (+15.5%)  dram +0.0%
+2026-09-22T16:43:57+00:00 [r650] B boot tabbyapi:moepf-r1 with EXL3_MOE_PREFETCH_L2=1
+2026-09-22T16:44:13+00:00 [r650] canonical gate
+2026-09-22T16:46:27+00:00 [r650] === R650 DONE ===
