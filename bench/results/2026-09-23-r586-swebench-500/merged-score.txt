@@ -1,0 +1,6 @@
+MERGED (R586 isolated 340 + R586d redo 160): resolved 397/500; scored 493, no report 7 (empty patches or not yet scored)
+REDO SET: networked run resolved 156/160, isolated redo resolved 129/160
+flips: unresolved->resolved 1, resolved->unresolved 28
+  up:  django__django-11820
+  down: astropy__astropy-13033 astropy__astropy-13236 astropy__astropy-13398 astropy__astropy-14369 django__django-10554 django__django-10973 django__django-10999 django__django-11087 django__django-11141 django__django-11555 django__django-11734 django__django-11848 django__django-12209 django__django-12273 django__django-12325 django__django-12406 django__django-12663 django__django-13195 django__django-13212 django__django-13406 django__django-13512 django__django-13513 django__django-14034 django__django-14155 django__django-14170 django__django-14315 django__django-14376 django__django-14539
+ISOLATION: 0 redo trajectories without --network none  (all isolated)

@@ -1,0 +1,361 @@
+2026-09-20T01:27:23+00:00 [r586] lock held; served at entry: <no answer>; disk free 347G
+2026-09-20T01:27:23+00:00 [r586] === start K=500 chunk=10 w=8 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-20T01:27:47+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1041/2531/; image tabbyapi:mtpwin-r2
+2026-09-20T01:27:56+00:00 [prepull 0] done (1 ids) free 343G
+2026-09-20T01:27:56+00:00 [r586] [smoke] slice 0:1 w1 start
+2026-09-20T01:30:45+00:00 [r586] [smoke] rc=0
+2026-09-20T01:30:45+00:00 [r586] ### SMOKE GATE FAILED — see results/2026-09-20-r586-swebench-full/out/*/*.traj.json and run.log ###
+This is mini-swe-agent version 2.4.6.
+Check the v2 migration guide at https://klieret.short.gy/mini-v2-migration
+Loading global config from '~/.config/mini-swe-agent/.env'
+minisweagent: INFO: Results will be saved to                                    
+results/2026-09-20-r586-swebench-full/out                         
+Logging to 'results/2026-09-20-r586-swebench-full/out/minisweagent.log'
+minisweagent: INFO: Loading dataset princeton-nlp/SWE-Bench_Verified, split     
+test...                                                                         
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+minisweagent: INFO: Instance slice: 500 -> 1 instances                          
+minisweagent: INFO: Running on 1 instances...                                   
+minisweagent: INFO: Building agent config from specs:                           
+['miniswe/.venv/lib/python3.12/site-packages/minisweagent/config/b
+enchmarks/swebench.yaml', 'miniswe/flashnext-local.yaml']         
+minisweagent.environment: DEBUG: Starting container with command: docker run -d 
+--name minisweagent-3b5ce809 -w /testbed --rm --memory=3g --memory-swap=3g      
+docker.io/swebench/sweb.eval.x86_64.astropy_1776_astropy-12907:latest sleep 2h  
+minisweagent.environment: INFO: Started container minisweagent-3b5ce809 with ID 
+c1f77ad45cdfef8eeeb6d521acd05cec671d0b4c9212c46097874142661c477c                
+minisweagent: INFO: Saved trajectory to                                         
+'results/2026-09-20-r586-swebench-full/out/astropy__astropy-12907/
+astropy__astropy-12907.traj.json'                                               
+  Overall Progress ($0.00) ━━━━━━━━━━━━━━━━━━━━━━━ 1/1 100% 0:02:46 eta: 0:00:00
+┏━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━�
+┃ Exit Status ┃ Count ┃ Most recent instances                                  ┃
+┡━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━�
+│ Submitted   │     1 │ astropy__astropy-12907                                 │
+└─────────────┴───────┴───────────────────────────────────────────�
+2026-09-20T01:30:48+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 1506961))
+2026-09-20T01:30:49+00:00 [r586] === R586 SMOKE-FAILED ===
+2026-09-20T01:41:54+00:00 [r586] lock held; served at entry: <no answer>; disk free 343G
+2026-09-20T01:41:55+00:00 [r586] === start K=500 chunk=10 w=8 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-20T01:42:16+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1041/2531/; image tabbyapi:mtpwin-r2
+2026-09-20T01:42:48+00:00 [prepull 0] done (10 ids) free 337G
+2026-09-20T01:42:48+00:00 [r586] ### CHUNK 0:10 w=8 start | free 337G | load 4.96 | VRAM 1041/2531/ ###
+2026-09-20T01:43:18+00:00 [prepull 10] done (10 ids) free 333G
+2026-09-20T02:01:12+00:00 [r586] ### CHUNK 0:10 done in 18m24s | 110s per instance | 10 of 500 | elapsed 0h18m | projected total 15h ###
+### PROGRESS preds=10 nonempty=10 exits={'Submitted': 10} ###
+2026-09-20T02:01:13+00:00 [r586] ### CHUNK 10:20 w=8 start | free 333G | load 1.75 | VRAM 195/1849/ ###
+2026-09-20T02:02:03+00:00 [prepull 20] done (10 ids) free 324G
+[score 0] predictions: 10 (0 empty)
+[score 0] ### OFFICIAL cumulative: resolved 10/10 submitted (of 500); completed 10, errors 0, empty 0 ###
+2026-09-20T02:22:01+00:00 [r586] ### CHUNK 10:20 done in 20m48s | 124s per instance | 20 of 500 | elapsed 0h39m | projected total 16h ###
+### PROGRESS preds=20 nonempty=20 exits={'Submitted': 20} ###
+2026-09-20T02:22:02+00:00 [r586] [prune 0] free 327G
+2026-09-20T02:22:02+00:00 [r586] ### CHUNK 20:30 w=8 start | free 327G | load 2.95 | VRAM 63/1803/ ###
+2026-09-20T02:22:27+00:00 [prepull 30] done (10 ids) free 325G
+[score 10] predictions: 20 (0 empty)
+[score 10] ### OFFICIAL cumulative: resolved 19/20 submitted (of 500); completed 20, errors 0, empty 0 ###
+2026-09-20T02:34:30+00:00 [r586] ### CHUNK 20:30 done in 12m28s | 74s per instance | 30 of 500 | elapsed 0h51m | projected total 14h ###
+### PROGRESS preds=30 nonempty=30 exits={'Submitted': 30} ###
+2026-09-20T02:34:31+00:00 [r586] [prune 10] free 332G
+2026-09-20T02:34:31+00:00 [r586] ### CHUNK 30:40 w=8 start | free 332G | load 2.41 | VRAM 47/1787/ ###
+2026-09-20T02:34:58+00:00 [prepull 40] done (10 ids) free 330G
+[score 20] predictions: 30 (0 empty)
+[score 20] ### OFFICIAL cumulative: resolved 28/30 submitted (of 500); completed 30, errors 0, empty 0 ###
+2026-09-20T02:50:56+00:00 [r586] ### CHUNK 30:40 done in 16m25s | 98s per instance | 40 of 500 | elapsed 1h8m | projected total 14h ###
+### PROGRESS preds=40 nonempty=40 exits={'Submitted': 40} ###
+2026-09-20T02:50:58+00:00 [r586] [prune 20] free 337G
+2026-09-20T02:50:58+00:00 [r586] ### CHUNK 40:50 w=8 start | free 337G | load 1.26 | VRAM 45/1787/ ###
+2026-09-20T02:51:32+00:00 [prepull 50] done (10 ids) free 335G
+[score 30] predictions: 40 (0 empty)
+[score 30] ### OFFICIAL cumulative: resolved 38/40 submitted (of 500); completed 40, errors 0, empty 0 ###
+2026-09-20T03:09:20+00:00 [r586] ### CHUNK 40:50 done in 18m22s | 110s per instance | 50 of 500 | elapsed 1h26m | projected total 14h ###
+### PROGRESS preds=50 nonempty=50 exits={'Submitted': 50} ###
+2026-09-20T03:09:22+00:00 [r586] [prune 30] free 340G
+2026-09-20T03:09:22+00:00 [r586] ### CHUNK 50:60 w=8 start | free 340G | load 0.98 | VRAM 43/1785/ ###
+2026-09-20T03:10:06+00:00 [prepull 60] done (10 ids) free 335G
+[score 40] predictions: 50 (0 empty)
+[score 40] ### OFFICIAL cumulative: resolved 48/50 submitted (of 500); completed 50, errors 0, empty 0 ###
+2026-09-20T03:36:16+00:00 [r586] ### CHUNK 50:60 done in 26m54s | 161s per instance | 60 of 500 | elapsed 1h53m | projected total 15h ###
+### PROGRESS preds=60 nonempty=60 exits={'Submitted': 60} ###
+2026-09-20T03:36:18+00:00 [r586] [prune 40] free 337G
+2026-09-20T03:36:18+00:00 [r586] ### CHUNK 60:70 w=8 start | free 337G | load 2.22 | VRAM 43/1785/ ###
+2026-09-20T03:36:58+00:00 [prepull 70] done (10 ids) free 334G
+[score 50] predictions: 60 (0 empty)
+[score 50] ### OFFICIAL cumulative: resolved 58/60 submitted (of 500); completed 60, errors 0, empty 0 ###
+2026-09-20T03:46:51+00:00 [r586] ### CHUNK 60:70 done in 10m33s | 63s per instance | 70 of 500 | elapsed 2h4m | projected total 14h ###
+### PROGRESS preds=70 nonempty=70 exits={'Submitted': 70} ###
+2026-09-20T03:46:52+00:00 [r586] [prune 50] free 337G
+2026-09-20T03:46:52+00:00 [r586] ### CHUNK 70:80 w=8 start | free 337G | load 3.32 | VRAM 41/1781/ ###
+2026-09-20T03:47:31+00:00 [prepull 80] done (10 ids) free 333G
+[score 60] predictions: 70 (0 empty)
+[score 60] ### OFFICIAL cumulative: resolved 67/70 submitted (of 500); completed 70, errors 0, empty 0 ###
+2026-09-20T03:56:26+00:00 [r586] ### CHUNK 70:80 done in 9m34s | 57s per instance | 80 of 500 | elapsed 2h13m | projected total 13h ###
+### PROGRESS preds=80 nonempty=80 exits={'Submitted': 80} ###
+2026-09-20T03:56:28+00:00 [r586] [prune 60] free 335G
+2026-09-20T03:56:28+00:00 [r586] ### CHUNK 80:90 w=8 start | free 335G | load 4.77 | VRAM 39/1781/ ###
+2026-09-20T03:57:11+00:00 [prepull 90] done (10 ids) free 331G
+[score 70] predictions: 80 (0 empty)
+[score 70] ### OFFICIAL cumulative: resolved 77/80 submitted (of 500); completed 80, errors 0, empty 0 ###
+2026-09-20T04:19:11+00:00 [r586] ### CHUNK 80:90 done in 22m43s | 136s per instance | 90 of 500 | elapsed 2h36m | projected total 14h ###
+### PROGRESS preds=90 nonempty=90 exits={'Submitted': 90} ###
+2026-09-20T04:19:12+00:00 [r586] [prune 70] free 333G
+2026-09-20T04:19:12+00:00 [r586] ### CHUNK 90:100 w=8 start | free 333G | load 1.51 | VRAM 39/1781/ ###
+2026-09-20T04:19:50+00:00 [prepull 100] done (10 ids) free 331G
+[score 80] predictions: 90 (0 empty)
+[score 80] ### OFFICIAL cumulative: resolved 87/90 submitted (of 500); completed 90, errors 0, empty 0 ###
+2026-09-20T04:45:09+00:00 [r586] ### CHUNK 90:100 done in 25m57s | 155s per instance | 100 of 500 | elapsed 3h2m | projected total 15h ###
+### PROGRESS preds=100 nonempty=100 exits={'Submitted': 100} ###
+2026-09-20T04:45:11+00:00 [r586] [prune 80] free 335G
+2026-09-20T04:45:11+00:00 [r586] ### CHUNK 100:110 w=8 start | free 335G | load 3.34 | VRAM 39/1781/ ###
+2026-09-20T04:45:46+00:00 [prepull 110] done (10 ids) free 332G
+[score 90] predictions: 100 (0 empty)
+[score 90] ### OFFICIAL cumulative: resolved 97/100 submitted (of 500); completed 100, errors 0, empty 0 ###
+2026-09-20T05:02:53+00:00 [r586] ### CHUNK 100:110 done in 17m42s | 106s per instance | 110 of 500 | elapsed 3h20m | projected total 15h ###
+### PROGRESS preds=110 nonempty=110 exits={'Submitted': 110} ###
+2026-09-20T05:02:55+00:00 [r586] [prune 90] free 336G
+2026-09-20T05:02:55+00:00 [r586] ### CHUNK 110:120 w=8 start | free 336G | load 2.97 | VRAM 39/1781/ ###
+2026-09-20T05:03:35+00:00 [prepull 120] done (10 ids) free 332G
+[score 100] predictions: 110 (0 empty)
+[score 100] ### OFFICIAL cumulative: resolved 106/110 submitted (of 500); completed 110, errors 0, empty 0 ###
+2026-09-20T05:22:15+00:00 [r586] ### CHUNK 110:120 done in 19m20s | 116s per instance | 120 of 500 | elapsed 3h39m | projected total 15h ###
+### PROGRESS preds=120 nonempty=120 exits={'Submitted': 120} ###
+2026-09-20T05:22:17+00:00 [r586] [prune 100] free 335G
+2026-09-20T05:22:17+00:00 [r586] ### CHUNK 120:130 w=8 start | free 335G | load 1.20 | VRAM 321/1781/ ###
+2026-09-20T05:23:00+00:00 [prepull 130] done (10 ids) free 329G
+[score 110] predictions: 120 (0 empty)
+[score 110] ### OFFICIAL cumulative: resolved 116/120 submitted (of 500); completed 120, errors 0, empty 0 ###
+2026-09-20T05:30:40+00:00 [r586] ### CHUNK 120:130 done in 8m23s | 50s per instance | 130 of 500 | elapsed 3h47m | projected total 14h ###
+### PROGRESS preds=130 nonempty=130 exits={'Submitted': 130} ###
+2026-09-20T05:30:42+00:00 [r586] [prune 110] free 331G
+2026-09-20T05:30:42+00:00 [r586] ### CHUNK 130:140 w=8 start | free 331G | load 3.23 | VRAM 99/1781/ ###
+2026-09-20T05:31:17+00:00 [prepull 140] done (10 ids) free 328G
+[score 120] predictions: 130 (0 empty)
+[score 120] ### OFFICIAL cumulative: resolved 126/130 submitted (of 500); completed 130, errors 0, empty 0 ###
+2026-09-20T05:46:51+00:00 [r586] ### CHUNK 130:140 done in 16m9s | 96s per instance | 140 of 500 | elapsed 4h4m | projected total 14h ###
+### PROGRESS preds=140 nonempty=140 exits={'Submitted': 140} ###
+2026-09-20T05:46:53+00:00 [r586] [prune 120] free 334G
+2026-09-20T05:46:53+00:00 [r586] ### CHUNK 140:150 w=8 start | free 334G | load 1.21 | VRAM 37/1781/ ###
+2026-09-20T05:47:34+00:00 [prepull 150] done (10 ids) free 332G
+[score 130] predictions: 140 (0 empty)
+[score 130] ### OFFICIAL cumulative: resolved 136/140 submitted (of 500); completed 140, errors 0, empty 0 ###
+2026-09-20T05:58:29+00:00 [r586] ### CHUNK 140:150 done in 11m36s | 69s per instance | 150 of 500 | elapsed 4h15m | projected total 14h ###
+### PROGRESS preds=150 nonempty=150 exits={'Submitted': 150} ###
+2026-09-20T05:58:30+00:00 [r586] [prune 130] free 336G
+2026-09-20T05:58:30+00:00 [r586] ### CHUNK 150:160 w=8 start | free 336G | load 3.39 | VRAM 37/1781/ ###
+2026-09-20T05:59:19+00:00 [prepull 160] done (10 ids) free 330G
+[score 140] predictions: 150 (0 empty)
+[score 140] ### OFFICIAL cumulative: resolved 146/150 submitted (of 500); completed 150, errors 0, empty 0 ###
+2026-09-20T06:13:12+00:00 [r586] ### CHUNK 150:160 done in 14m42s | 88s per instance | 160 of 500 | elapsed 4h30m | projected total 14h ###
+### PROGRESS preds=160 nonempty=160 exits={'Submitted': 160} ###
+2026-09-20T06:13:13+00:00 [r586] [prune 140] free 332G
+2026-09-20T06:13:13+00:00 [r586] ### CHUNK 160:170 w=8 start | free 332G | load 1.03 | VRAM 37/1781/ ###
+2026-09-20T06:13:51+00:00 [prepull 170] done (10 ids) free 330G
+[score 150] predictions: 160 (0 empty)
+[score 150] ### OFFICIAL cumulative: resolved 156/160 submitted (of 500); completed 160, errors 0, empty 0 ###
+2026-09-20T06:34:31+00:00 [r586] ### CHUNK 160:170 done in 21m18s | 127s per instance | 170 of 500 | elapsed 4h51m | projected total 14h ###
+### PROGRESS preds=170 nonempty=170 exits={'Submitted': 170} ###
+2026-09-20T06:34:33+00:00 [r586] [prune 150] free 332G
+2026-09-20T06:34:33+00:00 [r586] ### CHUNK 170:180 w=8 start | free 332G | load 1.32 | VRAM 37/1781/ ###
+2026-09-20T06:35:08+00:00 [prepull 180] done (10 ids) free 330G
+[score 160] predictions: 170 (0 empty)
+[score 160] ### OFFICIAL cumulative: resolved 166/170 submitted (of 500); completed 170, errors 0, empty 0 ###
+2026-09-20T06:56:18+00:00 [r586] ### CHUNK 170:180 done in 21m45s | 130s per instance | 180 of 500 | elapsed 5h13m | projected total 14h ###
+### PROGRESS preds=180 nonempty=180 exits={'Submitted': 180} ###
+2026-09-20T06:56:19+00:00 [r586] [prune 160] free 332G
+2026-09-20T06:56:19+00:00 [r586] ### CHUNK 180:190 w=8 start | free 332G | load 2.64 | VRAM 37/1779/ ###
+2026-09-20T06:56:55+00:00 [prepull 190] done (10 ids) free 330G
+[score 170] predictions: 180 (0 empty)
+[score 170] ### OFFICIAL cumulative: resolved 173/180 submitted (of 500); completed 180, errors 0, empty 0 ###
+2026-09-20T07:37:26+00:00 [r586] ### CHUNK 180:190 done in 41m7s | 246s per instance | 190 of 500 | elapsed 5h54m | projected total 15h ###
+### PROGRESS preds=190 nonempty=190 exits={'Submitted': 190} ###
+2026-09-20T07:37:27+00:00 [r586] [prune 170] free 336G
+2026-09-20T07:37:27+00:00 [r586] ### CHUNK 190:200 w=8 start | free 336G | load 2.16 | VRAM 37/1775/ ###
+2026-09-20T07:38:11+00:00 [prepull 200] done (10 ids) free 333G
+[score 180] predictions: 190 (0 empty)
+[score 180] ### OFFICIAL cumulative: resolved 182/190 submitted (of 500); completed 190, errors 0, empty 0 ###
+2026-09-20T08:06:12+00:00 [r586] ### CHUNK 190:200 done in 28m45s | 172s per instance | 200 of 500 | elapsed 6h23m | projected total 15h ###
+### PROGRESS preds=200 nonempty=200 exits={'Submitted': 200} ###
+2026-09-20T08:06:13+00:00 [r586] [prune 180] free 336G
+2026-09-20T08:06:13+00:00 [r586] ### CHUNK 200:210 w=8 start | free 336G | load 2.28 | VRAM 37/1775/ ###
+2026-09-20T08:06:54+00:00 [prepull 210] done (10 ids) free 333G
+[score 190] predictions: 200 (0 empty)
+[score 190] ### OFFICIAL cumulative: resolved 192/200 submitted (of 500); completed 200, errors 0, empty 0 ###
+2026-09-20T08:33:34+00:00 [r586] ### CHUNK 200:210 done in 27m21s | 164s per instance | 210 of 500 | elapsed 6h50m | projected total 16h ###
+### PROGRESS preds=210 nonempty=210 exits={'Submitted': 210} ###
+2026-09-20T08:33:35+00:00 [r586] [prune 190] free 335G
+2026-09-20T08:33:35+00:00 [r586] ### CHUNK 210:220 w=8 start | free 335G | load 2.29 | VRAM 37/1775/ ###
+2026-09-20T08:34:21+00:00 [prepull 220] done (10 ids) free 331G
+[score 200] predictions: 210 (0 empty)
+[score 200] ### OFFICIAL cumulative: resolved 201/210 submitted (of 500); completed 210, errors 0, empty 0 ###
+2026-09-20T08:44:00+00:00 [r586] signal
+2026-09-20T08:44:04+00:00 [r586] restoring the daily
+2026-09-20T08:44:05+00:00 [flashnext] starting on 0.0.0.0:8022, slots 8, cache 999424 @ 8,8, moe offload 0, split [30, 30], draft depth 3, policy '[[4, 3], [5, 2], [8, 1]]'
+2026-09-20T08:44:26+00:00 [flashnext] UP on 8022 | warmup 0.455782s | VRAM free MiB 1041/2531/
+2026-09-20T08:44:26+00:00 [flashnext] OpenAI-compatible base URL: http://<host>:8022/v1
+2026-09-20T08:44:26+00:00 [r586] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-20T08:44:26+00:00 [r586] === R586 ABORTED ===
+2026-09-22T19:49:05+00:00 [r586] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; disk free 448G
+2026-09-22T19:49:06+00:00 [r586] === start K=500 chunk=10 w=8 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-22T19:49:21+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-22T19:49:36+00:00 [prepull 210] done (10 ids) free 447G
+2026-09-22T19:49:36+00:00 [r586] ### CHUNK 210:220 w=8 start | free 447G | load 2.47 | VRAM 1039/2531/ ###
+2026-09-22T19:49:36+00:00 [prepull 220] done (10 ids) free 447G
+2026-09-22T20:10:07+00:00 [r586] ### CHUNK 210:220 done in 20m31s | 123s per instance | 10 of 290 | elapsed 0h20m | projected total 9h ###
+### PROGRESS preds=220 nonempty=218 exits={'Submitted': 218, 'ServiceUnavailableError': 2} ###
+2026-09-22T20:10:08+00:00 [r586] ### CHUNK 220:230 w=8 start | free 447G | load 1.57 | VRAM 7/1841/ ###
+2026-09-22T20:10:52+00:00 [prepull 230] done (10 ids) free 443G
+[score 210] predictions: 220 (2 empty)
+[score 210] ### OFFICIAL cumulative: resolved 209/220 submitted (of 500); completed 218, errors 0, empty 2 ###
+2026-09-22T20:47:41+00:00 [r586] ### CHUNK 220:230 done in 37m33s | 225s per instance | 20 of 290 | elapsed 0h58m | projected total 14h ###
+### PROGRESS preds=230 nonempty=228 exits={'Submitted': 228, 'ServiceUnavailableError': 2} ###
+2026-09-22T20:47:44+00:00 [r586] [prune 210] free 445G
+2026-09-22T20:47:44+00:00 [r586] ### CHUNK 230:240 w=8 start | free 445G | load 1.75 | VRAM 165/1981/ ###
+2026-09-22T20:48:25+00:00 [prepull 240] done (10 ids) free 441G
+[score 220] predictions: 230 (2 empty)
+[score 220] ### OFFICIAL cumulative: resolved 217/230 submitted (of 500); completed 228, errors 0, empty 2 ###
+2026-09-22T20:50:12+00:00 [r586] signal
+2026-09-22T20:50:15+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 318912))
+2026-09-22T20:50:16+00:00 [r586] === R586 ABORTED ===
+2026-09-22T20:50:16+00:00 [r586] lock held; served at entry: <no answer>; disk free 441G
+2026-09-22T20:50:17+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-22T20:50:36+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-22T20:50:36+00:00 [r586] ### ROLLING start: 269 instances to run, W=12, lookahead 16, score every 12 | free 441G ###
+[score rolling] predictions: 244 (2 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 229/244 submitted (of 500); completed 242, errors 0, empty 2 ###
+2026-09-22T21:12:38+00:00 [r586] [prune rolling] removed 13 scored images; free 350G
+### PROGRESS preds=246 nonempty=244 exits={'Submitted': 244, 'ServiceUnavailableError': 2} ###
+[score rolling] predictions: 257 (3 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 238/257 submitted (of 500); completed 254, errors 0, empty 3 ###
+2026-09-22T21:34:50+00:00 [r586] [prune rolling] removed 12 scored images; free 323G
+### PROGRESS preds=258 nonempty=255 exits={'Submitted': 255, 'ServiceUnavailableError': 3} ###
+[score rolling] predictions: 270 (3 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 248/270 submitted (of 500); completed 267, errors 0, empty 3 ###
+2026-09-22T21:50:27+00:00 [r586] [prune rolling] removed 13 scored images; free 342G
+### PROGRESS preds=270 nonempty=267 exits={'Submitted': 267, 'ServiceUnavailableError': 3} ###
+[score rolling] predictions: 282 (3 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 258/282 submitted (of 500); completed 279, errors 0, empty 3 ###
+2026-09-22T22:14:04+00:00 [r586] [prune rolling] removed 12 scored images; free 376G
+### PROGRESS preds=287 nonempty=284 exits={'Submitted': 284, 'ServiceUnavailableError': 3} ###
+[score rolling] predictions: 294 (3 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 268/294 submitted (of 500); completed 291, errors 0, empty 3 ###
+2026-09-22T22:43:45+00:00 [r586] [prune rolling] removed 12 scored images; free 351G
+### PROGRESS preds=307 nonempty=304 exits={'Submitted': 304, 'ServiceUnavailableError': 3} ###
+[score rolling] predictions: 307 (3 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 277/307 submitted (of 500); completed 304, errors 0, empty 3 ###
+2026-09-22T22:48:59+00:00 [r586] [prune rolling] removed 13 scored images; free 374G
+### PROGRESS preds=312 nonempty=309 exits={'Submitted': 309, 'ServiceUnavailableError': 3} ###
+[score rolling] predictions: 328 (15 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/328 submitted (of 500); completed 313, errors 0, empty 15 ###
+2026-09-22T23:04:52+00:00 [r586] [prune rolling] removed 9 scored images; free 374G
+### PROGRESS preds=328 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 15} ###
+[score rolling] predictions: 340 (27 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/340 submitted (of 500); completed 313, errors 0, empty 27 ###
+2026-09-22T23:09:05+00:00 [r586] [prune rolling] removed 0 scored images; free 367G
+### PROGRESS preds=340 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 27} ###
+[score rolling] predictions: 352 (39 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/352 submitted (of 500); completed 313, errors 0, empty 39 ###
+2026-09-22T23:13:19+00:00 [r586] [prune rolling] removed 0 scored images; free 355G
+### PROGRESS preds=352 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 39} ###
+[score rolling] predictions: 364 (51 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/364 submitted (of 500); completed 313, errors 0, empty 51 ###
+2026-09-22T23:17:34+00:00 [r586] [prune rolling] removed 0 scored images; free 343G
+### PROGRESS preds=364 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 51} ###
+[score rolling] predictions: 376 (63 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/376 submitted (of 500); completed 313, errors 0, empty 63 ###
+2026-09-22T23:21:49+00:00 [r586] [prune rolling] removed 0 scored images; free 340G
+### PROGRESS preds=376 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 63} ###
+[score rolling] predictions: 388 (75 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 283/388 submitted (of 500); completed 313, errors 0, empty 75 ###
+2026-09-22T23:26:03+00:00 [r586] [prune rolling] removed 0 scored images; free 333G
+### PROGRESS preds=388 nonempty=313 exits={'Submitted': 313, 'ServiceUnavailableError': 75} ###
+[score rolling] predictions: 400 (75 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 293/400 submitted (of 500); completed 325, errors 0, empty 75 ###
+2026-09-22T23:55:47+00:00 [r586] [prune rolling] removed 12 scored images; free 331G
+### PROGRESS preds=400 nonempty=325 exits={'Submitted': 325, 'ServiceUnavailableError': 75} ###
+[score rolling] predictions: 413 (78 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 298/413 submitted (of 500); completed 335, errors 0, empty 78 ###
+2026-09-23T00:15:23+00:00 [r586] [prune rolling] removed 10 scored images; free 330G
+### PROGRESS preds=414 nonempty=336 exits={'Submitted': 336, 'ServiceUnavailableError': 78} ###
+[score rolling] predictions: 430 (85 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 306/430 submitted (of 500); completed 345, errors 0, empty 85 ###
+2026-09-23T00:34:53+00:00 [r586] [prune rolling] removed 10 scored images; free 332G
+### PROGRESS preds=435 nonempty=345 exits={'Submitted': 345, 'ServiceUnavailableError': 90} ###
+2026-09-23T00:37:37+00:00 [r586] signal
+2026-09-23T00:37:41+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 318912))
+2026-09-23T00:37:43+00:00 [r586] === R586 ABORTED ===
+2026-09-23T05:23:16+00:00 [r586] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; disk free 312G
+2026-09-23T05:23:16+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T05:23:32+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T05:23:32+00:00 [r586] ### ROLLING start: 58 instances to run, W=12, lookahead 16, score every 12 | free 312G ###
+[score rolling] predictions: 456 (97 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 319/456 submitted (of 500); completed 359, errors 0, empty 97 ###
+2026-09-23T06:06:31+00:00 [r586] [prune rolling] removed 14 scored images; free 310G
+### PROGRESS preds=457 nonempty=359 exits={'Submitted': 359, 'ServiceUnavailableError': 98} ###
+[score rolling] predictions: 469 (99 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 326/469 submitted (of 500); completed 370, errors 0, empty 99 ###
+2026-09-23T06:26:37+00:00 [r586] [prune rolling] removed 11 scored images; free 309G
+### PROGRESS preds=470 nonempty=371 exits={'Submitted': 371, 'ServiceUnavailableError': 99} ###
+2026-09-23T06:37:25+00:00 [prepull] all 58 images handled
+2026-09-23T06:40:15+00:00 [r586] signal
+2026-09-23T06:40:19+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 2319136))
+2026-09-23T06:40:20+00:00 [r586] === R586 ABORTED ===
+2026-09-23T07:10:30+00:00 [r586] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; disk free 308G
+2026-09-23T07:10:31+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T07:10:49+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T07:10:49+00:00 [r586] ### ROLLING start: 27 instances to run, W=12, lookahead 16, score every 12 | free 308G ###
+2026-09-23T07:10:50+00:00 [prepull] all 27 images handled
+[score rolling] predictions: 485 (99 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 338/485 submitted (of 500); completed 386, errors 0, empty 99 ###
+2026-09-23T08:07:51+00:00 [r586] [prune rolling] removed 12 scored images; free 310G
+### PROGRESS preds=488 nonempty=389 exits={'Submitted': 389, 'ServiceUnavailableError': 99} ###
+[score rolling] predictions: 498 (100 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 347/498 submitted (of 500); completed 398, errors 0, empty 100 ###
+2026-09-23T08:29:49+00:00 [r586] [prune rolling] removed 12 scored images; free 313G
+### PROGRESS preds=498 nonempty=398 exits={'Submitted': 398, 'ServiceUnavailableError': 99, 'RepeatedFormatError': 1} ###
+2026-09-23T08:39:49+00:00 [r586] ### ROLLING pool exited rc=0 after 1h29m | done 27 this run ###
+### PROGRESS preds=500 nonempty=400 exits={'Submitted': 400, 'ServiceUnavailableError': 99, 'RepeatedFormatError': 1} ###
+2026-09-23T08:39:50+00:00 [r586] ### RETRY pass: 99 infra-exit instances: django__django-15957 django__django-15973 matplotlib__matplotlib-22865 pylint-dev__pylint-6386 pylint-dev__pylint-6903 pylint-dev__pylint-6528 pylint-dev__pylint-7080 pydata__xarray-7229 pylint-dev__pylint-4551 pylint-dev__pylint-4970 pydata__xarray-6992 pydata__xarray-6599 mwaskom__seaborn-3069 pyd ###
+2026-09-23T10:20:42+00:00 [r586] signal
+2026-09-23T10:20:46+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 2319136))
+2026-09-23T10:20:47+00:00 [r586] === R586 ABORTED ===
+2026-09-23T11:13:18+00:00 [r586] lock held; served at entry: <no answer>; disk free 306G
+2026-09-23T11:13:19+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T11:13:38+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T11:13:38+00:00 [r586] ### ROLLING start: 12 instances to run, W=12, lookahead 16, score every 12 | free 306G ###
+2026-09-23T11:13:39+00:00 [prepull] all 12 images handled
+2026-09-23T11:15:11+00:00 [r586] signal
+2026-09-23T11:15:14+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 2319136))
+2026-09-23T11:15:15+00:00 [r586] === R586 ABORTED ===
+2026-09-23T11:19:32+00:00 [r586] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; disk free 306G
+2026-09-23T11:19:33+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T11:19:52+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T11:19:52+00:00 [r586] ### ROLLING start: 12 instances to run, W=12, lookahead 16, score every 12 | free 306G ###
+2026-09-23T11:19:52+00:00 [prepull] all 12 images handled
+2026-09-23T11:32:57+00:00 [r586] signal
+2026-09-23T11:33:01+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 2319136))
+2026-09-23T11:33:02+00:00 [r586] === R586 ABORTED ===
+2026-09-23T11:51:08+00:00 [r586] lock held; served at entry: <no answer>; disk free 278G
+2026-09-23T11:51:08+00:00 [r586] === start K=500 chunk=10 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T11:51:30+00:00 [r586] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T11:51:30+00:00 [r586] ### ROLLING start: 12 instances to run, W=12, lookahead 16, score every 12 | free 278G ###
+[score rolling] predictions: 500 (26 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 405/500 submitted (of 500); completed 474, errors 0, empty 26 ###
+2026-09-23T12:48:37+00:00 [r586] [prune rolling] removed 12 scored images; free 291G
+### PROGRESS preds=500 nonempty=474 exits={'Submitted': 474, 'ServiceUnavailableError': 25, 'RepeatedFormatError': 1} ###
+2026-09-23T12:48:37+00:00 [r586] ### ROLLING pool exited rc=0 after 0h57m | done 12 this run ###
+### PROGRESS preds=500 nonempty=474 exits={'Submitted': 474, 'ServiceUnavailableError': 25, 'RepeatedFormatError': 1} ###
+2026-09-23T12:48:38+00:00 [r586] ### RETRY pass: 25 infra-exit instances: sphinx-doc__sphinx-11445 sphinx-doc__sphinx-8548 sphinx-doc__sphinx-9258 sphinx-doc__sphinx-9320 sympy__sympy-13551 sympy__sympy-13480 sympy__sympy-12481 sympy__sympy-13091 sphinx-doc__sphinx-9461 sympy__sympy-13372 sphinx-doc__sphinx-9229 sympy__sympy-12489 sympy__sympy-12419 sphinx-doc__sphinx-863 ###
+2026-09-23T14:25:13+00:00 [r586] [retry] rc=0
+### PROGRESS preds=500 nonempty=498 exits={'Submitted': 498, 'RepeatedFormatError': 2} ###
+[score FINAL] predictions: 500 (2 empty)
+[score FINAL] ### OFFICIAL cumulative: resolved 424/500 submitted (of 500); completed 498, errors 0, empty 2 ###
+### PROGRESS preds=500 nonempty=498 exits={'Submitted': 498, 'RepeatedFormatError': 2} ###
+2026-09-23T14:27:14+00:00 [r586] ### GPU PHASE DONE K=500 in 2h35m | free 283G ###
+[score rolling] predictions: 500 (2 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 424/500 submitted (of 500); completed 498, errors 0, empty 2 ###
+2026-09-23T14:27:30+00:00 [r586] [prune rolling] removed 0 scored images; free 283G
+2026-09-23T14:27:33+00:00 [r586] not restoring: GPU queue continues (r515-queue-chain(pid 2319136)
+r676-slotfix-gate(pid 1047987)
+r677-promote-floor-r6-w8(pid 1883339)
+r678-fill16(pid 1883353))
+2026-09-23T14:27:35+00:00 [r586] === R586 DONE ===

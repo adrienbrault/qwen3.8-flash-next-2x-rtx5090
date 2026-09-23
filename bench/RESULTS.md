@@ -5,6 +5,7 @@ One file per experiment, newest first. Each file names its results directory on 
 ## 2026-09-23
 
 - [R676: the recurrent-state slot pool returns a slot when state construction fails, promoted](results/r676-slotfix.md)
+- [R586, R586d: SWE-bench Verified, all 500 instances with the task containers off the network: 397 resolved](results/r586-swebench-500.md)
 
 ## 2026-09-22
 

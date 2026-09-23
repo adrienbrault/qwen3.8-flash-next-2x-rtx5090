@@ -30,8 +30,9 @@ PATS=(
 )
 RE=$(IFS='|'; echo "${PATS[*]}")
 # Exempt: the docker bridge gateway (172.17.0.1 is the same on every host), and lines carrying a hygiene-ok marker
-# with a reason (fictional addresses inside frozen benchmark prompts).
-EXEMPT='172\.17\.0\.1|hygiene-ok'
+# with a reason (fictional addresses inside frozen benchmark prompts), and the one published SWE-bench prediction whose
+# patch quotes Django's documentation example address 192.168.2.1 (django__django-16145; R586 preds.jsonl, verbatim).
+EXEMPT='172\.17\.0\.1|hygiene-ok|"instance_id": *"django__django-16145"'
 hits=0
 if [ "${1:-}" = "--tree" ]; then
   while IFS= read -r -d '' f; do

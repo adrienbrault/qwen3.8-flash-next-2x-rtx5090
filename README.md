@@ -32,7 +32,7 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 | long-context retrieval | 5/5 needles at 131k and at 240k prompt tokens | [R548][r548], [R546][r546] |
 | GSM8K 5-shot, n=500, no stop strings | 0.978 | [R565][r565] |
 | [tool-eval-bench][tool-eval], 69 × 4 | 84.0 ± 2.4 | [R565][r565] |
-| [SWE-bench Verified][swebench], [mini-SWE-agent][mini-swe] 2.4.6 | 46 of 49 selected instances | [R359][r359], 3.05 bpw pack |
+| [SWE-bench Verified][swebench], all 500, [mini-SWE-agent][mini-swe] 2.4.6, task containers without network | 397 resolved (79.4 %); 7 ended without a patch, 2 of them on server errors | [R586, R586d][r586] |
 | boot to serving | ~20 s, warm kernel caches | [R525][r525] |
 
 Also passing: structured output (`json_schema`, `response_format`, `regex_pattern`, thinking on and off, [R453][r453]); `tool_choice` `required` 48/48, named 4/4, 8/8 concurrent ([R529][r529]); a long prompt prefilled twice gives identical output ([R535][r535]).
@@ -313,3 +313,4 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r646]: bench/results/r646-verifybatch.md
 [r653]: bench/results/r653-stack.md
 [r676]: bench/results/r676-slotfix.md
+[r586]: bench/results/r586-swebench-500.md

@@ -1,0 +1,74 @@
+2026-09-23T14:27:35+00:00 [r586d] lock held; served at entry: <no answer>; disk free 283G; redo set 160 ids
+2026-09-23T14:27:35+00:00 [r586d] === start redo n=160 w=12 | mini-swe-agent 2.4.6 swebench 4.1.0 ===
+2026-09-23T14:27:57+00:00 [r586d] UP: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; VRAM free 1039/2531/; image tabbyapi:stack-r1
+2026-09-23T14:27:57+00:00 [r586d] ### ROLLING start: 160 of 160 still to run, W=12, lookahead 16, score every 12 | free 283G ###
+[score rolling] predictions: 12 (0 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 9/12 submitted (of 500); completed 12, errors 0, empty 0 ###
+2026-09-23T15:10:28+00:00 [r586d] [prune rolling] removed 12 scored images; free 266G
+### PROGRESS preds=14 nonempty=14 exits={'Submitted': 14} traj_without_network_none=0 ###
+[score rolling] predictions: 24 (0 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 19/24 submitted (of 500); completed 24, errors 0, empty 0 ###
+2026-09-23T15:24:49+00:00 [r586d] [prune rolling] removed 12 scored images; free 270G
+### PROGRESS preds=26 nonempty=26 exits={'Submitted': 26} traj_without_network_none=0 ###
+[score rolling] predictions: 36 (0 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 28/36 submitted (of 500); completed 36, errors 0, empty 0 ###
+2026-09-23T15:42:47+00:00 [r586d] [prune rolling] removed 12 scored images; free 279G
+### PROGRESS preds=36 nonempty=36 exits={'Submitted': 36} traj_without_network_none=0 ###
+[score rolling] predictions: 48 (0 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 39/48 submitted (of 500); completed 48, errors 0, empty 0 ###
+2026-09-23T16:04:35+00:00 [r586d] [prune rolling] removed 12 scored images; free 279G
+### PROGRESS preds=49 nonempty=49 exits={'Submitted': 49} traj_without_network_none=0 ###
+[score rolling] predictions: 60 (1 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 49/60 submitted (of 500); completed 59, errors 0, empty 1 ###
+2026-09-23T16:20:35+00:00 [r586d] [prune rolling] removed 11 scored images; free 275G
+### PROGRESS preds=61 nonempty=60 exits={'Submitted': 60, 'RepeatedFormatError': 1} traj_without_network_none=0 ###
+[score rolling] predictions: 74 (4 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 58/74 submitted (of 500); completed 70, errors 0, empty 4 ###
+2026-09-23T16:36:18+00:00 [r586d] [prune rolling] removed 11 scored images; free 273G
+### PROGRESS preds=75 nonempty=71 exits={'Submitted': 71, 'ServiceUnavailableError': 3, 'RepeatedFormatError': 1} traj_without_network_none=0 ###
+[score rolling] predictions: 86 (5 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 69/86 submitted (of 500); completed 81, errors 0, empty 5 ###
+2026-09-23T16:54:46+00:00 [r586d] [prune rolling] removed 11 scored images; free 271G
+### PROGRESS preds=86 nonempty=81 exits={'Submitted': 81, 'ServiceUnavailableError': 4, 'RepeatedFormatError': 1} traj_without_network_none=0 ###
+[score rolling] predictions: 99 (5 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 80/99 submitted (of 500); completed 94, errors 0, empty 5 ###
+2026-09-23T17:17:25+00:00 [r586d] [prune rolling] removed 13 scored images; free 270G
+### PROGRESS preds=100 nonempty=95 exits={'Submitted': 95, 'ServiceUnavailableError': 4, 'RepeatedFormatError': 1} traj_without_network_none=0 ###
+[score rolling] predictions: 111 (8 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 86/111 submitted (of 500); completed 103, errors 0, empty 8 ###
+2026-09-23T17:36:06+00:00 [r586d] [prune rolling] removed 9 scored images; free 270G
+### PROGRESS preds=112 nonempty=104 exits={'Submitted': 104, 'ServiceUnavailableError': 6, 'RepeatedFormatError': 2} traj_without_network_none=0 ###
+[score rolling] predictions: 127 (8 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 99/127 submitted (of 500); completed 119, errors 0, empty 8 ###
+2026-09-23T17:50:32+00:00 [r586d] [prune rolling] removed 16 scored images; free 268G
+### PROGRESS preds=128 nonempty=120 exits={'Submitted': 120, 'ServiceUnavailableError': 6, 'RepeatedFormatError': 2} traj_without_network_none=0 ###
+[score rolling] predictions: 140 (8 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 111/140 submitted (of 500); completed 132, errors 0, empty 8 ###
+2026-09-23T18:08:49+00:00 [r586d] [prune rolling] removed 13 scored images; free 268G
+### PROGRESS preds=141 nonempty=133 exits={'Submitted': 133, 'ServiceUnavailableError': 6, 'RepeatedFormatError': 2} traj_without_network_none=0 ###
+[score rolling] predictions: 152 (8 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 119/152 submitted (of 500); completed 144, errors 0, empty 8 ###
+2026-09-23T18:18:46+00:00 [r586d] [prune rolling] removed 12 scored images; free 269G
+### PROGRESS preds=154 nonempty=146 exits={'Submitted': 146, 'ServiceUnavailableError': 6, 'RepeatedFormatError': 2} traj_without_network_none=0 ###
+2026-09-23T18:24:46+00:00 [r586d] ### ROLLING pool exited rc=0 after 3h41m | done 160 this run ###
+### PROGRESS preds=160 nonempty=147 exits={'Submitted': 147, 'ServiceUnavailableError': 11, 'RepeatedFormatError': 2} traj_without_network_none=0 ###
+2026-09-23T18:24:47+00:00 [r586d] ### RETRY pass: 11 infra-exit instances: django__django-11885 django__django-11555 django__django-12209 django__django-12406 django__django-13315 django__django-13449 django__django-14534 django__django-14351 django__django-14404 django__django-14539 django__django-14140 ###
+2026-09-23T18:55:29+00:00 [r586d] [retry] rc=0
+### PROGRESS preds=160 nonempty=155 exits={'Submitted': 155, 'ServiceUnavailableError': 2, 'RepeatedFormatError': 3} traj_without_network_none=0 ###
+[score FINAL] predictions: 160 (5 empty)
+[score FINAL] ### OFFICIAL cumulative: resolved 129/160 submitted (of 500); completed 155, errors 0, empty 5 ###
+### PROGRESS preds=160 nonempty=155 exits={'Submitted': 155, 'ServiceUnavailableError': 2, 'RepeatedFormatError': 3} traj_without_network_none=0 ###
+[score rolling] predictions: 160 (5 empty)
+[score rolling] ### OFFICIAL cumulative: resolved 129/160 submitted (of 500); completed 155, errors 0, empty 5 ###
+2026-09-23T18:57:05+00:00 [r586d] [prune rolling] removed 11 scored images; free 279G
+[merged] MERGED (R586 isolated 340 + R586d redo 160): resolved 397/500; scored 493, no report 7 (empty patches or not yet scored)
+[merged] REDO SET: networked run resolved 156/160, isolated redo resolved 129/160
+[merged] flips: unresolved->resolved 1, resolved->unresolved 28
+[merged]   up:  django__django-11820
+[merged]   down: astropy__astropy-13033 astropy__astropy-13236 astropy__astropy-13398 astropy__astropy-14369 django__django-10554 django__django-10973 django__django-10999 django__django-11087 django__django-11141 django__django-11555 django__django-11734 django__django-11848 django__django-12209 django__django-12273 django__django-12325 django__django-12406 django__django-12663 django__django-13195 django__django-13212 django__django-13406 django__django-13512 django__django-13513 django__django-14034 django__django-14155 django__django-14170 django__django-14315 django__django-14376 django__django-14539
+[merged] ISOLATION: 0 redo trajectories without --network none  (all isolated)
+2026-09-23T18:57:09+00:00 [r586d] not restoring: GPU queue continues (r515-queue-chain(pid 2319136)
+r676-slotfix-gate(pid 1047987)
+r677-promote-floor-r6-w8(pid 1883339)
+r678-fill16(pid 1883353))
+2026-09-23T18:57:10+00:00 [r586d] === R586d DONE ===
