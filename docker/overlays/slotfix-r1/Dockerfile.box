@@ -1,0 +1,7 @@
+FROM tabbyapi:stack-r1
+COPY slotfix-r1.patch /opt/slotfix-r1/slotfix-r1.patch
+RUN set -e; P=$(python3 -c "import exllamav3,os;print(os.path.dirname(exllamav3.__file__))"); \
+    patch -p1 --fuzz=0 --dry-run -d "$P" < /opt/slotfix-r1/slotfix-r1.patch && \
+    patch -p1 --fuzz=0 --no-backup-if-mismatch -d "$P" < /opt/slotfix-r1/slotfix-r1.patch && \
+    find "$P" -name __pycache__ -type d -exec rm -rf {} + ; \
+    python3 -c 'import exllamav3.cache.cache as c; assert c._SLOTFIX_BUILD == "r1", c._SLOTFIX_BUILD; print("slotfix-r1 landed")'

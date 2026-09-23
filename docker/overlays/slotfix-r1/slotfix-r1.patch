@@ -1,0 +1,203 @@
+slotfix-r1: make the recurrent-state slot pool exception-safe.
+
+The pool (num_slots = max_batch_size) hands a slot handle out of free_list
+BEFORE constructing the state object. If recurrent_state_cls.__init__ throws
+(l.clear() or unstash() hitting a CUDA error under VRAM pressure, a restored
+stash failing its position assert), the handle is already popped and no
+reference survives: the slot is burned permanently. With 8 slots and a few
+such failures the pool empties and every subsequent request fails with
+"Cannot create new state: no available slots" until the container restarts
+(observed 2026-09-22 22:58-23:25 UTC, 2,380 failures in 27 min, R586c).
+
+  cache/cache.py
+    - the three alloc paths (get_new_state / get_test_state / new_from_stashed)
+      return the handle to free_list when the constructor raises.
+    - release_state refuses a slot that is already free (a double release
+      would hand one slot to two live states and silently corrupt both).
+    - issued/reclaimed counters in the exhaustion assert for forensics.
+    - _make_state() centralises construction; EXL3_SLOTFIX_TEST_FAULTS=N
+      (default 0) injects constructor faults for gate verification. If
+      EXL3_SLOTFIX_TEST_FAULT_FILE is also set, faults only fire while that
+      path exists, so the launcher's warmup generation cannot consume them.
+  generator/generator.py
+    - reap_failed_job: deallocate_pages() and release_draft_window_slot()
+      run in separate guards so a failure in one cannot strand the other.
+    - cancel(): a release_draft_window_slot() failure no longer skips
+      deallocate_pages() + active_jobs.remove().
+
+Paths are package-relative; apply with patch -p1 -d <exllamav3 package dir>.
+
+--- a/cache/cache.py
++++ b/cache/cache.py
+@@ -9,6 +9,18 @@
+     from ..modules import Attention
+ import weakref
+ from .mtp_window import MTP_KV_WINDOW as _MTP_KV_WINDOW
++import logging
++import os
++
++logger = logging.getLogger(__name__)
++
++_SLOTFIX_BUILD = "r1"
++# Test hook: the first N state constructions raise, exercising the recovery path.
++# If EXL3_SLOTFIX_TEST_FAULT_FILE is set, faults only fire while that path exists:
++# the launcher's warmup generation would otherwise consume (and fail on) injected
++# faults during boot. The gate touches the file after the model is serving.
++_SLOTFIX_TEST_FAULTS = int(os.environ.get("EXL3_SLOTFIX_TEST_FAULTS", "0"))
++_SLOTFIX_TEST_FAULT_FILE = os.environ.get("EXL3_SLOTFIX_TEST_FAULT_FILE")
+ 
+ class CacheLayer(ABC):
+     """
+@@ -183,6 +195,9 @@
+         self.num_slots = max_batch_size
+         self.max_history = max_history
+         self.free_list = deque(range(self.num_slots))
++        # Conservation bookkeeping for the slot pool; reported by the exhaustion assert.
++        self._state_issued = 0
++        self._state_reclaimed = 0
+         self.recurrent_state_cls = model.recurrent_state_cls
+ 
+         rl = self.model.get_recurrent_layers()
+@@ -355,14 +370,20 @@
+         """
+         Allocate a new, empty state
+         """
+-        assert len(self.free_list) > 0, "Cannot create new state: no available slots"
++        assert len(self.free_list) > 0, \
++            f"Cannot create new state: no available slots (issued={self._state_issued} reclaimed={self._state_reclaimed})"
+         handle = self.free_list.popleft()
+-        return self.recurrent_state_cls(
+-            self,
+-            handle,
+-            0,
+-            clear = True,
+-        )
++        self._state_issued += 1
++        try:
++            return self._make_state(handle, 0, clear = True)
++        except BaseException:
++            # The handle was popped already; without this the slot is burned permanently.
++            # Whatever partial state the failed construction left in the slot's planes is
++            # overwritten by the next allocation's clear=/unstash.
++            self.free_list.appendleft(handle)
++            self._state_reclaimed += 1
++            logger.warning("state construction failed; returned slot %d to the pool", handle)
++            raise
+ 
+ 
+     def get_test_state(self, position: int):
+@@ -370,37 +391,57 @@
+         Allocate a new state for given position, for testing/benchmarking purposes. If position > 0 this will
+         not be a valid recurrent state for the model.
+         """
+-        assert len(self.free_list) > 0, "Cannot create new state: no available slots"
++        assert len(self.free_list) > 0, \
++            f"Cannot create new state: no available slots (issued={self._state_issued} reclaimed={self._state_reclaimed})"
+         handle = self.free_list.popleft()
+-        return self.recurrent_state_cls(
+-            self,
+-            handle,
+-            position,
+-            clear = True,
+-            test_state = True,
+-        )
++        self._state_issued += 1
++        try:
++            return self._make_state(handle, position, clear = True, test_state = True)
++        except BaseException:
++            self.free_list.appendleft(handle)
++            self._state_reclaimed += 1
++            logger.warning("state construction failed; returned slot %d to the pool", handle)
++            raise
+ 
+ 
+     def new_from_stashed(self, stashed_state, position):
+         """
+         Allocate a new state from a stashed state
+         """
+-        assert len(self.free_list) > 0, "Cannot create new state: no available slots"
++        assert len(self.free_list) > 0, \
++            f"Cannot create new state: no available slots (issued={self._state_issued} reclaimed={self._state_reclaimed})"
+         handle = self.free_list.popleft()
+-        return self.recurrent_state_cls(
+-            self,
+-            handle,
+-            position,
+-            clear = False,
+-            stashed = stashed_state
+-        )
++        self._state_issued += 1
++        try:
++            return self._make_state(handle, position, clear = False, stashed = stashed_state)
++        except BaseException:
++            self.free_list.appendleft(handle)
++            self._state_reclaimed += 1
++            logger.warning("state construction failed; returned slot %d to the pool", handle)
++            raise
+ 
+ 
++    def _make_state(self, handle, position, **kwargs):
++        global _SLOTFIX_TEST_FAULTS
++        if _SLOTFIX_TEST_FAULTS and (
++            _SLOTFIX_TEST_FAULT_FILE is None or os.path.exists(_SLOTFIX_TEST_FAULT_FILE)
++        ):
++            _SLOTFIX_TEST_FAULTS -= 1
++            raise RuntimeError("slotfix-r1 injected state-construction fault")
++        return self.recurrent_state_cls(self, handle, position, **kwargs)
++
++
+     def release_state(self, state):
+         """
+         Return state to the pool
+         """
++        if state.slot in self.free_list:
++            # A double release would hand one slot to two live states and silently
++            # corrupt both; refuse it and keep the pool consistent.
++            logger.error("state slot %d released twice; ignoring", state.slot)
++            return
+         self.free_list.appendleft(state.slot)
++        self._state_reclaimed += 1
+ 
+ 
+     def reset_states(self):
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -547,7 +547,13 @@
+         if job in self.pending_jobs:
+             self.pending_jobs.remove(job)
+         elif job in self.active_jobs:
+-            self.release_draft_window_slot(job, keep = True)
++            try:
++                self.release_draft_window_slot(job, keep = True)
++            except Exception:
++                logger.error(
++                    "cancel: release_draft_window_slot() raised for job %s; deallocating anyway",
++                    job, exc_info = True,
++                )
+             job.deallocate_pages()
+             self.active_jobs.remove(job)
+         if num_jobs and not self.num_remaining_jobs():
+@@ -1952,7 +1958,6 @@
+         the iteration task for every job.
+         """
+         try:
+-            self.release_draft_window_slot(job)
+             job.deallocate_pages()
+         except Exception:
+             logger.error(
+@@ -1961,6 +1966,15 @@
+                 job,
+                 exc_info = True,
+             )
++        try:
++            self.release_draft_window_slot(job)
++        except Exception:
++            logger.error(
++                "reap_failed_job: release_draft_window_slot() raised while cleaning up failed "
++                "job %s; the draft window slot may be stranded",
++                job,
++                exc_info = True,
++            )
+         if job in self.active_jobs:
+             self.active_jobs.remove(job)
+         results.append({

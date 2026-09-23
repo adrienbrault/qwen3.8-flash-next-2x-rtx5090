@@ -147,7 +147,13 @@ DRAFT=${DRAFT:-3}
 #   one call per group, ~140 fewer launches/step at c8). Greedy byte-identical on all 6 prompts vs
 #   bverify-r1; canonical gate: c1 +1.2%, c4/4k +3.8%, c8 +4.4%, c4/26k -0.1%; acceptance parity.
 #   ROLLBACK: IMG=tabbyapi:bverify-r1 and drop EXL3_GR_STATE_IN_UP from EXTRA_ENV below.
-DAILY_IMG=tabbyapi:stack-r1
+# R676 (2026-09-23): slotfix-r1 = stack-r1 + the recurrent-state slot fix (exllamav3/cache/cache.py: every alloc
+#   path took a slot off free_list before constructing the state, so a throwing constructor leaked the slot;
+#   8 leaks = "no available slots" 503s with a live server, R586c). The slot now returns to the pool on
+#   failure, and a double release is refused. Greedy byte-identical on all 6 prompts; 6 injected constructor
+#   faults -> 6 slots returned; 18 min churn with ~25 % mid-stream cancels, 1,497 requests, 0 errors; c8 8/8
+#   after. ROLLBACK: IMG=tabbyapi:stack-r1
+DAILY_IMG=tabbyapi:slotfix-r1
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -226,7 +232,9 @@ case "$NGRAM_RAM" in 0) NGRAM_RAM_BOOL=false;; 1) NGRAM_RAM_BOOL=true;; *) echo 
 CACHE_MODE=${CACHE_MODE:-8,8}
 MOE_OFFLOAD=${MOE_OFFLOAD:-0}
 GPU_SPLIT=${GPU_SPLIT:-30, 30}
-case "$CACHE_MODE" in [2-8],[2-8]) ;; *) echo "ABORT: CACHE_MODE must be K,V bits 2-8 (got $CACHE_MODE)"; exit 3;; esac
+# R660 (2026-09-23): the nvfp4kv-r1 image adds NVFP4 sides (exllamav3/cache/nvfp4.py parse_cache_mode: "nvfp4",
+# "nvfp4+s2", "8,nvfp4", ...). Any other image rejects them at load, so the launcher only lets the forms through.
+case "$CACHE_MODE" in [2-8],[2-8]|nvfp4*|[2-8],nvfp4*) ;; *) echo "ABORT: CACHE_MODE must be K,V bits 2-8 or an nvfp4 form (got $CACHE_MODE)"; exit 3;; esac
 case "$MOE_OFFLOAD" in [0-9]|[0-9][0-9]) ;; *) echo "ABORT: MOE_OFFLOAD must be a layer count (got $MOE_OFFLOAD)"; exit 3;; esac
 # DECODE SLOTS (R367). TabbyAPI derives 4 for a recurrent model and 128 otherwise; 8 is what has been served. More
 # slots means more concurrent jobs inside the fast decode path, at the cost of recurrent-state VRAM. This is the last
@@ -427,12 +435,17 @@ YML
 # held :8022 down on 2026-09-16 while the session moved on. ~0.4 s, measured. Two failure modes it makes
 # impossible: a wrong literal (`draft_mode: none`, r407 v1 / r397) and a legal literal with an illegal
 # combination (the policy line under `disabled`, r407 v2).
+# The capture goes to a mktemp file, not $LOG.preflight: a root-owned stale file in the logs dir once
+# made a healthy boot read as a validation failure (r643, 2026-09-22). Diagnostic-only output does not
+# belong to the served log's ownership rules.
+PFLOG=$(mktemp /tmp/flashnext-preflight.XXXXXX.log) || { log "ABORT: cannot create preflight log"; exit 3; }
 if ! sudo docker run --rm -v "$CFG":/app/config.yml:ro -w /app --entrypoint python3 "$IMG" \
-    -c "from common.tabby_config import config; config.load({})" > "$LOG.preflight" 2>&1; then
+    -c "from common.tabby_config import config; config.load({})" > "$PFLOG" 2>&1; then
   log "ABORT: config failed validation inside $IMG — served container untouched:"
-  tail -8 "$LOG.preflight" | cut -c1-200 | sed 's/^/  /' | tee -a "$LOG"
+  tail -8 "$PFLOG" | cut -c1-200 | sed 's/^/  /' | tee -a "$LOG"
   exit 3
 fi
+rm -f "$PFLOG"
 
 # --- memory hygiene ---------------------------------------------------------------------------------
 # A killed vLLM leaves a multi-GB /dev/shm/vllm_offload_*.mmap behind. On 2026-09-15 one 16 GB orphan left the box
@@ -504,8 +517,17 @@ sudo docker logs "$NAME" > "$LOG.docker" 2>&1
 SID=$(curl -s -m 8 "http://127.0.0.1:$PORT/v1/model" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])' 2>/dev/null)
 [ "$SID" = "$MODEL" ] || { log "NO BOOT: /v1/model reports '$SID', expected '$MODEL'"; exit 1; }
 if [ "$DRAFT_MODE" != disabled ]; then
-  sudo docker logs "$NAME" 2>&1 | grep -aqiE "draft" \
-    || { log "NO BOOT: draft_mode=$DRAFT_MODE but nothing about a draft in the engine log — serving undrafted"; exit 1; }
+  # The draft lines ("Using main model MTP component for drafting", the "Loading draft modules"
+  # progress) are emitted during model load, which can land within a second of /health answering --
+  # and stdout under docker is block-buffered, so a line printed at T can reach `docker logs` well
+  # after T. A one-shot grep raced exactly that (false NO BOOT on a healthy boot, R643 2026-09-22).
+  # Poll instead: the evidence always appears when the draft really loaded.
+  ok=0
+  for i in $(seq 30); do
+    sudo docker logs "$NAME" 2>&1 | grep -aqiE "draft" && { ok=1; break; }
+    sleep 2
+  done
+  [ "$ok" = 1 ] || { log "NO BOOT: draft_mode=$DRAFT_MODE but nothing about a draft in the engine log after 60s — serving undrafted"; exit 1; }
 fi
 
 # Warm the kernels OUTSIDE any measurement: the first inference is the expensive one, and a client that

@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-23
+
+- [R676: the recurrent-state slot pool returns a slot when state construction fails, promoted](results/r676-slotfix.md)
+
 ## 2026-09-22
 
 - [R655: expert parallelism across the two GPUs is refuted — the P2P exchange alone eats the prize](results/r655-ep-p2p.md)

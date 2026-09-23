@@ -1,0 +1,60 @@
+150c150
+< DAILY_IMG=tabbyapi:stack-r1
+---
+> DAILY_IMG=tabbyapi:slotfix-r1
+W0923 13:22:47.604000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+slotfix-r1 landed
+2026-09-23T13:22:48+00:00 [r676] queued behind: r515-queue-chain(pid 2319136)
+r586c-swebench-rolling(pid 505780)
+2026-09-23T18:57:32+00:00 [r676] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+GREEDY ref short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY ref short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY ref short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY ref short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY ref short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY ref long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+2026-09-23T18:58:18+00:00 [r676] NO BOOT cand:     File "/opt/venv/lib/python3.12/site-packages/exllamav3/cache/cache.py", line 424, in _make_state       raise RuntimeError("slotfix-r1 injected state-construction fault")   RuntimeError: slotfix-r1
+2026-09-23T18:58:18+00:00 [sctl] GPU queue continues (r677-promote-floor-r6-w8(pid 1883339)
+r678-fill16(pid 1883353)); leaving the GPUs to the next unit
+2026-09-23T18:58:18+00:00 [r676] === R676 NO-BOOT ===
+150c150
+< DAILY_IMG=tabbyapi:stack-r1
+---
+> DAILY_IMG=tabbyapi:slotfix-r1
+W0923 20:04:17.594000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+slotfix-r1 landed
+2026-09-23T20:04:17+00:00 [r676] queued behind: r677-promote-floor-r6-w8(pid 963991)
+2026-09-23T20:05:21+00:00 [r676] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+GREEDY ref short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY ref short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY ref short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY ref short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY ref short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY ref long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+2026-09-23T20:05:45+00:00 [r676] candidate: image tabbyapi:slotfix-r1; env keys (25); assert=0 returned=0 twice=0; free 1039 2531 
+2026-09-23T20:05:53+00:00 [r676] fault probe: ok=4 err=6; assert=0 returned=6 twice=0
+2026-09-23T20:05:54+00:00 [r676] fault injection proven: 6 constructor faults, pool self-healed, zero exhaustion
+GREEDY cand short0 depth=None n=None finish=length ' Paris. The capital of Germany is Berlin. The capital of Ita'
+GREEDY cand short1 depth=None n=None finish=length '    if n < 0:\n        raise ValueError("Input must be a non-'
+GREEDY cand short2 depth=None n=None finish=length '\n\n<think>\n\n</think>\n\nTo find the distance traveled, we use t'
+GREEDY cand short3 depth=None n=None finish=stop '\n\n<think>\n\n</think>\n\n2, 3, 5, 7, 11, 13, 17, 19'
+GREEDY cand short4 depth=None n=None finish=length '\n\n<think>\nThe user wants a concise two-sentence explanation '
+GREEDY cand long100k depth=None n=None finish=stop '\n\nThe provided text is a lengthy, nonsensical sequence of NA'
+GREEDY cand vs ref: 6 identical, IDENTICAL
+GREEDY-SUMMARY reference=ref divergences=0
+2026-09-23T20:06:23+00:00 [r676] ramp cand c1..c8 done; free 117 1921 ; graph.cu lines 0
+2026-09-23T20:06:23+00:00 [r676] churn: 12 workers, 18 min, ~25% mid-stream cancels, long gens (requeue/stash/restore) + shared prefix
+  cancel-long    cancelled 78
+  cancel-prefix  cancelled 96
+  cancel-short   cancelled 216
+  long           ok        225
+  prefix         ok        263
+  short          ok        619
+total 1497 | ok 1107 | cancelled 390 | err 0
+2026-09-23T20:24:40+00:00 [r676] post-churn: assert=0 returned=6 twice=0; restarts 0
+2026-09-23T20:24:44+00:00 [r676] post-churn c8: 8/8 streams ok — pool intact
+2026-09-23T20:24:44+00:00 [r676] promoted: live launcher DAILY_IMG=tabbyapi:slotfix-r1; booting the daily
+2026-09-23T20:25:05+00:00 [r676] PROMOTED slotfix-r1; served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab on tabbyapi:slotfix-r1; assert=0 returned=0 twice=0
+2026-09-23T20:25:05+00:00 [sctl] GPU queue continues (r677-promote-floor-r6-w8(pid 1040460)
+r678-fill16(pid 1040517)); leaving the GPUs to the next unit
+2026-09-23T20:25:05+00:00 [r676] === R676 DONE ===
