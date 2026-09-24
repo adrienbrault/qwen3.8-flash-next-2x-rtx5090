@@ -99,6 +99,12 @@ The same overlay one pool step higher, 1,015,808, passed its A/B and four gates 
 | 12:10 | image `tabbyapi:bverify-r1` = `mtpwin-r2-metrics1` + verifybatch-r1.patch: the round-4 batched MTP verifier was unreachable — `reqs_past_ids` was aggregated over pre-simplification sampler steps (the frontend appends neutral penalty steps to every stack), and `device_logit_mask` vetoed every `min_tokens` request | canonical gate vs `mtpwin-r2-metrics1`, same salt/shapes: c1 +3.4 %, c4/4k +0.8 %, c8 +3.9 %, c4/26k +3.5 % decode t/s; acceptance per verify unchanged; py-spy leaf `job.py:622` 43.3 % → ~0 | 999,424 | [R646](../bench/results/r646-verifybatch.md) |
 | 20:00 | image `tabbyapi:stack-r1` = `bverify-r1` + mtpnorm (MTP input-norm chain → fused `rms_norm`) + mixstate (state row folded into the int8 up kernel, `EXL3_GR_STATE_IN_UP=1`) + prefbatch (accept-path draft prefills grouped by accepted length) | greedy byte-identical on all 6 prompts vs `bverify-r1`; canonical gate: c1 +1.2 %, c4/4k +3.8 %, c8 +4.4 %, c4/26k −0.1 %; acceptance parity; the c8 figure reproduces the prefbatch-only gate exactly | 999,424 | [R653](../bench/results/r653-stack.md) |
 
+## 2026-09-24: the MTP draft component moves to the second GPU
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 08:34 | launcher `DRAFT_GPU_SPLIT="0, 32"` → `draft_gpu_split: [0, 32]`: the MTP draft component loads on the second GPU; image unchanged (`tabbyapi:slotfix-r1`) | 3 alternating pairs, canonical gate: prose leg A +2.9 / +2.2 / +2.0 % at 1 / 4 / 8 streams, leg B (26k, 4 streams) +2.2 %, means of per-request medians; greedy identical in all 6 boots; 0 OOM; GPU 0 free after the gate 125-139 MiB against 19-33 | 999,424 | [R694](../bench/results/r694-mtp-card1.md) |
+
 ## 2026-09-23: the recurrent-state slot pool stops losing slots
 
 | promoted (CEST) | change | gate evidence | page pool | results |

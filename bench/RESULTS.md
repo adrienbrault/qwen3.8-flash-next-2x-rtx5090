@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-24
+
+- [R694: the MTP draft component on the second GPU, promoted](results/r694-mtp-card1.md)
+
 ## 2026-09-23
 
 - [R676: the recurrent-state slot pool returns a slot when state construction fails, promoted](results/r676-slotfix.md)

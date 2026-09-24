@@ -147,6 +147,11 @@ DRAFT=${DRAFT:-3}
 #   one call per group, ~140 fewer launches/step at c8). Greedy byte-identical on all 6 prompts vs
 #   bverify-r1; canonical gate: c1 +1.2%, c4/4k +3.8%, c8 +4.4%, c4/26k -0.1%; acceptance parity.
 #   ROLLBACK: IMG=tabbyapi:bverify-r1 and drop EXL3_GR_STATE_IN_UP from EXTRA_ENV below.
+# R694 (2026-09-24): the MTP draft component loads on cuda:1 (DRAFT_GPU_SPLIT "0, 32" -> draft_gpu_split: [0, 32]). Card 1 idles
+# 74-75 % of the decode step (R680); the draft chain no longer queues behind the target's front on cuda:0. Canonical gate, 3
+# alternating pairs, same session: leg A c1 +2.9 %, c4 +2.2 %, c8 +2.0 % (mean ON/OFF; 8 of 9 cells > 1), leg B (26k c4) +2.2 %
+# (3/3 > 1); greedy 6/6 identical in every boot; 0 OOM; cuda:0 free after the gate 125-139 MiB vs the old placement's 19-33.
+# ROLLBACK: DRAFT_GPU_SPLIT= (empty).
 # R676 (2026-09-23): slotfix-r1 = stack-r1 + the recurrent-state slot fix (exllamav3/cache/cache.py: every alloc
 #   path took a slot off free_list before constructing the state, so a throwing constructor leaked the slot;
 #   8 leaks = "no available slots" 503s with a live server, R586c). The slot now returns to the pool on
@@ -215,6 +220,9 @@ SYS_KV=${SYS_KV:-0}
 #   CACHE_MODE   exllamav3 K,V bits ("8,8" served; "8,4" = K8V4). TabbyAPI accepts ^[2-8],[2-8]$ (backends/exllamav3/model.py:619).
 #   MOE_OFFLOAD  routed experts of the FIRST N MoE layers run on the CPU (exllamav3 moe_cpu_offload; frees VRAM on cuda:0).
 #   GPU_SPLIT    the manual split in GB, a YAML list body ("30, 30" served).
+#   DRAFT_GPU_SPLIT  the MTP draft component's split, a YAML list body. SERVED "0, 32" since R694 (2026-09-24): the draft
+#                component loads on cuda:1 (decode-push track B M4); leg A +2.0..+2.9 % mean over 3 ABAB pairs, leg B +2.2 %,
+#                greedy identical. DRAFT_GPU_SPLIT= (empty) restores the pre-R694 loader placement (no key emitted).
 # R483 (2026-09-18, user: "Keep experimenting and pushing the setup. Decode speed and kv pool size. Prefill speed seems
 # more than enough"): the loader's budget check runs every module on a dummy chunk of chunk_size tokens and keeps headroom
 # for the largest transient it measured (exllamav3 model/model_ls.py:230-270), so a smaller chunk trades prefill speed for
@@ -232,6 +240,7 @@ case "$NGRAM_RAM" in 0) NGRAM_RAM_BOOL=false;; 1) NGRAM_RAM_BOOL=true;; *) echo 
 CACHE_MODE=${CACHE_MODE:-8,8}
 MOE_OFFLOAD=${MOE_OFFLOAD:-0}
 GPU_SPLIT=${GPU_SPLIT:-30, 30}
+DRAFT_GPU_SPLIT=${DRAFT_GPU_SPLIT-0, 32}   # R694 served value; set empty to drop the key
 # R660 (2026-09-23): the nvfp4kv-r1 image adds NVFP4 sides (exllamav3/cache/nvfp4.py parse_cache_mode: "nvfp4",
 # "nvfp4+s2", "8,nvfp4", ...). Any other image rejects them at load, so the launcher only lets the forms through.
 case "$CACHE_MODE" in [2-8],[2-8]|nvfp4*|[2-8],nvfp4*) ;; *) echo "ABORT: CACHE_MODE must be K,V bits 2-8 or an nvfp4 form (got $CACHE_MODE)"; exit 3;; esac
@@ -343,6 +352,7 @@ case "$DRAFT_MODE" in
   *) DRAFT_BLOCK="$DRAFT_BLOCK
   draft_num_tokens: $DRAFT
   ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
+  ${DRAFT_GPU_SPLIT:+draft_gpu_split: [$DRAFT_GPU_SPLIT]}
   draft_cache_mode: Q8
   dynamic_draft: $DYN";;
 esac

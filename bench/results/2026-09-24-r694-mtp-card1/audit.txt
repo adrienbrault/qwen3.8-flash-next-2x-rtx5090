@@ -1,0 +1,33 @@
+2026-09-24T06:12:38+00:00 [r694] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; host: avail 49673 shared 107 swap 8177/8191 
+2026-09-24T06:12:57+00:00 [r694] [A1] booted; free 1039 2531 ; draft split in config: 0 log lines; 
+2026-09-24T06:15:49+00:00 [r694] [A1] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 25 1913 
+2026-09-24T06:16:19+00:00 [r694] [B1] booted; free 1041 2049 ; draft split in config: 0 log lines; 
+  [B1] GREEDY B1 vs ref: 6 identical, IDENTICAL
+2026-09-24T06:19:32+00:00 [r694] [B1] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 131 1487 
+2026-09-24T06:19:49+00:00 [r694] [A2] booted; free 1039 2531 ; draft split in config: 0 log lines; 
+  [A2] GREEDY A2 vs ref: 6 identical, IDENTICAL
+2026-09-24T06:22:39+00:00 [r694] [A2] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 19 1903 
+2026-09-24T06:22:56+00:00 [r694] [B2] booted; free 1041 2429 ; draft split in config: 0 log lines; 
+  [B2] GREEDY B2 vs ref: 6 identical, IDENTICAL
+2026-09-24T06:25:43+00:00 [r694] [B2] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 125 1639 
+2026-09-24T06:26:00+00:00 [r694] [A3] booted; free 1039 2531 ; draft split in config: 0 log lines; 
+  [A3] GREEDY A3 vs ref: 6 identical, IDENTICAL
+2026-09-24T06:28:43+00:00 [r694] [A3] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 33 1919 
+2026-09-24T06:28:58+00:00 [r694] [B3] booted; free 1041 2429 ; draft split in config: 0 log lines; 
+  [B3] GREEDY B3 vs ref: 6 identical, IDENTICAL
+2026-09-24T06:31:39+00:00 [r694] [B3] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 139 1655 
+RATIO leg A pair 1 c1: OFF 212.8 ON 209.5 ON/OFF 0.985
+RATIO leg A pair 1 c4: OFF 130.8 ON 136.5 ON/OFF 1.044
+RATIO leg A pair 1 c8: OFF 85.1 ON 87.5 ON/OFF 1.028
+RATIO leg A pair 2 c1: OFF 210.6 ON 228.5 ON/OFF 1.085
+RATIO leg A pair 2 c4: OFF 129.7 ON 131.1 ON/OFF 1.011
+RATIO leg A pair 2 c8: OFF 87.1 ON 88.7 ON/OFF 1.018
+RATIO leg A pair 3 c1: OFF 298.1 ON 303.2 ON/OFF 1.017
+RATIO leg A pair 3 c4: OFF 162.9 ON 164.6 ON/OFF 1.010
+RATIO leg A pair 3 c8: OFF 89.2 ON 90.6 ON/OFF 1.015
+RATIO leg B pair 1 c4: OFF 123.6 ON 124.7 ON/OFF 1.009
+RATIO leg B pair 2 c4: OFF 123.6 ON 127.5 ON/OFF 1.032
+RATIO leg B pair 3 c4: OFF 122.0 ON 125.0 ON/OFF 1.025
+2026-09-24T06:31:39+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-24T06:31:56+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T06:31:56+00:00 [r694] === R694 DONE ===
