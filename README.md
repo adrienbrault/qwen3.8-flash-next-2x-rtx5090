@@ -10,7 +10,6 @@ Decode on the served configuration, 2026-09-24 ([R704][r704]): greedy, 1,024 for
 
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
-- The per-stream rate is 1.05 to 1.15 times the configuration served before R701, at every shape from 1 to 8 streams, code and prose ([R704][r704]).
 - The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy drops from two draft tokens to one ([Conditions](#conditions)).
 - Time to the first token is 0.13 s at 1 stream and 0.67 to 0.72 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
@@ -23,7 +22,7 @@ Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
 | page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
-| free VRAM after boot | 1,041 / 2,431 MiB (2026-09-24); 251 / 2,013 after a 1-to-8-stream decode ramp on the layout before R694 (2026-09-20) | [R704][r704], [R579][r579] |
+| free VRAM after boot | 1,041 / 2,431 MiB | [R704][r704] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
@@ -39,12 +38,11 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 ### Conditions
 
 - **Agent traffic.** On the same server, one 3,000-token generation at ~10k context decodes at 236 t/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). The three-agent figure is generated tokens over generation time in the server's own request log ([R583][r583]). A 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode; context depth and generation length do not account for the loss ([R583][r583]).
-- **Draft depth.** The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip from 5 to 6 streams; it is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
+- **Draft depth.** The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Two draft tokens at 5 streams put the dip at 6 rather than 5 ([R576][r576]).
 - **Code and prose.** Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft is one token deep, which caps what acceptance can add.
 - **Slots.** 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
-- **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moved the boundary layer to the other card, added 32,768 pool tokens and made that other card the bounding one ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
-- **GSM8K history.** Figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
+- **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
 
 ## Served configuration
 
@@ -127,7 +125,7 @@ Each entry names the change and the number that kept it out of the served config
 
 - **Decode rate per stream**: the median over requests of (tokens − 1) / (time of the last token − time of the first token).
 - **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 96.3 to 100 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 4 %.
-- **End-to-end burst aggregate**: all streams' tokens over the round's wall time, including time to the first token and the tail after the first stream finishes. It was this README's headline metric until R704. R580 published it for prose at 8 streams as 630 t/s on 2026-09-20; R704 re-measured 676 on the configuration served before R701 and 714 on the served one.
+- **End-to-end burst aggregate**: all streams' tokens over the round's wall time, including time to the first token and the tail after the first stream finishes.
 
 | streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose | end-to-end burst aggregate, t/s, code / prose |
 | ---: | ---: | ---: | ---: | ---: |
@@ -140,9 +138,7 @@ Each entry names the change and the number that kept it out of the served config
 | 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
 | 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
 
-The before/after-R701 comparison ran both configurations in the same session on two alternating boots per arm; the slower boot of the served configuration is faster than the faster boot of the previous one at every shape ([R704][r704]).
-
-**Prefill** ([R580][r580], 2026-09-20, one boot of the launcher served then): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. R701's overlays change decode kernels only, and R704 measured the same time to the first token on short prompts before and after R701.
+**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only, and time to the first token on short prompts is unchanged ([R704][r704]).
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
