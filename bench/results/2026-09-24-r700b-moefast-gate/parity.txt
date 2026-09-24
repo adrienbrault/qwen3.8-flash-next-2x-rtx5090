@@ -1,0 +1,26 @@
+[parity] device NVIDIA GeForce RTX 5090; KSPLIT=default
+[parity] dispatch K2 rows 4 mode 0: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, false, false>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 2: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, false, true>(MoeCoopParams)']
+[parity] real:model.language_model.layers.20.mlp K2: 468/468 equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 4 D28 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 4 D28 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 12 D60 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 12 D60 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 16 D77 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 16 D77 mode 2: 200/200 launches equal
+[parity] dispatch K3 rows 4 mode 0: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<3, 2, false, false>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 2: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<3, 2, false, true>(MoeCoopParams)']
+[parity] real:model.language_model.layers.3.mlp K3: 468/468 equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 4 D28 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 4 D28 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 12 D60 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 12 D60 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 16 D77 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 16 D77 mode 2: 200/200 launches equal
+[parity] synth:K2 K2: 468/468 equal
+[parity] synth:K3 K3: 468/468 equal
+[parity] synth:K4 K4: 468/468 equal
+[parity] 2352/2352 comparisons equal; dispatch ok
+PARITY PASS

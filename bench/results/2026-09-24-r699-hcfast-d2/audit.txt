@@ -1,0 +1,32 @@
+2026-09-24T07:24:34+00:00 [r699-hcfast-d2] queued behind: r698-hcfast-gate(pid 82232)
+2026-09-24T07:31:18+00:00 [r699-hcfast-d2] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T07:31:20+00:00 [r699-hcfast-d2] image tabbyapi:hcfast-r1: W0924 07:31:19.806000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+landed
+2026-09-24T07:31:26+00:00 [r699-hcfast-d2] parity rc=0: PARITY PASS
+2026-09-24T07:31:26+00:00 [r699-hcfast-d2] P1 ON arm: EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 (from R698 P0 v3-d2)
+2026-09-24T07:32:07+00:00 [r699-hcfast-d2]   P1 c4d3-A1 (flag 0) rc=0: events: 740.731222 ms capture, 23.147851 ms/iterate
+2026-09-24T07:32:49+00:00 [r699-hcfast-d2]   P1 c4d3-B1 (flag 1) rc=0: events: 664.688065 ms capture, 20.771502 ms/iterate
+2026-09-24T07:33:30+00:00 [r699-hcfast-d2]   P1 c4d3-A2 (flag 0) rc=0: events: 696.643209 ms capture, 21.770100 ms/iterate
+2026-09-24T07:34:10+00:00 [r699-hcfast-d2]   P1 c4d3-B2 (flag 1) rc=0: events: 675.313234 ms capture, 21.103539 ms/iterate
+2026-09-24T07:34:10+00:00 [r699-hcfast-d2]   c4d3 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:34:10+00:00 [r699-hcfast-d2]   c4d3 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:34:52+00:00 [r699-hcfast-d2]   P1 c8d1-A1 (flag 0) rc=0: events: 628.109195 ms capture, 19.628412 ms/iterate
+2026-09-24T07:35:29+00:00 [r699-hcfast-d2]   P1 c8d1-B1 (flag 1) rc=0: events: 601.362441 ms capture, 18.792576 ms/iterate
+2026-09-24T07:36:05+00:00 [r699-hcfast-d2]   P1 c8d1-A2 (flag 0) rc=0: events: 615.251495 ms capture, 19.226609 ms/iterate
+2026-09-24T07:36:42+00:00 [r699-hcfast-d2]   P1 c8d1-B2 (flag 1) rc=0: events: 599.095873 ms capture, 18.721746 ms/iterate
+2026-09-24T07:36:42+00:00 [r699-hcfast-d2]   c8d1 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:36:42+00:00 [r699-hcfast-d2]   c8d1 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:37:07+00:00 [r699-hcfast-d2]   P1 c1d3-A1 (flag 0) rc=0: events: 424.736266 ms capture, 13.273008 ms/iterate
+2026-09-24T07:37:31+00:00 [r699-hcfast-d2]   P1 c1d3-B1 (flag 1) rc=0: events: 396.183568 ms capture, 12.380737 ms/iterate
+2026-09-24T07:37:56+00:00 [r699-hcfast-d2]   P1 c1d3-A2 (flag 0) rc=0: events: 409.849203 ms capture, 12.807788 ms/iterate
+2026-09-24T07:38:21+00:00 [r699-hcfast-d2]   P1 c1d3-B2 (flag 1) rc=0: events: 399.616448 ms capture, 12.488014 ms/iterate
+2026-09-24T07:38:21+00:00 [r699-hcfast-d2]   c1d3 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:38:21+00:00 [r699-hcfast-d2]   c1d3 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:39:04+00:00 [r699-hcfast-d2]   greedy on: tabbyapi:hcfast-r1; flag in env: 1
+  [greedy on] GREEDY on vs ref: 6 identical, IDENTICAL
+  [greedy on] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T07:39:35+00:00 [r699-hcfast-d2]   greedy off: tabbyapi:hcfast-r1; flag in env: 0
+  [greedy off] GREEDY off vs ref: 6 identical, IDENTICAL
+  [greedy off] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T07:39:49+00:00 [sctl] GPU queue continues (r700-moefast-gate(pid 1577068)); leaving the GPUs to the next unit
+2026-09-24T07:39:49+00:00 [r699-hcfast-d2] === r699-hcfast-d2 DONE ===

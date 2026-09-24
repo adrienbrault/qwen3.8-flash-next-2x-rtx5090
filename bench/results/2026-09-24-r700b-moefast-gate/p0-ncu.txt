@@ -1,0 +1,18 @@
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 18 (/usr/bin/python3.12)
+[p0] K=2 model.language_model.layers.20.mlp: 1248000 B/expert, loaded in 0.2s
+==ERROR== ERR_NVGPUCTRPERM - The user does not have permission to access NVIDIA GPU Performance Counters on the target device 0. For instructions on enabling permissions and to get more information see https://developer.nvidia.com/ERR_NVGPUCTRPERM
+[p0] ncu ref K2/r1/D10
+[p0] ncu m2 K2/r1/D10
+[p0] ncu ref K2/r4/D28
+[p0] ncu m2 K2/r4/D28
+[p0] ncu ref K2/r16/D77
+[p0] ncu m2 K2/r16/D77
+[p0] K=3 model.language_model.layers.3.mlp: 1862400 B/expert, loaded in 0.2s
+[p0] ncu ref K3/r1/D10
+[p0] ncu m2 K3/r1/D10
+[p0] ncu ref K3/r4/D28
+[p0] ncu m2 K3/r4/D28
+[p0] ncu ref K3/r16/D77
+[p0] ncu m2 K3/r16/D77
+==PROF== Disconnected from process 18

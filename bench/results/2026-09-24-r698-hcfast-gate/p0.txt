@@ -1,0 +1,13 @@
+torch 2.9.0+cu128 CUDA 12.8 NVIDIA GeForce RTX 5090; H=4 D=2560 LR=320
+24 real sites, 6.59 MB int8 weights per site, 158 MB cycled
+R= 1  graph us/chain: reference   9.92 (1.00x)  copy   9.92 (1.00x)  v3   8.56 (0.86x)  v3-dots   9.58 (0.97x)  v3-up   8.91 (0.90x)  v3-d4   8.58 (0.86x)  v3-d2   8.56 (0.86x)  v3-d1   8.56 (0.86x)  v3-u4   8.57 (0.86x)  v3-u2   8.58 (0.86x)  v3-auto   8.58 (0.86x)  v3-dauto   8.57 (0.86x)  v3-uauto   8.57 (0.86x)  reference#2   9.96 (1.00x)   (504 chains each)
+      eager us/chain: reference  10.38  copy  10.55  v3   9.35  v3-dots  10.46  v3-up   9.47  v3-d4   9.21  v3-d2   8.98  v3-d1   8.94  v3-u4   8.94  v3-u2   8.94  v3-auto   8.94  v3-dauto   8.95  v3-uauto   8.94  reference#2  10.32
+R= 4  graph us/chain: reference  15.21 (1.00x)  copy  15.21 (1.00x)  v3  10.43 (0.69x)  v3-dots  12.90 (0.85x)  v3-up  12.76 (0.84x)  v3-d4  10.43 (0.69x)  v3-d2  10.62 (0.70x)  v3-d1  11.53 (0.76x)  v3-u4  10.43 (0.69x)  v3-u2  10.08 (0.66x)  v3-auto  11.15 (0.73x)  v3-dauto  11.52 (0.76x)  v3-uauto  10.08 (0.66x)  reference#2  15.23 (1.00x)   (504 chains each)
+      eager us/chain: reference  15.61  copy  15.62  v3  10.81  v3-dots  13.28  v3-up  13.21  v3-d4  10.81  v3-d2  11.04  v3-d1  11.89  v3-u4  10.83  v3-u2  10.45  v3-auto  11.53  v3-dauto  11.90  v3-uauto  10.46  reference#2  15.62
+R= 8  graph us/chain: reference  21.84 (1.00x)  copy  21.84 (1.00x)  v3  15.04 (0.69x)  v3-dots  18.70 (0.86x)  v3-up  18.21 (0.83x)  v3-d4  15.23 (0.70x)  v3-d2  14.77 (0.68x)  v3-d1  16.68 (0.76x)  v3-u4  15.47 (0.71x)  v3-u2  16.01 (0.73x)  v3-auto  15.22 (0.70x)  v3-dauto  14.78 (0.68x)  v3-uauto  15.51 (0.71x)  reference#2  21.92 (1.00x)   (504 chains each)
+      eager us/chain: reference  22.23  copy  22.23  v3  15.45  v3-dots  19.07  v3-up  18.63  v3-d4  15.67  v3-d2  15.14  v3-d1  17.08  v3-u4  15.87  v3-u2  16.42  v3-auto  15.62  v3-dauto  15.14  v3-uauto  15.90  reference#2  22.31
+R=16  graph us/chain: reference  29.03 (1.00x)  copy  29.00 (1.00x)  v3  28.38 (0.98x)  v3-dots  32.00 (1.10x)  v3-up  25.60 (0.88x)  v3-d4  25.04 (0.86x)  v3-d2  23.97 (0.83x)  v3-d1  27.05 (0.93x)  v3-u4  29.90 (1.03x)  v3-u2  30.21 (1.04x)  v3-auto  28.48 (0.98x)  v3-dauto  28.48 (0.98x)  v3-uauto  28.47 (0.98x)  reference#2  29.06 (1.00x)   (504 chains each)
+      eager us/chain: reference  29.39  copy  29.43  v3  28.84  v3-dots  32.42  v3-up  25.98  v3-d4  25.46  v3-d2  24.42  v3-d1  27.54  v3-u4  30.30  v3-u2  30.61  v3-auto  28.87  v3-dauto  28.87  v3-uauto  28.89  reference#2  29.46
+
+v3 / reference: R=4 0.686, R=16 0.978
+P0 MARGINAL (between the bars): run P1, it decides

@@ -1,0 +1,69 @@
+2026-09-24T07:39:32+00:00 [moefast] queued behind: r699-hcfast-d2(pid 634007)
+2026-09-24T07:39:49+00:00 [moefast] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T07:39:50+00:00 [moefast] building tabbyapi:moefast-r1 on tabbyapi:slotfix-r1
+  [build] Step 7/8 : RUN MAX_JOBS=${MAX_JOBS} bash /opt/moefast-r1/install-moefast.sh &&     python3 /opt/moefast-r1/test_moefast_trace_cpu.py &&     python3 -m py_compile /opt/moefast-r1/test_moefast_parity.py /opt/moefast-r1/bench_moefast_p0.py &&     python3 -c 'import torch, exllamav3_ext as e; assert e.moe_coop_v3_revision == 1; print("moefast r1 landed (default off: EXL3_MOE_COOP_V3 unset)")'
+  [build] moefast r1 landed: patch applied, exllamav3_ext rebuilt for sm_120, moe_coop_v3_revision=1, 45 V3 kernels (default off)
+  [build] moefast r1 landed (default off: EXL3_MOE_COOP_V3 unset)
+2026-09-24T07:46:02+00:00 [moefast] image tabbyapi:moefast-r1: landed
+2026-09-24T07:46:09+00:00 [moefast] parity rc=0: [parity] 2352/2352 comparisons equal; dispatch ok PARITY PASS 
+2026-09-24T07:46:41+00:00 [moefast] P0 rc=0
+  [p0] K2/r1/D10      ref   34.14 (1.000)  m1   34.46 (1.009)  m2   34.14 (1.000)   rot/a/b µs ref:0.0/18.8/13.4 m1:0.0/18.8/13.3 m2:0.0/18.8/13.4
+  [p0] K2/r4/D28      ref   66.66 (1.000)  m1   65.18 (0.978)  m2   56.35 (0.845)   rot/a/b µs ref:3.2/28.5/32.6 m1:3.4/27.4/32.5 m2:3.4/27.2/23.3
+  [p0] K2/r16/D77     ref  129.73 (1.000)  m1  117.28 (0.904)  m2  117.09 (0.903)   rot/a/b µs ref:7.4/72.6/47.2 m1:7.8/62.4/45.8 m2:7.8/62.2/45.9
+  [p0] K2/r4/D10      ref   45.15 (1.000)  m1   38.30 (0.848)  m2   37.98 (0.841)   rot/a/b µs ref:3.2/21.8/17.5 m1:3.4/16.7/16.0 m2:3.4/16.7/15.1
+  [p0] K2/r4/D20      ref   57.86 (1.000)  m1   56.22 (0.972)  m2   51.62 (0.892)   rot/a/b µs ref:3.2/27.4/24.4 m1:3.4/26.8/23.5 m2:3.4/26.9/19.0
+  [p0] K2/r4/D40      ref   96.96 (1.000)  m1   84.58 (0.872)  m2   70.75 (0.730)   rot/a/b µs ref:3.2/47.6/43.3 m1:3.8/38.6/40.0 m2:3.8/38.3/26.6
+  [p0] K2/r8/D40      ref  101.38 (1.000)  m1   88.74 (0.875)  m2   73.02 (0.720)   rot/a/b µs ref:4.5/47.8/46.4 m1:4.8/38.6/43.1 m2:4.8/38.5/27.9
+  [p0] K2/r12/D60     ref  130.18 (1.000)  m1  128.58 (0.988)  m2  107.39 (0.825)   rot/a/b µs ref:5.7/55.2/66.5 m1:6.0/54.1/66.0 m2:6.0/53.7/45.9
+  [p0] K2/r16/D40     ref   87.17 (1.000)  m1   74.82 (0.858)  m2   74.85 (0.859)   rot/a/b µs ref:7.5/48.0/28.9 m1:7.7/38.8/26.1 m2:7.7/38.9/26.1
+  [p0] K2/r16/D160    ref  230.08 (1.000)  m1  226.94 (0.986)  m2  226.98 (0.987)   rot/a/b µs ref:7.6/137.9/84.7 m1:8.0/138.5/79.8 m2:8.1/138.7/80.2
+  [p0] K3/r1/D10      ref   40.38 (1.000)  m1   40.32 (0.998)  m2   40.38 (1.000)   rot/a/b µs ref:0.0/22.1/16.3 m1:0.0/22.2/16.3 m2:0.0/22.2/16.3
+  [p0] K3/r4/D28      ref   78.98 (1.000)  m1   71.33 (0.903)  m2   62.59 (0.793)   rot/a/b µs ref:3.2/34.5/38.8 m1:3.6/30.9/34.6 m2:3.6/30.9/26.2
+  [p0] K3/r16/D77     ref  156.77 (1.000)  m1  133.57 (0.852)  m2  132.90 (0.848)   rot/a/b µs ref:7.4/90.2/56.7 m1:7.9/73.4/50.7 m2:7.9/73.5/50.4
+  [p0] K3/r4/D10      ref   51.65 (1.000)  m1   41.47 (0.803)  m2   40.26 (0.779)   rot/a/b µs ref:3.2/25.6/20.1 m1:3.4/18.4/17.4 m2:3.4/18.3/16.3
+  [p0] K3/r4/D20      ref   67.23 (1.000)  m1   61.02 (0.908)  m2   56.58 (0.842)   rot/a/b µs ref:3.2/32.8/28.8 m1:3.4/30.0/25.2 m2:3.4/30.0/21.3
+  [p0] K3/r4/D40      ref  115.81 (1.000)  m1   95.17 (0.822)  m2   81.50 (0.704)   rot/a/b µs ref:3.2/58.1/51.9 m1:3.8/45.9/43.1 m2:3.8/45.9/30.0
+  [p0] K3/r8/D40      ref  119.94 (1.000)  m1   97.98 (0.817)  m2   83.62 (0.697)   rot/a/b µs ref:4.5/58.3/54.6 m1:4.9/45.8/45.8 m2:4.9/45.8/31.2
+  [p0] K3/r12/D60     ref  154.75 (1.000)  m1  138.43 (0.895)  m2  117.79 (0.761)   rot/a/b µs ref:5.7/68.0/79.0 m1:6.1/60.2/70.2 m2:6.1/59.8/50.3
+  [p0] K3/r16/D40     ref  103.71 (1.000)  m1   85.02 (0.820)  m2   84.96 (0.819)   rot/a/b µs ref:7.5/58.6/35.2 m1:7.8/45.7/29.2 m2:7.8/45.8/29.4
+  [p0] K3/r16/D160    ref  277.47 (1.000)  m1  253.63 (0.914)  m2  253.60 (0.914)   rot/a/b µs ref:7.6/167.9/101.8 m1:8.2/154.7/91.6 m2:8.2/153.6/91.5
+  [p0] K2/r4/D28      best ratio 0.845  ({'ref': 1.0, 'm1': 0.9779164105585509, 'm2': 0.8454152651279278})
+  [p0] K2/r16/D77     best ratio 0.903  ({'ref': 1.0, 'm1': 0.9040453490213934, 'm2': 0.9025653180676688})
+  [p0] K3/r4/D28      best ratio 0.793  ({'ref': 1.0, 'm1': 0.9031604685254565, 'm2': 0.792544589003431})
+  [p0] K3/r16/D77     best ratio 0.848  ({'ref': 1.0, 'm1': 0.8520106701929809, 'm2': 0.8477240958195801})
+  [p0] control K2/r1/D10: {'ref': 1.0, 'm1': 1.0093721428057074, 'm2': 1.0}  ok
+  [p0] control K3/r1/D10: {'ref': 1.0, 'm1': 0.9984152940589347, 'm2': 1.0}  ok
+  [p0] MIXED: see HOW-TO-VERIFY.md §3 (P1 runs if the step prediction >= 0.4 ms at c1d3 or c8d1)
+  [p0] c1d3 m1: predicted step saving 0.21 ms (48 layers, events medians)
+  [p0] c1d3 m2: predicted step saving 0.63 ms (48 layers, events medians)
+  [p0] c8d1 / c4d3 m1: predicted step saving 0.84 ms (48 layers, events medians)
+  [p0] c8d1 / c4d3 m2: predicted step saving 0.87 ms (48 layers, events medians)
+2026-09-24T07:46:41+00:00 [moefast] P1 / ncu mode: EXL3_MOE_COOP_V3=2
+2026-09-24T07:46:45+00:00 [moefast] ncu rc=1;  bytes
+2026-09-24T07:47:23+00:00 [moefast]   P1 c4d3-A1 (V3=0) rc=0: events: 711.575511 ms capture, 22.236735 ms/iterate
+2026-09-24T07:48:02+00:00 [moefast]   P1 c4d3-B1 (V3=2) rc=0: events: 684.906378 ms capture, 21.403324 ms/iterate
+2026-09-24T07:48:38+00:00 [moefast]   P1 c4d3-A2 (V3=0) rc=0: events: 678.726538 ms capture, 21.210204 ms/iterate
+2026-09-24T07:49:10+00:00 [moefast]   P1 c4d3-B2 (V3=2) rc=0: events: 634.934035 ms capture, 19.841689 ms/iterate
+2026-09-24T07:49:10+00:00 [moefast]   c4d3 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:49:10+00:00 [moefast]   c4d3 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:49:48+00:00 [moefast]   P1 c8d1-A1 (V3=0) rc=0: events: 621.076881 ms capture, 19.408653 ms/iterate
+2026-09-24T07:50:25+00:00 [moefast]   P1 c8d1-B1 (V3=2) rc=0: events: 605.216128 ms capture, 18.913004 ms/iterate
+2026-09-24T07:51:02+00:00 [moefast]   P1 c8d1-A2 (V3=0) rc=0: events: 622.952394 ms capture, 19.467262 ms/iterate
+2026-09-24T07:51:39+00:00 [moefast]   P1 c8d1-B2 (V3=2) rc=0: events: 599.227022 ms capture, 18.725844 ms/iterate
+2026-09-24T07:51:39+00:00 [moefast]   c8d1 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:51:39+00:00 [moefast]   c8d1 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:52:04+00:00 [moefast]   P1 c1d3-A1 (V3=0) rc=0: events: 419.945601 ms capture, 13.123300 ms/iterate
+2026-09-24T07:52:29+00:00 [moefast]   P1 c1d3-B1 (V3=2) rc=0: events: 422.208939 ms capture, 13.194029 ms/iterate
+2026-09-24T07:52:54+00:00 [moefast]   P1 c1d3-A2 (V3=0) rc=0: events: 411.055701 ms capture, 12.845491 ms/iterate
+2026-09-24T07:53:19+00:00 [moefast]   P1 c1d3-B2 (V3=2) rc=0: events: 421.575976 ms capture, 13.174249 ms/iterate
+2026-09-24T07:53:19+00:00 [moefast]   c1d3 pair 1: sequence hashes IDENTICAL
+2026-09-24T07:53:19+00:00 [moefast]   c1d3 pair 2: sequence hashes IDENTICAL
+2026-09-24T07:54:04+00:00 [moefast]   greedy on: tabbyapi:moefast-r1; flag in env: 1
+  [greedy on] GREEDY on vs ref: 6 identical, IDENTICAL
+  [greedy on] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T07:54:34+00:00 [moefast]   greedy off: tabbyapi:moefast-r1; flag in env: 0
+  [greedy off] GREEDY off vs ref: 6 identical, IDENTICAL
+  [greedy off] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T07:54:48+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-24T07:55:03+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T07:55:03+00:00 [moefast] === moefast r1 DONE ===

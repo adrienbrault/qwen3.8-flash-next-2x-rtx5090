@@ -1,0 +1,27 @@
+PASS c6 fills 16 rows [2, 2, 2, 2, 1, 1]
+PASS c7 fills 16 rows [2, 2, 1, 1, 1, 1, 1]
+PASS c5 fills 16 rows [3, 2, 2, 2, 2]
+PASS c8 no spare stays uniform [1, 1, 1, 1, 1, 1, 1, 1]
+PASS c4 at max_draft stays uniform [3, 3, 3, 3]
+PASS c3 spare>0 but capped [3, 3, 3]
+PASS +2 cap respected [3, 3]
+PASS d0=0 caps at +2 [2, 2, 2]
+PASS over-budget policy unchanged [3, 3, 3, 3, 3, 3]
+PASS EMA ranks job 4 first [2, 2, 2, 1, 2, 1]
+PASS ties rotate {(1, 2, 2, 2, 2, 1), (2, 1, 1, 2, 2, 2), (2, 2, 1, 1, 2, 2), (2, 2, 2, 1, 1, 2), (1, 1, 2, 2, 2, 2), (2, 2, 2, 2, 1, 1)}
+PASS deterministic [1, 1, 2, 2, 2, 2]
+PASS row_index pads excluded [0, 1, 2, 3, 4]
+PASS row_index c6 = 16 rows [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16]
+PASS row_index uniform = identity [0, 1, 2, 3]
+PASS ema lazily inits to prior [0.8, 0.8, 0.8]
+PASS ema_for idempotent 
+PASS ema hit [0.9, 0.4, 0.8]
+PASS ema miss [0.9, 0.4, 0.8]
+PASS ema untested level untouched [0.9, 0.4, 0.8]
+PASS full accept raises hit levels [0.75, 0.75, 0.5]
+PASS first-level miss [0.4, 0.8, 0.8]
+PASS oob missed_level ignored [0.9, 0.9, 0.8]
+PASS pad accounting nets zero num_rejected=2 pads=2
+PASS real rejects exclude pads num_rejected=3 pads=2 d_j=1
+
+25/25 passed

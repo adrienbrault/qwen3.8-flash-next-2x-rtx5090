@@ -1,0 +1,32 @@
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 18 (/usr/bin/python3.12)
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "hc_apply_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_dots_i8_kernel": 0%....50%....100% - 19 passes
+==PROF== Profiling "gr_v2_up_i8_state_kernel": 0%....50%....100% - 19 passes
+torch 2.9.0+cu128 CUDA 12.8 NVIDIA GeForce RTX 5090; H=4 D=2560 LR=320
+3 real sites, 6.59 MB int8 weights per site, 20 MB cycled
+R=4: one chain per variant issued for ncu
+R=16: one chain per variant issued for ncu
+==PROF== Disconnected from process 18
+==PROF== Report: /results/hc-src.ncu-rep

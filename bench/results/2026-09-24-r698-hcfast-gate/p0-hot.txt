@@ -1,0 +1,14 @@
+torch 2.9.0+cu128 CUDA 12.8 NVIDIA GeForce RTX 5090; H=4 D=2560 LR=320
+1 real sites, 6.59 MB int8 weights per site, 7 MB cycled
+R= 1  graph us/chain: reference   9.58 (1.00x)  v3   8.20 (0.86x)  v3-auto   8.20 (0.86x)  reference#2  10.03 (1.05x)   (504 chains each)
+      eager us/chain: reference   8.04  v3   6.65  v3-auto   6.76  reference#2   8.47
+R= 4  graph us/chain: reference  14.35 (1.00x)  v3  10.26 (0.71x)  v3-auto  12.29 (0.86x)  reference#2  14.34 (1.00x)   (504 chains each)
+      eager us/chain: reference  13.70  v3   9.86  v3-auto  10.33  reference#2  13.40
+R= 8  graph us/chain: reference  22.53 (1.00x)  v3  16.39 (0.73x)  v3-auto  16.39 (0.73x)  reference#2  22.53 (1.00x)   (504 chains each)
+      eager us/chain: reference  20.44  v3  15.02  v3-auto  14.31  reference#2  20.45
+R=16  graph us/chain: reference  30.73 (1.00x)  v3  30.71 (1.00x)  v3-auto  30.71 (1.00x)  reference#2  30.73 (1.00x)   (504 chains each)
+      eager us/chain: reference  29.47  v3  29.03  v3-auto  29.03  reference#2  29.58
+
+CONTROL FAIL R=1: reference#2 10.03 vs reference 9.58 us (drift > 3 %)
+v3 / reference: R=4 0.715, R=16 1.000
+P0 MARGINAL (between the bars): run P1, it decides

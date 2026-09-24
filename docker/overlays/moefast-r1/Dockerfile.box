@@ -1,0 +1,21 @@
+# moefast r1: routed-expert MoE coop kernels with a working weight prefetch (cp.async ring + counted wait),
+# one-slice activation prefetch, one acq_rel counter arrival instead of the block-wide fence pairs, and
+# (mode 2) the narrow down stage merged per 128-column chunk.
+# Opt-in EXL3_MOE_COOP_V3=1|2 (read per launch, on top of the served EXL3_MOE_COOP_V2=1, bsz > 1, K 2..4);
+# unset = the served V2 kernels, whose SASS is unchanged by the patch.
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:slotfix-r1 -t tabbyapi:moefast-r1 .
+#
+# Build context = this directory. No heredocs (legacy builder). The CPU model test runs during the build; the
+# GPU parity test and the P0 bench are copied to /opt/moefast-r1/ with the d0 harness they import.
+ARG BASE=tabbyapi:slotfix-r1
+FROM ${BASE}
+ARG BASE
+ARG MAX_JOBS=4
+COPY moefast-r1.patch rebuild-native.py install-moefast.sh test_moefast_parity.py bench_moefast_p0.py test_moefast_trace_cpu.py quick-nvcc.sh /opt/moefast-r1/
+COPY d0/d0_microbench.py /opt/moefast-r1/d0/
+RUN MAX_JOBS=${MAX_JOBS} bash /opt/moefast-r1/install-moefast.sh && \
+    python3 /opt/moefast-r1/test_moefast_trace_cpu.py && \
+    python3 -m py_compile /opt/moefast-r1/test_moefast_parity.py /opt/moefast-r1/bench_moefast_p0.py && \
+    python3 -c 'import torch, exllamav3_ext as e; assert e.moe_coop_v3_revision == 1; print("moefast r1 landed (default off: EXL3_MOE_COOP_V3 unset)")'
+LABEL local.moefast.base="${BASE}"

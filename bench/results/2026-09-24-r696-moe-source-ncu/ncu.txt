@@ -1,0 +1,38 @@
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 19 (/usr/bin/python3.12)
+[d0] meta {"variant": "served", "mode": "ncu", "sms": 170, "l2_bytes": 100663296, "int8_gemv_max_k": 6}
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_rot_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_a_kernel": 0%....50%....100% - 34 passes
+==PROF== Profiling "exl3_moe_coop_b_kernel": 0%....50%....100% - 34 passes
+[d0] done: /results/d0/ncu-cells.jsonl
+==PROF== Disconnected from process 19
+==PROF== Report: /results/moe-src.ncu-rep

@@ -1,0 +1,24 @@
+exllamav3 /opt/venv/lib/python3.12/site-packages/exllamav3/__init__.py
+torch 2.9.0+cu128 CUDA 12.8 NVIDIA GeForce RTX 5090
+H=4 D=2560 LR=320; V3 kernels apply to this shape: True
+weights: REAL, 5 sites from /models/qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+
+[1] kernel parity: rows x sites x mixed dtype x configurations
+  2080/2080 identical
+
+[2] GatedResidual._mix, MIX_V3 on vs off
+  80/80 identical
+
+[3] fuzz, 200 seeds
+  200/200 identical
+
+[4] graph capture + 20 replays
+  80/80 identical
+
+[4b] auto tile captured cold, fresh process
+  AUTO-CAPTURE 10/10
+
+[5] misaligned dots workspace -> V3 up declines, outputs exact
+  3/3 identical
+
+PARITY PASS
