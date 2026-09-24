@@ -6,7 +6,7 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on the served configuration, 2026-09-24 ([R704][r704]): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on `tabbyapi:stack-r2`, the configuration served from 2026-09-24 10:46 to 22:10 CEST, measured 2026-09-24 ([R704][r704], results `2026-09-24-r704-decode-curve-ab`): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. The configuration served since 22:10 CEST, `tabbyapi:stack-r3`, has no decode curve of its own yet; its canonical-gate ratios are under [What the stack is](#what-the-stack-is). Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
@@ -22,7 +22,7 @@ Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
 | page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
-| free VRAM after boot | 1,041 / 2,431 MiB | [R704][r704] |
+| free VRAM after boot | 1,033 / 2,421 MiB | [R716b][r716b] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
@@ -46,7 +46,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 ## Served configuration
 
-- Since 2026-09-24 10:46 CEST ([R701][r701]): image `tabbyapi:stack-r2`, launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- Since 2026-09-24 22:10 CEST ([R716b][r716b]): image `tabbyapi:stack-r3`, launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
 - 8 slots, 999,424-token page pool, 8-bit KV.
 - MTP draft depth 3 up to 4 jobs, 2 at 5 jobs, 1 above; a windowed draft cache of 16,384 tokens per slot (`EXL3_MTP_KV_WINDOW=16384`).
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
@@ -72,6 +72,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
   - a slot returned to the recurrent-state pool when state construction fails; before, each failure lost one of the 8 slots until restart ([R676][r676]).
   - the MTP draft component loaded on the second GPU (`draft_gpu_split: [0, 32]`), +2.0 to +2.9 % prose decode at 1 to 8 streams and +2.2 % at 26k context, mean of three alternating pairs, greedy output identical ([R694][r694]).
   - the hyper-connection mixer's int8 kernels with each weight converted once per iteration, the loads batched and the reduction as a reduce-scatter ([R698, R699][r698]), and the routed-expert MoE decode kernels with a cp.async weight ring, an activation prefetch and one counter arrival per item ([R700b][r700b]); both bitwise-identical, admitted on the stack-track rule in [`docs/PROMOTION.md`][promotion] and promoted together: 1.051 to 1.093 times the per-stream prose decode rate at 1 to 8 streams and 1.064 times at 26k context, mean of three alternating pairs, greedy output identical ([R701][r701]).
+  - a second batch of bitwise-identical decode changes: the mixer kernels' round 2 with per-row-count tiles ([R702][r702]); the Gated-DeltaNet recurrence held in registers, the QSA indexer as a parallel CUDA-graph branch and compile options for the QSA split and combine kernels ([R712][r712]); V2 twins of the dense K=4 decode GEMM, mgemm and gemv kernels ([R714][r714]); the round-2 MoE decode kernels with the shared expert forked before the router ([R713][r713]). Promoted together on 2026-09-24 as `stack-r3`: 1.149, 1.088 and 1.087 times the per-stream prose decode rate of `stack-r2` at 1, 4 and 8 streams at about 4k tokens of context, and 1.104 times at 26k tokens and 4 streams (canonical gate, 1,024 forced tokens, greedy, mean over three alternating pairs of the per-request median, results `2026-09-24-r716b-stack-r3`); logits identical to `stack-r2` at every served decode shape ([R716b, R716c][r716b]).
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs, depth 2 at 5 and depth 1 above (`[[4, 3], [5, 2], [8, 1]]`, since [R576][r576]). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
@@ -121,7 +122,7 @@ Each entry names the change and the number that kept it out of the served config
 
 ## How the numbers are measured
 
-**Decode** ([R704][r704], 2026-09-24, results `2026-09-24-r704-decode-curve-ab`, driver [`scripts/r704-decode-curve-ab.sh`](scripts/r704-decode-curve-ab.sh)): `fn_bench` ([`bench/probe.py`][probe]) against the served launcher on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off.
+**Decode** ([R704][r704], 2026-09-24, results `2026-09-24-r704-decode-curve-ab`, driver [`scripts/r704-decode-curve-ab.sh`](scripts/r704-decode-curve-ab.sh)): `fn_bench` ([`bench/probe.py`][probe]) against the launcher of `tabbyapi:stack-r2` on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off.
 
 - **Decode rate per stream**: the median over requests of (tokens − 1) / (time of the last token − time of the first token).
 - **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 96.3 to 100 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 4 %.
@@ -138,7 +139,7 @@ Each entry names the change and the number that kept it out of the served config
 | 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
 | 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
 
-**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only, and time to the first token on short prompts is unchanged ([R704][r704]).
+**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only; time to the first token on short prompts was unchanged through `stack-r2` ([R704][r704]) and was not measured on `stack-r3`.
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
@@ -349,4 +350,9 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r698]: bench/results/r698-hcfast.md
 [r700b]: bench/results/r700b-moefast.md
 [r701]: bench/results/r701-stack-r2.md
+[r702]: bench/results/r702-hcfast-r2.md
+[r712]: bench/results/r712-latchain-r1.md
+[r713]: bench/results/r713-moefast-r3.md
+[r714]: bench/results/r714-densegemm-r2.md
+[r716b]: bench/results/r716b-stack-r3.md
 [r586]: bench/results/r586-swebench-500.md

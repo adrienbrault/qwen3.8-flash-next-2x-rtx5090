@@ -4,7 +4,13 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-24
 
+- [R716b, R716c: stack-r3 (hcfast r2, latchain, densegemm r2, moefast r3), promoted; bitwise-identical to stack-r2 at every served decode shape](results/r716b-stack-r3.md)
+- [R714: densegemm r2's twins no longer run out of local memory; mode 1 is bitwise-identical and 5.2 / 2.2 / 2.1 % faster per iterate at 1 / 4 / 8 streams](results/r714-densegemm-r2.md)
+- [R713: moefast r3 is bitwise-identical; forking the shared expert before the router is 1.2 % faster per iterate at 8 streams and 3.2 % at 1 stream](results/r713-moefast-r3.md)
+- [R710, R710b: densegemm r1's gemv twin is bitwise-identical and 0.37 ms faster per iterate at 1 stream; its gemm and mgemm twins are 2.6 to 6.6 times slower](results/r710b-densegemm-gv.md)
+- [R712: latchain r1 is bitwise-identical; the register-resident GDN recurrence is accepted, all four levers together are 3.5 to 4.8 % faster per iterate](results/r712-latchain-r1.md)
 - [R704: the decode curve of the served configuration, measured after the first token: 1.05 to 1.15 times the previous configuration's per-stream rate at 1 to 8 streams; the README headline moves from the round-wall aggregate to the decode rate](results/r704-decode-curve.md)
+- [R702: hcfast r2 is bitwise-identical and 1.2 % faster at 1 stream in 5 of 5 rounds; flat at 4 and 8 streams](results/r702-hcfast-r2.md)
 - [R701: stack-r2 (hcfast r1 + moefast r1), promoted](results/r701-stack-r2.md)
 - [R700b: moefast r1 is bitwise-identical; mode 2 is 5 % faster at 4 streams and 3 % at 8](results/r700b-moefast.md)
 - [R698, R699: hcfast r1 is bitwise-identical; the DOTS_B=2 tile is accepted, the 8/8 default regresses at 8 streams](results/r698-hcfast.md)

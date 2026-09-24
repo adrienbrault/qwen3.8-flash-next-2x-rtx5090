@@ -1,6 +1,6 @@
 # stack-r2
 
-`tabbyapi:stack-r2` is the image served since 2026-09-24 10:46 CEST ([R701](../../../bench/results/r701-stack-r2.md)). It is `tabbyapi:slotfix-r1` with two overlays applied in sequence. Each overlay applies its patch to the installed `exllamav3` package with `patch --fuzz=0` after a dry run, rebuilds `exllamav3_ext` for `sm_120` and asserts its landing marker. Both patches touch `exllamav3_ext/bindings.cpp`, and they apply in this order at fuzz 0 with no offsets on the `slotfix-r1` tree.
+`tabbyapi:stack-r2` was the image served from 2026-09-24 10:46 to 22:10 CEST ([R701](../../../bench/results/r701-stack-r2.md)) and is the base of `tabbyapi:stack-r3` ([`../stack-r3/README.md`](../stack-r3/README.md)). It is `tabbyapi:slotfix-r1` with two overlays applied in sequence. Each overlay applies its patch to the installed `exllamav3` package with `patch --fuzz=0` after a dry run, rebuilds `exllamav3_ext` for `sm_120` and asserts its landing marker. Both patches touch `exllamav3_ext/bindings.cpp`, and they apply in this order at fuzz 0 with no offsets on the `slotfix-r1` tree.
 
 Build order, from the repository root:
 

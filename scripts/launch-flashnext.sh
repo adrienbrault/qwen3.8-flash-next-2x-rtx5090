@@ -164,7 +164,18 @@ DRAFT=${DRAFT:-3}
 #   failure, and a double release is refused. Greedy byte-identical on all 6 prompts; 6 injected constructor
 #   faults -> 6 slots returned; 18 min churn with ~25 % mid-stream cancels, 1,497 requests, 0 errors; c8 8/8
 #   after. ROLLBACK: IMG=tabbyapi:stack-r1
-DAILY_IMG=tabbyapi:stack-r2
+# R716b/R716c (2026-09-24, second stack promotion under the stack-track rule, docs/PROMOTION.md): image tabbyapi:stack-r3 = stack-r2 + one
+#   series (docker/overlays/stack-r3, INCLUDE "mf3 dg2"): hcfast r2, latchain-r1b, moefast r3, densegemm r2, dense-lcguard.
+#   Flags: HC2 (EXL3_HC_MIX_V3=2 + R702 P0 tables, replacing HC1's DOTS_B=2 UP_B=8), RR (EXL3_LC_GDN_RR=1), QT (QSA split
+#   2 / combine 1 / div16), QF (EXL3_LC_QSA_FORK=1), DG (EXL3_DENSE_V2=1, every r2 twin), MF3 (EXL3_MOE_COOP_V3=3,
+#   MAP 2-4:2, EXL3_SHARED_EXPERT_EARLY=1). Bitwise identical: kernel parity, P1 hashes (7 rounds, every leave-one-out),
+#   fn_greedy 0/7 boots, and logits-level model parity OFF = U = OFF2 = stack-r2 at every served decode shape (b1d3 b2d3
+#   b3d3 b4d3 b5d2 b6d1 b7d1 b8d1, R716c). R716b's own "DECISION UNION: REJECT" came only from greedy_streams' max-of-3
+#   rule at c4/c8, where the daily diverges from itself on 60-76 % of streams (review: 64 % false alarms; the rule is
+#   replaced). Served canonical gate, 3 ABAB pairs: leg A c1 1.149, c4 1.088, c8 1.087, leg B c4 1.104, aggregate 1.107;
+#   UP-line free -8/-10 MiB vs A. ROLLBACK: IMG=tabbyapi:stack-r2 and EXTRA_ENV = R701's 27 keys (the 23 below plus
+#   EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 EXL3_MOE_COOP_V3=2).
+DAILY_IMG=tabbyapi:stack-r3
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -268,7 +279,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 EXL3_MOE_COOP_V3=2}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
