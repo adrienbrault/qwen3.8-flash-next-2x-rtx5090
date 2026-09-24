@@ -71,7 +71,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-999424}   # R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+CACHE=${CACHE:-983040}   # R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -175,7 +175,16 @@ DRAFT=${DRAFT:-3}
 #   replaced). Served canonical gate, 3 ABAB pairs: leg A c1 1.149, c4 1.088, c8 1.087, leg B c4 1.104, aggregate 1.107;
 #   UP-line free -8/-10 MiB vs A. ROLLBACK: IMG=tabbyapi:stack-r2 and EXTRA_ENV = R701's 27 keys (the 23 below plus
 #   EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 EXL3_MOE_COOP_V3=2).
-DAILY_IMG=tabbyapi:stack-r3
+# R717/R717b/R717c (2026-09-25, rows32-r4 on stack-r3; pool trade approved by the user): image tabbyapi:stack-r3-rows32
+#   = stack-r3 + docker/overlays/rows32-r4 (host-only, SASS unchanged); flags EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1
+#   EXL3_SHARED_EXPERT_ROWS32=1, MAP 2-4:2,17-32:2; policy [[4, 3], [8, 2]] (MTP depth 2 at c6-c8: 18/21/24 verify rows);
+#   pool 983,040 (-16,384 tokens, -1.6 %). Bitwise at every shape (c6/c7/c8 depth 2 deterministic, flags inert at <= 16
+#   rows); greedy_conc c8-vs-c1 rate 89.1 % vs the daily's own 92.2 %. Per-stream decode vs stack-r3, 3 ABAB pairs, unique
+#   prompts (R717c): c6 4k +16.0 / +20.8 % (code / prose), 16k +0.5 / +6.0 %, 32k +5.4 / +2.5 %; c8 4k +1.7 / +5.1 %, 16k
+#   +2.3 / +5.6 %, 32k +4.0 / +0.4 %; c1-c5 unchanged (R717). Free at boot 1125 / 2513 MiB (stack-r3 at 999,424: 1033 / 2421).
+#   ROLLBACK: IMG=tabbyapi:stack-r3 CACHE=999424 DRAFT_POLICY='[[4, 3], [5, 2], [8, 1]]' and EXTRA_ENV = stack-r3's 39 keys
+#   (MAP 2-4:2, without the three ROWS32 keys).
+DAILY_IMG=tabbyapi:stack-r3-rows32
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -202,7 +211,7 @@ case "$DYN" in true|false) ;; *) echo "DYN must be true|false"; exit 3;; esac
 DRAFT_MODE=${DRAFT_MODE:-mtp}
 case "$DRAFT_MODE" in model|disabled|mtp|ngram) ;; *) echo "ABORT: DRAFT_MODE must be model|disabled|mtp|ngram (got $DRAFT_MODE)"; exit 3;; esac
 DRAFT_POLICY_SET=${DRAFT_POLICY+set}
-DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [5, 2], [8, 1]]}
+DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [8, 2]]}   # R717c: rows32 (depth 2 at c6-c8, 18-24 verify rows); was [[4, 3], [5, 2], [8, 1]]
 # DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
 # the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
 # ABOVE the last ceiling (8). That branch is unreachable here because the generator clamps max_batch_size to
@@ -279,7 +288,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,

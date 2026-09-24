@@ -6,11 +6,11 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on `tabbyapi:stack-r2`, the configuration served from 2026-09-24 10:46 to 22:10 CEST, measured 2026-09-24 ([R704][r704], results `2026-09-24-r704-decode-curve-ab`): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. The configuration served since 22:10 CEST, `tabbyapi:stack-r3`, has no decode curve of its own yet; its canonical-gate ratios are under [What the stack is](#what-the-stack-is). Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on `tabbyapi:stack-r2`, the configuration served from 2026-09-24 10:46 to 22:10 CEST, measured 2026-09-24 ([R704][r704], results `2026-09-24-r704-decode-curve-ab`): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. The configurations served since, `tabbyapi:stack-r3` (from 22:10 CEST) and `tabbyapi:stack-r3-rows32` (from 2026-09-25 01:05 CEST), have no decode curve of their own yet; their ratios against the configuration before each are under [What the stack is](#what-the-stack-is). Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
-- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy drops from two draft tokens to one ([Conditions](#conditions)).
+- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy of that configuration drops from two draft tokens to one; the policy served since 2026-09-25 keeps two draft tokens up to 8 streams ([Conditions](#conditions)).
 - Time to the first token is 0.13 s at 1 stream and 0.67 to 0.72 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
 
@@ -21,8 +21,8 @@ Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 
 | | value | source |
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
-| page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
-| free VRAM after boot | 1,033 / 2,421 MiB | [R716b][r716b] |
+| page pool | 983,040 tokens, 15,236 B per token: 1.52 GB per 100k, 15.0 GB total | [R579][r579], [R717c][r717] |
+| free VRAM after boot | 1,125 / 2,513 MiB | [R717c][r717] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
@@ -38,17 +38,17 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 ### Conditions
 
 - **Agent traffic.** On the same server, one 3,000-token generation at ~10k context decodes at 236 t/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). The three-agent figure is generated tokens over generation time in the server's own request log ([R583][r583]). A 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode; context depth and generation length do not account for the loss ([R583][r583]).
-- **Draft depth.** The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Two draft tokens at 5 streams put the dip at 6 rather than 5 ([R576][r576]).
-- **Code and prose.** Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft is one token deep, which caps what acceptance can add.
+- **Draft depth.** In the configuration of the decode curve the draft policy drops to one draft token at 6 streams, because a deeper draft exceeded the 16 verify rows the cooperative MoE decode kernels took ([R560][r560], [R562][r562]); two draft tokens at 5 streams put the dip at 6 rather than 5 ([R576][r576]). Since 2026-09-25 the decode paths take up to 32 rows and the policy keeps two draft tokens at 6 to 8 streams (18 to 24 verify rows, [R717, R717c][r717]).
+- **Code and prose.** Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft in that measurement is one token deep, which caps what acceptance can add.
 - **Slots.** 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
 - **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
 
 ## Served configuration
 
-- Since 2026-09-24 22:10 CEST ([R716b][r716b]): image `tabbyapi:stack-r3`, launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
-- 8 slots, 999,424-token page pool, 8-bit KV.
-- MTP draft depth 3 up to 4 jobs, 2 at 5 jobs, 1 above; a windowed draft cache of 16,384 tokens per slot (`EXL3_MTP_KV_WINDOW=16384`).
+- Since 2026-09-25 01:05 CEST ([R717c][r717]): image `tabbyapi:stack-r3-rows32`, launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- 8 slots, 983,040-token page pool, 8-bit KV.
+- MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); a windowed draft cache of 16,384 tokens per slot (`EXL3_MTP_KV_WINDOW=16384`).
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
 
 ## What the stack is
@@ -73,8 +73,9 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
   - the MTP draft component loaded on the second GPU (`draft_gpu_split: [0, 32]`), +2.0 to +2.9 % prose decode at 1 to 8 streams and +2.2 % at 26k context, mean of three alternating pairs, greedy output identical ([R694][r694]).
   - the hyper-connection mixer's int8 kernels with each weight converted once per iteration, the loads batched and the reduction as a reduce-scatter ([R698, R699][r698]), and the routed-expert MoE decode kernels with a cp.async weight ring, an activation prefetch and one counter arrival per item ([R700b][r700b]); both bitwise-identical, admitted on the stack-track rule in [`docs/PROMOTION.md`][promotion] and promoted together: 1.051 to 1.093 times the per-stream prose decode rate at 1 to 8 streams and 1.064 times at 26k context, mean of three alternating pairs, greedy output identical ([R701][r701]).
   - a second batch of bitwise-identical decode changes: the mixer kernels' round 2 with per-row-count tiles ([R702][r702]); the Gated-DeltaNet recurrence held in registers, the QSA indexer as a parallel CUDA-graph branch and compile options for the QSA split and combine kernels ([R712][r712]); V2 twins of the dense K=4 decode GEMM, mgemm and gemv kernels ([R714][r714]); the round-2 MoE decode kernels with the shared expert forked before the router ([R713][r713]). Promoted together on 2026-09-24 as `stack-r3`: 1.149, 1.088 and 1.087 times the per-stream prose decode rate of `stack-r2` at 1, 4 and 8 streams at about 4k tokens of context, and 1.104 times at 26k tokens and 4 streams (canonical gate, 1,024 forced tokens, greedy, mean over three alternating pairs of the per-request median, results `2026-09-24-r716b-stack-r3`); logits identical to `stack-r2` at every served decode shape ([R716b, R716c][r716b]).
+  - decode paths for 17 to 32 rows (the routed-expert MoE decode in one launch, the shared expert and the dense GEMMs at 32 rows), so that 6 to 8 jobs verify at draft depth 2 instead of 1; host code only, each MoE output at 17 to 32 rows equal to two served 16-row calls. Promoted on 2026-09-25 as `stack-r3-rows32` with the policy `[[4, 3], [8, 2]]` and a page pool 1.6 % smaller: about +3 % per-stream decode (0 to +6 % across cells) at 6 and 8 streams at the 16k and 32k context settings (prompts of 12,000 to 44,000 tokens), and up to +16 to +21 % at 6 streams with 4k context, where the output is highly predictable; 1 to 5 streams unchanged (1,024 forced tokens, greedy, code and prose, mean over three alternating pairs of the per-boot median, results `2026-09-24-r717c-rows32-context`, [R717, R717b, R717c][r717]).
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
-- **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs, depth 2 at 5 and depth 1 above (`[[4, 3], [5, 2], [8, 1]]`, since [R576][r576]). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
+- **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 2 at 5 to 8 (`[[4, 3], [8, 2]]`, since [R717c][r717]; from [R576][r576] to then depth 1 at 6 to 8, `[[4, 3], [5, 2], [8, 1]]`). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
 - **Guard rails**: the launcher refuses to start without the checkpoint or the image, stops any other engine holding the cards, waits for them to drain and mounts the kernel caches. Every promotion re-runs the gates in [`docs/PROMOTION.md`][promotion] on the exact launcher.
 
@@ -97,8 +98,8 @@ Read from the box on 2026-09-19; every number in this README was measured in thi
 Each entry names the change and the number that kept it out of the served configuration. c1, c4 and c6 mean 1, 4 and 6 concurrent streams.
 
 - Mixed draft depth per job inside one verify batch, so 5 to 7 streams fill the 16 verify rows: 0.79× at 5 streams and 0.84× at 7, code, 256 forced tokens, greedy. The verify window grows to the deepest job in the batch, which adds a sequential draft level to every step ([R678b][r678b]).
-- 17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, −14.5 % at 8 streams against drafting one token ([R566][r566]).
-- Draft depth 2 above 4 jobs: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows fall off the cooperative MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]).
+- 17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, −14.5 % at 8 streams against drafting one token ([R566][r566]). One launch of up to 32 rows is served since 2026-09-25 ([R717][r717]).
+- Draft depth 2 above 4 jobs on the 16-row decode paths: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows fell off the cooperative MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]). With the rows32 paths depth 2 at 6 to 8 jobs is served since 2026-09-25 ([R717][r717]).
 - Draft depth 4 at 1 stream, with or without a controller: costs 32,768 page-pool tokens and returns at most about +2 % ([R567][r567]).
 - A deeper MTP draft for a single decoding job (depth 4 or 5 instead of 3), all arms at a 753,664-token pool: +4.8 / +5.2 % code and −5.4 / −8.2 % prose at 1 stream against depth 3, 16,384 / 49,152 fewer pool tokens than the served 819,200 of that date, and a different greedy output (2026-09-19, [R537][r537]).
 - Adaptive MTP draft depth, round 2: −2.4 to −3.5 % prose at 1 stream, no gain on code ([R556][r556]).
@@ -139,7 +140,7 @@ Each entry names the change and the number that kept it out of the served config
 | 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
 | 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
 
-**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only; time to the first token on short prompts was unchanged through `stack-r2` ([R704][r704]) and was not measured on `stack-r3`.
+**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only; time to the first token on short prompts was unchanged through `stack-r2` ([R704][r704]) and was not measured on `stack-r3` or `stack-r3-rows32`.
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
@@ -355,4 +356,5 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r713]: bench/results/r713-moefast-r3.md
 [r714]: bench/results/r714-densegemm-r2.md
 [r716b]: bench/results/r716b-stack-r3.md
+[r717]: bench/results/r717-rows32.md
 [r586]: bench/results/r586-swebench-500.md
