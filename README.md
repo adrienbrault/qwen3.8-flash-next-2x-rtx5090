@@ -35,7 +35,7 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
 | page pool | 999,424 tokens, 15,236 B per token: 1.52 GB per 100k, 15.2 GB total | [R579][r579] |
-| free VRAM after boot | 1,041 / 2,531 MiB; 251 / 2,013 after a 1-to-8-stream decode ramp | [R579][r579] |
+| free VRAM after boot | 1,041 / 2,431 MiB (2026-09-24); 251 / 2,013 after a 1-to-8-stream decode ramp on the layout before R694 (2026-09-20) | [R704][r704], [R579][r579] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
@@ -51,7 +51,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 Conditions behind the figures and the table:
 
 - The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip in the end-to-end burst aggregate from 5 to 6 streams; it is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
-- Code decodes faster than prose at 1 stream because draft acceptance follows how predictable the text is ([R572][r572]).
+- Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft is one token deep, which caps what acceptance can add.
 - 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
 - The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moved the boundary layer to the other card, added 32,768 pool tokens and made that other card the bounding one ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
