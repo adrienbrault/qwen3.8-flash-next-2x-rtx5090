@@ -1,0 +1,411 @@
+2026-09-24T12:49:40+00:00 [latchain-r1] queued behind: r709c-drafttopk-r1(pid 97596)
+r710-densegemm-gate(pid 3622109)
+r711-draft-policy-p3(pid 91622)
+2026-09-24T13:49:52+00:00 [latchain-r1] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; BASE tabbyapi:stack-r2; IMG tabbyapi:stack-latchain-r1
+2026-09-24T13:49:52+00:00 [latchain-r1] building tabbyapi:stack-latchain-r1 on tabbyapi:stack-r2
+  [build] Step 6/7 : RUN MAX_JOBS=${MAX_JOBS} bash /opt/latchain-r1/install-latchain.sh &&     python3 /opt/latchain-r1/test_latchain_cpu.py &&     python3 -m py_compile /opt/latchain-r1/test_latchain_parity.py /opt/latchain-r1/bench_latchain_p0.py /opt/latchain-r1/lc_model_parity.py &&     python3 -c 'import torch, exllamav3_ext as e; assert e.latchain_revision == 1; print("latchain r1 landed (default off: EXL3_LC_* unset)")'
+  [build] latchain r1 landed: patch applied, exllamav3_ext rebuilt for sm_120, latchain_revision=1, 8 rr kernels, 12 served _128 kernels (default off)
+  [build] CPU PASS
+  [build] latchain r1 landed (default off: EXL3_LC_* unset)
+2026-09-24T13:56:30+00:00 [latchain-r1] image tabbyapi:stack-latchain-r1: W0924 13:56:29.877000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+latchain 1 moefast 1 latchain-r1
+2026-09-24T13:56:51+00:00 [latchain-r1] parity rc=0: comparisons equal: 272/272 (9 s) PARITY PASS 
+2026-09-24T13:56:55+00:00 [latchain-r1] P0 rc=0
+  [p0] GDN c1d3 (bsz 1, 4 rows/job, history 1): served 14.93 us, rr 9.92 us (-33.5 %), per step x36 -180.2 us
+  [p0] GDN c4d3 (bsz 4, 4 rows/job, history 1): served 27.85 us, rr 19.96 us (-28.3 %), per step x36 -283.9 us
+  [p0] GDN c8d1 (bsz 8, 2 rows/job, history 1): served 27.24 us, rr 24.39 us (-10.5 %), per step x36 -102.5 us
+  [p0] GDN c1d0 (bsz 1, 1 rows/job, history 0): served 3.53 us, rr 3.31 us (-6.3 %), per step x36 -8.0 us
+  [p0] GDN c4d0 (bsz 4, 1 rows/job, history 0): served 9.14 us, rr 8.84 us (-3.2 %), per step x36 -10.5 us
+  [p0] GDN c8d0 (bsz 8, 1 rows/job, history 0): served 18.62 us, rr 15.96 us (-14.3 %), per step x36 -95.9 us
+  [p0] QSA c1d3 best s2c1d1 20.51 us vs served 29.10 (-29.5 %; x12 layers -103.1 us/step)
+  [p0] QSA c4d3 best s2c1d1 37.68 us vs served 53.66 (-29.8 %; x12 layers -191.7 us/step)
+  [p0] QSA c8d1 best s2c1d1 40.21 us vs served 54.89 (-26.7 %; x12 layers -176.2 us/step)
+  [p0] QSA c1d0 best s4c1d1 20.15 us vs served 28.82 (-30.1 %; x12 layers -104.0 us/step)
+  [p0] QSA c4d0 best s4c2d1 22.09 us vs served 29.95 (-26.2 %; x12 layers -94.3 us/step)
+  [p0] QSA c8d0 best s2c2d1 29.46 us vs served 38.91 (-24.3 %; x12 layers -113.4 us/step)
+  [p0] QT summed drafting-shape us: served 137.65, s2c1d1 98.40
+  [p0] QT choice EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1
+2026-09-24T13:56:55+00:00 [latchain-r1] arms: OFF RR QF GF QT ALL (QT: 'EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1'); rounds 6; ALL = EXL3_LC_GDN_RR=1 EXL3_LC_QSA_FORK=1 EXL3_LC_GDN_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 
+2026-09-24T13:57:13+00:00 [latchain-r1]   model parity b1d3-OFF rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+2026-09-24T13:57:31+00:00 [latchain-r1]   model parity b1d3-ALL rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {'EXL3_LC_GDN_FORK': '1', 'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA
+2026-09-24T13:57:47+00:00 [latchain-r1]   model parity b1d3-OFF2 rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+  [mp b1d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b1d3-OFF2.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b1d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b1d3-ALL.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b1d3] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T13:58:05+00:00 [latchain-r1]   model parity b4d3-OFF rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+2026-09-24T13:58:25+00:00 [latchain-r1]   model parity b4d3-ALL rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {'EXL3_LC_GDN_FORK': '1', 'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA
+2026-09-24T13:58:44+00:00 [latchain-r1]   model parity b4d3-OFF2 rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+  [mp b4d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b4d3-OFF2.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b4d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b4d3-ALL.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b4d3] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T13:59:06+00:00 [latchain-r1]   model parity b8d1-OFF rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+2026-09-24T13:59:28+00:00 [latchain-r1]   model parity b8d1-ALL rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {'EXL3_LC_GDN_FORK': '1', 'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA
+2026-09-24T13:59:50+00:00 [latchain-r1]   model parity b8d1-OFF2 rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {'EXL3_LC_GDN_FORK': '0', 'EXL3_LC_GDN_RR': '0', 'EXL3_LC_QSA
+  [mp b8d1] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b8d1-OFF2.json: forwards identical 48/48 (arm has 48), tokens identical yes
+  [mp b8d1] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r712-latchain-r1/mp-b8d1-ALL.json: forwards identical 48/48 (arm has 48), tokens identical yes
+  [mp b8d1] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T13:59:50+00:00 [latchain-r1] model parity PASS (logits-level, all three shapes)
+2026-09-24T14:00:13+00:00 [latchain-r1]   nsys c1d3 OFF rc=0: 40198144 bytes
+2026-09-24T14:00:38+00:00 [latchain-r1]   nsys c1d3 ALL rc=0: 40226816 bytes
+2026-09-24T14:01:06+00:00 [latchain-r1]   nsys c8d1 OFF rc=0: 60755968 bytes
+2026-09-24T14:01:34+00:00 [latchain-r1]   nsys c8d1 ALL rc=0: 60780544 bytes
+2026-09-24T14:01:34+00:00 [latchain-r1]   c4d3 round 1 order: OFF RR QF GF QT ALL
+2026-09-24T14:02:06+00:00 [latchain-r1]   P1 c4d3-OFF1 rc=0: d3 events: 641.974045 ms capture, 20.061689 ms/iterate | d0 events: 315.519079 ms capture, 9.859971 ms/iterate
+2026-09-24T14:02:37+00:00 [latchain-r1]   P1 c4d3-RR1 rc=0: d3 events: 607.868462 ms capture, 18.995889 ms/iterate | d0 events: 349.701567 ms capture, 10.928174 ms/iterate
+2026-09-24T14:03:07+00:00 [latchain-r1]   P1 c4d3-QF1 rc=0: d3 events: 631.608364 ms capture, 19.737761 ms/iterate | d0 events: 309.053678 ms capture, 9.657927 ms/iterate
+2026-09-24T14:03:38+00:00 [latchain-r1]   P1 c4d3-GF1 rc=0: d3 events: 657.357438 ms capture, 20.542420 ms/iterate | d0 events: 313.653971 ms capture, 9.801687 ms/iterate
+2026-09-24T14:04:08+00:00 [latchain-r1]   P1 c4d3-QT1 rc=0: d3 events: 661.249372 ms capture, 20.664043 ms/iterate | d0 events: 315.420417 ms capture, 9.856888 ms/iterate
+2026-09-24T14:04:39+00:00 [latchain-r1]   P1 c4d3-ALL1 rc=0: d3 events: 620.415668 ms capture, 19.387990 ms/iterate | d0 events: 304.045775 ms capture, 9.501430 ms/iterate
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 RR d3: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 RR d0: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 QF d3: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 QF d0: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 GF d3: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 GF d0: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 QT d3: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 QT d0: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 ALL d3: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 1 ALL d0: hashes IDENTICAL
+2026-09-24T14:04:39+00:00 [latchain-r1]   c4d3 round 2 order: RR QF GF QT ALL OFF
+2026-09-24T14:05:09+00:00 [latchain-r1]   P1 c4d3-RR2 rc=0: d3 events: 603.484821 ms capture, 18.858901 ms/iterate | d0 events: 316.251351 ms capture, 9.882855 ms/iterate
+2026-09-24T14:05:39+00:00 [latchain-r1]   P1 c4d3-QF2 rc=0: d3 events: 642.320796 ms capture, 20.072525 ms/iterate | d0 events: 308.901188 ms capture, 9.653162 ms/iterate
+2026-09-24T14:06:09+00:00 [latchain-r1]   P1 c4d3-GF2 rc=0: d3 events: 622.011244 ms capture, 19.437851 ms/iterate | d0 events: 314.461203 ms capture, 9.826913 ms/iterate
+2026-09-24T14:06:39+00:00 [latchain-r1]   P1 c4d3-QT2 rc=0: d3 events: 637.244042 ms capture, 19.913876 ms/iterate | d0 events: 313.150993 ms capture, 9.785969 ms/iterate
+2026-09-24T14:07:09+00:00 [latchain-r1]   P1 c4d3-ALL2 rc=0: d3 events: 627.735784 ms capture, 19.616743 ms/iterate | d0 events: 338.576051 ms capture, 10.580502 ms/iterate
+2026-09-24T14:07:40+00:00 [latchain-r1]   P1 c4d3-OFF2 rc=0: d3 events: 621.001885 ms capture, 19.406309 ms/iterate | d0 events: 317.004379 ms capture, 9.906387 ms/iterate
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 RR d3: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 RR d0: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 QF d3: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 QF d0: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 GF d3: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 GF d0: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 QT d3: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 QT d0: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 ALL d3: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 2 ALL d0: hashes IDENTICAL
+2026-09-24T14:07:40+00:00 [latchain-r1]   c4d3 round 3 order: QF GF QT ALL OFF RR
+2026-09-24T14:08:10+00:00 [latchain-r1]   P1 c4d3-QF3 rc=0: d3 events: 641.379046 ms capture, 20.043095 ms/iterate | d0 events: 342.553573 ms capture, 10.704799 ms/iterate
+2026-09-24T14:08:40+00:00 [latchain-r1]   P1 c4d3-GF3 rc=0: d3 events: 632.059294 ms capture, 19.751853 ms/iterate | d0 events: 348.278832 ms capture, 10.883713 ms/iterate
+2026-09-24T14:09:10+00:00 [latchain-r1]   P1 c4d3-QT3 rc=0: d3 events: 645.801403 ms capture, 20.181294 ms/iterate | d0 events: 314.119569 ms capture, 9.816237 ms/iterate
+2026-09-24T14:09:40+00:00 [latchain-r1]   P1 c4d3-ALL3 rc=0: d3 events: 611.384423 ms capture, 19.105763 ms/iterate | d0 events: 304.143763 ms capture, 9.504493 ms/iterate
+2026-09-24T14:10:10+00:00 [latchain-r1]   P1 c4d3-OFF3 rc=0: d3 events: 652.353916 ms capture, 20.386060 ms/iterate | d0 events: 316.351318 ms capture, 9.885979 ms/iterate
+2026-09-24T14:10:40+00:00 [latchain-r1]   P1 c4d3-RR3 rc=0: d3 events: 632.528261 ms capture, 19.766508 ms/iterate | d0 events: 316.557275 ms capture, 9.892415 ms/iterate
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 RR d3: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 RR d0: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 QF d3: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 QF d0: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 GF d3: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 GF d0: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 QT d3: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 QT d0: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 ALL d3: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 3 ALL d0: hashes IDENTICAL
+2026-09-24T14:10:40+00:00 [latchain-r1]   c4d3 round 4 order: GF QT ALL OFF RR QF
+2026-09-24T14:11:10+00:00 [latchain-r1]   P1 c4d3-GF4 rc=0: d3 events: 635.812421 ms capture, 19.869138 ms/iterate | d0 events: 314.731541 ms capture, 9.835361 ms/iterate
+2026-09-24T14:11:40+00:00 [latchain-r1]   P1 c4d3-QT4 rc=0: d3 events: 627.848225 ms capture, 19.620257 ms/iterate | d0 events: 313.454697 ms capture, 9.795459 ms/iterate
+2026-09-24T14:12:09+00:00 [latchain-r1]   P1 c4d3-ALL4 rc=0: d3 events: 604.664984 ms capture, 18.895781 ms/iterate | d0 events: 304.381981 ms capture, 9.511937 ms/iterate
+2026-09-24T14:12:39+00:00 [latchain-r1]   P1 c4d3-OFF4 rc=0: d3 events: 645.250087 ms capture, 20.164065 ms/iterate | d0 events: 316.465659 ms capture, 9.889552 ms/iterate
+2026-09-24T14:13:09+00:00 [latchain-r1]   P1 c4d3-RR4 rc=0: d3 events: 627.236194 ms capture, 19.601131 ms/iterate | d0 events: 316.015927 ms capture, 9.875498 ms/iterate
+2026-09-24T14:13:39+00:00 [latchain-r1]   P1 c4d3-QF4 rc=0: d3 events: 630.571510 ms capture, 19.705360 ms/iterate | d0 events: 309.641988 ms capture, 9.676312 ms/iterate
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 RR d3: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 RR d0: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 QF d3: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 QF d0: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 GF d3: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 GF d0: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 QT d3: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 QT d0: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 ALL d3: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 4 ALL d0: hashes IDENTICAL
+2026-09-24T14:13:39+00:00 [latchain-r1]   c4d3 round 5 order: QT ALL OFF RR QF GF
+2026-09-24T14:14:09+00:00 [latchain-r1]   P1 c4d3-QT5 rc=0: d3 events: 615.365034 ms capture, 19.230157 ms/iterate | d0 events: 314.859904 ms capture, 9.839372 ms/iterate
+2026-09-24T14:14:38+00:00 [latchain-r1]   P1 c4d3-ALL5 rc=0: d3 events: 604.843574 ms capture, 18.901362 ms/iterate | d0 events: 303.749803 ms capture, 9.492181 ms/iterate
+2026-09-24T14:15:08+00:00 [latchain-r1]   P1 c4d3-OFF5 rc=0: d3 events: 638.697221 ms capture, 19.959288 ms/iterate | d0 events: 316.468214 ms capture, 9.889632 ms/iterate
+2026-09-24T14:15:38+00:00 [latchain-r1]   P1 c4d3-RR5 rc=0: d3 events: 611.478970 ms capture, 19.108718 ms/iterate | d0 events: 316.900185 ms capture, 9.903131 ms/iterate
+2026-09-24T14:16:07+00:00 [latchain-r1]   P1 c4d3-QF5 rc=0: d3 events: 613.412053 ms capture, 19.169127 ms/iterate | d0 events: 343.557442 ms capture, 10.736170 ms/iterate
+2026-09-24T14:16:37+00:00 [latchain-r1]   P1 c4d3-GF5 rc=0: d3 events: 617.508424 ms capture, 19.297138 ms/iterate | d0 events: 315.003368 ms capture, 9.843855 ms/iterate
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 RR d3: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 RR d0: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 QF d3: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 QF d0: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 GF d3: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 GF d0: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 QT d3: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 QT d0: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 ALL d3: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 5 ALL d0: hashes IDENTICAL
+2026-09-24T14:16:37+00:00 [latchain-r1]   c4d3 round 6 order: ALL OFF RR QF GF QT
+2026-09-24T14:17:07+00:00 [latchain-r1]   P1 c4d3-ALL6 rc=0: d3 events: 599.128429 ms capture, 18.722763 ms/iterate | d0 events: 305.234693 ms capture, 9.538584 ms/iterate
+2026-09-24T14:17:37+00:00 [latchain-r1]   P1 c4d3-OFF6 rc=0: d3 events: 618.934179 ms capture, 19.341693 ms/iterate | d0 events: 317.396513 ms capture, 9.918641 ms/iterate
+2026-09-24T14:18:07+00:00 [latchain-r1]   P1 c4d3-RR6 rc=0: d3 events: 619.696056 ms capture, 19.365502 ms/iterate | d0 events: 350.284510 ms capture, 10.946391 ms/iterate
+2026-09-24T14:18:36+00:00 [latchain-r1]   P1 c4d3-QF6 rc=0: d3 events: 618.950578 ms capture, 19.342206 ms/iterate | d0 events: 308.629813 ms capture, 9.644682 ms/iterate
+2026-09-24T14:19:06+00:00 [latchain-r1]   P1 c4d3-GF6 rc=0: d3 events: 647.014939 ms capture, 20.219217 ms/iterate | d0 events: 350.163833 ms capture, 10.942620 ms/iterate
+2026-09-24T14:19:36+00:00 [latchain-r1]   P1 c4d3-QT6 rc=0: d3 events: 624.672767 ms capture, 19.521024 ms/iterate | d0 events: 347.394770 ms capture, 10.856087 ms/iterate
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 RR d3: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 RR d0: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 QF d3: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 QF d0: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 GF d3: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 GF d0: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 QT d3: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 QT d0: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 ALL d3: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c4d3 round 6 ALL d0: hashes IDENTICAL
+2026-09-24T14:19:36+00:00 [latchain-r1]   c8d1 round 1 order: OFF RR QF GF QT ALL
+2026-09-24T14:20:13+00:00 [latchain-r1]   P1 c8d1-OFF1 rc=0: d1 events: 588.280622 ms capture, 18.383769 ms/iterate | d0 events: 417.509291 ms capture, 13.047165 ms/iterate
+2026-09-24T14:20:49+00:00 [latchain-r1]   P1 c8d1-RR1 rc=0: d1 events: 577.062384 ms capture, 18.033199 ms/iterate | d0 events: 380.224858 ms capture, 11.882027 ms/iterate
+2026-09-24T14:21:26+00:00 [latchain-r1]   P1 c8d1-QF1 rc=0: d1 events: 621.755743 ms capture, 19.429867 ms/iterate | d0 events: 376.070614 ms capture, 11.752207 ms/iterate
+2026-09-24T14:22:02+00:00 [latchain-r1]   P1 c8d1-GF1 rc=0: d1 events: 588.098316 ms capture, 18.378072 ms/iterate | d0 events: 383.341855 ms capture, 11.979433 ms/iterate
+2026-09-24T14:22:39+00:00 [latchain-r1]   P1 c8d1-QT1 rc=0: d1 events: 584.236311 ms capture, 18.257385 ms/iterate | d0 events: 381.660772 ms capture, 11.926899 ms/iterate
+2026-09-24T14:23:15+00:00 [latchain-r1]   P1 c8d1-ALL1 rc=0: d1 events: 566.366287 ms capture, 17.698946 ms/iterate | d0 events: 382.869578 ms capture, 11.964674 ms/iterate
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 RR d1: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 RR d0: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 QF d1: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 QF d0: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 GF d1: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 GF d0: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 QT d1: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 QT d0: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 ALL d1: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 1 ALL d0: hashes IDENTICAL
+2026-09-24T14:23:15+00:00 [latchain-r1]   c8d1 round 2 order: RR QF GF QT ALL OFF
+2026-09-24T14:23:52+00:00 [latchain-r1]   P1 c8d1-RR2 rc=0: d1 events: 581.798734 ms capture, 18.181210 ms/iterate | d0 events: 380.988637 ms capture, 11.905895 ms/iterate
+2026-09-24T14:24:28+00:00 [latchain-r1]   P1 c8d1-QF2 rc=0: d1 events: 588.036279 ms capture, 18.376134 ms/iterate | d0 events: 410.577112 ms capture, 12.830535 ms/iterate
+2026-09-24T14:25:05+00:00 [latchain-r1]   P1 c8d1-GF2 rc=0: d1 events: 615.018718 ms capture, 19.219335 ms/iterate | d0 events: 382.126429 ms capture, 11.941451 ms/iterate
+2026-09-24T14:25:41+00:00 [latchain-r1]   P1 c8d1-QT2 rc=0: d1 events: 598.735488 ms capture, 18.710484 ms/iterate | d0 events: 380.365952 ms capture, 11.886436 ms/iterate
+2026-09-24T14:26:18+00:00 [latchain-r1]   P1 c8d1-ALL2 rc=0: d1 events: 575.203385 ms capture, 17.975106 ms/iterate | d0 events: 369.565062 ms capture, 11.548908 ms/iterate
+2026-09-24T14:26:54+00:00 [latchain-r1]   P1 c8d1-OFF2 rc=0: d1 events: 584.718187 ms capture, 18.272443 ms/iterate | d0 events: 383.890301 ms capture, 11.996572 ms/iterate
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 RR d1: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 RR d0: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 QF d1: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 QF d0: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 GF d1: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 GF d0: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 QT d1: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 QT d0: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 ALL d1: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 2 ALL d0: hashes IDENTICAL
+2026-09-24T14:26:54+00:00 [latchain-r1]   c8d1 round 3 order: QF GF QT ALL OFF RR
+2026-09-24T14:27:31+00:00 [latchain-r1]   P1 c8d1-QF3 rc=0: d1 events: 585.012288 ms capture, 18.281634 ms/iterate | d0 events: 379.027469 ms capture, 11.844608 ms/iterate
+2026-09-24T14:28:08+00:00 [latchain-r1]   P1 c8d1-GF3 rc=0: d1 events: 582.053451 ms capture, 18.189170 ms/iterate | d0 events: 419.862197 ms capture, 13.120694 ms/iterate
+2026-09-24T14:28:44+00:00 [latchain-r1]   P1 c8d1-QT3 rc=0: d1 events: 583.199677 ms capture, 18.224990 ms/iterate | d0 events: 380.396799 ms capture, 11.887400 ms/iterate
+2026-09-24T14:29:21+00:00 [latchain-r1]   P1 c8d1-ALL3 rc=0: d1 events: 570.698330 ms capture, 17.834323 ms/iterate | d0 events: 368.764317 ms capture, 11.523885 ms/iterate
+2026-09-24T14:29:57+00:00 [latchain-r1]   P1 c8d1-OFF3 rc=0: d1 events: 612.064535 ms capture, 19.127017 ms/iterate | d0 events: 382.601292 ms capture, 11.956290 ms/iterate
+2026-09-24T14:30:34+00:00 [latchain-r1]   P1 c8d1-RR3 rc=0: d1 events: 585.001792 ms capture, 18.281306 ms/iterate | d0 events: 380.666290 ms capture, 11.895822 ms/iterate
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 RR d1: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 RR d0: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 QF d1: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 QF d0: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 GF d1: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 GF d0: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 QT d1: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 QT d0: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 ALL d1: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 3 ALL d0: hashes IDENTICAL
+2026-09-24T14:30:34+00:00 [latchain-r1]   c8d1 round 4 order: GF QT ALL OFF RR QF
+2026-09-24T14:31:10+00:00 [latchain-r1]   P1 c8d1-GF4 rc=0: d1 events: 589.241197 ms capture, 18.413787 ms/iterate | d0 events: 382.450272 ms capture, 11.951571 ms/iterate
+2026-09-24T14:31:46+00:00 [latchain-r1]   P1 c8d1-QT4 rc=0: d1 events: 574.403550 ms capture, 17.950111 ms/iterate | d0 events: 379.690763 ms capture, 11.865336 ms/iterate
+2026-09-24T14:32:23+00:00 [latchain-r1]   P1 c8d1-ALL4 rc=0: d1 events: 566.021138 ms capture, 17.688161 ms/iterate | d0 events: 370.626902 ms capture, 11.582091 ms/iterate
+2026-09-24T14:32:59+00:00 [latchain-r1]   P1 c8d1-OFF4 rc=0: d1 events: 586.657271 ms capture, 18.333040 ms/iterate | d0 events: 385.766333 ms capture, 12.055198 ms/iterate
+2026-09-24T14:33:36+00:00 [latchain-r1]   P1 c8d1-RR4 rc=0: d1 events: 579.730252 ms capture, 18.116570 ms/iterate | d0 events: 380.748303 ms capture, 11.898384 ms/iterate
+2026-09-24T14:34:12+00:00 [latchain-r1]   P1 c8d1-QF4 rc=0: d1 events: 582.968348 ms capture, 18.217761 ms/iterate | d0 events: 376.685654 ms capture, 11.771427 ms/iterate
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 RR d1: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 RR d0: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 QF d1: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 QF d0: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 GF d1: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 GF d0: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 QT d1: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 QT d0: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 ALL d1: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 4 ALL d0: hashes IDENTICAL
+2026-09-24T14:34:12+00:00 [latchain-r1]   c8d1 round 5 order: QT ALL OFF RR QF GF
+2026-09-24T14:34:49+00:00 [latchain-r1]   P1 c8d1-QT5 rc=0: d1 events: 581.424481 ms capture, 18.169515 ms/iterate | d0 events: 380.242297 ms capture, 11.882572 ms/iterate
+2026-09-24T14:35:26+00:00 [latchain-r1]   P1 c8d1-ALL5 rc=0: d1 events: 564.662239 ms capture, 17.645695 ms/iterate | d0 events: 369.281876 ms capture, 11.540059 ms/iterate
+2026-09-24T14:36:02+00:00 [latchain-r1]   P1 c8d1-OFF5 rc=0: d1 events: 630.964541 ms capture, 19.717642 ms/iterate | d0 events: 383.090948 ms capture, 11.971592 ms/iterate
+2026-09-24T14:36:39+00:00 [latchain-r1]   P1 c8d1-RR5 rc=0: d1 events: 580.853873 ms capture, 18.151684 ms/iterate | d0 events: 380.733174 ms capture, 11.897912 ms/iterate
+2026-09-24T14:37:15+00:00 [latchain-r1]   P1 c8d1-QF5 rc=0: d1 events: 581.266055 ms capture, 18.164564 ms/iterate | d0 events: 376.976501 ms capture, 11.780516 ms/iterate
+2026-09-24T14:37:52+00:00 [latchain-r1]   P1 c8d1-GF5 rc=0: d1 events: 576.972861 ms capture, 18.030402 ms/iterate | d0 events: 382.371102 ms capture, 11.949097 ms/iterate
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 RR d1: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 RR d0: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 QF d1: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 QF d0: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 GF d1: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 GF d0: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 QT d1: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 QT d0: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 ALL d1: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 5 ALL d0: hashes IDENTICAL
+2026-09-24T14:37:52+00:00 [latchain-r1]   c8d1 round 6 order: ALL OFF RR QF GF QT
+2026-09-24T14:38:28+00:00 [latchain-r1]   P1 c8d1-ALL6 rc=0: d1 events: 563.227470 ms capture, 17.600858 ms/iterate | d0 events: 368.497360 ms capture, 11.515543 ms/iterate
+2026-09-24T14:39:04+00:00 [latchain-r1]   P1 c8d1-OFF6 rc=0: d1 events: 584.564433 ms capture, 18.267639 ms/iterate | d0 events: 384.026952 ms capture, 12.000842 ms/iterate
+2026-09-24T14:39:41+00:00 [latchain-r1]   P1 c8d1-RR6 rc=0: d1 events: 584.046069 ms capture, 18.251440 ms/iterate | d0 events: 382.591057 ms capture, 11.955971 ms/iterate
+2026-09-24T14:40:17+00:00 [latchain-r1]   P1 c8d1-QF6 rc=0: d1 events: 584.344103 ms capture, 18.260753 ms/iterate | d0 events: 376.688464 ms capture, 11.771515 ms/iterate
+2026-09-24T14:40:54+00:00 [latchain-r1]   P1 c8d1-GF6 rc=0: d1 events: 586.359707 ms capture, 18.323741 ms/iterate | d0 events: 382.410220 ms capture, 11.950319 ms/iterate
+2026-09-24T14:41:30+00:00 [latchain-r1]   P1 c8d1-QT6 rc=0: d1 events: 575.925441 ms capture, 17.997670 ms/iterate | d0 events: 378.599467 ms capture, 11.831233 ms/iterate
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 RR d1: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 RR d0: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 QF d1: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 QF d0: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 GF d1: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 GF d0: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 QT d1: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 QT d0: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 ALL d1: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c8d1 round 6 ALL d0: hashes IDENTICAL
+2026-09-24T14:41:30+00:00 [latchain-r1]   c1d3 round 1 order: OFF RR QF GF QT ALL
+2026-09-24T14:41:54+00:00 [latchain-r1]   P1 c1d3-OFF1 rc=0: d3 events: 390.304635 ms capture, 12.197020 ms/iterate | d0 events: 250.137416 ms capture, 7.816794 ms/iterate
+2026-09-24T14:42:19+00:00 [latchain-r1]   P1 c1d3-RR1 rc=0: d3 events: 366.876075 ms capture, 11.464877 ms/iterate | d0 events: 250.149523 ms capture, 7.817173 ms/iterate
+2026-09-24T14:42:43+00:00 [latchain-r1]   P1 c1d3-QF1 rc=0: d3 events: 398.536086 ms capture, 12.454253 ms/iterate | d0 events: 243.512055 ms capture, 7.609752 ms/iterate
+2026-09-24T14:43:08+00:00 [latchain-r1]   P1 c1d3-GF1 rc=0: d3 events: 373.661071 ms capture, 11.676908 ms/iterate | d0 events: 248.324210 ms capture, 7.760132 ms/iterate
+2026-09-24T14:43:32+00:00 [latchain-r1]   P1 c1d3-QT1 rc=0: d3 events: 411.582973 ms capture, 12.861968 ms/iterate | d0 events: 246.396236 ms capture, 7.699882 ms/iterate
+2026-09-24T14:43:56+00:00 [latchain-r1]   P1 c1d3-ALL1 rc=0: d3 events: 353.581066 ms capture, 11.049408 ms/iterate | d0 events: 237.512991 ms capture, 7.422281 ms/iterate
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 RR d3: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 RR d0: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 QF d3: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 QF d0: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 GF d3: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 GF d0: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 QT d3: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 QT d0: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 ALL d3: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 1 ALL d0: hashes IDENTICAL
+2026-09-24T14:43:56+00:00 [latchain-r1]   c1d3 round 2 order: RR QF GF QT ALL OFF
+2026-09-24T14:44:21+00:00 [latchain-r1]   P1 c1d3-RR2 rc=0: d3 events: 367.119760 ms capture, 11.472493 ms/iterate | d0 events: 249.610565 ms capture, 7.800330 ms/iterate
+2026-09-24T14:44:45+00:00 [latchain-r1]   P1 c1d3-QF2 rc=0: d3 events: 403.417026 ms capture, 12.606782 ms/iterate | d0 events: 242.325935 ms capture, 7.572685 ms/iterate
+2026-09-24T14:45:09+00:00 [latchain-r1]   P1 c1d3-GF2 rc=0: d3 events: 405.813463 ms capture, 12.681671 ms/iterate | d0 events: 248.052491 ms capture, 7.751640 ms/iterate
+2026-09-24T14:45:34+00:00 [latchain-r1]   P1 c1d3-QT2 rc=0: d3 events: 401.504894 ms capture, 12.547028 ms/iterate | d0 events: 247.113683 ms capture, 7.722303 ms/iterate
+2026-09-24T14:45:58+00:00 [latchain-r1]   P1 c1d3-ALL2 rc=0: d3 events: 352.701564 ms capture, 11.021924 ms/iterate | d0 events: 238.206935 ms capture, 7.443967 ms/iterate
+2026-09-24T14:46:23+00:00 [latchain-r1]   P1 c1d3-OFF2 rc=0: d3 events: 406.899243 ms capture, 12.715601 ms/iterate | d0 events: 250.368148 ms capture, 7.824005 ms/iterate
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 RR d3: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 RR d0: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 QF d3: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 QF d0: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 GF d3: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 GF d0: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 QT d3: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 QT d0: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 ALL d3: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 2 ALL d0: hashes IDENTICAL
+2026-09-24T14:46:23+00:00 [latchain-r1]   c1d3 round 3 order: QF GF QT ALL OFF RR
+2026-09-24T14:46:47+00:00 [latchain-r1]   P1 c1d3-QF3 rc=0: d3 events: 362.723407 ms capture, 11.335106 ms/iterate | d0 events: 241.867450 ms capture, 7.558358 ms/iterate
+2026-09-24T14:47:11+00:00 [latchain-r1]   P1 c1d3-GF3 rc=0: d3 events: 405.262937 ms capture, 12.664467 ms/iterate | d0 events: 249.692082 ms capture, 7.802878 ms/iterate
+2026-09-24T14:47:35+00:00 [latchain-r1]   P1 c1d3-QT3 rc=0: d3 events: 417.021585 ms capture, 13.031925 ms/iterate | d0 events: 245.802536 ms capture, 7.681329 ms/iterate
+2026-09-24T14:48:00+00:00 [latchain-r1]   P1 c1d3-ALL3 rc=0: d3 events: 357.231050 ms capture, 11.163470 ms/iterate | d0 events: 237.632668 ms capture, 7.426021 ms/iterate
+2026-09-24T14:48:24+00:00 [latchain-r1]   P1 c1d3-OFF3 rc=0: d3 events: 371.749617 ms capture, 11.617176 ms/iterate | d0 events: 249.661952 ms capture, 7.801936 ms/iterate
+2026-09-24T14:48:49+00:00 [latchain-r1]   P1 c1d3-RR3 rc=0: d3 events: 409.947749 ms capture, 12.810867 ms/iterate | d0 events: 249.281818 ms capture, 7.790057 ms/iterate
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 RR d3: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 RR d0: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 QF d3: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 QF d0: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 GF d3: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 GF d0: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 QT d3: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 QT d0: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 ALL d3: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 3 ALL d0: hashes IDENTICAL
+2026-09-24T14:48:49+00:00 [latchain-r1]   c1d3 round 4 order: GF QT ALL OFF RR QF
+2026-09-24T14:49:13+00:00 [latchain-r1]   P1 c1d3-GF4 rc=0: d3 events: 370.145902 ms capture, 11.567059 ms/iterate | d0 events: 249.279849 ms capture, 7.789995 ms/iterate
+2026-09-24T14:49:37+00:00 [latchain-r1]   P1 c1d3-QT4 rc=0: d3 events: 402.491707 ms capture, 12.577866 ms/iterate | d0 events: 245.564497 ms capture, 7.673891 ms/iterate
+2026-09-24T14:50:01+00:00 [latchain-r1]   P1 c1d3-ALL4 rc=0: d3 events: 354.145280 ms capture, 11.067040 ms/iterate | d0 events: 238.603228 ms capture, 7.456351 ms/iterate
+2026-09-24T14:50:26+00:00 [latchain-r1]   P1 c1d3-OFF4 rc=0: d3 events: 411.781997 ms capture, 12.868187 ms/iterate | d0 events: 248.727213 ms capture, 7.772725 ms/iterate
+2026-09-24T14:50:50+00:00 [latchain-r1]   P1 c1d3-RR4 rc=0: d3 events: 374.055371 ms capture, 11.689230 ms/iterate | d0 events: 247.921369 ms capture, 7.747543 ms/iterate
+2026-09-24T14:51:15+00:00 [latchain-r1]   P1 c1d3-QF4 rc=0: d3 events: 362.503408 ms capture, 11.328231 ms/iterate | d0 events: 242.418786 ms capture, 7.575587 ms/iterate
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 RR d3: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 RR d0: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 QF d3: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 QF d0: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 GF d3: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 GF d0: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 QT d3: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 QT d0: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 ALL d3: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 4 ALL d0: hashes IDENTICAL
+2026-09-24T14:51:15+00:00 [latchain-r1]   c1d3 round 5 order: QT ALL OFF RR QF GF
+2026-09-24T14:51:39+00:00 [latchain-r1]   P1 c1d3-QT5 rc=0: d3 events: 405.266512 ms capture, 12.664578 ms/iterate | d0 events: 245.625229 ms capture, 7.675788 ms/iterate
+2026-09-24T14:52:03+00:00 [latchain-r1]   P1 c1d3-ALL5 rc=0: d3 events: 361.018991 ms capture, 11.281843 ms/iterate | d0 events: 238.085702 ms capture, 7.440178 ms/iterate
+2026-09-24T14:52:28+00:00 [latchain-r1]   P1 c1d3-OFF5 rc=0: d3 events: 372.499765 ms capture, 11.640618 ms/iterate | d0 events: 249.153040 ms capture, 7.786032 ms/iterate
+2026-09-24T14:52:52+00:00 [latchain-r1]   P1 c1d3-RR5 rc=0: d3 events: 375.700463 ms capture, 11.740639 ms/iterate | d0 events: 247.876680 ms capture, 7.746146 ms/iterate
+2026-09-24T14:53:16+00:00 [latchain-r1]   P1 c1d3-QF5 rc=0: d3 events: 364.477268 ms capture, 11.389915 ms/iterate | d0 events: 243.369641 ms capture, 7.605301 ms/iterate
+2026-09-24T14:53:40+00:00 [latchain-r1]   P1 c1d3-GF5 rc=0: d3 events: 370.264501 ms capture, 11.570766 ms/iterate | d0 events: 248.758267 ms capture, 7.773696 ms/iterate
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 RR d3: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 RR d0: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 QF d3: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 QF d0: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 GF d3: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 GF d0: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 QT d3: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 QT d0: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 ALL d3: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 5 ALL d0: hashes IDENTICAL
+2026-09-24T14:53:40+00:00 [latchain-r1]   c1d3 round 6 order: ALL OFF RR QF GF QT
+2026-09-24T14:54:04+00:00 [latchain-r1]   P1 c1d3-ALL6 rc=0: d3 events: 399.808450 ms capture, 12.494014 ms/iterate | d0 events: 237.672447 ms capture, 7.427264 ms/iterate
+2026-09-24T14:54:29+00:00 [latchain-r1]   P1 c1d3-OFF6 rc=0: d3 events: 375.305293 ms capture, 11.728290 ms/iterate | d0 events: 249.601401 ms capture, 7.800044 ms/iterate
+2026-09-24T14:54:53+00:00 [latchain-r1]   P1 c1d3-RR6 rc=0: d3 events: 401.522890 ms capture, 12.547590 ms/iterate | d0 events: 247.957990 ms capture, 7.748687 ms/iterate
+2026-09-24T14:55:18+00:00 [latchain-r1]   P1 c1d3-QF6 rc=0: d3 events: 370.242931 ms capture, 11.570092 ms/iterate | d0 events: 242.762264 ms capture, 7.586321 ms/iterate
+2026-09-24T14:55:42+00:00 [latchain-r1]   P1 c1d3-GF6 rc=0: d3 events: 406.325784 ms capture, 12.697681 ms/iterate | d0 events: 248.816567 ms capture, 7.775518 ms/iterate
+2026-09-24T14:56:06+00:00 [latchain-r1]   P1 c1d3-QT6 rc=0: d3 events: 404.655149 ms capture, 12.645473 ms/iterate | d0 events: 245.680490 ms capture, 7.677515 ms/iterate
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 RR d3: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 RR d0: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 QF d3: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 QF d0: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 GF d3: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 GF d0: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 QT d3: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 QT d0: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 ALL d3: hashes IDENTICAL
+2026-09-24T14:56:06+00:00 [latchain-r1]   c1d3 round 6 ALL d0: hashes IDENTICAL
+P1 c1d3 RR-OFF ms: -0.73 -1.24 +1.19 -1.18 +0.10 +0.82  mean -0.174 (-1.43 %) flat  [n=6]
+P1 d0 ctx4096_b1_d0 RR-OFF ms: +0.000 -0.024 -0.012 -0.025 -0.040 -0.051  mean -0.0253 (-0.32 %) flat
+P1 c4d3 RR-OFF ms: -1.07 -0.55 -0.62 -0.56 -0.85 +0.02  mean -0.604 (-3.04 %) flat  [n=6]
+P1 d0 ctx4096_b4_d0 RR-OFF ms: +1.068 -0.024 +0.006 -0.014 +0.013 +1.028  mean +0.3464 (+3.50 %) flat
+P1 c8d1 RR-OFF ms: -0.35 -0.09 -0.85 -0.22 -1.57 -0.02  mean -0.514 (-2.75 %) GAIN  [n=6]
+P1 d0 ctx4096_b8_d0 RR-OFF ms: -1.165 -0.091 -0.060 -0.157 -0.074 -0.045  mean -0.2653 (-2.18 %) GAIN
+P1-VERDICT RR: SPEED+HASHES OK
+P1 c1d3 QF-OFF ms: +0.26 -0.11 -0.28 -1.54 -0.25 -0.16  mean -0.347 (-2.86 %) flat  [n=6]
+P1 d0 ctx4096_b1_d0 QF-OFF ms: -0.207 -0.251 -0.244 -0.197 -0.181 -0.214  mean -0.2156 (-2.76 %) GAIN
+P1 c4d3 QF-OFF ms: -0.32 +0.67 -0.34 -0.46 -0.79 +0.00  mean -0.208 (-1.05 %) flat  [n=6]
+P1 d0 ctx4096_b4_d0 QF-OFF ms: -0.202 -0.253 +0.819 -0.213 +0.847 -0.274  mean +0.1205 (+1.22 %) flat
+P1 c8d1 QF-OFF ms: +1.05 +0.10 -0.85 -0.12 -1.55 -0.01  mean -0.228 (-1.22 %) flat  [n=6]
+P1 d0 ctx4096_b8_d0 QF-OFF ms: -1.295 +0.834 -0.112 -0.284 -0.191 -0.229  mean -0.2128 (-1.75 %) flat
+P1-VERDICT QF: NO (gain clause: no shape GAIN (all flat) -> not a stack entry)
+P1 c1d3 GF-OFF ms: -0.52 -0.03 +1.05 -1.30 -0.07 +0.97  mean +0.015 (+0.13 %) flat  [n=6]
+P1 d0 ctx4096_b1_d0 GF-OFF ms: -0.057 -0.072 +0.001 +0.017 -0.012 -0.025  mean -0.0246 (-0.32 %) flat
+P1 c4d3 GF-OFF ms: +0.48 +0.03 -0.63 -0.29 -0.66 +0.88  mean -0.034 (-0.17 %) flat  [n=6]
+P1 d0 ctx4096_b4_d0 GF-OFF ms: -0.058 -0.079 +0.998 -0.054 -0.046 +1.024  mean +0.2973 (+3.01 %) flat
+P1 c8d1 GF-OFF ms: -0.01 +0.95 -0.94 +0.08 -1.69 +0.06  mean -0.258 (-1.38 %) flat  [n=6]
+P1 d0 ctx4096_b8_d0 GF-OFF ms: -1.068 -0.055 +1.164 -0.104 -0.022 -0.051  mean -0.0225 (-0.18 %) flat
+P1-VERDICT GF: NO (gain clause: no shape GAIN (all flat) -> not a stack entry)
+P1 c1d3 QT-OFF ms: +0.66 -0.17 +1.41 -0.29 +1.02 +0.92  mean +0.594 (+4.90 %) flat  [n=6]
+P1 d0 ctx4096_b1_d0 QT-OFF ms: -0.117 -0.102 -0.121 -0.099 -0.110 -0.123  mean -0.1118 (-1.43 %) GAIN
+P1 c4d3 QT-OFF ms: +0.60 +0.51 -0.20 -0.54 -0.73 +0.18  mean -0.031 (-0.16 %) flat  [n=6]
+P1 d0 ctx4096_b4_d0 QT-OFF ms: -0.003 -0.120 -0.070 -0.094 -0.050 +0.937  mean +0.1000 (+1.01 %) flat
+P1 c8d1 QT-OFF ms: -0.13 +0.44 -0.90 -0.38 -1.55 -0.27  mean -0.465 (-2.49 %) flat  [n=6]
+P1 d0 ctx4096_b8_d0 QT-OFF ms: -1.120 -0.110 -0.069 -0.190 -0.089 -0.170  mean -0.2913 (-2.39 %) GAIN
+P1-VERDICT QT: NO (gain clause: no shape GAIN (all flat) -> not a stack entry)
+P1 c1d3 ALL-OFF ms: -1.15 -1.69 -0.45 -1.80 -0.36 +0.77  mean -0.782 (-6.44 %) flat  [n=6]
+P1 d0 ctx4096_b1_d0 ALL-OFF ms: -0.395 -0.380 -0.376 -0.316 -0.346 -0.373  mean -0.3642 (-4.67 %) GAIN
+P1 c4d3 ALL-OFF ms: -0.67 +0.21 -1.28 -1.27 -1.06 -0.62  mean -0.781 (-3.93 %) flat  [n=6]
+P1 d0 ctx4096_b4_d0 ALL-OFF ms: -0.359 +0.674 -0.381 -0.378 -0.397 -0.380  mean -0.2035 (-2.06 %) flat
+P1 c8d1 ALL-OFF ms: -0.68 -0.30 -1.29 -0.64 -2.07 -0.67  mean -0.943 (-5.05 %) GAIN  [n=6]
+P1 d0 ctx4096_b8_d0 ALL-OFF ms: -1.082 -0.448 -0.432 -0.473 -0.432 -0.485  mean -0.5587 (-4.59 %) GAIN
+P1-VERDICT ALL: SPEED+HASHES OK
+2026-09-24T14:56:06+00:00 [latchain-r1] greedy ON config (accepted arms: RR): EXL3_LC_GDN_RR=1 EXL3_LC_QSA_FORK=0 EXL3_LC_GDN_FORK=0 EXL3_LC_QSA_SPLIT_STAGES=0 EXL3_LC_QSA_COMBINE_STAGES=0 EXL3_LC_QSA_DIV16=0 
+2026-09-24T14:56:36+00:00 [latchain-r1]   ref boot: cuda:0 used 31928 MiB
+2026-09-24T14:56:51+00:00 [latchain-r1]   greedy on: tabbyapi:stack-latchain-r1; LC env: EXL3_LC_GDN_FORK=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=0 EXL3_LC_QSA_DIV16=0 EXL3_LC_QSA_SPLIT_STAGES=0 EXL3_LC_QSA_FORK=0 
+2026-09-24T14:57:05+00:00 [latchain-r1]   on boot: cuda:0 used 31860 MiB (ref 31928)
+2026-09-24T14:57:20+00:00 [latchain-r1]   greedy off: tabbyapi:stack-latchain-r1; LC env: EXL3_LC_GDN_FORK=0 EXL3_LC_QSA_COMBINE_STAGES=0 EXL3_LC_QSA_DIV16=0 EXL3_LC_GDN_RR=0 EXL3_LC_QSA_SPLIT_STAGES=0 EXL3_LC_QSA_FORK=0 
+  [greedy] GREEDY off vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY on vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=ref divergences=0
+FINAL identity: parity PASS; model parity ok; greedy on 0 / off 0 divergences; headroom cuda:0 used on 31860 vs ref 31928 MiB (ok: bar ref + 32)
+FINAL RR: ACCEPT (stack entry) [c1d3 -1.43 % flat, c4d3 -3.04 % flat, c8d1 -2.75 % GAIN]
+FINAL QF: REJECT [c1d3 -2.86 % flat, c4d3 -1.05 % flat, c8d1 -1.22 % flat] (gain clause: no shape GAIN (all flat) -> not a stack entry)
+FINAL GF: REJECT [c1d3 +0.13 % flat, c4d3 -0.17 % flat, c8d1 -1.38 % flat] (gain clause: no shape GAIN (all flat) -> not a stack entry)
+FINAL QT: REJECT [c1d3 +4.90 % flat, c4d3 -0.16 % flat, c8d1 -2.49 % flat] (gain clause: no shape GAIN (all flat) -> not a stack entry)
+FINAL ALL (composition, not an entry): c1d3 -6.44 % flat, c4d3 -3.93 % flat, c8d1 -5.05 % GAIN
+FINAL stack entries: RR
+2026-09-24T14:57:34+00:00 [sctl] GPU queue continues (r710b-densegemm-gv(pid 332366)
+r713-moefast-r3(pid 393677)
+r714-densegemm-r2(pid 2935726)); leaving the GPUs to the next unit
+2026-09-24T14:57:34+00:00 [latchain-r1] === latchain r1 DONE ===

@@ -1,0 +1,2105 @@
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp	2026-09-24 13:55:03
++++ b/exllamav3_ext/bindings.cpp	2026-09-24 14:16:24
+@@ -24,6 +24,7 @@
+ #include "quant/exl3_gemm.cuh"
+ #include "quant/exl3_gemv.cuh"
+ #include "quant/exl3_gemv_int8.cuh"
++#include "quant/exl3_dense_v2.cuh"
+ #include "cpu/moe_mul1.h"
+ #include "cpu/moe_handoff.h"
+ #include "quant/exl3_kernel_map.cuh"
+@@ -162,6 +163,11 @@
+     m.def("had_r_128_batch", &had_r_128_batch, "had_r_128_batch");
+     m.def("exl3_gemm", &exl3_gemm, "exl3_gemm");
+     m.def("exl3_gemv", &exl3_gemv, "exl3_gemv");
++    m.attr("dense_v2_revision") = DENSE_V2_REVISION;   // densegemm r1: EXL3_DENSE_V2 / EXL3_DENSE_ROWS32 kernels present (default off)
++    m.def("dense_v2_modes", &dense_v2_modes, "dense_v2_modes");
++    m.def("dense_v2_set_mode", &dense_v2_set_mode, "dense_v2_set_mode");
++    m.def("dense_v2_launch_counts", &dense_v2_launch_counts, "dense_v2_launch_counts");
++    m.def("dense_v2_reset_counts", &dense_v2_reset_counts, "dense_v2_reset_counts");
+     m.def("exl3_gemm_num_kernel_shapes", &exl3_gemm_num_kernel_shapes, "exl3_gemm_num_kernel_shapes");
+     m.def("exl3_gemm_shape_compat", &exl3_gemm_shape_compat, "exl3_gemm_shape_compat");
+     m.def("g_get_cc", &g_get_cc, "g_get_cc");
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemm.cu b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemm.cu
+--- a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemm.cu	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemm.cu	2026-09-24 14:16:00
+@@ -0,0 +1,14 @@
++#include <cuda_fp16.h>
++#include <cooperative_groups.h>
++namespace cg = cooperative_groups;
++#include "../../util.h"
++#include "../../util.cuh"
++#include "../../ptx.cuh"
++#include "../exl3_gemm_v2_kernel.cuh"
++
++// densegemm r1: gemm V2 twins, K = 4, mul1 codebook, fp16 / fp32 output (see exl3_dense_v2.cu)
++void* exl3_gemm_v2_tab_k4_cb2[2][7] =
++{
++    { EXL3_GEMM_V2_INSTANCES(4, false, 2) },
++    { EXL3_GEMM_V2_INSTANCES(4, true, 2) }
++};
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemv.cu b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemv.cu
+--- a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemv.cu	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_gemv.cu	2026-09-24 14:16:00
+@@ -0,0 +1,13 @@
++#include <cuda_fp16.h>
++#include <cooperative_groups.h>
++namespace cg = cooperative_groups;
++#include "../../util.h"
++#include "../../util.cuh"
++#include "../../ptx.cuh"
++#include "../exl3_gemv_v2_kernel.cuh"
++
++// densegemm r1: gemv V2 twins, K = 4, mul1 codebook (see exl3_dense_v2.cu)
++void* exl3_gemv_v2_tab_k4_cb2[8] =
++{
++    EXL3_GEMV_V2_INSTANCES(2)
++};
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_mgemm.cu b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_mgemm.cu
+--- a/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_mgemm.cu	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/comp_units/exl3_dense_v2_inst_mgemm.cu	2026-09-24 14:16:00
+@@ -0,0 +1,14 @@
++#include <cuda_fp16.h>
++#include <cooperative_groups.h>
++namespace cg = cooperative_groups;
++#include "../../util.h"
++#include "../../util.cuh"
++#include "../../ptx.cuh"
++#include "../exl3_gemm_v2_kernel.cuh"
++
++// densegemm r1: mgemm V2 twins, K = 4, mul1 codebook, fp16 / fp32 output (see exl3_dense_v2.cu)
++void* exl3_mgemm_v2_tab_k4_cb2[2][7] =
++{
++    { EXL3_MGEMM_V2_INSTANCES(4, false, 2) },
++    { EXL3_MGEMM_V2_INSTANCES(4, true, 2) }
++};
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/coop_autotune.cu b/exllamav3_ext/quant/coop_autotune.cu
+--- a/exllamav3_ext/quant/coop_autotune.cu	2026-09-24 13:55:03
++++ b/exllamav3_ext/quant/coop_autotune.cu	2026-09-24 14:15:31
+@@ -621,6 +621,18 @@
+     return true;
+ }
+ 
++bool CoopKernelAutotuner::peek
++(
++    uint64_t hash,
++    CoopAutotuneLaunch* launch_config
++)
++{
++    auto lookup = launch_cache.find(salt_hash(hash));
++    if (lookup == launch_cache.end()) return false;
++    *launch_config = lookup->second;
++    return true;
++}
++
+ CoopAutotuneLaunch CoopKernelAutotuner::launch
+ (
+     uint64_t hash,
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/coop_autotune.cuh b/exllamav3_ext/quant/coop_autotune.cuh
+--- a/exllamav3_ext/quant/coop_autotune.cuh	2026-09-24 13:55:03
++++ b/exllamav3_ext/quant/coop_autotune.cuh	2026-09-24 14:15:31
+@@ -35,6 +35,13 @@
+         CoopAutotuneLaunch* launch_config = nullptr
+     );
+ 
++    // densegemm r1: the config launch_locked would use for this hash, without launching anything
++    static bool peek
++    (
++        uint64_t hash,
++        CoopAutotuneLaunch* launch_config
++    );
++
+     static CoopAutotuneLaunch launch
+     (
+         uint64_t hash,
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_dense_v2.cu b/exllamav3_ext/quant/exl3_dense_v2.cu
+--- a/exllamav3_ext/quant/exl3_dense_v2.cu	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/exl3_dense_v2.cu	2026-09-24 14:35:19
+@@ -0,0 +1,309 @@
++#include <cuda_fp16.h>
++#include <c10/cuda/CUDAGuard.h>
++#include <ATen/cuda/CUDAContext.h>
++#include "../util.h"
++#include "../util.cuh"
++#include "exl3_dense_v2.cuh"
++#include "exl3_kernel_map.cuh"
++#include "exl3_devctx.cuh"
++#include "coop_autotune.cuh"
++#include "exl3_gemm_inner_v2.cuh"   // SMEM_MAX, exl3_dense_v2_slot_floats
++#include <atomic>
++#include <cstdlib>
++#include <cstring>
++#include <map>
++#include <mutex>
++#include <set>
++
++// densegemm r1 host side, see exl3_dense_v2.cuh
++
++// Instance tables (comp_units/exl3_dense_v2_inst_*.cu). gemm / mgemm: [c_fp32][idx], idx 1..4 =
++// served shape index at 16 rows, 5 / 6 = shapes 2 / 3 at 32 rows. gemv: [c_fp32 * 4 + mmode * 2 + cfg]
++extern void* exl3_gemm_v2_tab_k4_cb2[2][7];
++extern void* exl3_mgemm_v2_tab_k4_cb2[2][7];
++extern void* exl3_gemv_v2_tab_k4_cb2[8];
++
++static const int v2_tilesize_k[] = {EXL3_GEMM_TILESIZE_K};
++static const int v2_tilesize_n[] = {EXL3_GEMM_TILESIZE_N};
++
++// Partial-sum slots per device (+ the gemv arrival counters behind them). 4 MiB covers every served
++// dense K4 shape at 4 and 16 rows (the largest is the GDN in_proj: 160 CTAs x 16 KiB); 8 MiB when
++// EXL3_DENSE_ROWS32 is on (32-row slots). Allocated at the first dense gemm / mgemm call of any shape
++// once a flag is on (in practice the first prefill chunk, which is always eager), so that graphs
++// captured later find it; never during graph capture, never when both flags are off
++#define DENSE_V2_WS_BYTES        ((size_t) 4 << 20)
++#define DENSE_V2_WS_BYTES_ROWS32 ((size_t) 8 << 20)
++
++// --------------------------------------------------------------------------------------------- modes
++
++static std::atomic<int> g_mode{-1};
++static std::atomic<int> g_rows32{-1};
++static std::atomic<int64_t> g_count_gemm{0};
++static std::atomic<int64_t> g_count_gemv{0};
++
++static int parse_flag(const char* name, int max_value)
++{
++    const char* e = std::getenv(name);
++    if (!e || !e[0]) return 0;
++    TORCH_CHECK(std::strlen(e) == 1 && e[0] >= '0' && e[0] <= '0' + max_value,
++                name, " must be one of 0..", max_value, " (got '", e, "')");
++    return e[0] - '0';
++}
++
++int dense_v2_mode()
++{
++    int m = g_mode.load(std::memory_order_relaxed);
++    if (m < 0)
++    {
++        m = parse_flag("EXL3_DENSE_V2", 3);
++        g_mode.store(m, std::memory_order_relaxed);
++    }
++    return m;
++}
++
++bool dense_v2_rows32()
++{
++    int r = g_rows32.load(std::memory_order_relaxed);
++    if (r < 0)
++    {
++        r = parse_flag("EXL3_DENSE_ROWS32", 1);
++        g_rows32.store(r, std::memory_order_relaxed);
++    }
++    return r == 1;
++}
++
++void dense_v2_set_mode(int mode, int rows32)
++{
++    TORCH_CHECK(mode >= -1 && mode <= 3, "dense_v2_set_mode: mode must be -1..3");
++    TORCH_CHECK(rows32 >= -1 && rows32 <= 1, "dense_v2_set_mode: rows32 must be -1..1");
++    if (mode >= 0) g_mode.store(mode, std::memory_order_relaxed);
++    if (rows32 >= 0) g_rows32.store(rows32, std::memory_order_relaxed);
++}
++
++std::tuple<int, int> dense_v2_modes()
++{
++    return std::make_tuple(dense_v2_mode(), dense_v2_rows32() ? 1 : 0);
++}
++
++std::tuple<int64_t, int64_t> dense_v2_launch_counts()
++{
++    return std::make_tuple(g_count_gemm.load(), g_count_gemv.load());
++}
++
++void dense_v2_reset_counts()
++{
++    g_count_gemm.store(0);
++    g_count_gemv.store(0);
++}
++
++// --------------------------------------------------------------------------------------------- workspace
++
++struct DenseV2Ws
++{
++    float* slots = nullptr;
++    size_t slot_bytes = 0;
++    int* hctr = nullptr;
++    bool tried = false;
++};
++
++static DenseV2Ws g_ws[MAX_DEVICES];
++static std::mutex g_ws_mtx;
++
++static bool ws_ready(int device, cudaStream_t stream)
++{
++    DenseV2Ws& w = g_ws[device];
++    if (w.slots) return true;
++    std::lock_guard<std::mutex> lock(g_ws_mtx);
++    if (w.slots) return true;
++    if (w.tried) return false;
++
++    // Never allocate while this stream is being captured: the next eager call will
++    cudaStreamCaptureStatus status = cudaStreamCaptureStatusNone;
++    if (cudaStreamIsCapturing(stream, &status) != cudaSuccess || status != cudaStreamCaptureStatusNone)
++    {
++        (void) cudaGetLastError();
++        return false;
++    }
++    w.tried = true;
++
++    size_t slot_bytes = dense_v2_rows32() ? DENSE_V2_WS_BYTES_ROWS32 : DENSE_V2_WS_BYTES;
++    size_t hctr_bytes = (size_t) DENSE_V2_GEMV_MAX_HBLOCKS * sizeof(int);
++
++    // Relaxed capture mode around the allocation, in case another stream of this thread is capturing
++    cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
++    cudaThreadExchangeStreamCaptureMode(&mode);
++    void* p = nullptr;
++    cudaError_t e = cudaMalloc(&p, slot_bytes + hctr_bytes);
++    // Zeroed and complete before any stream can use it (the first caller may be a side stream)
++    if (e == cudaSuccess) e = cudaMemsetAsync((char*) p + slot_bytes, 0, hctr_bytes, stream);
++    if (e == cudaSuccess) e = cudaStreamSynchronize(stream);
++    cudaThreadExchangeStreamCaptureMode(&mode);
++
++    if (e != cudaSuccess)
++    {
++        (void) cudaGetLastError();
++        if (p) cudaFree(p);
++        TORCH_WARN("densegemm r1: workspace allocation failed on device ", device, " (", cudaGetErrorString(e),
++                   "); the served dense kernels run instead");
++        return false;
++    }
++    w.slots = (float*) p;
++    w.slot_bytes = slot_bytes;
++    w.hctr = (int*) ((char*) p + slot_bytes);
++    return true;
++}
++
++static std::set<std::pair<int, void*>> g_attr_set;
++static std::mutex g_attr_mtx;
++
++static void ensure_smem_attr(void* kernel, int device)
++{
++    std::lock_guard<std::mutex> lock(g_attr_mtx);
++    auto key = std::make_pair(device, kernel);
++    if (g_attr_set.find(key) != g_attr_set.end()) return;
++    cuda_check(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, SMEM_MAX));
++    g_attr_set.insert(key);
++}
++
++static std::map<std::pair<int, void*>, int> g_occ_cache;
++
++static int occupancy(void* kernel, int block_dim, int device)
++{
++    std::lock_guard<std::mutex> lock(g_attr_mtx);
++    auto key = std::make_pair(device, kernel);
++    auto it = g_occ_cache.find(key);
++    if (it != g_occ_cache.end()) return it->second;
++    int blocks_per_sm = 0;
++    cuda_check(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&blocks_per_sm, kernel, block_dim, 0));
++    g_occ_cache[key] = blocks_per_sm;
++    return blocks_per_sm;
++}
++
++// --------------------------------------------------------------------------------------------- launches
++
++// Resolve the served launch config of an autotuned gemm / mgemm call and the V2 twin for it
++static void* resolve_v2
++(
++    void* const tab[2][7],
++    uint64_t autotune_key,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32,
++    CoopAutotuneLaunch* cfg, int* tm, int* tn
++)
++{
++    if (K != 4 || cb != 2) return nullptr;
++    if (size_m < 1 || size_m > 32) return nullptr;
++    bool rows32 = size_m > 16;
++    if (rows32 ? !dense_v2_rows32() : !dense_v2_gemm_on()) return nullptr;
++
++    if (!CoopKernelAutotuner::peek(autotune_key, cfg)) return nullptr;   // first call of a shape: served path tunes
++    int tag = cfg->tag;
++    if (tag < 1 || tag > EXL3_GEMM_NUM_SHAPES) return nullptr;
++    int idx = tag;
++    if (rows32)
++    {
++        if (tag == 2) idx = 5;
++        else if (tag == 3) idx = 6;
++        else return nullptr;
++    }
++    *tm = rows32 ? 32 : 16;
++    *tn = v2_tilesize_n[tag];
++    if (size_k % v2_tilesize_k[tag] || size_n % v2_tilesize_n[tag]) return nullptr;
++    if (cfg->num_sms < 1 || cfg->concurrency < 1) return nullptr;
++    // The kernel's partition arithmetic (tiles * blockIdx / grid) must not overflow 32 bits, so that the
++    // V2 owner / tile_beg helpers (64-bit) agree with it
++    int64_t tiles = (int64_t) (size_k / v2_tilesize_k[tag]) * (size_n / v2_tilesize_n[tag]);
++    if (tiles * (cfg->num_sms + 1) >= ((int64_t) 1 << 31)) return nullptr;
++    return tab[c_fp32 ? 1 : 0][idx];
++}
++
++void* dense_v2_launch_gemm
++(
++    void** kernel_args,
++    uint64_t autotune_key,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32,
++    int device, cudaStream_t stream, int* out_tag
++)
++{
++    (void) ws_ready(device, stream);    // any shape, so the workspace exists before decode graphs are captured
++    CoopAutotuneLaunch cfg;
++    int tm, tn;
++    void* kernel = resolve_v2(exl3_gemm_v2_tab_k4_cb2, autotune_key, size_m, size_k, size_n, K, cb, c_fp32, &cfg, &tm, &tn);
++    if (!kernel || cfg.concurrency != 1) return nullptr;
++    int tiles = size_k / v2_tilesize_k[cfg.tag] * size_n / tn;
++    if (cfg.num_sms > tiles) return nullptr;
++
++    size_t need = (size_t) cfg.num_sms * exl3_dense_v2_slot_floats(tm, tn, size_m) * sizeof(float);
++    if (!ws_ready(device, stream) || need > g_ws[device].slot_bytes) return nullptr;
++    float* ws = g_ws[device].slots;
++
++    void* args[11];
++    for (int i = 0; i < 10; ++i) args[i] = kernel_args[i];
++    args[10] = (void*) &ws;
++
++    ensure_smem_attr(kernel, device);
++    cuda_check(cudaLaunchCooperativeKernel(kernel, dim3(cfg.num_sms, 1, 1), cfg.block_dim, args, SMEM_MAX, stream));
++    g_count_gemm.fetch_add(1, std::memory_order_relaxed);
++    *out_tag = cfg.tag;
++    return kernel;
++}
++
++void* dense_v2_launch_mgemm
++(
++    void** kernel_args,
++    uint64_t autotune_key,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32,
++    int device, cudaStream_t stream, int* out_tag
++)
++{
++    (void) ws_ready(device, stream);    // any shape, so the workspace exists before decode graphs are captured
++    CoopAutotuneLaunch cfg;
++    int tm, tn;
++    void* kernel = resolve_v2(exl3_mgemm_v2_tab_k4_cb2, autotune_key, size_m, size_k, size_n, K, cb, c_fp32, &cfg, &tm, &tn);
++    if (!kernel) return nullptr;
++
++    size_t need = (size_t) cfg.num_sms * cfg.concurrency * exl3_dense_v2_slot_floats(tm, tn, size_m) * sizeof(float);
++    if (!ws_ready(device, stream) || need > g_ws[device].slot_bytes) return nullptr;
++    float* ws = g_ws[device].slots;
++
++    void* args[23];
++    for (int i = 0; i < 22; ++i) args[i] = kernel_args[i];
++    args[22] = (void*) &ws;
++
++    ensure_smem_attr(kernel, device);
++    cuda_check(cudaLaunchCooperativeKernel(kernel, dim3(cfg.num_sms, 1, cfg.concurrency), cfg.block_dim, args, SMEM_MAX, stream));
++    g_count_gemm.fetch_add(1, std::memory_order_relaxed);
++    *out_tag = cfg.tag;
++    return kernel;
++}
++
++void* dense_v2_launch_gemv
++(
++    void** kernel_args,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32, int mmode, int cfg,
++    int block_dim, int cols, int device, cudaStream_t stream
++)
++{
++    if (!dense_v2_gemv_on() || K != 4 || cb != 2) return nullptr;
++    if (mmode < 0 || mmode > 1 || cfg < 0 || cfg > 1) return nullptr;
++    if (size_n % 128 || size_n / 128 > DENSE_V2_GEMV_MAX_HBLOCKS) return nullptr;
++    const uint16_t* B_ptr = *((const uint16_t* const*) kernel_args[1]);
++    if (((uintptr_t) B_ptr) & 15) return nullptr;   // 16-byte cp.async of the weight rows
++
++    void* kernel = exl3_gemv_v2_tab_k4_cb2[(c_fp32 ? 4 : 0) + mmode * 2 + cfg];
++    if (!kernel) return nullptr;
++    if (!ws_ready(device, stream)) return nullptr;
++
++    int num_sms = DevCtx::instance().get_num_sms(device);
++    int max_blocks = occupancy(kernel, block_dim, device) * num_sms;
++    int grid = MIN(size_n / cols, max_blocks);
++    if (grid < 1) return nullptr;
++
++    int* hctr = g_ws[device].hctr;
++    void* args[11];
++    for (int i = 0; i < 10; ++i) args[i] = kernel_args[i];
++    args[10] = (void*) &hctr;
++
++    cuda_check(cudaLaunchCooperativeKernel(kernel, dim3(grid), dim3(block_dim), args, 0, stream));
++    g_count_gemv.fetch_add(1, std::memory_order_relaxed);
++    return kernel;
++}
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_dense_v2.cuh b/exllamav3_ext/quant/exl3_dense_v2.cuh
+--- a/exllamav3_ext/quant/exl3_dense_v2.cuh	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/exl3_dense_v2.cuh	2026-09-24 15:08:33
+@@ -0,0 +1,56 @@
++#pragma once
++
++// densegemm r1: host side of the dense EXL3 V2 kernels (exl3_gemm_v2_kernel.cuh,
++// exl3_gemv_v2_kernel.cuh). Opt-in, default off:
++//   EXL3_DENSE_V2     = 0 (unset) served kernels | 1 V2 gemm + mgemm + gemv | 2 gemm + mgemm | 3 gemv
++//   EXL3_DENSE_ROWS32 = 0 (unset) | 1 one-pass 17-32-row gemm / mgemm (shapes 2, 3), independent of
++//                       EXL3_DENSE_V2
++// Both are read once, at the first dense call (dense_v2_set_mode overrides them for tests). Every
++// launch uses the grid the served path would use for the same call, and every V2 kernel is bitwise
++// identical to the served kernel it replaces at that grid. Anything not covered (other K or
++// codebook, unexpected shape, workspace too small, first call of a shape) runs the served kernel.
++
++#include <cuda_runtime.h>
++#include <cstdint>
++#include <tuple>
++
++#define DENSE_V2_REVISION 2
++#define DENSE_V2_GEMV_MAX_HBLOCKS 16384      // gemv output-block arrival counters per device
++
++int dense_v2_mode();
++bool dense_v2_rows32();
++void dense_v2_set_mode(int mode, int rows32);          // -1 keeps the current value (tests)
++std::tuple<int, int> dense_v2_modes();                  // (EXL3_DENSE_V2, EXL3_DENSE_ROWS32)
++std::tuple<int64_t, int64_t> dense_v2_launch_counts();  // (V2 gemm/mgemm launches, V2 gemv launches), tests
++void dense_v2_reset_counts();
++
++inline bool dense_v2_gemm_on() { int m = dense_v2_mode(); return m == 1 || m == 2; }
++inline bool dense_v2_gemv_on() { int m = dense_v2_mode(); return m == 1 || m == 3; }
++
++// V2 twin of the autotuned exl3_gemm_kernel launch this call would get (cache hit only). Returns
++// the launched kernel (for graph parameter recording) and sets *out_tag, or nullptr (nothing launched)
++void* dense_v2_launch_gemm
++(
++    void** kernel_args,         // the 10 exl3_gemm_kernel arguments
++    uint64_t autotune_key,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32,
++    int device, cudaStream_t stream, int* out_tag
++);
++
++// Same for exl3_mgemm_kernel; the caller has checked dense mode (no indices / weights / range
++// filter, num_tokens 1)
++void* dense_v2_launch_mgemm
++(
++    void** kernel_args,         // the 22 exl3_mgemm_kernel arguments
++    uint64_t autotune_key,
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32,
++    int device, cudaStream_t stream, int* out_tag
++);
++
++// V2 twin of an exl3_gemv_kernel launch already decided by exl3_gemv_try_launch
++void* dense_v2_launch_gemv
++(
++    void** kernel_args,         // the 10 exl3_gemm_kernel arguments
++    int size_m, int size_k, int size_n, int K, int cb, bool c_fp32, int mmode, int cfg,
++    int block_dim, int cols, int device, cudaStream_t stream
++);
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_gemm.cu b/exllamav3_ext/quant/exl3_gemm.cu
+--- a/exllamav3_ext/quant/exl3_gemm.cu	2026-09-24 13:55:03
++++ b/exllamav3_ext/quant/exl3_gemm.cu	2026-09-24 14:30:15
+@@ -13,6 +13,7 @@
+ #include "exl3_gemv.cuh"
+ #include "exl3_gemv_int8.cuh"
+ #include "coop_autotune.cuh"
++#include "exl3_dense_v2.cuh"
+ #include <set>
+ #include <vector>
+ 
+@@ -239,6 +240,23 @@
+     if (autotune)
+     {
+         uint64_t autotune_key = gemm_autotune_hash(MAX(size_m, 2), size_k, size_n, K, c_fp32, device, cc, num_sms, cb);
++
++        // densegemm r1 (EXL3_DENSE_V2 = 1 | 2, EXL3_DENSE_ROWS32 = 1): V2 twin of the tuned kernel,
++        // same grid, bitwise identical; nullptr = not applicable, the served launch below runs.
++        // Entered with any flag on (mode 3 too: the call allocates the workspace the gemv twin uses)
++        if (suh_ptr && A_had_ptr && svh_ptr && (dense_v2_mode() != 0 || dense_v2_rows32()))
++        {
++            int v2_tag = 0;
++            void* v2_kernel = dense_v2_launch_gemm(kernelArgs, autotune_key, size_m, size_k, size_n, K, cb, c_fp32,
++                                                   device, stream, &v2_tag);
++            if (v2_kernel)
++            {
++                add_graph_args(v2_kernel);
++                cuda_check(cudaPeekAtLastError());
++                return v2_tag;
++            }
++        }
++
+         CoopAutotuneLaunch tuned;
+         if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, SMEM_MAX, stream, &tuned))
+         {
+@@ -580,6 +598,20 @@
+             size_m, size_k, size_n, K, c_fp32, device, cc, total_sms, cb, bszm_in, bszm_out
+         );
+         if (had_src_list) autotune_key ^= 0x9e3779b97f4a7c15ull;   // sliced launches tune separately
++
++        // densegemm r1: V2 twin for dense calls (no indices / weights / range filter, one token)
++        if (!indices && !weights && min_index < 0 && num_tokens == 1 && (dense_v2_mode() != 0 || dense_v2_rows32()))
++        {
++            int v2_tag = 0;
++            void* v2_kernel = dense_v2_launch_mgemm(kernelArgs, autotune_key, size_m, size_k, size_n, K, cb, c_fp32,
++                                                    device, stream, &v2_tag);
++            if (v2_kernel)
++            {
++                add_graph_args(v2_kernel);
++                cuda_check(cudaPeekAtLastError());
++                return v2_tag;
++            }
++        }
+ 
+         CoopAutotuneLaunch tuned;
+         if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, SMEM_MAX, stream, &tuned))
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_gemm_inner_v2.cuh b/exllamav3_ext/quant/exl3_gemm_inner_v2.cuh
+--- a/exllamav3_ext/quant/exl3_gemm_inner_v2.cuh	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/exl3_gemm_inner_v2.cuh	2026-09-24 15:08:07
+@@ -0,0 +1,1048 @@
++#pragma once
++
++// densegemm r1 (EXL3_DENSE_V2 / EXL3_DENSE_ROWS32, default off): the dense stream-K inner loop of
++// exl3_gemm_kernel_inner (exl3_gemm_inner.cuh) with three changes that leave every floating-point
++// operation, its operands and its order unchanged:
++//
++//   1. Weight prologue first. The first SH_STAGES - 1 weight (B) tiles are issued with cp.async
++//      BEFORE the caller's input stage (Hadamard of A + grid / group barrier, passed in as pre_a),
++//      the A tiles after it. B does not depend on A, so the first DRAM round trip overlaps the
++//      input stage instead of following it.
++//
++//   2. Gathered stream-K fixup. The served kernel sums the k-segments of an output column tile as a
++//      chain: the segment holding the top k writes its partial into C, then each lower segment in
++//      turn waits on the column lock, reads the running sum, adds its own partial and writes it
++//      back (rounded to fp16 when C is fp16), down to the segment holding k = 0. With nseg segments
++//      that is nseg - 1 serialized lock handoffs at the end of every call (5 for the served GDN
++//      out_proj at 16 rows). Here every segment except the k = 0 one ("head") publishes its fp32
++//      partial into its CTA's slot in a workspace and bumps the column lock once, without waiting;
++//      the head waits for the count, then folds the partials in the SAME order with the SAME
++//      intermediate rounding: S = P_top; S = P_i + rnd(S) for each lower segment; own P + rnd(S),
++//      where rnd() is the fp16 round trip the served kernel applies when it stores the running sum
++//      into an fp16 C, and the identity for fp32 C. fp32 addition is commutative, so P + S == S + P
++//      bitwise; the association (the order of the chain) is what is preserved. A CTA publishes at
++//      most one partial (its first segment, the only one that can start mid-column), so the slot
++//      index is the CTA index.
++//
++//   3. Output Hadamard in the finalizing CTA. The head (or a CTA owning a whole column tile) stages
++//      the final sums in shared memory and applies the output transform itself, as the served
++//      exl3_gemm_kernel already does (shmem_out_had). EPI 0 = exl3_gemm_kernel semantics (fp32 sums
++//      -> had_ff / had_fh). EPI 1 = exl3_mgemm_kernel semantics: that kernel rounds the final sum to
++//      the C dtype, writes it, and then runs had_ff / had_hf over C after a group barrier; here the
++//      same rounded values go through the same functions from shared memory.
++//
++// Everything else (tiling, slice partition, pipeline, dequantization, MMA sequence, threadblock
++// reduction over sub_k) is the served code, copied verbatim. The partition depends only on
++// gridDim.x and the tile counts, so a V2 launch with the served (autotuned) grid computes the same
++// partial sums as the served kernel. TILESIZE_M == 32 (EXL3_DENSE_ROWS32) runs rows 17-32 in one
++// pass: each 16-row block sees the same B fragments, k order and reduction as the served kernel's
++// second 16-row chunk.
++//
++// densegemm r2 (R710: every r1 gemm / mgemm twin ran 3-6x slower than served because its stack
++// frame was 544-1832 bytes per thread: the fragment and pipeline state lived in local memory).
++// Code structure only, same arithmetic:
++//   - the head fold of a column that continues in later CTAs runs AFTER the main loop, at one call
++//     site (such a segment is always its CTA's last one), so the unrolled loop's reduce() is no
++//     bigger than the served one and the fold's registers are not live next to frag_a / frag_b;
++//   - the fold reads one producer slot at a time (no batched buf[] / ok[] arrays);
++//   - partition arithmetic in 32 bits, the served expression (the host guarantees no overflow), so
++//     there are no 64-bit division calls;
++//   - slot store and fold are __forceinline__ free functions; no new lambda captures frag_c;
++//   - the B prologue waits for stage 0 only (served wait_stage), not for every prologue stage.
++// Compile-time switches for the r2 compile bisect (bisect-compile.sh), defaults = the r2 design:
++//   DGV2_BPRO      1: weight prologue before the input stage | 0: served order (input stage first)
++//   DGV2_LAMBDA_AI 1: __attribute__((always_inline)) on the main-loop lambdas | 0: none
++
++#include "hadamard_inner.cuh"
++#include "exl3_gemm_inner.cuh"
++
++#ifndef DGV2_BPRO
++    #define DGV2_BPRO 1
++#endif
++#ifndef DGV2_LAMBDA_AI
++    #define DGV2_LAMBDA_AI 0
++#endif
++#if DGV2_LAMBDA_AI
++    #define DGV2_AI __attribute__((always_inline))
++#else
++    #define DGV2_AI
++#endif
++
++// Slot layout: rows <= 8 at TILESIZE_M == 16 store only the fragment halves that hold rows 0-7
++// (float2 per fragment); everything else stores whole fragments (float4)
++__host__ __device__ inline int exl3_dense_v2_slot_floats(int tilesize_m, int tilesize_n, int size_m)
++{
++    return (tilesize_m == 16 && size_m <= 8) ? 8 * tilesize_n : tilesize_m * tilesize_n;
++}
++
++// fp16 round trip the served chain applies when it stores a running sum into an fp16 C
++template <bool c_fp32>
++__device__ __forceinline__ float dv2_rnd(float x)
++{
++    if constexpr (c_fp32) return x;
++    else return __half2float(__float2half_rn(x));
++}
++
++// First tile of CTA b under the served slice partition (served expression, 32 bits)
++__device__ __forceinline__ int dv2_tile_beg(int tiles_kn, int num_slices, int b)
++{
++    return tiles_kn * b / num_slices;
++}
++
++// Publish this CTA's partial (sub_k == 0 threads). compact: float2 [n * 256 + t] holding rows 0-7;
++// otherwise float4 [(m * F + n) * 256 + t]
++template <int TILEBLOCKS_M, int FRAGS_N_PER_WARP>
++__device__ __forceinline__ void dv2_store_slot
++(
++    FragC (&frag_c)[TILEBLOCKS_M][FRAGS_N_PER_WARP],
++    float* __restrict__ slot,
++    const bool compact,
++    const int t
++)
++{
++    if (compact)
++    {
++        float2* s2 = (float2*) slot;
++        #pragma unroll
++        for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++            __stcg(s2 + n * EXL3_GEMM_BASE_THREADS + t, make_float2(frag_c[0][n][0], frag_c[0][n][1]));
++    }
++    else
++    {
++        float4* s4 = (float4*) slot;
++        #pragma unroll
++        for (int m = 0; m < TILEBLOCKS_M; ++m)
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                __stcg(s4 + (m * FRAGS_N_PER_WARP + n) * EXL3_GEMM_BASE_THREADS + t,
++                       make_float4(frag_c[m][n][0], frag_c[m][n][1], frag_c[m][n][2], frag_c[m][n][3]));
++    }
++}
++
++// Fold the published partials of the non-empty CTAs b_top .. b_head + 1 (descending k) and then the
++// head's own partial, exactly as the served lock chain does: S = P_top; S = P_b + rnd(S); own + rnd(S).
++// One slot at a time (the fold is sequential anyway); acc holds only the running sum
++template <int TILEBLOCKS_M, int FRAGS_N_PER_WARP, bool c_fp32>
++__device__ __forceinline__ void dv2_fold
++(
++    FragC (&frag_c)[TILEBLOCKS_M][FRAGS_N_PER_WARP],
++    const float* __restrict__ ws_slots,
++    const int slot_floats,
++    const bool compact,
++    const int b_top,
++    const int b_head,
++    const int tiles_kn,
++    const int num_slices,
++    const int t
++)
++{
++    if (compact)
++    {
++        float2 acc[FRAGS_N_PER_WARP];
++        #pragma unroll
++        for (int n = 0; n < FRAGS_N_PER_WARP; ++n) acc[n] = make_float2(0.0f, 0.0f);
++        bool have = false;
++        for (int b = b_top; b > b_head; --b)
++        {
++            if (dv2_tile_beg(tiles_kn, num_slices, b + 1) <= dv2_tile_beg(tiles_kn, num_slices, b)) continue;
++            const float2* s2 = (const float2*) (ws_slots + (size_t) b * slot_floats);
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++            {
++                float2 p = __ldcg(s2 + n * EXL3_GEMM_BASE_THREADS + t);
++                if (have)
++                {
++                    p.x += dv2_rnd<c_fp32>(acc[n].x);
++                    p.y += dv2_rnd<c_fp32>(acc[n].y);
++                }
++                acc[n] = p;
++            }
++            have = true;
++        }
++        if (have)
++        {
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++            {
++                frag_c[0][n][0] += dv2_rnd<c_fp32>(acc[n].x);
++                frag_c[0][n][1] += dv2_rnd<c_fp32>(acc[n].y);
++            }
++        }
++    }
++    else
++    {
++        float4 acc[TILEBLOCKS_M][FRAGS_N_PER_WARP];
++        #pragma unroll
++        for (int m = 0; m < TILEBLOCKS_M; ++m)
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n) acc[m][n] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++        bool have = false;
++        for (int b = b_top; b > b_head; --b)
++        {
++            if (dv2_tile_beg(tiles_kn, num_slices, b + 1) <= dv2_tile_beg(tiles_kn, num_slices, b)) continue;
++            const float4* s4 = (const float4*) (ws_slots + (size_t) b * slot_floats);
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    float4 p = __ldcg(s4 + (m * FRAGS_N_PER_WARP + n) * EXL3_GEMM_BASE_THREADS + t);
++                    if (have)
++                    {
++                        p.x += dv2_rnd<c_fp32>(acc[m][n].x);
++                        p.y += dv2_rnd<c_fp32>(acc[m][n].y);
++                        p.z += dv2_rnd<c_fp32>(acc[m][n].z);
++                        p.w += dv2_rnd<c_fp32>(acc[m][n].w);
++                    }
++                    acc[m][n] = p;
++                }
++            have = true;
++        }
++        if (have)
++        {
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    frag_c[m][n][0] += dv2_rnd<c_fp32>(acc[m][n].x);
++                    frag_c[m][n][1] += dv2_rnd<c_fp32>(acc[m][n].y);
++                    frag_c[m][n][2] += dv2_rnd<c_fp32>(acc[m][n].z);
++                    frag_c[m][n][3] += dv2_rnd<c_fp32>(acc[m][n].w);
++                }
++        }
++    }
++}
++
++template<EXL3_GEMM_T_ARGS, int EPI, typename PreA>
++inline __device__
++void exl3_gemm_kernel_inner_v2
++(
++    const half* __restrict__  A,
++    const uint16_t* __restrict__ B,
++    void* __restrict__ C,
++    const int size_m,
++    const int size_k,
++    const int size_n,
++    int* __restrict__ locks,
++    const half* post_scale,
++    int size_n_stride,              // full width of B and C when computing a column slice (0: = size_n)
++    float* __restrict__ ws_slots,   // this z-group's partial-sum slots, slot b at b * slot_floats
++    PreA pre_a                      // input stage: every thread of the block calls it exactly once
++)
++{
++    const int TILEBLOCKS_M = TILESIZE_M / 16;
++    if (size_n_stride == 0) size_n_stride = size_n;
++    const int blocks_n_full = size_n_stride / 16;
++    const int TILEBLOCKS_K = TILESIZE_K / 16;
++    const int TILEBLOCKS_N = TILESIZE_N / 16;
++    const int FRAGS_N_PER_WARP = 2 * TILEBLOCKS_N / (EXL3_GEMM_BASE_THREADS / 32);
++
++    const int sh_a_stage_size = TILESIZE_M * TILESIZE_K;                         // in halfs
++    const int sh_b_stage_size = TILEBLOCKS_K * TILEBLOCKS_N * 256 / 16 * bits;   // in uint16s
++    const int sh_c_size = MAX  // in floats
++    (
++        4 * EXL3_GEMM_BASE_THREADS * FRAGS_N_PER_WARP * TILEBLOCKS_M,
++        TILESIZE_N * TILESIZE_M
++    );
++
++    const int A_COLS = TILESIZE_K / 8;
++    const int A_SWIZZLE_MASK = A_COLS - 1;
++    const int A_SWIZZLE_SHIFT = (A_COLS <= 2) ? 2 : 1;
++
++    static_assert(EXL3_GEMM_BASE_THREADS == 256);
++    static_assert(TILESIZE_M == 16 || TILESIZE_M == 32, "V2: 16 or 32 rows per tile");
++    static_assert(TILESIZE_K % 16 == 0, "Invalid kernel params");
++    static_assert(TILESIZE_N % 128 == 0, "Invalid kernel params");
++    static_assert(EPI == 0 || EPI == 1, "V2: epilogue 0 (gemm) or 1 (mgemm)");
++    static_assert
++    (
++        SMEM_MAX >= SH_STAGES * (2 * sh_a_stage_size + 2 * sh_b_stage_size) + 4 * sh_c_size,
++        "Invalid kernel params (insufficient shared memory for shape)"
++    );
++
++    extern __shared__ half shared[];
++    half* sh_a = shared;
++    uint16_t* sh_b = (uint16_t*) (sh_a + SH_STAGES * sh_a_stage_size);
++    float* sh_c = (float*) (sh_b + sh_b_stage_size * SH_STAGES);
++
++    int t = threadIdx.x % EXL3_GEMM_BASE_THREADS;
++    int sub_k = threadIdx.x / EXL3_GEMM_BASE_THREADS;
++    int warp_id = t / 32;
++    int lane_id = t % 32;
++
++    int tiles_k = size_k / TILESIZE_K;
++    int tiles_n = size_n / TILESIZE_N;
++    int blocks_n = tiles_n * TILEBLOCKS_N;
++
++    // Slice partition: identical to the served kernel
++    int num_slices = gridDim.x;
++    int slice_beg = tiles_k * tiles_n * blockIdx.x / num_slices;
++    int slice_end = tiles_k * tiles_n * (blockIdx.x + 1) / num_slices;
++    int slice_len = slice_end - slice_beg;
++    if (slice_len < 1)
++    {
++        // An empty CTA still takes part in the input stage's barrier
++        pre_a();
++        return;
++    }
++
++    // Served partition in 32 bits: the host launches V2 only when tiles * (grid + 1) < 2^31, so
++    // tiles_kn * b and (i + 1) * num_slices below cannot overflow and equal the served values
++    const int tiles_kn = tiles_k * tiles_n;
++
++    auto index_k = [&] (int slice_i) { return (slice_i % tiles_k); };
++    auto index_n = [&] (int slice_i) { return (slice_i / tiles_k); };
++
++    const int slice_m = 0;
++
++    int slice0_k = index_k(slice_beg);
++    int slice0_n = index_n(slice_beg);
++    int slice0_iters = slice_len;
++
++    int gl_a_stride_m = TILESIZE_M * size_k;
++    const int gl_a_stride_k = TILESIZE_K;
++    const int sh0_a_stride_m = TILESIZE_M * TILESIZE_K;
++    const half* gl_a_ptr = A + slice_m * gl_a_stride_m + slice0_k * gl_a_stride_k;
++    half* sh0_a_ptr = sh_a + (slice0_iters % SH_STAGES) * sh_a_stage_size;
++
++    const int load_a_iters = CEIL_DIVIDE(sh0_a_stride_m / 8, EXL3_GEMM_BASE_THREADS);
++    bool pred_a_gl[load_a_iters];
++    int load_a_gl[load_a_iters];
++    int load_a_sh[load_a_iters];
++    for (int i = 0; i < load_a_iters; ++i)
++    {
++        int k = (i * EXL3_GEMM_BASE_THREADS + t) % (gl_a_stride_k / 8);
++        int m = (i * EXL3_GEMM_BASE_THREADS + t) / (gl_a_stride_k / 8);
++        load_a_gl[i] = m * size_k / 8 + k;
++        load_a_sh[i] = m * A_COLS + (k ^ ((m >> A_SWIZZLE_SHIFT) & A_SWIZZLE_MASK));
++        pred_a_gl[i] = m < size_m;
++    }
++
++    int gl_b_stride_k = blocks_n_full * TILEBLOCKS_K * 256 / 16 * bits;
++    const int gl_b_stride_n = TILEBLOCKS_N * 256 / 16 * bits;
++    const int sh0_b_stride_k = TILEBLOCKS_K * TILEBLOCKS_N * 256 / 16 * bits;
++    const uint16_t* gl_b_ptr = B + slice0_k * gl_b_stride_k + slice0_n * gl_b_stride_n;
++    uint16_t* sh0_b_ptr = sh_b + (slice0_iters % SH_STAGES) * sh_b_stage_size;
++
++    const int load_b_iters = CEIL_DIVIDE(sh0_b_stride_k / 8, EXL3_GEMM_BASE_THREADS);
++    bool pred_b_gl[load_b_iters];
++    int load_b_gl[load_b_iters];
++    for (int i = 0; i < load_b_iters; ++i)
++    {
++        int n = (i * EXL3_GEMM_BASE_THREADS + t) % (gl_b_stride_n / 8);
++        int k = (i * EXL3_GEMM_BASE_THREADS + t) / (gl_b_stride_n / 8);
++        load_b_gl[i] = k * (blocks_n_full * 256 / 16 * bits / 8) + n;
++        pred_b_gl[i] = i * EXL3_GEMM_BASE_THREADS + t < sh0_b_stride_k / 8;
++    }
++
++    auto advance0 = [&] () DGV2_AI
++    {
++        slice0_k++;
++        slice0_iters--;
++
++        int stage = slice0_iters % SH_STAGES;
++        sh0_a_ptr = sh_a + stage * sh_a_stage_size;
++        sh0_b_ptr = sh_b + stage * sh_b_stage_size;
++
++        if (slice0_k >= tiles_k)
++        {
++            slice0_k = 0;
++            slice0_n++;
++            gl_a_ptr = A + slice_m * gl_a_stride_m + slice0_k * gl_a_stride_k;
++            gl_b_ptr = B + slice0_k * gl_b_stride_k + slice0_n * gl_b_stride_n;
++        }
++        else
++        {
++            gl_a_ptr += gl_a_stride_k;
++            gl_b_ptr += gl_b_stride_k;
++        }
++    };
++
++    int slice1_k = slice0_k;
++    int slice1_n = slice0_n;
++    int slice1_iters = slice0_iters;
++
++    half* sh1_a_ptr = sh_a + (slice1_iters % SH_STAGES) * sh_a_stage_size;
++    uint16_t* sh1_b_ptr = sh_b + (slice1_iters % SH_STAGES) * sh_b_stage_size;
++
++    auto advance1 = [&] () DGV2_AI
++    {
++        slice1_k++;
++        slice1_iters--;
++
++        int stage = slice1_iters % SH_STAGES;
++        sh1_a_ptr = sh_a + stage * sh_a_stage_size;
++        sh1_b_ptr = sh_b + stage * sh_b_stage_size;
++
++        if (slice1_k >= tiles_k)
++        {
++            slice1_k = 0;
++            slice1_n++;
++        }
++    };
++
++    int slice2_k = slice0_k;
++    int slice2_k0 = slice0_k;
++    int slice2_n = slice0_n;
++    int slice2_iters = slice0_iters;
++
++    int gl_c_stride_n = TILESIZE_N;
++    int gl_c_stride_m = TILESIZE_M * size_n_stride;
++
++    half* gl_c_ptr_16 = ((half*) C) + slice_m * gl_c_stride_m + slice2_n * gl_c_stride_n;
++    float* gl_c_ptr_32 = ((float*) C) + slice_m * gl_c_stride_m + slice2_n * gl_c_stride_n;
++
++    register FragA frag_a[TILEBLOCKS_M == 1 ? FRAG_STAGES : TILEBLOCKS_M];
++    register FragB frag_b[FRAG_STAGES][FRAGS_N_PER_WARP];
++    register FragC frag_c[TILEBLOCKS_M][FRAGS_N_PER_WARP];
++    #if EXL3_GEMM_H_ACC
++        register FragC_h frag_c_h[TILEBLOCKS_M][FRAGS_N_PER_WARP];
++    #endif
++
++    auto advance2 = [&] () DGV2_AI
++    {
++        slice2_k++;
++        slice2_iters--;
++
++        if (slice2_k >= tiles_k)
++        {
++            slice2_k = 0;
++            slice2_k0 = 0;
++            slice2_n++;
++            if constexpr (c_fp32)
++                gl_c_ptr_32 += gl_c_stride_n;
++            else
++                gl_c_ptr_16 += gl_c_stride_n;
++        }
++    };
++
++    // The two halves of the served async_load_gl: A tile, B tile (sub_k == 0 threads only)
++    auto load_a_stage = [&] () DGV2_AI
++    {
++        const int4* gl = (const int4*) gl_a_ptr;
++        int4* sh = (int4*) sh0_a_ptr;
++        #pragma unroll
++        for (int i = 0; i < load_a_iters; ++i)
++        {
++            if (pred_a_gl[i]) cp_async(sh + load_a_sh[i], gl + load_a_gl[i]);
++        }
++    };
++
++    auto load_b_stage = [&] () DGV2_AI
++    {
++        const int4* gl = (const int4*) gl_b_ptr;
++        int4* sh = (int4*) sh0_b_ptr;
++        #pragma unroll
++        for (int i = 0; i < load_b_iters; ++i)
++        {
++            if (pred_b_gl[i]) cp_async(sh + EXL3_GEMM_BASE_THREADS * i + t, gl + load_b_gl[i]);
++        }
++    };
++
++    auto async_load_gl = [&] () DGV2_AI
++    {
++        if (sub_k)
++        {
++            cp_async_fence();
++            return;
++        }
++
++        if (slice0_iters)
++        {
++            load_a_stage();
++            load_b_stage();
++            advance0();
++        }
++
++        cp_async_fence();
++    };
++
++    auto load_frags = [&] (int buf) DGV2_AI
++    {
++        if (!slice1_iters) return;
++
++        {
++            int r = (lane_id % 8) + 8 * ((lane_id / 8) % 2);
++            int base_c = lane_id / 16 + sub_k * 2;
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++            {
++                int R = r + m * 16;
++                int c_swizzled = base_c ^ ((R >> A_SWIZZLE_SHIFT) & A_SWIZZLE_MASK);
++                ldsm4(frag_a[TILEBLOCKS_M == 1 ? buf : m], (int4*) sh1_a_ptr + R * A_COLS + c_swizzled);
++            }
++        }
++
++        #pragma unroll
++        for (int n2 = 0; n2 < FRAGS_N_PER_WARP; n2 += 2)
++        {
++            int sub_n2 = warp_id * FRAGS_N_PER_WARP / 2 + n2 / 2;
++            const uint32_t* shb = (const uint32_t*) (sh1_b_ptr + (sub_k * TILEBLOCKS_N + sub_n2) * 256 / 16 * bits);
++
++            dq_dispatch<bits, cb>(shb, lane_id << 3, frag_b[buf][n2], frag_b[buf][n2 + 1]);
++        }
++
++        __syncthreads();
++        advance1();
++    };
++
++    auto clear_frag_c = [&] () DGV2_AI
++    {
++        #pragma unroll
++        for (int m = 0; m < TILEBLOCKS_M; ++m)
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                frag_c[m][n] = {};
++        #if EXL3_GEMM_H_ACC
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    frag_c_h[m][n] = {};
++        #endif
++    };
++
++    // Threadblock reduction over sub_k: served code
++    auto threadblock_reduce = [&] () DGV2_AI
++    {
++        auto store = [&] (int i) DGV2_AI
++        {
++            if (sub_k == i)
++            {
++                if constexpr (TILEBLOCKS_M == 1)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4) * t;
++                    #pragma unroll
++                    for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    {
++                        #pragma unroll
++                        for (int j = 0; j < 4; ++j) *sh_red++ = frag_c[0][n][j];
++                    }
++                }
++                else
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4 * TILEBLOCKS_M) * t;
++                    #pragma unroll
++                    for (int m = 0; m < TILEBLOCKS_M; ++m)
++                        #pragma unroll
++                        for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                        {
++                            #pragma unroll
++                            for (int j = 0; j < 4; ++j) *sh_red++ = frag_c[m][n][j];
++                        }
++                }
++            }
++            __syncthreads();
++        };
++
++        auto add = [&] (int i) DGV2_AI
++        {
++            if (sub_k == i)
++            {
++                if constexpr (TILEBLOCKS_M == 1)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4) * t;
++                    #pragma unroll
++                    for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    {
++                        #pragma unroll
++                        for (int j = 0; j < 4; ++j) frag_c[0][n][j] += *sh_red++;
++                    }
++                }
++                else
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4 * TILEBLOCKS_M) * t;
++                    #pragma unroll
++                    for (int m = 0; m < TILEBLOCKS_M; ++m)
++                        #pragma unroll
++                        for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                        {
++                            #pragma unroll
++                            for (int j = 0; j < 4; ++j) frag_c[m][n][j] += *sh_red++;
++                        }
++                }
++            }
++        };
++
++        auto store_small = [&] (int i) DGV2_AI
++        {
++            if constexpr (TILEBLOCKS_M == 1)
++            {
++                if (sub_k == i && lane_id / 4 < size_m)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4) * t;
++                    #pragma unroll
++                    for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    {
++                        *sh_red++ = frag_c[0][n][0];
++                        *sh_red++ = frag_c[0][n][1];
++                    }
++                }
++                __syncthreads();
++            }
++            else
++            {
++                if (sub_k == i)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4 * TILEBLOCKS_M) * t;
++                    #pragma unroll
++                    for (int m = 0; m < TILEBLOCKS_M; ++m)
++                    {
++                        bool row_ok = (m * 16 + lane_id / 4) < size_m;
++                        #pragma unroll
++                        for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                        {
++                            if (row_ok) { *sh_red = frag_c[m][n][0]; *(sh_red + 1) = frag_c[m][n][1]; }
++                            sh_red += 2;
++                        }
++                    }
++                }
++                __syncthreads();
++            }
++        };
++
++        auto add_small = [&] (int i) DGV2_AI
++        {
++            if constexpr (TILEBLOCKS_M == 1)
++            {
++                if (sub_k == i && lane_id / 4 < size_m)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4) * t;
++                    #pragma unroll
++                    for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    {
++                        frag_c[0][n][0] += *sh_red++;
++                        frag_c[0][n][1] += *sh_red++;
++                    }
++                }
++            }
++            else
++            {
++                if (sub_k == i)
++                {
++                    float* sh_red = sh_c + (FRAGS_N_PER_WARP * 4 * TILEBLOCKS_M) * t;
++                    #pragma unroll
++                    for (int m = 0; m < TILEBLOCKS_M; ++m)
++                    {
++                        bool row_ok = (m * 16 + lane_id / 4) < size_m;
++                        #pragma unroll
++                        for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                        {
++                            if (row_ok) { frag_c[m][n][0] += *sh_red; frag_c[m][n][1] += *(sh_red + 1); }
++                            sh_red += 2;
++                        }
++                    }
++                }
++            }
++        };
++
++        if (size_m <= 8)
++        {
++            if constexpr (TILEBLOCKS_K == 2)
++            {
++                store_small(1);
++                add_small(0);
++            }
++            if constexpr (TILEBLOCKS_K == 3)
++            {
++                store_small(1);
++                add_small(0);
++                store_small(2);
++                add_small(0);
++            }
++            if constexpr (TILEBLOCKS_K == 4)
++            {
++                store_small(3);
++                add_small(2);
++                store_small(1);
++                add_small(0);
++                store_small(2);
++                add_small(0);
++            }
++        }
++        else
++        {
++            if constexpr (TILEBLOCKS_K == 2)
++            {
++                store(1);
++                add(0);
++            }
++            if constexpr (TILEBLOCKS_K == 3)
++            {
++                store(1);
++                add(0);
++                store(2);
++                add(0);
++            }
++            if constexpr (TILEBLOCKS_K == 4)
++            {
++                store(3);
++                add(2);
++                store(1);
++                add(0);
++                store(2);
++                add(0);
++            }
++        }
++    };
++
++    // Final sums -> shared memory, fp32 (served write_sum_tile_sh)
++    auto write_sum_tile_sh = [&]() DGV2_AI
++    {
++        const int n0 = warp_id * FRAGS_N_PER_WARP;
++        #pragma unroll
++        for (int m = 0; m < TILEBLOCKS_M; ++m)
++        {
++            const int r0 = m * 16 + lane_id / 4;
++            const int r1 = r0 + 8;
++            const int c = (lane_id % 4) * 2;
++            if (r0 < size_m)
++            {
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    float* c_ptr = ((float*) sh_c) + r0 * TILESIZE_N + (n0 + n) * 8 + c;
++                    *c_ptr++ = frag_c[m][n][0];
++                    *c_ptr++ = frag_c[m][n][1];
++                }
++            }
++            if (r1 < size_m)
++            {
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    float* c_ptr = ((float*) sh_c) + r1 * TILESIZE_N + (n0 + n) * 8 + c;
++                    *c_ptr++ = frag_c[m][n][2];
++                    *c_ptr++ = frag_c[m][n][3];
++                }
++            }
++        }
++    };
++
++    // Final sums -> shared memory rounded to fp16 (what the served mgemm kernel writes into an
++    // fp16 C before its output transform reads it back), same rounding as its write_sum_gl
++    auto write_sum_tile_sh_h = [&]() DGV2_AI
++    {
++        const int n0 = warp_id * FRAGS_N_PER_WARP;
++        half* sh_h = (half*) sh_c;
++        #pragma unroll
++        for (int m = 0; m < TILEBLOCKS_M; ++m)
++        {
++            const int r0 = m * 16 + lane_id / 4;
++            const int r1 = r0 + 8;
++            const int c = (lane_id % 4) * 2;
++            if (r0 < size_m)
++            {
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    *((half2*) (sh_h + r0 * TILESIZE_N + (n0 + n) * 8 + c)) =
++                        __floats2half2_rn(frag_c[m][n][0], frag_c[m][n][1]);
++            }
++            if (r1 < size_m)
++            {
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                    *((half2*) (sh_h + r1 * TILESIZE_N + (n0 + n) * 8 + c)) =
++                        __floats2half2_rn(frag_c[m][n][2], frag_c[m][n][3]);
++            }
++        }
++    };
++
++    // Output transform from shared memory to C (served output_had_sh_gl; EPI 1 with an fp16 C reads
++    // the fp16-rounded sums, as the served mgemm's had_hf pass over C does)
++    auto output_had_sh_gl = [&]() DGV2_AI
++    {
++        int sh_warp = warp_id;
++        constexpr int active_warps = EXL3_GEMM_BASE_THREADS / 32;
++        for (;; sh_warp += active_warps)
++        {
++            int col = sh_warp % (TILESIZE_N / 128);
++            int row = sh_warp / (TILESIZE_N / 128);
++            if (row >= size_m) break;
++
++            const half* post_scale_c = post_scale + slice2_n * gl_c_stride_n + col * 128;
++
++            if constexpr (c_fp32)
++            {
++                const float* had_in = sh_c + row * TILESIZE_N + col * 128;
++                float* had_out = gl_c_ptr_32 + row * size_n_stride + col * 128;
++                had_ff_r_128_inner<false, true>(had_in, had_out, post_scale_c, 0.088388347648f);
++            }
++            else if constexpr (EPI == 0)
++            {
++                const float* had_in = sh_c + row * TILESIZE_N + col * 128;
++                half* had_out = gl_c_ptr_16 + row * size_n_stride + col * 128;
++                had_fh_r_128_inner<false, true>(had_in, had_out, post_scale_c, 0.088388347648f);
++            }
++            else
++            {
++                const half* had_in = ((const half*) sh_c) + row * TILESIZE_N + col * 128;
++                half* had_out = gl_c_ptr_16 + row * size_n_stride + col * 128;
++                had_hf_r_128_inner<false, true>(had_in, had_out, post_scale_c, 0.088388347648f);
++            }
++        }
++    };
++
++    // Partial-sum slots (dv2_store_slot / dv2_fold): whole fragments as float4 at
++    // [(m * F + n) * 256 + t]; at 16-row tiles with size_m <= 8, only elements [0], [1] (rows 0-7)
++    // as float2 at [n * 256 + t]
++    const int slot_floats = exl3_dense_v2_slot_floats(TILESIZE_M, TILESIZE_N, size_m);
++    const bool compact = (TILEBLOCKS_M == 1) && (size_m <= 8);
++
++    // Final sums of the current column tile (in frag_c, sub_k == 0 threads) -> output transform -> C.
++    // The caller has separated the threadblock reduction's last reads of sh_c from these writes
++    auto epilogue = [&] () DGV2_AI
++    {
++        if constexpr (EPI == 1 && !c_fp32)
++        {
++            if (!sub_k) write_sum_tile_sh_h();
++        }
++        else
++        {
++            if (!sub_k) write_sum_tile_sh();
++        }
++        __syncthreads();
++        if (!sub_k) output_had_sh_gl();
++        __syncthreads();    // sh_c is reused by the next segment's threadblock reduction
++    };
++
++    // Head of a column that continues in later CTAs: always this CTA's last segment (the segment
++    // ends before the top k tile, so it ends the slice). Its fold runs after the main loop
++    bool deferred = false;
++
++    // Output reduction at the end of a segment (in the unrolled main loop: kept to the served size)
++    auto reduce = [&] () DGV2_AI
++    {
++        #if EXL3_GEMM_H_ACC
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    float2 f0 = __half22float2(frag_c_h[m][n][0]);
++                    float2 f1 = __half22float2(frag_c_h[m][n][1]);
++                    frag_c[m][n][0] += f0.x; frag_c[m][n][1] += f0.y;
++                    frag_c[m][n][2] += f1.x; frag_c[m][n][3] += f1.y;
++                }
++        #endif
++
++        threadblock_reduce();
++
++        // This segment covers k tiles slice2_k0 .. slice2_k of column tile slice2_n
++        const bool is_head = slice2_k0 == 0;
++        const bool is_top = slice2_k == tiles_k - 1;
++
++        if (!is_head)
++        {
++            // Publish and move on. Only a CTA's first segment can start mid-column, so the slot
++            // is this CTA's. barrier_release: __syncthreads, then fence.acq_rel.gpu + red.add
++            if (!sub_k) dv2_store_slot<TILEBLOCKS_M, FRAGS_N_PER_WARP>(frag_c, ws_slots + (size_t) blockIdx.x * slot_floats, compact, t);
++            barrier_release(&locks[slice_m * blocks_n + slice2_n], 1, false);
++            clear_frag_c();
++        }
++        else if (is_top)
++        {
++            // Whole column in this CTA. The served kernel reaches its epilogue through
++            // barrier_acquire, whose __syncthreads separates the threadblock reduction's last
++            // reads of sh_c from the epilogue's writes into it
++            __syncthreads();
++            epilogue();
++            clear_frag_c();
++        }
++        else
++        {
++            // Keep frag_c; slice2_n and the C pointers do not move (advance2 stays in this column)
++            deferred = true;
++        }
++    };
++
++    auto wait_stage = [&] () DGV2_AI
++    {
++        cp_async_wait<SH_STAGES - 2>();
++        __syncthreads();
++    };
++
++    auto matmul = [&] (int buf) DGV2_AI
++    {
++        if constexpr (TILEBLOCKS_M == 1)
++        {
++            #pragma unroll
++            for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++            {
++                #if EXL3_GEMM_H_ACC
++                    ptx_mma_m16n8k16(frag_a[buf], frag_b[buf][n], frag_c_h[0][n]);
++                #else
++                    ptx_mma_m16n8k16(frag_a[buf], frag_b[buf][n], frag_c[0][n]);
++                #endif
++            }
++        }
++        else
++        {
++            #pragma unroll
++            for (int m = 0; m < TILEBLOCKS_M; ++m)
++                #pragma unroll
++                for (int n = 0; n < FRAGS_N_PER_WARP; ++n)
++                {
++                    #if EXL3_GEMM_H_ACC
++                        ptx_mma_m16n8k16(frag_a[m], frag_b[buf][n], frag_c_h[m][n]);
++                    #else
++                        ptx_mma_m16n8k16(frag_a[m], frag_b[buf][n], frag_c[m][n]);
++                    #endif
++                }
++        }
++    };
++
++    #if DGV2_BPRO
++    // Prologue: B tiles of the first SH_STAGES - 1 stages (one commit group), then the caller's input
++    // stage, then the A tile of each stage (one commit group per stage), then the served wait_stage:
++    // wait_group<SH_STAGES - 2> completes the B group and A stage 0 and leaves the other A stages in
++    // flight. The pipeline state (slice0_*, sh0_*, pending groups) ends where the served prologue
++    // leaves it, one extra group ahead, which the main loop's wait_group<SH_STAGES - 2> absorbs
++    {
++        const half* s_gl_a_ptr = gl_a_ptr;
++        const uint16_t* s_gl_b_ptr = gl_b_ptr;
++        const int s_slice0_k = slice0_k;
++        const int s_slice0_n = slice0_n;
++        const int s_slice0_iters = slice0_iters;
++        half* s_sh0_a_ptr = sh0_a_ptr;
++        uint16_t* s_sh0_b_ptr = sh0_b_ptr;
++
++        if (!sub_k)
++        {
++            #pragma unroll
++            for (int i = 0; i < SH_STAGES - 1; ++i)
++            {
++                if (slice0_iters)
++                {
++                    load_b_stage();
++                    advance0();
++                }
++            }
++        }
++        cp_async_fence();
++
++        gl_a_ptr = s_gl_a_ptr;
++        gl_b_ptr = s_gl_b_ptr;
++        slice0_k = s_slice0_k;
++        slice0_n = s_slice0_n;
++        slice0_iters = s_slice0_iters;
++        sh0_a_ptr = s_sh0_a_ptr;
++        sh0_b_ptr = s_sh0_b_ptr;
++
++        pre_a();
++
++        #pragma unroll
++        for (int i = 0; i < SH_STAGES - 1; ++i)
++        {
++            if (!sub_k && slice0_iters)
++            {
++                load_a_stage();
++                advance0();
++            }
++            cp_async_fence();
++        }
++        wait_stage();
++    }
++    #else
++    // Served order: input stage (Hadamard + barrier), then the served pipeline prologue
++    pre_a();
++    #pragma unroll
++    for (int i = 0; i < SH_STAGES - 1; ++i)
++        async_load_gl();
++    wait_stage();
++    #endif
++
++    clear_frag_c();
++    if constexpr (FRAG_STAGES > 1)
++        load_frags(0);
++
++    #define FSTAGE_OLD_V2(_load, _mul) \
++        async_load_gl(); \
++        wait_stage(); \
++        load_frags(_load); \
++        matmul(_mul); \
++        if (slice2_k == tiles_k - 1 || slice2_iters == 1) { reduce(); slice2_k0 = slice2_k + 1; } \
++        advance2(); \
++        if (!slice2_iters) break; \
++
++    #define FSTAGE_V2(_load, _mul) \
++        async_load_gl(); \
++        wait_stage(); \
++        matmul(_mul); \
++        if (slice2_k == tiles_k - 1 || slice2_iters == 1) { reduce(); slice2_k0 = slice2_k + 1; } \
++        advance2(); \
++        if (!slice2_iters) break; \
++        load_frags(_load); \
++
++    if constexpr (FRAG_STAGES == 1)
++    {
++        while (true)
++        {
++            FSTAGE_OLD_V2(0, 0);
++        }
++    }
++
++    if constexpr (FRAG_STAGES == 2)
++    {
++        while (true)
++        {
++            FSTAGE_V2(1, 0);
++            FSTAGE_V2(0, 1);
++        }
++    }
++
++    if constexpr (FRAG_STAGES == 3)
++    {
++        while (true)
++        {
++            FSTAGE_V2(1, 0);
++            FSTAGE_V2(2, 1);
++            FSTAGE_V2(0, 2);
++        }
++    }
++
++    if constexpr (FRAG_STAGES == 4)
++    {
++        while (true)
++        {
++            FSTAGE_V2(1, 0);
++            FSTAGE_V2(2, 1);
++            FSTAGE_V2(3, 2);
++            FSTAGE_V2(0, 3);
++        }
++    }
++
++    if constexpr (FRAG_STAGES == 5)
++    {
++        while (true)
++        {
++            FSTAGE_V2(1, 0);
++            FSTAGE_V2(2, 1);
++            FSTAGE_V2(3, 2);
++            FSTAGE_V2(4, 3);
++            FSTAGE_V2(0, 4);
++        }
++    }
++
++    #undef FSTAGE_OLD_V2
++    #undef FSTAGE_V2
++
++    // Deferred head (see reduce): wait for every producer of this column, fold their partials in
++    // chain order into frag_c, reset the lock, transform and store. One call site, outside the
++    // unrolled loop, with frag_a / frag_b dead
++    if (deferred)
++    {
++        const int b_top = (((slice2_n + 1) * tiles_k) * num_slices - 1) / tiles_kn;   // owner of the top k tile
++        int nprod = 0;
++        for (int b = blockIdx.x + 1; b <= b_top; ++b)
++            nprod += dv2_tile_beg(tiles_kn, num_slices, b + 1) > dv2_tile_beg(tiles_kn, num_slices, b) ? 1 : 0;
++        int* lock = &locks[slice_m * blocks_n + slice2_n];
++        barrier_acquire(lock, nprod);   // thread 0 spins (ld.acquire.gpu), then __syncthreads
++        if (!sub_k)
++            dv2_fold<TILEBLOCKS_M, FRAGS_N_PER_WARP, c_fp32>
++                (frag_c, ws_slots, slot_floats, compact, b_top, blockIdx.x, tiles_kn, num_slices, t);
++        if (threadIdx.x == 0) *lock = 0;   // every producer of this column has arrived
++        epilogue();
++    }
++}
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_gemm_v2_kernel.cuh b/exllamav3_ext/quant/exl3_gemm_v2_kernel.cuh
+--- a/exllamav3_ext/quant/exl3_gemm_v2_kernel.cuh	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/exl3_gemm_v2_kernel.cuh	2026-09-24 15:08:15
+@@ -0,0 +1,191 @@
++#pragma once
++
++// densegemm r1: twins of exl3_gemm_kernel / exl3_mgemm_kernel (exl3_gemm_kernel.cuh) built on
++// exl3_gemm_kernel_inner_v2 (see the header of exl3_gemm_inner_v2.cuh for what changes and why the
++// output is bitwise identical). Same arguments as the served kernels plus one trailing pointer
++// (the partial-sum workspace), so graph parameter indices are unchanged. Launched only for:
++//   exl3_gemm_v2_kernel:  size_m <= TILESIZE_M, suh / svh / A_had present (dense EXL3 linears)
++//   exl3_mgemm_v2_kernel: dense mode only (no indices, weights or range filter, num_tokens 1),
++//                         size_m <= TILESIZE_M
++// with the grid the served kernel would get (autotuned config), which fixes the k partition.
++//
++// Barriers vs the served kernels:
++//   gemm:  input Hadamard + grid.sync (unchanged); the trailing grid.sync after the last 16-row
++//          chunk (a leftover of a commented-out epilogue) is gone.
++//   mgemm: sliced mode keeps the input Hadamard + grid.sync but drops the group barrier that
++//          followed it; per-matrix mode keeps its per-matrix Hadamard + group barrier. The
++//          per-chunk group barrier and the separate output-Hadamard pass are gone (the finalizing
++//          CTA transforms its own tile); a group barrier separates consecutive matrices of one
++//          z-group only when there is a next matrix (lock and slot reuse).
++
++#include "exl3_kernel_map.cuh"
++#include "hadamard_inner.cuh"
++#include "exl3_gemm_inner_v2.cuh"
++#include "exl3_devctx.cuh"
++
++template<EXL3_GEMM_T_ARGS>
++__global__ __launch_bounds__(EXL3_GEMM_BASE_THREADS * TILESIZE_K / 16)
++void exl3_gemm_v2_kernel(EXL3_GEMM_ARGS, float* __restrict__ ws)
++{
++    auto grid = cg::this_grid();
++
++    auto pre_a = [&] () DGV2_AI
++    {
++        int total_warps = size_m * size_k / 128;
++        int warps_grid = gridDim.x * blockDim.x / 32;
++        int this_warp = threadIdx.x / 32 + blockDim.x / 32 * blockIdx.x;
++
++        for(; this_warp < total_warps; this_warp += warps_grid)
++            had_hf_r_128_inner<true, false>
++            (
++                A + this_warp * 128,
++                A_had + this_warp * 128,
++                suh + (this_warp * 128) % size_k,
++                0.088388347648f  // 1/sqrt(128)
++            );
++
++        grid.sync();
++    };
++
++    exl3_gemm_kernel_inner_v2
++    <bits, c_fp32, cb, TILESIZE_M, TILESIZE_K, TILESIZE_N, SH_STAGES, FRAG_STAGES, 0>
++    (A_had, B, C, size_m, size_k, size_n, locks, svh, 0, ws, pre_a);
++}
++
++template<EXL3_GEMM_T_ARGS>
++__global__ __launch_bounds__(EXL3_GEMM_BASE_THREADS * TILESIZE_K / 16)
++void exl3_mgemm_v2_kernel(EXL3_MGEMM_ARGS, float* __restrict__ ws)
++{
++    int bszm = MAX(bszm_in, bszm_out);
++    auto grid = cg::this_grid();
++
++    #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ > 890)
++        int* barrier_counters_sense = locks + BARRIER_LOCKS_OFFSET;
++    #endif
++
++    auto group_sync = [&] () DGV2_AI
++    {
++        #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ > 890)
++            group_barrier(blockIdx.z, gridDim.x, barrier_counters_sense);
++        #else
++            grid.sync();
++        #endif
++    };
++
++    const int slot_floats = exl3_dense_v2_slot_floats(TILESIZE_M, TILESIZE_N, size_m);
++    float* ws_z = ws + (size_t) blockIdx.z * gridDim.x * slot_floats;
++
++    for (int i = 0; i < bszm; i += gridDim.z)
++    {
++        const bool first_iter = i == 0;
++        int j = i + blockIdx.z;
++        int mat_index = -1;
++        const uint16_t* B = nullptr;
++        if (j >= bszm) j = -1;
++        else
++        {
++            mat_index = j;
++            B = B_list[mat_index];
++        }
++
++        // Input stage of this matrix (called once by every thread, from inside the inner loop's
++        // prologue when there is a matrix, directly otherwise)
++        auto pre_a = [&] () DGV2_AI
++        {
++            if (had_src_list)
++            {
++                if (first_iter)
++                {
++                    // Sliced mode: one input transform per source, every block cooperating (served code)
++                    int total_warps = size_m * size_k / 128;
++                    int warps_grid = gridDim.x * gridDim.z * blockDim.x / 32;
++                    int this_warp = threadIdx.x / 32 + blockDim.x / 32 * (blockIdx.x + gridDim.x * blockIdx.z);
++                    for (; this_warp < num_had_src * total_warps; this_warp += warps_grid)
++                    {
++                        int src = this_warp / total_warps;
++                        int w = this_warp - src * total_warps;
++                        had_hf_r_128_inner<true, false>
++                        (
++                            A + w * 128,
++                            A_had + src * size_m * size_k + w * 128,
++                            suh_list[src] + (w * 128) % size_k,
++                            0.088388347648f  // 1/sqrt(128)
++                        );
++                    }
++                    grid.sync();
++                }
++                else
++                {
++                    // Previous matrix of this z-group done everywhere (lock and slot reuse)
++                    group_sync();
++                }
++            }
++            else
++            {
++                if (B)
++                {
++                    int total_warps = size_m * size_k / 128;
++                    int warps_grid = gridDim.x * blockDim.x / 32;
++                    int this_warp = threadIdx.x / 32 + blockDim.x / 32 * blockIdx.x;
++
++                    const half* suh = suh_list[mat_index];
++                    const half* A_ = bszm_in == 1 ? A : A + j * size_m * size_k;
++                    half* A_had_ = A_had + j * size_m * size_k;
++
++                    for(; this_warp < total_warps; this_warp += warps_grid)
++                        had_hf_r_128_inner<true, false>
++                        (
++                            A_ + this_warp * 128,
++                            A_had_ + this_warp * 128,
++                            suh + (this_warp * 128) % size_k,
++                            0.088388347648f  // 1/sqrt(128)
++                        );
++                }
++                group_sync();
++            }
++        };
++
++        if (!B)
++        {
++            pre_a();
++            continue;
++        }
++
++        int n_j = size_n_list ? size_n_list[mat_index] : size_n;
++        int n_stride_j = n_stride_list ? n_stride_list[mat_index] : n_j;
++        const half* A_ = A_had + (had_src_list ? had_src_list[mat_index] : j) * size_m * size_k;
++        void* C_;
++        if (C_list) C_ = C_list[mat_index];
++        else if constexpr (c_fp32) C_ = (void*) (((float*) C) + j * size_m * size_n);
++        else                       C_ = (void*) (((half*) C) + j * size_m * size_n);
++
++        int lock_offs = blockIdx.z * size_n / 128;
++
++        exl3_gemm_kernel_inner_v2
++        <bits, c_fp32, cb, TILESIZE_M, TILESIZE_K, TILESIZE_N, SH_STAGES, FRAG_STAGES, 1>
++        (A_, B, C_, size_m, size_k, n_j, locks + lock_offs, svh_list[mat_index], n_stride_j, ws_z, pre_a);
++    }
++}
++
++// Shapes: the served ones (exl3_kernel_map.cuh) and the 32-row variants of shapes 2 and 3
++#define EXL3_GEMM_V2_SHAPE_2_M32     32,     32,    128,     4,     3
++#define EXL3_GEMM_V2_SHAPE_3_M32     32,     32,    256,     4,     3
++
++// Instance table per (kernel, c_fp32): index = shape_idx (1..4) for 16 rows, 5 / 6 = shapes 2 / 3 at 32 rows
++#define EXL3_GEMM_V2_INSTANCES(_bits, _c_fp32, _cb) \
++    nullptr, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_1>, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_2>, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_3>, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_4>, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_V2_SHAPE_2_M32>, \
++    (void*) exl3_gemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_V2_SHAPE_3_M32>
++
++#define EXL3_MGEMM_V2_INSTANCES(_bits, _c_fp32, _cb) \
++    nullptr, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_1>, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_2>, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_3>, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_SHAPE_4>, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_V2_SHAPE_2_M32>, \
++    (void*) exl3_mgemm_v2_kernel<_bits, _c_fp32, _cb, EXL3_GEMM_V2_SHAPE_3_M32>
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_gemv.cu b/exllamav3_ext/quant/exl3_gemv.cu
+--- a/exllamav3_ext/quant/exl3_gemv.cu	2026-09-24 13:55:03
++++ b/exllamav3_ext/quant/exl3_gemv.cu	2026-09-24 14:15:46
+@@ -9,6 +9,7 @@
+ #include "../util.cuh"
+ #include "exl3_gemv_kernel.cuh"
+ #include "exl3_devctx.cuh"
++#include "exl3_dense_v2.cuh"
+ #include <map>
+ 
+ /*
+@@ -149,6 +150,18 @@
+ 
+     int block_dim = cfg == 0 ? 512 : 256;
+     int cols = cfg == 0 ? 32 : 64;
++
++    // densegemm r1 (EXL3_DENSE_V2 = 1 | 3): V2 twin of this launch (4 bpw, mul1, shuffle extraction)
++    if (!smem && dense_v2_gemv_on())
++    {
++        void* v2_kernel = dense_v2_launch_gemv(kernel_args, size_m, size_k, size_n, K, cb, c_fp32, mmode, cfg,
++                                               block_dim, cols, device, stream);
++        if (v2_kernel)
++        {
++            if (launched_kernel) *launched_kernel = v2_kernel;
++            return true;
++        }
++    }
+ 
+     int max_blocks = occupancy(kernel, block_dim) * num_sms;
+     int grid = MIN(size_n / cols, max_blocks);
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_gemv_v2_kernel.cuh b/exllamav3_ext/quant/exl3_gemv_v2_kernel.cuh
+--- a/exllamav3_ext/quant/exl3_gemv_v2_kernel.cuh	1970-01-01 01:00:00
++++ b/exllamav3_ext/quant/exl3_gemv_v2_kernel.cuh	2026-09-24 14:04:09
+@@ -0,0 +1,280 @@
++#pragma once
++
++// densegemm r1 (EXL3_DENSE_V2 = 1 or 3, default off): twin of the served small-m GEMV
++// (exl3_gemv_kernel, exl3_gemv_kernel.cuh) for 4 bpw, mul1 codebook, shuffle extraction. Served at
++// 3-8 rows (the c1d3 shape): GDN out_proj, attention o_proj, index_qk_proj, shared-expert down.
++//
++// Every value that reaches an MMA, every MMA, the fp16 accumulator fold cadence, the cross-warp
++// reduction order and the output transform are the served ones. What changes is how operands
++// arrive and how the output stage is synchronized:
++//
++//   1. Weights through a warp-private cp.async ring in shared memory (RING slices deep) instead of
++//      the served register prefetch ring (ld.global.cs into pf[PF][LOADS]). The served ring's
++//      loads are issued in the same instruction group as the activation loads of the current
++//      slice; when they share a scoreboard (the pattern moefast r1 found in the MoE twin of this
++//      loop, FINDINGS R700b / moefast-r1 ANALYSIS.md), each MMA waits for a DRAM load issued in
++//      the same iteration and the ring gives no latency cover. cp.async completion is tracked by
++//      wait_group instead, so the MMA only waits on the activation fragment. Each lane reads the
++//      two words the served shuffle would have given it (tp[lane], tp[(lane + 31) & 31]), exactly
++//      like the served SMEM_STAGE variant.
++//   2. The activation fragment of slice i + 1 is loaded during slice i.
++//   3. The first group's weight ring is filled BEFORE the input Hadamard + grid.sync.
++//   4. Output transform: instead of grid.sync + a grid-wide pass over C, the block that completes
++//      the last group of a 128-column Hadamard block (per-block arrival counter, threadfence
++//      pattern) transforms that block in place. Same function, same inputs, same place.
++
++#include <cooperative_groups.h>
++#include "../ptx.cuh"
++#include "exl3_dq.cuh"
++#include "exl3_kernel_map.cuh"
++#include "hadamard_inner.cuh"
++#include "exl3_gemv_kernel.cuh"
++
++// Arrival counters for the output stage (hctr): one int per 128 output columns, zero at rest, owned
++// by exl3_dense_v2.cu (DENSE_V2_GEMV_MAX_HBLOCKS)
++
++template <int bits, bool c_fp32, int cb, int MMODE, int CFG>
++__global__ __launch_bounds__(CFG == 0 ? 512 : 256)
++void exl3_gemv_v2_kernel(EXL3_GEMM_ARGS, int* __restrict__ hctr)
++{
++    static_assert(bits == 4, "exl3_gemv_v2_kernel: 4 bpw only");
++    constexpr int WK   = CFG == 0 ? 16 : 8;     // k-split (warps per block)
++    constexpr int WNT  = CFG == 0 ? 2 : 4;      // adjacent n-tiles per warp
++    constexpr int PF   = CFG == 0 ? 4 : 2;      // served prefetch depth: defines the loop shape
++    constexpr int FOLD = CFG == 0 ? 4 : 2;      // fp16->fp32 fold cadence (divides PF)
++    constexpr int THREADS = WK * 32;
++    constexpr int ROWS = MMODE == 0 ? 1 : EXL3_GEMV_MAX_M;
++    constexpr int COLS = WNT * 16;
++    constexpr int TWORDS = 8 * bits;            // uint32 per 16x16 tile
++    constexpr int SW = WNT * TWORDS;            // uint32 per warp per k-slice (contiguous in B)
++    constexpr int RING = 6;                     // cp.async ring depth, slices
++    constexpr int CHUNKS = SW / 4;              // 16-byte copies per slice
++    constexpr int GPB = 128 / COLS;             // groups per 128-column output block
++    static_assert(CHUNKS <= 32 && 128 % COLS == 0, "exl3_gemv_v2_kernel: shape");
++
++    auto grid = cooperative_groups::this_grid();
++
++    const int warp = threadIdx.x / 32;
++    const int lane = threadIdx.x % 32;
++
++    const int ntiles = size_n / 16;
++    const int kslices = size_k / 16;
++    const int num_groups = size_n / COLS;
++
++    const int chunk = CEIL_DIVIDE(kslices, WK);
++    const int ks0 = warp * chunk;
++    const int myn = max(0, min(chunk, kslices - ks0));
++
++    const uint32_t* B32 = (const uint32_t*) B;
++    const size_t slice_stride = (size_t) ntiles * TWORDS;   // uint32 per k-slice row
++
++    __shared__ float sh_red[WK][ROWS][COLS];
++    __shared__ __align__(16) uint32_t sh_ring[WK][RING][SW];
++    __shared__ int sh_last;
++
++    // Slice i of this warp's k range for output group g -> ring slot i % RING. One commit group per
++    // call on every lane, copies or not, so wait_group counts stay uniform
++    auto issue = [&] (int g, int i)
++    {
++        if (i < myn)
++        {
++            const uint32_t* src = B32 + (size_t) (ks0 + i) * slice_stride + (size_t) g * SW;
++            uint32_t* dst = &sh_ring[warp][i % RING][0];
++            if (lane < CHUNKS) cp_async_stream(dst + lane * 4, src + lane * 4);   // evict-first, like the served __ldcs
++        }
++        cp_async_fence();
++    };
++
++    // 3. First group's ring fill before the input stage
++    if (blockIdx.x < num_groups)
++    {
++        #pragma unroll
++        for (int d = 0; d < RING - 1; ++d)
++            issue(blockIdx.x, d);
++    }
++
++    // Input scales and Hadamard transform (served code)
++    {
++        int total_warps = size_m * size_k / 128;
++        int warps_grid = gridDim.x * blockDim.x / 32;
++        int this_warp = threadIdx.x / 32 + blockDim.x / 32 * blockIdx.x;
++
++        for(; this_warp < total_warps; this_warp += warps_grid)
++            had_hf_r_128_inner<true, false>
++            (
++                A + this_warp * 128,
++                A_had + this_warp * 128,
++                suh + (this_warp * 128) % size_k,
++                0.088388347648f  // 1/sqrt(128)
++            );
++
++        grid.sync();
++        A = A_had;
++    }
++
++    const half2* A2 = (const half2*) A;
++    const half2 hzero = __half2half2(__ushort_as_half(0));
++
++    const int r0 = lane >> 2;
++    const size_t a_row0 = (size_t) r0 * (size_k / 2);
++    const bool r0_ok = MMODE == 0 ? lane < 4 : r0 < size_m;
++
++    for (int group = blockIdx.x; group < num_groups; group += gridDim.x)
++    {
++        if (group != blockIdx.x)
++        {
++            #pragma unroll
++            for (int d = 0; d < RING - 1; ++d)
++                issue(group, d);
++        }
++
++        // 2. Activation fragment of slice 0; slice i + 1's is loaded while slice i computes
++        half2 an0 = hzero, an1 = hzero;
++        if (myn > 0)
++        {
++            const size_t a_col = (size_t) ks0 * 8 + (lane & 3);
++            an0 = r0_ok ? A2[a_row0 + a_col] : hzero;
++            an1 = r0_ok ? A2[a_row0 + a_col + 4] : hzero;
++        }
++
++        FragC_h ch[WNT][2] = {};
++        float2 acc0[WNT][2] = {};
++
++        for (int ib = 0; ib < myn; ib += PF)
++        {
++        #pragma unroll
++        for (int d = 0; d < PF; ++d)
++        {
++            const int i = ib + d;
++            if (i >= myn) break;
++
++            // Keep the ring RING - 1 slices ahead, then wait for slice i
++            issue(group, i + RING - 1);
++            cp_async_wait<RING - 1>();
++            __syncwarp();
++
++            FragB a01, a23;
++            a01[0] = an0;
++            a23[0] = an1;
++            a01[1] = hzero;
++            a23[1] = hzero;
++            if (i + 1 < myn)
++            {
++                const size_t a_col = (size_t) (ks0 + i + 1) * 8 + (lane & 3);
++                an0 = r0_ok ? A2[a_row0 + a_col] : hzero;
++                an1 = r0_ok ? A2[a_row0 + a_col + 4] : hzero;
++            }
++
++            const uint32_t* tp_slice = &sh_ring[warp][i % RING][0];
++
++            #pragma unroll
++            for (int t = 0; t < WNT; ++t)
++            {
++                FragB f0, f1;
++                const uint32_t* tp = tp_slice + t * TWORDS;
++                exl3_gemv_ns::dq8_regs_4bits<cb>(tp[(lane + 31) & 31], tp[lane], f0, f1);
++                exl3_gemv_ns::mma_ab_h(a01, a23, f0, ch[t][0]);
++                exl3_gemv_ns::mma_ab_h(a01, a23, f1, ch[t][1]);
++            }
++
++            // Every lane is done with this slot before any lane refills it (next iteration)
++            __syncwarp();
++
++            if ((d + 1) % FOLD == 0 || i + 1 == myn)
++            {
++                #pragma unroll
++                for (int t = 0; t < WNT; ++t)
++                    #pragma unroll
++                    for (int f = 0; f < 2; ++f)
++                    {
++                        acc0[t][f].x += __low2float(ch[t][f][0]);
++                        acc0[t][f].y += __high2float(ch[t][f][0]);
++                        ch[t][f][0] = hzero;
++                    }
++            }
++        }
++        }
++
++        // Cross-warp reduction over the k splits (served code)
++        {
++            const int c0 = 2 * (lane & 3);
++            const bool store0 = MMODE == 0 ? lane < 4 : r0 < ROWS;
++            const int sr0 = MMODE == 0 ? 0 : r0;
++            if (store0)
++            {
++                #pragma unroll
++                for (int t = 0; t < WNT; ++t)
++                    #pragma unroll
++                    for (int f = 0; f < 2; ++f)
++                    {
++                        const int col = t * 16 + f * 8 + c0;
++                        sh_red[warp][sr0][col + 0] = acc0[t][f].x;
++                        sh_red[warp][sr0][col + 1] = acc0[t][f].y;
++                    }
++            }
++        }
++        __syncthreads();
++
++        const int rows_out = MMODE == 0 ? 1 : min(size_m, ROWS);
++        for (int idx = threadIdx.x; idx < COLS * rows_out; idx += THREADS)
++        {
++            const int r = idx / COLS;
++            const int c = idx % COLS;
++            float sum = 0.0f;
++            #pragma unroll
++            for (int j = 0; j < WK; ++j)
++                sum += sh_red[j][r][c];
++            const int col = group * COLS + c;
++            if constexpr (c_fp32) ((float*) C)[(size_t) r * size_n + col] = sum;
++            else                  ((half*)  C)[(size_t) r * size_n + col] = __float2half_rn(sum);
++        }
++        __syncthreads();
++
++        // 4. Output transform of a 128-column block by the block that completes it
++        const int hb = group / GPB;
++        if (threadIdx.x == 0)
++        {
++            __threadfence();
++            int old = atomicAdd(&hctr[hb], 1);
++            int last = old == GPB - 1 ? 1 : 0;
++            if (last) hctr[hb] = 0;
++            __threadfence();
++            sh_last = last;
++        }
++        __syncthreads();
++        if (sh_last)
++        {
++            for (int r = warp; r < size_m; r += WK)
++            {
++                if constexpr (c_fp32)
++                    had_ff_r_128_inner<false, true>
++                    (
++                        ((const float*) C) + (size_t) r * size_n + hb * 128,
++                        ((float*) C) + (size_t) r * size_n + hb * 128,
++                        svh + hb * 128,
++                        0.088388347648f  // 1/sqrt(128)
++                    );
++                else
++                    had_hf_r_128_inner<false, true>
++                    (
++                        ((const half*) C) + (size_t) r * size_n + hb * 128,
++                        ((half*) C) + (size_t) r * size_n + hb * 128,
++                        svh + hb * 128,
++                        0.088388347648f  // 1/sqrt(128)
++                    );
++            }
++        }
++        __syncthreads();
++    }
++}
++
++// Instance table index: c_fp32 * 4 + MMODE * 2 + CFG
++#define EXL3_GEMV_V2_INSTANCES(_cb) \
++    (void*) exl3_gemv_v2_kernel<4, false, _cb, 0, 0>, \
++    (void*) exl3_gemv_v2_kernel<4, false, _cb, 0, 1>, \
++    (void*) exl3_gemv_v2_kernel<4, false, _cb, 1, 0>, \
++    (void*) exl3_gemv_v2_kernel<4, false, _cb, 1, 1>, \
++    (void*) exl3_gemv_v2_kernel<4, true,  _cb, 0, 0>, \
++    (void*) exl3_gemv_v2_kernel<4, true,  _cb, 0, 1>, \
++    (void*) exl3_gemv_v2_kernel<4, true,  _cb, 1, 0>, \
++    (void*) exl3_gemv_v2_kernel<4, true,  _cb, 1, 1>

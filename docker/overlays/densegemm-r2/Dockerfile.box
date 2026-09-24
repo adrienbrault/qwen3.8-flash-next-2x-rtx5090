@@ -1,0 +1,26 @@
+# densegemm r2: dense EXL3 K4 decode GEMMs (GDN in_proj / out_proj, attention qkv / o_proj, index_qk, shared expert).
+# r2 = r1 with the gemm / mgemm twins restructured so they no longer run out of local memory (R710: 544-1832 B
+# stack frames, 3-6x slower than served; out-densegemm/r2/DIAGNOSIS.md). The gemv twin is r1's, unchanged.
+# Opt-in EXL3_DENSE_V2=1|2|3 and EXL3_DENSE_ROWS32=1 (read at the first dense call); unset = the served kernels, whose
+# SASS the install checks unchanged against BASE's .so.
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:stack-r2 --build-arg DGV2_DEFS="<bisect choice>" \
+#     --build-arg PATCH_SHA=$(sha256sum densegemm-r2.patch | cut -c1-64) -t tabbyapi:densegemm-r2 .
+#
+# DGV2_DEFS = the defines bisect-compile.sh chose ("" for the r2 defaults); the install fails when a 16-row twin's
+# stack frame exceeds its served shape's by more than 64 bytes. BASE = the daily image (tabbyapi:stack-r2 =
+# slotfix-r1 + hcfast-r1 + moefast-r1 since 2026-09-24 08:46 UTC); the patch is made against those sources and
+# composes with pdl-l2-r1 in either order (make-patch.sh). Build context = this directory. No heredocs in RUN.
+ARG BASE=tabbyapi:stack-r2
+FROM ${BASE}
+ARG BASE
+ARG MAX_JOBS=2
+ARG PATCH_SHA=unknown
+ARG DGV2_DEFS=
+COPY densegemm-r2.patch rebuild-native.py install-densegemm.sh sass_hashes.py compile_bar.py test_densegemm_cpu.py test_densegemm_parity.py bench_densegemm_p0.py /opt/densegemm-r2/
+COPY d0/d0_microbench.py /opt/densegemm-r2/d0/
+RUN DGV2_NVCC_DEFS="${DGV2_DEFS}" MAX_JOBS=${MAX_JOBS} bash /opt/densegemm-r2/install-densegemm.sh && \
+    python3 /opt/densegemm-r2/test_densegemm_cpu.py && \
+    PYTHONPYCACHEPREFIX=/tmp/pyc python3 -m py_compile /opt/densegemm-r2/test_densegemm_parity.py /opt/densegemm-r2/bench_densegemm_p0.py && \
+    python3 -c 'import torch, exllamav3_ext as e; assert e.dense_v2_revision == 2 and tuple(e.dense_v2_modes()) == (0, 0); print("densegemm r2 landed (default off: EXL3_DENSE_V2 / EXL3_DENSE_ROWS32 unset)")'
+LABEL local.densegemm.base="${BASE}" local.densegemm.patch_sha256="${PATCH_SHA}" local.densegemm.defs="${DGV2_DEFS}"

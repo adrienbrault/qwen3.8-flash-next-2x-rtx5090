@@ -1,0 +1,58 @@
+[parity] device NVIDIA GeForce RTX 5090; KSPLIT=default
+[parity] dispatch K2 rows 4 mode 0: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, false, false>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 2: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, false, true>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 3: ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K2 rows 4 MAP 2-4:0,5-16:3: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)']
+[parity] dispatch K2 rows 8 MAP 2-4:0,5-16:3: ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K2 rows 4 mode 3 HEAD=1: ['exl3_moe_coop_r2_ns::exl3_moe_coop_r2_head_kernel(unsigned int)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K2 rows 4 mode 3 HEAD=2000: ['exl3_moe_coop_r2_ns::exl3_moe_coop_r2_head_kernel(unsigned int)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K2 rows 4 mode 2 HEAD=1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, false, true>(MoeCoopParams)']
+[parity] dispatch K2 rows 4 mode 0 HEAD=1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<2, 2, false>(MoeCoopParams)']
+[parity] real:model.language_model.layers.20.mlp K2: 1944/1944 equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 4 D28 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 4 D28 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 4 D28 mode 3: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 12 D60 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 12 D60 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 12 D60 mode 3: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 16 D77 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 16 D77 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 16 D77 mode 3: 200/200 launches equal
+[parity] dispatch K3 rows 4 mode 0: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<3, 2, false, false>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 2: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<3, 2, false, true>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 3: ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<3, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<3, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K3 rows 4 MAP 2-4:0,5-16:3: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)']
+[parity] dispatch K3 rows 8 MAP 2-4:0,5-16:3: ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<3, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<3, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K3 rows 4 mode 3 HEAD=1: ['exl3_moe_coop_r2_ns::exl3_moe_coop_r2_head_kernel(unsigned int)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<3, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<3, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K3 rows 4 mode 3 HEAD=2000: ['exl3_moe_coop_r2_ns::exl3_moe_coop_r2_head_kernel(unsigned int)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<3, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<3, 2, false>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch K3 rows 4 mode 2 HEAD=1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<3, 2, false, true>(MoeCoopParams)']
+[parity] dispatch K3 rows 4 mode 0 HEAD=1: ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_a_kernel<3, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v2_ns::exl3_moe_coop_b_kernel<3, 2, false>(MoeCoopParams)']
+[parity] real:model.language_model.layers.3.mlp K3: 1944/1944 equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 4 D28 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 4 D28 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 4 D28 mode 3: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 12 D60 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 12 D60 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 12 D60 mode 3: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 16 D77 mode 1: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 16 D77 mode 2: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 16 D77 mode 3: 200/200 launches equal
+[parity] synth:K2 K2: 1944/1944 equal
+[parity] synth:K3 K3: 1944/1944 equal
+[parity] synth:K4 K4: 1944/1944 equal
+[parity] [side] 48 shared experts K=[4] I=640 codebook mcg=False mul1=True; all tensors real
+[parity] side streams: priority 0 / -3
+[parity] side real:model.language_model.layers.20.mlp K2: 231/231 equal (arms ['late-V2', 'late-m2', 'late-m3', 'early-m3', 'earlyP-m3', 'early-m2', 'earlyP-m2', 'lateP-m3', 'head1-m3', 'head2000-m3', 'serial-m3'])
+[parity] join stress real:model.language_model.layers.20.mlp K2 rows 4 mode 2: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.20.mlp K2 rows 4 mode 3: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.20.mlp K2 rows 16 mode 2: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.20.mlp K2 rows 16 mode 3: 200/200 launches equal
+[parity] side real:model.language_model.layers.3.mlp K3: 231/231 equal (arms ['late-V2', 'late-m2', 'late-m3', 'early-m3', 'earlyP-m3', 'early-m2', 'earlyP-m2', 'lateP-m3', 'head1-m3', 'head2000-m3', 'serial-m3'])
+[parity] join stress real:model.language_model.layers.3.mlp K3 rows 4 mode 2: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.3.mlp K3 rows 4 mode 3: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.3.mlp K3 rows 16 mode 2: 200/200 launches equal
+[parity] join stress real:model.language_model.layers.3.mlp K3 rows 16 mode 3: 200/200 launches equal
+[parity] 10208/10208 comparisons equal; dispatch ok
+PARITY PASS

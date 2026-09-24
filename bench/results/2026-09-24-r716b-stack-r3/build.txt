@@ -1,0 +1,105 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  890.4kB
+Step 1/13 : ARG BASE=tabbyapi:stack-r2
+Step 2/13 : FROM ${BASE}
+ ---> 349f8b9a1523
+Step 3/13 : ARG BASE
+ ---> Using cache
+ ---> 248a40005442
+Step 4/13 : ARG INCLUDE=""
+ ---> Using cache
+ ---> e67cb35ca732
+Step 5/13 : ARG DGV2_NVCC_DEFS=""
+ ---> Using cache
+ ---> 092934653443
+Step 6/13 : ARG SERIES_SHA=unset
+ ---> Using cache
+ ---> 8cdc4e3d7911
+Step 7/13 : ARG MAX_JOBS=4
+ ---> Using cache
+ ---> a355c78161a6
+Step 8/13 : COPY install-stack.sh /opt/stack-r3/
+ ---> Using cache
+ ---> 829098260215
+Step 9/13 : COPY series/ /opt/stack-r3/series/
+ ---> Using cache
+ ---> ca23fddb538a
+Step 10/13 : COPY tools/ /opt/stack-r3/tools/
+ ---> 3b72e47f167b
+Step 11/13 : COPY tests/ /opt/stack-r3/tests/
+ ---> e18c31463917
+Step 12/13 : RUN INCLUDE="${INCLUDE}" DGV2_NVCC_DEFS="${DGV2_NVCC_DEFS}" MAX_JOBS=${MAX_JOBS} STACK_INSTALL_OUT=/opt/stack-r3/install       bash /opt/stack-r3/install-stack.sh &&     python3 -m py_compile /opt/stack-r3/tests/latchain/test_latchain_parity.py /opt/stack-r3/tests/latchain/lc_model_parity.py       /opt/stack-r3/tests/hcfast/test_hcfast_parity.py /opt/stack-r3/tests/moefast/test_moefast_parity.py       /opt/stack-r3/tests/densegemm-r1/test_densegemm_parity.py /opt/stack-r3/tests/densegemm-r2/test_densegemm_parity.py &&     python3 /opt/stack-r3/tools/landing.py --include "${INCLUDE}"
+ ---> Running in 85c02ecf7dc9
+stack-r3: INCLUDE='mf3 dg2' DGV2_NVCC_DEFS='' MAX_JOBS=4
+stack-r3: base markers ok (hcfast 1, moefast 1)
+stack-r3: base .so /opt/venv/lib/python3.12/site-packages/exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+stack-r3: base .so has 1533 function bodies, 1645 res-usage entries
+apply-series: 01-hcfast-r2-on-stack-r2.patch applied (4 files, fuzz 0)
+apply-series: 02-latchain-r1b.patch applied (9 files, fuzz 0)
+apply-series: 03-moefast-r3.patch applied (12 files, fuzz 0)
+apply-series: 05-densegemm-r2.patch applied (13 files, fuzz 0)
+apply-series: 06-dense-lcguard.patch applied (3 files, fuzz 0)
+apply-series: OK INCLUDE='mf3 dg2' patches=5
+stack-r3 SASS: base functions 1533; unchanged 1533; changed or missing 0; new 100 = hcv4 23, rr 8, moe-r2-ab 36, moe-r2-head 1, gemm-v2 12, mgemm-v2 12, gemv-v2 8, other 0; hcfast r1 kernels in base 24 (must be unchanged)
+stack-r3: served SASS identical (anonymous-namespace hashes blanked); new kernels exactly the INCLUDE='dg2 mf3' set
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi4ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi4ELi1EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi4ELi2EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi8ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi8ELi1EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi1ELi8ELi2EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi4ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi4ELi1EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi4ELi2EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi8ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi8ELi1EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi2ELi8ELi2EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi4ELi4ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi4ELi4ELi1EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi4ELi8ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv417dots_i8_v4_kernelILi8ELi4ELi0EEEvPKfPKaS2_Pfii                   0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi1ELi2ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi1ELi4ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi2ELi2ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi2ELi4ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi4ELi2ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi4ELi4ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+hcv4       _ZN4hcv421up_i8_state_v4_kernelILi8ELi4ELb1EEEvPKfS2_PfS3_PKaS2_PK6__h     0     0    64  ok (family max over 24 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb0ELi1E13__nv_bfloa     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb0ELi1EfEvPK13__nv_     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb0ELi4E13__nv_bfloa     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb0ELi4EfEvPK13__nv_     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb1ELi1E13__nv_bfloa     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb1ELi1EfEvPK13__nv_     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb1ELi4E13__nv_bfloa     0     8    72  ok (family max over 12 served)
+rr         _Z45cuda_recurrent_gated_delta_rule_kernel_128_rrILb1ELi4EfEvPK13__nv_     0     8    72  ok (family max over 12 served)
+moe-r2     _ZN19exl3_moe_coop_r2_ns28exl3_moe_coop_r2_head_kernelEj                   0    16    80  ok (family max over 45 served)
+STACK-BOUND PASS 100/100 enforced; 0 report-only (0 over bar); margin 64 B
+BAR stack-r3 no-defs PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS
+landing: stripping image EXL3_* keys and re-executing: ['EXL3_DECODE_FUSE', 'EXL3_DECODE_OVERLAP', 'EXL3_EMBED_GPU_PRUNED', 'EXL3_MOE_COOP_V2', 'EXL3_MOE_PREFILL_E3', 'EXL3_SHARED_EXPERT_OVERLAP']
+[91mW0924 17:24:37.142000 3770 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+[0mext: /opt/venv/lib/python3.12/site-packages/exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+stack-r3 landed: hcfast r2 (hc_mix_v3_revision 2, build r2), latchain 1 (latchain-r1), moefast 3, densegemm 2 + lcguard; every flag default off; HC2 tables parse (2 [1, 2, 4, 4] [1, 4, 4, 8] [4, 8, 8] [1, 0] [4, 2, 2, 4] False)
+stack-r3: cpu-densegemm.txt: CPU TESTS PASS
+stack-r3: cpu-hcfast.txt: FLOW PASS
+stack-r3: cpu-latchain-installed.txt: CPU PASS
+stack-r3: cpu-latchain.txt: CPU PASS
+stack-r3: cpu-lcguard.txt: LCGUARD CPU PASS
+stack-r3: cpu-moefast-r3.txt: CPU TESTS PASS
+stack-r3: cpu-moefast-trace.txt: 300 partition/ksplit cases + served shapes: PASS
+stack-r3 landed: INCLUDE='mf3 dg2' DGV2_NVCC_DEFS=''; served SASS identical; STACK bound PASS; markers ok; CPU tests PASS (all flags default off)
+landing: stripping image EXL3_* keys and re-executing: ['EXL3_DECODE_FUSE', 'EXL3_DECODE_OVERLAP', 'EXL3_EMBED_GPU_PRUNED', 'EXL3_MOE_COOP_V2', 'EXL3_MOE_PREFILL_E3', 'EXL3_SHARED_EXPERT_OVERLAP']
+[91mW0924 17:24:57.095000 4191 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+[0mext: /opt/venv/lib/python3.12/site-packages/exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+stack-r3 landed: hcfast r2 (hc_mix_v3_revision 2, build r2), latchain 1 (latchain-r1), moefast 3, densegemm 2 + lcguard; every flag default off; HC2 tables parse (2 [1, 2, 4, 4] [1, 4, 4, 8] [4, 8, 8] [1, 0] [4, 2, 2, 4] False)
+ ---> Removed intermediate container 85c02ecf7dc9
+ ---> 44df53e0ee30
+Step 13/13 : LABEL local.stack.round="r3" local.stack.base="${BASE}" local.stack.include="${INCLUDE}"       local.stack.dgv2_defs="${DGV2_NVCC_DEFS}" local.stack.series_sha256="${SERIES_SHA}"
+ ---> Running in a06470b22a5f
+ ---> Removed intermediate container a06470b22a5f
+ ---> e0e233c3dc16
+Successfully built e0e233c3dc16
+Successfully tagged tabbyapi:stack-r3

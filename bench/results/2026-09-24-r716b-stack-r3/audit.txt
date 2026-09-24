@@ -1,0 +1,673 @@
+2026-09-24T17:16:45+00:00 [r716b-stack-r3] HC2 = R702 P0 RECOMMEND (/srv/qwen5090/results/2026-09-24-r702-hcfast-r2/p0.json)
+2026-09-24T17:16:45+00:00 [r716b-stack-r3] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; BASE tabbyapi:stack-r2; IMG tabbyapi:stack-r3; INCLUDE 'mf3 dg2'; defines ''; series sha fe779eac68b7994d0c9745e1c643b76ef4671a719a755d2a109b0942841bbe18
+2026-09-24T17:16:45+00:00 [r716b-stack-r3] UNION (pre-registered default): EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_DENSE_V2=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3] components: HC2 RR QT QF DG MF3 (optional: QT QF DG MF3); guard required: 1; P1 arms: OFF U UnoQT UnoQF UnoDG UnoMF3 OFF2 x 7 rounds
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm OFF flags: <served env>
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm U flags: EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_DENSE_V2=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm UnoQT flags: EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_FORK=1 EXL3_DENSE_V2=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm UnoQF flags: EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_DENSE_V2=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm UnoDG flags: EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm UnoMF3 flags: EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_DENSE_V2=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   arm OFF2 flags: <served env>
+2026-09-24T17:16:45+00:00 [r716b-stack-r3]   served B env: EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_HC_MIX_V3_PDL=0 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_DENSE_V2=1 EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T17:16:45+00:00 [r716b-stack-r3] building tabbyapi:stack-r3 on tabbyapi:stack-r2 (INCLUDE 'mf3 dg2')
+  [build] stack-r3: INCLUDE='mf3 dg2' DGV2_NVCC_DEFS='' MAX_JOBS=4
+  [build] stack-r3: base markers ok (hcfast 1, moefast 1)
+  [build] stack-r3: base .so /opt/venv/lib/python3.12/site-packages/exllamav3_ext.cpython-312-x86_64-linux-gnu.so
+  [build] stack-r3: base .so has 1533 function bodies, 1645 res-usage entries
+  [build] stack-r3: served SASS identical (anonymous-namespace hashes blanked); new kernels exactly the INCLUDE='dg2 mf3' set
+  [build] STACK-BOUND PASS 100/100 enforced; 0 report-only (0 over bar); margin 64 B
+  [build] stack-r3 landed: hcfast r2 (hc_mix_v3_revision 2, build r2), latchain 1 (latchain-r1), moefast 3, densegemm 2 + lcguard; every flag default off; HC2 tables parse (2 [1, 2, 4, 4] [1, 4, 4, 8] [4, 8, 8] [1, 0] [4, 2, 2, 4] False)
+  [build] stack-r3: cpu-densegemm.txt: CPU TESTS PASS
+  [build] stack-r3: cpu-hcfast.txt: FLOW PASS
+  [build] stack-r3: cpu-latchain-installed.txt: CPU PASS
+  [build] stack-r3: cpu-latchain.txt: CPU PASS
+  [build] stack-r3: cpu-lcguard.txt: LCGUARD CPU PASS
+  [build] stack-r3: cpu-moefast-r3.txt: CPU TESTS PASS
+  [build] stack-r3: cpu-moefast-trace.txt: 300 partition/ksplit cases + served shapes: PASS
+  [build] stack-r3 landed: INCLUDE='mf3 dg2' DGV2_NVCC_DEFS=''; served SASS identical; STACK bound PASS; markers ok; CPU tests PASS (all flags default off)
+  [build] stack-r3 landed: hcfast r2 (hc_mix_v3_revision 2, build r2), latchain 1 (latchain-r1), moefast 3, densegemm 2 + lcguard; every flag default off; HC2 tables parse (2 [1, 2, 4, 4] [1, 4, 4, 8] [4, 8, 8] [1, 0] [4, 2, 2, 4] False)
+2026-09-24T17:25:18+00:00 [r716b-stack-r3] image tabbyapi:stack-r3: stack-r3 landed: hcfast r2 (hc_mix_v3_revision 2, build r2), latchain 1 (latchain-r1), moefast 3, densegemm 2 + lcguard; every flag default off; HC2 tables parse (2 [1, 2, 4, 4] [1, 4, 4, 8] [4, 8, 8] [1, 0] [4, 2, 2, 4] False)
+2026-09-24T17:25:19+00:00 [r716b-stack-r3] lcguard present (dense_v2_lc_guard=1): QF and EXL3_DENSE_V2=1 co-exist
+2026-09-24T17:25:28+00:00 [r716b-stack-r3] parity hcfast rc=0: PARITY PASS
+2026-09-24T17:25:31+00:00 [r716b-stack-r3] parity latchain rc=0: PARITY PASS
+2026-09-24T17:25:38+00:00 [r716b-stack-r3] parity moefast rc=0: PARITY PASS
+2026-09-24T17:25:42+00:00 [r716b-stack-r3] parity densegemm rc=0: PARITY PASS
+2026-09-24T17:25:59+00:00 [r716b-stack-r3]   model parity b1d3-OFF rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {} -> /results/mp-b1d3-OFF.json
+2026-09-24T17:26:15+00:00 [r716b-stack-r3]   model parity b1d3-U rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA_COMBINE_STAGES': '1', 'E
+2026-09-24T17:26:32+00:00 [r716b-stack-r3]   model parity b1d3-OFF2 rc=0: lc_model_parity: b1 d3 ctx4096: 96 forwards recorded, tokens 2a8a8d0b6a45f14bc07fb9a1de9179c2, env {} -> /results/mp-b1d3-OFF2.json
+  [mp b1d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b1d3-OFF2.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b1d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b1d3-U.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b1d3] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T17:26:51+00:00 [r716b-stack-r3]   model parity b4d3-OFF rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {} -> /results/mp-b4d3-OFF.json
+2026-09-24T17:27:11+00:00 [r716b-stack-r3]   model parity b4d3-U rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA_COMBINE_STAGES': '1', 'E
+2026-09-24T17:27:30+00:00 [r716b-stack-r3]   model parity b4d3-OFF2 rc=0: lc_model_parity: b4 d3 ctx4096: 96 forwards recorded, tokens 3d833433f3d81faaf8fc852d92b4895c, env {} -> /results/mp-b4d3-OFF2.json
+  [mp b4d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b4d3-OFF2.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b4d3] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b4d3-U.json: forwards identical 96/96 (arm has 96), tokens identical yes
+  [mp b4d3] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T17:27:52+00:00 [r716b-stack-r3]   model parity b8d1-OFF rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {} -> /results/mp-b8d1-OFF.json
+2026-09-24T17:28:14+00:00 [r716b-stack-r3]   model parity b8d1-U rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {'EXL3_LC_GDN_RR': '1', 'EXL3_LC_QSA_COMBINE_STAGES': '1', 'E
+2026-09-24T17:28:37+00:00 [r716b-stack-r3]   model parity b8d1-OFF2 rc=0: lc_model_parity: b8 d1 ctx4096: 48 forwards recorded, tokens 97abdb089f7a9c989795a61d22fc2b17, env {} -> /results/mp-b8d1-OFF2.json
+  [mp b8d1] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b8d1-OFF2.json: forwards identical 48/48 (arm has 48), tokens identical yes
+  [mp b8d1] MODEL-PARITY /srv/qwen5090/results/2026-09-24-r716b-stack-r3/mp-b8d1-U.json: forwards identical 48/48 (arm has 48), tokens identical yes
+  [mp b8d1] MODEL-PARITY-SUMMARY aa=IDENTICAL arms=IDENTICAL
+2026-09-24T17:28:37+00:00 [r716b-stack-r3] model parity U: lcguard lines per shape: b1d3:2 b4d3:2 b8d1:2 (0 = no side-branch dense call reached the guard in-process)
+2026-09-24T17:28:37+00:00 [r716b-stack-r3] model parity PASS (logits-level, all three shapes)
+2026-09-24T17:28:37+00:00 [r716b-stack-r3]   c4d3 round 1 order: OFF U UnoQT UnoQF UnoDG UnoMF3 OFF2
+2026-09-24T17:29:15+00:00 [r716b-stack-r3]   P1 c4d3-OFF1 rc=0: d3 events: 643.092594 ms capture, 20.096644 ms/iterate | d0 events: 327.067303 ms capture, 10.220853 ms/iterate
+2026-09-24T17:29:54+00:00 [r716b-stack-r3]   P1 c4d3-U1 rc=0: d3 events: 625.895813 ms capture, 19.559244 ms/iterate | d0 events: 281.640052 ms capture, 8.801252 ms/iterate
+2026-09-24T17:30:32+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT1 rc=0: d3 events: 592.270440 ms capture, 18.508451 ms/iterate | d0 events: 284.643235 ms capture, 8.895101 ms/iterate
+2026-09-24T17:31:11+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF1 rc=0: d3 events: 613.143671 ms capture, 19.160740 ms/iterate | d0 events: 284.981586 ms capture, 8.905675 ms/iterate
+2026-09-24T17:31:49+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG1 rc=0: d3 events: 602.717531 ms capture, 18.834923 ms/iterate | d0 events: 293.169185 ms capture, 9.161537 ms/iterate
+2026-09-24T17:32:27+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF31 rc=0: d3 events: 591.978874 ms capture, 18.499340 ms/iterate | d0 events: 289.658276 ms capture, 9.051821 ms/iterate
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   P1 c4d3-OFF21 rc=0: d3 events: 658.922045 ms capture, 20.591314 ms/iterate | d0 events: 319.183966 ms capture, 9.974499 ms/iterate
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 U d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 U d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:33:06+00:00 [r716b-stack-r3]   c4d3 round 2 order: U UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF
+2026-09-24T17:33:43+00:00 [r716b-stack-r3]   P1 c4d3-U2 rc=0: d3 events: 594.408347 ms capture, 18.575261 ms/iterate | d0 events: 279.663634 ms capture, 8.739489 ms/iterate
+2026-09-24T17:34:21+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT2 rc=0: d3 events: 599.843690 ms capture, 18.745115 ms/iterate | d0 events: 284.165026 ms capture, 8.880157 ms/iterate
+2026-09-24T17:34:58+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF2 rc=0: d3 events: 599.819502 ms capture, 18.744359 ms/iterate | d0 events: 284.908622 ms capture, 8.903394 ms/iterate
+2026-09-24T17:35:36+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG2 rc=0: d3 events: 592.208180 ms capture, 18.506506 ms/iterate | d0 events: 298.430050 ms capture, 9.325939 ms/iterate
+2026-09-24T17:36:14+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF32 rc=0: d3 events: 592.913192 ms capture, 18.528537 ms/iterate | d0 events: 288.919303 ms capture, 9.028728 ms/iterate
+2026-09-24T17:36:52+00:00 [r716b-stack-r3]   P1 c4d3-OFF22 rc=0: d3 events: 639.664354 ms capture, 19.989511 ms/iterate | d0 events: 320.626231 ms capture, 10.019570 ms/iterate
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   P1 c4d3-OFF2 rc=0: d3 events: 642.874418 ms capture, 20.089826 ms/iterate | d0 events: 351.640122 ms capture, 10.988754 ms/iterate
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 U d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 U d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:37:31+00:00 [r716b-stack-r3]   c4d3 round 3 order: UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF U
+2026-09-24T17:38:10+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT3 rc=0: d3 events: 596.249396 ms capture, 18.632794 ms/iterate | d0 events: 283.043865 ms capture, 8.845121 ms/iterate
+2026-09-24T17:38:48+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF3 rc=0: d3 events: 592.190717 ms capture, 18.505960 ms/iterate | d0 events: 286.351638 ms capture, 8.948489 ms/iterate
+2026-09-24T17:39:27+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG3 rc=0: d3 events: 602.897602 ms capture, 18.840550 ms/iterate | d0 events: 293.878366 ms capture, 9.183699 ms/iterate
+2026-09-24T17:40:05+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF33 rc=0: d3 events: 595.138528 ms capture, 18.598079 ms/iterate | d0 events: 289.731152 ms capture, 9.054098 ms/iterate
+2026-09-24T17:40:44+00:00 [r716b-stack-r3]   P1 c4d3-OFF23 rc=0: d3 events: 642.845672 ms capture, 20.088927 ms/iterate | d0 events: 320.257434 ms capture, 10.008045 ms/iterate
+2026-09-24T17:41:22+00:00 [r716b-stack-r3]   P1 c4d3-OFF3 rc=0: d3 events: 642.616145 ms capture, 20.081755 ms/iterate | d0 events: 320.077472 ms capture, 10.002421 ms/iterate
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   P1 c4d3-U3 rc=0: d3 events: 599.001197 ms capture, 18.718787 ms/iterate | d0 events: 306.392963 ms capture, 9.574780 ms/iterate
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 U d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 U d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:42:00+00:00 [r716b-stack-r3]   c4d3 round 4 order: UnoQF UnoDG UnoMF3 OFF2 OFF U UnoQT
+2026-09-24T17:42:38+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF4 rc=0: d3 events: 593.653601 ms capture, 18.551675 ms/iterate | d0 events: 284.909525 ms capture, 8.903423 ms/iterate
+2026-09-24T17:43:16+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG4 rc=0: d3 events: 602.902443 ms capture, 18.840701 ms/iterate | d0 events: 297.578833 ms capture, 9.299339 ms/iterate
+2026-09-24T17:43:54+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF34 rc=0: d3 events: 602.339875 ms capture, 18.823121 ms/iterate | d0 events: 290.217266 ms capture, 9.069290 ms/iterate
+2026-09-24T17:44:33+00:00 [r716b-stack-r3]   P1 c4d3-OFF24 rc=0: d3 events: 652.897832 ms capture, 20.403057 ms/iterate | d0 events: 319.278120 ms capture, 9.977441 ms/iterate
+2026-09-24T17:45:11+00:00 [r716b-stack-r3]   P1 c4d3-OFF4 rc=0: d3 events: 662.685005 ms capture, 20.708906 ms/iterate | d0 events: 318.652414 ms capture, 9.957888 ms/iterate
+2026-09-24T17:45:49+00:00 [r716b-stack-r3]   P1 c4d3-U4 rc=0: d3 events: 601.374252 ms capture, 18.792945 ms/iterate | d0 events: 281.796420 ms capture, 8.806138 ms/iterate
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT4 rc=0: d3 events: 614.036724 ms capture, 19.188648 ms/iterate | d0 events: 283.701979 ms capture, 8.865687 ms/iterate
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 U d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 U d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:46:28+00:00 [r716b-stack-r3]   c4d3 round 5 order: UnoDG UnoMF3 OFF2 OFF U UnoQT UnoQF
+2026-09-24T17:47:06+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG5 rc=0: d3 events: 598.943796 ms capture, 18.716994 ms/iterate | d0 events: 294.199078 ms capture, 9.193721 ms/iterate
+2026-09-24T17:47:44+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF35 rc=0: d3 events: 617.387550 ms capture, 19.293361 ms/iterate | d0 events: 320.834223 ms capture, 10.026069 ms/iterate
+2026-09-24T17:48:22+00:00 [r716b-stack-r3]   P1 c4d3-OFF25 rc=0: d3 events: 643.058273 ms capture, 20.095571 ms/iterate | d0 events: 318.034382 ms capture, 9.938574 ms/iterate
+2026-09-24T17:49:01+00:00 [r716b-stack-r3]   P1 c4d3-OFF5 rc=0: d3 events: 653.523417 ms capture, 20.422607 ms/iterate | d0 events: 319.826595 ms capture, 9.994581 ms/iterate
+2026-09-24T17:49:39+00:00 [r716b-stack-r3]   P1 c4d3-U5 rc=0: d3 events: 592.690729 ms capture, 18.521585 ms/iterate | d0 events: 280.643836 ms capture, 8.770120 ms/iterate
+2026-09-24T17:50:17+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT5 rc=0: d3 events: 595.702750 ms capture, 18.615711 ms/iterate | d0 events: 284.421337 ms capture, 8.888167 ms/iterate
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF5 rc=0: d3 events: 590.971796 ms capture, 18.467869 ms/iterate | d0 events: 284.947349 ms capture, 8.904605 ms/iterate
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 U d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 U d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:50:55+00:00 [r716b-stack-r3]   c4d3 round 6 order: UnoMF3 OFF2 OFF U UnoQT UnoQF UnoDG
+2026-09-24T17:51:32+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF36 rc=0: d3 events: 596.615154 ms capture, 18.644224 ms/iterate | d0 events: 315.914830 ms capture, 9.872338 ms/iterate
+2026-09-24T17:52:10+00:00 [r716b-stack-r3]   P1 c4d3-OFF26 rc=0: d3 events: 662.896451 ms capture, 20.715514 ms/iterate | d0 events: 319.856420 ms capture, 9.995513 ms/iterate
+2026-09-24T17:52:49+00:00 [r716b-stack-r3]   P1 c4d3-OFF6 rc=0: d3 events: 646.888366 ms capture, 20.215261 ms/iterate | d0 events: 351.675809 ms capture, 10.989869 ms/iterate
+2026-09-24T17:53:27+00:00 [r716b-stack-r3]   P1 c4d3-U6 rc=0: d3 events: 593.522658 ms capture, 18.547583 ms/iterate | d0 events: 279.846198 ms capture, 8.745194 ms/iterate
+2026-09-24T17:54:04+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT6 rc=0: d3 events: 616.350736 ms capture, 19.260961 ms/iterate | d0 events: 283.259239 ms capture, 8.851851 ms/iterate
+2026-09-24T17:54:42+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF6 rc=0: d3 events: 608.819935 ms capture, 19.025623 ms/iterate | d0 events: 284.817102 ms capture, 8.900534 ms/iterate
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG6 rc=0: d3 events: 603.950860 ms capture, 18.873464 ms/iterate | d0 events: 294.710528 ms capture, 9.209704 ms/iterate
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 U d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 U d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 6 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:55:21+00:00 [r716b-stack-r3]   c4d3 round 7 order: OFF2 OFF U UnoQT UnoQF UnoDG UnoMF3
+2026-09-24T17:55:59+00:00 [r716b-stack-r3]   P1 c4d3-OFF27 rc=0: d3 events: 649.911023 ms capture, 20.309719 ms/iterate | d0 events: 343.831974 ms capture, 10.744749 ms/iterate
+2026-09-24T17:56:38+00:00 [r716b-stack-r3]   P1 c4d3-OFF7 rc=0: d3 events: 644.062881 ms capture, 20.126965 ms/iterate | d0 events: 320.275073 ms capture, 10.008596 ms/iterate
+2026-09-24T17:57:16+00:00 [r716b-stack-r3]   P1 c4d3-U7 rc=0: d3 events: 591.328491 ms capture, 18.479015 ms/iterate | d0 events: 295.895248 ms capture, 9.246726 ms/iterate
+2026-09-24T17:57:54+00:00 [r716b-stack-r3]   P1 c4d3-UnoQT7 rc=0: d3 events: 608.833090 ms capture, 19.026034 ms/iterate | d0 events: 282.266911 ms capture, 8.820841 ms/iterate
+2026-09-24T17:58:32+00:00 [r716b-stack-r3]   P1 c4d3-UnoQF7 rc=0: d3 events: 601.710722 ms capture, 18.803460 ms/iterate | d0 events: 318.315353 ms capture, 9.947355 ms/iterate
+2026-09-24T17:59:10+00:00 [r716b-stack-r3]   P1 c4d3-UnoDG7 rc=0: d3 events: 614.753679 ms capture, 19.211052 ms/iterate | d0 events: 296.072025 ms capture, 9.252251 ms/iterate
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   P1 c4d3-UnoMF37 rc=0: d3 events: 593.430609 ms capture, 18.544707 ms/iterate | d0 events: 290.309396 ms capture, 9.072169 ms/iterate
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 U d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 U d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoQT d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoQT d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoQF d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoQF d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoDG d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoDG d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 OFF2 d3: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c4d3 round 7 OFF2 d0: hashes IDENTICAL
+2026-09-24T17:59:49+00:00 [r716b-stack-r3]   c8d1 round 1 order: OFF U UnoQT UnoQF UnoDG UnoMF3 OFF2
+2026-09-24T18:00:34+00:00 [r716b-stack-r3]   P1 c8d1-OFF1 rc=0: d1 events: 598.007666 ms capture, 18.687740 ms/iterate | d0 events: 386.921595 ms capture, 12.091300 ms/iterate
+2026-09-24T18:01:19+00:00 [r716b-stack-r3]   P1 c8d1-U1 rc=0: d1 events: 558.593309 ms capture, 17.456041 ms/iterate | d0 events: 361.612826 ms capture, 11.300401 ms/iterate
+2026-09-24T18:02:03+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT1 rc=0: d1 events: 554.139269 ms capture, 17.316852 ms/iterate | d0 events: 342.538291 ms capture, 10.704322 ms/iterate
+2026-09-24T18:02:49+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF1 rc=0: d1 events: 575.799330 ms capture, 17.993729 ms/iterate | d0 events: 344.454156 ms capture, 10.764192 ms/iterate
+2026-09-24T18:03:34+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG1 rc=0: d1 events: 559.525706 ms capture, 17.485178 ms/iterate | d0 events: 352.494548 ms capture, 11.015455 ms/iterate
+2026-09-24T18:04:19+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF31 rc=0: d1 events: 558.112668 ms capture, 17.441021 ms/iterate | d0 events: 351.138585 ms capture, 10.973081 ms/iterate
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   P1 c8d1-OFF21 rc=0: d1 events: 591.769936 ms capture, 18.492811 ms/iterate | d0 events: 389.514578 ms capture, 12.172331 ms/iterate
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 U d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 U d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:05:03+00:00 [r716b-stack-r3]   c8d1 round 2 order: U UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF
+2026-09-24T18:05:48+00:00 [r716b-stack-r3]   P1 c8d1-U2 rc=0: d1 events: 547.529454 ms capture, 17.110295 ms/iterate | d0 events: 339.339175 ms capture, 10.604349 ms/iterate
+2026-09-24T18:06:33+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT2 rc=0: d1 events: 557.959933 ms capture, 17.436248 ms/iterate | d0 events: 344.143165 ms capture, 10.754474 ms/iterate
+2026-09-24T18:07:18+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF2 rc=0: d1 events: 548.187983 ms capture, 17.130874 ms/iterate | d0 events: 346.444796 ms capture, 10.826400 ms/iterate
+2026-09-24T18:08:02+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG2 rc=0: d1 events: 560.297737 ms capture, 17.509304 ms/iterate | d0 events: 353.725865 ms capture, 11.053933 ms/iterate
+2026-09-24T18:08:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF32 rc=0: d1 events: 569.685449 ms capture, 17.802670 ms/iterate | d0 events: 348.857338 ms capture, 10.901792 ms/iterate
+2026-09-24T18:09:33+00:00 [r716b-stack-r3]   P1 c8d1-OFF22 rc=0: d1 events: 594.915369 ms capture, 18.591105 ms/iterate | d0 events: 384.120423 ms capture, 12.003763 ms/iterate
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   P1 c8d1-OFF2 rc=0: d1 events: 586.711825 ms capture, 18.334745 ms/iterate | d0 events: 411.804909 ms capture, 12.868903 ms/iterate
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 U d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 U d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:10:17+00:00 [r716b-stack-r3]   c8d1 round 3 order: UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF U
+2026-09-24T18:11:02+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT3 rc=0: d1 events: 548.511437 ms capture, 17.140982 ms/iterate | d0 events: 342.897157 ms capture, 10.715536 ms/iterate
+2026-09-24T18:11:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF3 rc=0: d1 events: 549.564295 ms capture, 17.173884 ms/iterate | d0 events: 345.297043 ms capture, 10.790533 ms/iterate
+2026-09-24T18:12:32+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG3 rc=0: d1 events: 568.266276 ms capture, 17.758321 ms/iterate | d0 events: 352.996330 ms capture, 11.031135 ms/iterate
+2026-09-24T18:13:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF33 rc=0: d1 events: 552.220436 ms capture, 17.256889 ms/iterate | d0 events: 350.030388 ms capture, 10.938450 ms/iterate
+2026-09-24T18:14:02+00:00 [r716b-stack-r3]   P1 c8d1-OFF23 rc=0: d1 events: 595.423971 ms capture, 18.606999 ms/iterate | d0 events: 387.285559 ms capture, 12.102674 ms/iterate
+2026-09-24T18:14:47+00:00 [r716b-stack-r3]   P1 c8d1-OFF3 rc=0: d1 events: 596.161013 ms capture, 18.630032 ms/iterate | d0 events: 384.945778 ms capture, 12.029556 ms/iterate
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   P1 c8d1-U3 rc=0: d1 events: 545.085398 ms capture, 17.033919 ms/iterate | d0 events: 339.540443 ms capture, 10.610639 ms/iterate
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 U d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 U d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:15:33+00:00 [r716b-stack-r3]   c8d1 round 4 order: UnoQF UnoDG UnoMF3 OFF2 OFF U UnoQT
+2026-09-24T18:16:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF4 rc=0: d1 events: 548.565531 ms capture, 17.142673 ms/iterate | d0 events: 345.359957 ms capture, 10.792499 ms/iterate
+2026-09-24T18:17:01+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG4 rc=0: d1 events: 557.185735 ms capture, 17.412054 ms/iterate | d0 events: 352.451828 ms capture, 11.014120 ms/iterate
+2026-09-24T18:17:46+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF34 rc=0: d1 events: 558.656929 ms capture, 17.458029 ms/iterate | d0 events: 353.142921 ms capture, 11.035716 ms/iterate
+2026-09-24T18:18:31+00:00 [r716b-stack-r3]   P1 c8d1-OFF24 rc=0: d1 events: 591.612453 ms capture, 18.487889 ms/iterate | d0 events: 384.894074 ms capture, 12.027940 ms/iterate
+2026-09-24T18:19:16+00:00 [r716b-stack-r3]   P1 c8d1-OFF4 rc=0: d1 events: 599.285861 ms capture, 18.727683 ms/iterate | d0 events: 385.799462 ms capture, 12.056233 ms/iterate
+2026-09-24T18:20:01+00:00 [r716b-stack-r3]   P1 c8d1-U4 rc=0: d1 events: 547.846310 ms capture, 17.120197 ms/iterate | d0 events: 350.416103 ms capture, 10.950503 ms/iterate
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT4 rc=0: d1 events: 555.975346 ms capture, 17.374230 ms/iterate | d0 events: 343.480055 ms capture, 10.733752 ms/iterate
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 U d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 U d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:20:47+00:00 [r716b-stack-r3]   c8d1 round 5 order: UnoDG UnoMF3 OFF2 OFF U UnoQT UnoQF
+2026-09-24T18:21:32+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG5 rc=0: d1 events: 557.484072 ms capture, 17.421377 ms/iterate | d0 events: 352.333418 ms capture, 11.010419 ms/iterate
+2026-09-24T18:22:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF35 rc=0: d1 events: 553.735495 ms capture, 17.304234 ms/iterate | d0 events: 349.800592 ms capture, 10.931269 ms/iterate
+2026-09-24T18:23:02+00:00 [r716b-stack-r3]   P1 c8d1-OFF25 rc=0: d1 events: 623.787821 ms capture, 19.493369 ms/iterate | d0 events: 387.771342 ms capture, 12.117854 ms/iterate
+2026-09-24T18:23:47+00:00 [r716b-stack-r3]   P1 c8d1-OFF5 rc=0: d1 events: 595.210131 ms capture, 18.600317 ms/iterate | d0 events: 386.788400 ms capture, 12.087138 ms/iterate
+2026-09-24T18:24:32+00:00 [r716b-stack-r3]   P1 c8d1-U5 rc=0: d1 events: 543.225832 ms capture, 16.975807 ms/iterate | d0 events: 338.971998 ms capture, 10.592875 ms/iterate
+2026-09-24T18:25:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT5 rc=0: d1 events: 554.741645 ms capture, 17.335676 ms/iterate | d0 events: 344.439166 ms capture, 10.763724 ms/iterate
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF5 rc=0: d1 events: 539.199912 ms capture, 16.849997 ms/iterate | d0 events: 345.547125 ms capture, 10.798348 ms/iterate
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 U d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 U d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:26:02+00:00 [r716b-stack-r3]   c8d1 round 6 order: UnoMF3 OFF2 OFF U UnoQT UnoQF UnoDG
+2026-09-24T18:26:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF36 rc=0: d1 events: 560.354056 ms capture, 17.511064 ms/iterate | d0 events: 349.617399 ms capture, 10.925544 ms/iterate
+2026-09-24T18:27:31+00:00 [r716b-stack-r3]   P1 c8d1-OFF26 rc=0: d1 events: 605.629608 ms capture, 18.925925 ms/iterate | d0 events: 385.558512 ms capture, 12.048704 ms/iterate
+2026-09-24T18:28:17+00:00 [r716b-stack-r3]   P1 c8d1-OFF6 rc=0: d1 events: 601.027021 ms capture, 18.782094 ms/iterate | d0 events: 388.923327 ms capture, 12.153854 ms/iterate
+2026-09-24T18:29:02+00:00 [r716b-stack-r3]   P1 c8d1-U6 rc=0: d1 events: 555.593001 ms capture, 17.362281 ms/iterate | d0 events: 338.967881 ms capture, 10.592746 ms/iterate
+2026-09-24T18:29:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT6 rc=0: d1 events: 553.320296 ms capture, 17.291259 ms/iterate | d0 events: 343.005614 ms capture, 10.718925 ms/iterate
+2026-09-24T18:30:32+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF6 rc=0: d1 events: 554.433275 ms capture, 17.326040 ms/iterate | d0 events: 345.586240 ms capture, 10.799570 ms/iterate
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG6 rc=0: d1 events: 557.301453 ms capture, 17.415670 ms/iterate | d0 events: 351.947594 ms capture, 10.998362 ms/iterate
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 U d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 U d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 6 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:31:17+00:00 [r716b-stack-r3]   c8d1 round 7 order: OFF2 OFF U UnoQT UnoQF UnoDG UnoMF3
+2026-09-24T18:32:02+00:00 [r716b-stack-r3]   P1 c8d1-OFF27 rc=0: d1 events: 606.357553 ms capture, 18.948674 ms/iterate | d0 events: 385.906840 ms capture, 12.059589 ms/iterate
+2026-09-24T18:32:47+00:00 [r716b-stack-r3]   P1 c8d1-OFF7 rc=0: d1 events: 588.149914 ms capture, 18.379685 ms/iterate | d0 events: 386.536206 ms capture, 12.079256 ms/iterate
+2026-09-24T18:33:32+00:00 [r716b-stack-r3]   P1 c8d1-U7 rc=0: d1 events: 541.130034 ms capture, 16.910314 ms/iterate | d0 events: 340.756475 ms capture, 10.648640 ms/iterate
+2026-09-24T18:34:17+00:00 [r716b-stack-r3]   P1 c8d1-UnoQT7 rc=0: d1 events: 548.067655 ms capture, 17.127114 ms/iterate | d0 events: 344.168888 ms capture, 10.755278 ms/iterate
+2026-09-24T18:35:02+00:00 [r716b-stack-r3]   P1 c8d1-UnoQF7 rc=0: d1 events: 551.671138 ms capture, 17.239723 ms/iterate | d0 events: 344.622694 ms capture, 10.769459 ms/iterate
+2026-09-24T18:35:47+00:00 [r716b-stack-r3]   P1 c8d1-UnoDG7 rc=0: d1 events: 553.550101 ms capture, 17.298441 ms/iterate | d0 events: 351.204063 ms capture, 10.975127 ms/iterate
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   P1 c8d1-UnoMF37 rc=0: d1 events: 561.781731 ms capture, 17.555679 ms/iterate | d0 events: 349.598128 ms capture, 10.924942 ms/iterate
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 U d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 U d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoQT d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoQF d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoDG d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoMF3 d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 OFF2 d1: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c8d1 round 7 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:36:32+00:00 [r716b-stack-r3]   c1d3 round 1 order: OFF U UnoQT UnoQF UnoDG UnoMF3 OFF2
+2026-09-24T18:37:05+00:00 [r716b-stack-r3]   P1 c1d3-OFF1 rc=0: d3 events: 387.306229 ms capture, 12.103320 ms/iterate | d0 events: 252.383282 ms capture, 7.886978 ms/iterate
+2026-09-24T18:37:38+00:00 [r716b-stack-r3]   P1 c1d3-U1 rc=0: d3 events: 336.719942 ms capture, 10.522498 ms/iterate | d0 events: 230.020094 ms capture, 7.188128 ms/iterate
+2026-09-24T18:38:10+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT1 rc=0: d3 events: 340.470704 ms capture, 10.639710 ms/iterate | d0 events: 233.032708 ms capture, 7.282272 ms/iterate
+2026-09-24T18:38:43+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF1 rc=0: d3 events: 342.590171 ms capture, 10.705943 ms/iterate | d0 events: 233.639357 ms capture, 7.301230 ms/iterate
+2026-09-24T18:39:16+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG1 rc=0: d3 events: 360.248603 ms capture, 11.257769 ms/iterate | d0 events: 250.260649 ms capture, 7.820645 ms/iterate
+2026-09-24T18:39:47+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF31 rc=0: d3 events: 348.373762 ms capture, 10.886680 ms/iterate | d0 events: 234.411937 ms capture, 7.325373 ms/iterate
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   P1 c1d3-OFF21 rc=0: d3 events: 388.877460 ms capture, 12.152421 ms/iterate | d0 events: 251.611563 ms capture, 7.862861 ms/iterate
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 U d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 U d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:40:20+00:00 [r716b-stack-r3]   c1d3 round 2 order: U UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF
+2026-09-24T18:40:53+00:00 [r716b-stack-r3]   P1 c1d3-U2 rc=0: d3 events: 336.028859 ms capture, 10.500902 ms/iterate | d0 events: 229.614965 ms capture, 7.175468 ms/iterate
+2026-09-24T18:41:25+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT2 rc=0: d3 events: 339.461545 ms capture, 10.608173 ms/iterate | d0 events: 231.406358 ms capture, 7.231449 ms/iterate
+2026-09-24T18:41:57+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF2 rc=0: d3 events: 354.044920 ms capture, 11.063904 ms/iterate | d0 events: 232.151486 ms capture, 7.254734 ms/iterate
+2026-09-24T18:42:31+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG2 rc=0: d3 events: 351.337941 ms capture, 10.979311 ms/iterate | d0 events: 235.052301 ms capture, 7.345384 ms/iterate
+2026-09-24T18:43:03+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF32 rc=0: d3 events: 346.533066 ms capture, 10.829158 ms/iterate | d0 events: 235.610116 ms capture, 7.362816 ms/iterate
+2026-09-24T18:43:35+00:00 [r716b-stack-r3]   P1 c1d3-OFF22 rc=0: d3 events: 393.816018 ms capture, 12.306751 ms/iterate | d0 events: 250.573427 ms capture, 7.830420 ms/iterate
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   P1 c1d3-OFF2 rc=0: d3 events: 386.677549 ms capture, 12.083673 ms/iterate | d0 events: 252.276256 ms capture, 7.883633 ms/iterate
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 U d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 U d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:44:07+00:00 [r716b-stack-r3]   c1d3 round 3 order: UnoQT UnoQF UnoDG UnoMF3 OFF2 OFF U
+2026-09-24T18:44:40+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT3 rc=0: d3 events: 340.118938 ms capture, 10.628717 ms/iterate | d0 events: 231.695512 ms capture, 7.240485 ms/iterate
+2026-09-24T18:45:13+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF3 rc=0: d3 events: 342.059491 ms capture, 10.689359 ms/iterate | d0 events: 234.518686 ms capture, 7.328709 ms/iterate
+2026-09-24T18:45:45+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG3 rc=0: d3 events: 350.031634 ms capture, 10.938489 ms/iterate | d0 events: 235.839428 ms capture, 7.369982 ms/iterate
+2026-09-24T18:46:18+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF33 rc=0: d3 events: 357.495692 ms capture, 11.171740 ms/iterate | d0 events: 234.868940 ms capture, 7.339654 ms/iterate
+2026-09-24T18:46:49+00:00 [r716b-stack-r3]   P1 c1d3-OFF23 rc=0: d3 events: 387.421062 ms capture, 12.106908 ms/iterate | d0 events: 259.105893 ms capture, 8.097059 ms/iterate
+2026-09-24T18:47:23+00:00 [r716b-stack-r3]   P1 c1d3-OFF3 rc=0: d3 events: 386.935748 ms capture, 12.091742 ms/iterate | d0 events: 252.137630 ms capture, 7.879301 ms/iterate
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   P1 c1d3-U3 rc=0: d3 events: 335.912843 ms capture, 10.497276 ms/iterate | d0 events: 229.132725 ms capture, 7.160398 ms/iterate
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 U d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 U d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:47:56+00:00 [r716b-stack-r3]   c1d3 round 4 order: UnoQF UnoDG UnoMF3 OFF2 OFF U UnoQT
+2026-09-24T18:48:29+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF4 rc=0: d3 events: 343.613075 ms capture, 10.737909 ms/iterate | d0 events: 233.297698 ms capture, 7.290553 ms/iterate
+2026-09-24T18:49:01+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG4 rc=0: d3 events: 350.593649 ms capture, 10.956052 ms/iterate | d0 events: 232.121832 ms capture, 7.253807 ms/iterate
+2026-09-24T18:49:34+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF34 rc=0: d3 events: 346.637321 ms capture, 10.832416 ms/iterate | d0 events: 245.667435 ms capture, 7.677107 ms/iterate
+2026-09-24T18:50:06+00:00 [r716b-stack-r3]   P1 c1d3-OFF24 rc=0: d3 events: 386.405372 ms capture, 12.075168 ms/iterate | d0 events: 251.736653 ms capture, 7.866770 ms/iterate
+2026-09-24T18:50:39+00:00 [r716b-stack-r3]   P1 c1d3-OFF4 rc=0: d3 events: 387.663991 ms capture, 12.114500 ms/iterate | d0 events: 250.258724 ms capture, 7.820585 ms/iterate
+2026-09-24T18:51:10+00:00 [r716b-stack-r3]   P1 c1d3-U4 rc=0: d3 events: 335.906485 ms capture, 10.497078 ms/iterate | d0 events: 229.712255 ms capture, 7.178508 ms/iterate
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT4 rc=0: d3 events: 341.078527 ms capture, 10.658704 ms/iterate | d0 events: 229.675371 ms capture, 7.177355 ms/iterate
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 U d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 U d0: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:51:41+00:00 [r716b-stack-r3]   c1d3 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:51:42+00:00 [r716b-stack-r3]   c1d3 round 5 order: UnoDG UnoMF3 OFF2 OFF U UnoQT UnoQF
+2026-09-24T18:52:15+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG5 rc=0: d3 events: 351.251774 ms capture, 10.976618 ms/iterate | d0 events: 234.471119 ms capture, 7.327222 ms/iterate
+2026-09-24T18:52:47+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF35 rc=0: d3 events: 350.642064 ms capture, 10.957565 ms/iterate | d0 events: 234.742919 ms capture, 7.335716 ms/iterate
+2026-09-24T18:53:20+00:00 [r716b-stack-r3]   P1 c1d3-OFF25 rc=0: d3 events: 388.398554 ms capture, 12.137455 ms/iterate | d0 events: 252.032190 ms capture, 7.876006 ms/iterate
+2026-09-24T18:53:52+00:00 [r716b-stack-r3]   P1 c1d3-OFF5 rc=0: d3 events: 386.484557 ms capture, 12.077642 ms/iterate | d0 events: 251.998685 ms capture, 7.874959 ms/iterate
+2026-09-24T18:54:25+00:00 [r716b-stack-r3]   P1 c1d3-U5 rc=0: d3 events: 336.562351 ms capture, 10.517573 ms/iterate | d0 events: 228.965156 ms capture, 7.155161 ms/iterate
+2026-09-24T18:54:57+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT5 rc=0: d3 events: 341.020578 ms capture, 10.656893 ms/iterate | d0 events: 229.577018 ms capture, 7.174282 ms/iterate
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF5 rc=0: d3 events: 343.777151 ms capture, 10.743036 ms/iterate | d0 events: 235.504843 ms capture, 7.359526 ms/iterate
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 U d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 U d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:55:29+00:00 [r716b-stack-r3]   c1d3 round 6 order: UnoMF3 OFF2 OFF U UnoQT UnoQF UnoDG
+2026-09-24T18:56:01+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF36 rc=0: d3 events: 358.727501 ms capture, 11.210234 ms/iterate | d0 events: 238.192628 ms capture, 7.443520 ms/iterate
+2026-09-24T18:56:34+00:00 [r716b-stack-r3]   P1 c1d3-OFF26 rc=0: d3 events: 428.160923 ms capture, 13.380029 ms/iterate | d0 events: 253.050934 ms capture, 7.907842 ms/iterate
+2026-09-24T18:57:06+00:00 [r716b-stack-r3]   P1 c1d3-OFF6 rc=0: d3 events: 387.424745 ms capture, 12.107023 ms/iterate | d0 events: 251.071234 ms capture, 7.845976 ms/iterate
+2026-09-24T18:57:39+00:00 [r716b-stack-r3]   P1 c1d3-U6 rc=0: d3 events: 347.029761 ms capture, 10.844680 ms/iterate | d0 events: 229.801457 ms capture, 7.181296 ms/iterate
+2026-09-24T18:58:11+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT6 rc=0: d3 events: 340.283782 ms capture, 10.633868 ms/iterate | d0 events: 232.971698 ms capture, 7.280366 ms/iterate
+2026-09-24T18:58:44+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF6 rc=0: d3 events: 349.785654 ms capture, 10.930802 ms/iterate | d0 events: 234.634803 ms capture, 7.332338 ms/iterate
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG6 rc=0: d3 events: 351.062892 ms capture, 10.970715 ms/iterate | d0 events: 243.906419 ms capture, 7.622076 ms/iterate
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 U d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 U d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoQT d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoQT d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoQF d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoQF d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoDG d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoDG d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 OFF2 d3: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 6 OFF2 d0: hashes IDENTICAL
+2026-09-24T18:59:16+00:00 [r716b-stack-r3]   c1d3 round 7 order: OFF2 OFF U UnoQT UnoQF UnoDG UnoMF3
+2026-09-24T18:59:48+00:00 [r716b-stack-r3]   P1 c1d3-OFF27 rc=0: d3 events: 387.645672 ms capture, 12.113927 ms/iterate | d0 events: 251.548016 ms capture, 7.860875 ms/iterate
+2026-09-24T19:00:20+00:00 [r716b-stack-r3]   P1 c1d3-OFF7 rc=0: d3 events: 415.232480 ms capture, 12.976015 ms/iterate | d0 events: 252.542389 ms capture, 7.891950 ms/iterate
+2026-09-24T19:00:52+00:00 [r716b-stack-r3]   P1 c1d3-U7 rc=0: d3 events: 336.277007 ms capture, 10.508656 ms/iterate | d0 events: 229.149729 ms capture, 7.160929 ms/iterate
+2026-09-24T19:01:25+00:00 [r716b-stack-r3]   P1 c1d3-UnoQT7 rc=0: d3 events: 341.169469 ms capture, 10.661546 ms/iterate | d0 events: 232.311147 ms capture, 7.259723 ms/iterate
+2026-09-24T19:01:57+00:00 [r716b-stack-r3]   P1 c1d3-UnoQF7 rc=0: d3 events: 343.787185 ms capture, 10.743350 ms/iterate | d0 events: 241.148875 ms capture, 7.535902 ms/iterate
+2026-09-24T19:02:30+00:00 [r716b-stack-r3]   P1 c1d3-UnoDG7 rc=0: d3 events: 352.347154 ms capture, 11.010849 ms/iterate | d0 events: 233.475775 ms capture, 7.296118 ms/iterate
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   P1 c1d3-UnoMF37 rc=0: d3 events: 357.845491 ms capture, 11.182672 ms/iterate | d0 events: 234.261468 ms capture, 7.320671 ms/iterate
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 U d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 U d0: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoQT d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoQT d0: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoQF d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoQF d0: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoDG d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoDG d0: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoMF3 d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 UnoMF3 d0: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 OFF2 d3: hashes IDENTICAL
+2026-09-24T19:03:02+00:00 [r716b-stack-r3]   c1d3 round 7 OFF2 d0: hashes IDENTICAL
+P1-HASH U vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH UnoQT vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH UnoQF vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH UnoDG vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH UnoMF3 vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH OFF2 vs OFF: 42 identical, 0 DIFFER, 0 missing (need 42)
+P1-HASH OFF across rounds: deterministic
+P1 U-OFF c1d3: excl -1.577 (-13.05 %) 7/7 GAIN | med -1.560 (-12.91 %) 7/7 GAIN | raw -1.666 (-13.63 %) 7/7 GAIN | dropped 2
+P1 U-OFF c1d3 d0(b1): excl -0.697 (-8.96 %) 7/7 GAIN | med -0.751 (-9.64 %) 7/7 GAIN | raw -0.698 (-8.87 %) 7/7 GAIN | dropped 0
+P1 U-OFF c4d3: excl -1.714 (-8.48 %) 7/7 GAIN | med -1.739 (-8.60 %) 7/7 GAIN | raw -1.507 (-7.44 %) 7/7 GAIN | dropped 7
+P1 U-OFF c4d3 d0(b4): excl -1.160 (-11.60 %) 7/7 GAIN | med -1.217 (-12.16 %) 7/7 GAIN | raw -1.354 (-13.14 %) 7/7 GAIN | dropped 3
+P1 U-OFF c8d1: excl -1.532 (-8.20 %) 7/7 GAIN | med -1.482 (-7.93 %) 7/7 GAIN | raw -1.453 (-7.82 %) 7/7 GAIN | dropped 3
+P1 U-OFF c8d1 d0(b8): excl -1.473 (-12.28 %) 7/7 GAIN | med -1.479 (-12.34 %) 7/7 GAIN | raw -1.438 (-11.79 %) 7/7 GAIN | dropped 3
+P1-VERDICT UNION: PASS: gain at c1d3, c4d3, c8d1
+P1 OFF2-OFF c1d3: excl +0.066 (+0.55 %) 1/7 flat | med +0.028 (+0.23 %) 3/7 flat | raw +0.103 (+0.84 %) 2/7 flat | dropped 2
+P1 OFF2-OFF c1d3 d0(b1): excl +0.031 (+0.40 %) 3/7 flat | med +0.002 (+0.02 %) 5/7 flat | raw +0.031 (+0.40 %) 3/7 flat | dropped 0
+P1 OFF2-OFF c4d3: excl -0.025 (-0.12 %) 5/7 flat | med -0.086 (-0.43 %) 5/7 flat | raw +0.065 (+0.32 %) 3/7 flat | dropped 4
+P1 OFF2-OFF c4d3 d0(b4): excl -0.016 (-0.16 %) 3/7 flat | med -0.042 (-0.42 %) 2/7 flat | raw -0.215 (-2.08 %) 4/7 flat | dropped 3
+P1 OFF2-OFF c8d1: excl +0.027 (+0.15 %) 3/7 flat | med +0.013 (+0.07 %) 4/7 flat | raw +0.201 (+1.08 %) 3/7 flat | dropped 5
+P1 OFF2-OFF c8d1 d0(b8): excl -0.017 (-0.14 %) 4/7 flat | med +0.011 (+0.09 %) 3/7 flat | raw -0.119 (-0.98 %) 4/7 flat | dropped 1
+P1-VERDICT A/A (OFF2 - OFF): A/A clean (flat at every shape)
+P1 U-UnoQT c1d3: excl -0.123 (-1.15 %) 7/7 GAIN | med -0.152 (-1.43 %) 7/7 GAIN | raw -0.086 (-0.80 %) 6/7 flat | dropped 1
+P1 U-UnoQT c1d3 d0(b1): excl -0.063 (-0.88 %) 6/7 flat | med -0.091 (-1.28 %) 7/7 GAIN | raw -0.064 (-0.88 %) 6/7 flat | dropped 0
+P1 U-UnoQT c4d3: excl -0.146 (-0.78 %) 5/7 flat | med -0.164 (-0.88 %) 5/7 flat | raw -0.112 (-0.59 %) 5/7 flat | dropped 9
+P1 U-UnoQT c4d3 d0(b4): excl -0.023 (-0.26 %) 6/7 flat | med -0.020 (-0.23 %) 6/7 flat | raw +0.091 (+1.03 %) 5/7 flat | dropped 1
+P1 U-UnoQT c8d1: excl -0.236 (-1.35 %) 7/7 GAIN | med -0.244 (-1.40 %) 7/7 GAIN | raw -0.151 (-0.87 %) 5/7 flat | dropped 3
+P1 U-UnoQT c8d1 d0(b8): excl -0.116 (-1.09 %) 7/7 GAIN | med -0.133 (-1.25 %) 7/7 GAIN | raw +0.022 (+0.21 %) 5/7 flat | dropped 2
+P1-VERDICT QT (U - UnoQT): KEEP: marginal gain at c1d3, c8d1
+P1 U-UnoQF c1d3: excl -0.241 (-2.24 %) 7/7 GAIN | med -0.215 (-2.00 %) 7/7 GAIN | raw -0.247 (-2.28 %) 7/7 GAIN | dropped 2
+P1 U-UnoQF c1d3 d0(b1): excl -0.172 (-2.39 %) 7/7 GAIN | med -0.166 (-2.31 %) 7/7 GAIN | raw -0.172 (-2.34 %) 7/7 GAIN | dropped 0
+P1 U-UnoQF c4d3: excl -0.097 (-0.52 %) 5/7 flat | med -0.138 (-0.74 %) 5/7 flat | raw -0.009 (-0.05 %) 3/7 flat | dropped 8
+P1 U-UnoQF c4d3 d0(b4): excl -0.066 (-0.75 %) 6/7 flat | med -0.065 (-0.74 %) 6/7 flat | raw -0.104 (-1.15 %) 6/7 flat | dropped 2
+P1 U-UnoQF c8d1: excl -0.133 (-0.77 %) 6/7 flat | med -0.150 (-0.87 %) 6/7 flat | raw -0.127 (-0.73 %) 5/7 flat | dropped 3
+P1 U-UnoQF c8d1 d0(b8): excl -0.172 (-1.61 %) 7/7 GAIN | med -0.181 (-1.70 %) 7/7 GAIN | raw -0.034 (-0.32 %) 5/7 flat | dropped 2
+P1-VERDICT QF (U - UnoQF): KEEP: marginal gain at c1d3
+P1 U-UnoDG c1d3: excl -0.452 (-4.11 %) 7/7 GAIN | med -0.476 (-4.33 %) 7/7 GAIN | raw -0.457 (-4.15 %) 7/7 GAIN | dropped 2
+P1 U-UnoDG c1d3 d0(b1): excl -0.256 (-3.51 %) 7/7 GAIN | med -0.266 (-3.65 %) 7/7 GAIN | raw -0.262 (-3.53 %) 7/7 GAIN | dropped 0
+P1 U-UnoDG c4d3: excl -0.327 (-1.73 %) 6/7 flat | med -0.382 (-2.03 %) 6/7 flat | raw -0.090 (-0.48 %) 5/7 flat | dropped 6
+P1 U-UnoDG c4d3 d0(b4): excl -0.390 (-4.27 %) 7/7 GAIN | med -0.358 (-3.92 %) 6/7 flat | raw -0.277 (-3.01 %) 6/7 flat | dropped 1
+P1 U-UnoDG c8d1: excl -0.463 (-2.63 %) 7/7 GAIN | med -0.378 (-2.15 %) 7/7 GAIN | raw -0.333 (-1.91 %) 7/7 GAIN | dropped 2
+P1 U-UnoDG c8d1 d0(b8): excl -0.394 (-3.60 %) 7/7 GAIN | med -0.412 (-3.77 %) 7/7 GAIN | raw -0.257 (-2.33 %) 6/7 flat | dropped 2
+P1-VERDICT DG (U - UnoDG): KEEP: marginal gain at c1d3, c8d1
+P1 U-UnoMF3 c1d3: excl -0.413 (-3.80 %) 7/7 GAIN | med -0.349 (-3.21 %) 7/7 GAIN | raw -0.455 (-4.13 %) 7/7 GAIN | dropped 3
+P1 U-UnoMF3 c1d3 d0(b1): excl -0.179 (-2.48 %) 7/7 GAIN | med -0.192 (-2.66 %) 7/7 GAIN | raw -0.229 (-3.10 %) 7/7 GAIN | dropped 1
+P1 U-UnoMF3 c4d3: excl -0.088 (-0.47 %) 5/7 flat | med -0.122 (-0.65 %) 6/7 flat | raw +0.038 (+0.20 %) 4/7 flat | dropped 8
+P1 U-UnoMF3 c4d3 d0(b4): excl -0.231 (-2.55 %) 6/7 flat | med -0.251 (-2.78 %) 6/7 flat | raw -0.356 (-3.82 %) 5/7 flat | dropped 3
+P1 U-UnoMF3 c8d1: excl -0.377 (-2.16 %) 7/7 GAIN | med -0.290 (-1.66 %) 7/7 GAIN | raw -0.337 (-1.93 %) 6/7 flat | dropped 4
+P1 U-UnoMF3 c8d1 d0(b8): excl -0.312 (-2.88 %) 7/7 GAIN | med -0.315 (-2.91 %) 7/7 GAIN | raw -0.190 (-1.74 %) 6/7 flat | dropped 2
+P1-VERDICT MF3 (U - UnoMF3): KEEP: marginal gain at c1d3, c8d1
+P1 UnoQT-OFF c1d3: excl -1.453 (-12.03 %) 7/7 GAIN | med -1.408 (-11.65 %) 7/7 GAIN | raw -1.581 (-12.93 %) 7/7 GAIN | dropped 1
+P1 UnoQT-OFF c1d3 d0(b1): excl -0.634 (-8.15 %) 7/7 GAIN | med -0.659 (-8.47 %) 7/7 GAIN | raw -0.634 (-8.06 %) 7/7 GAIN | dropped 0
+P1 UnoQT-OFF c4d3: excl -1.565 (-7.74 %) 7/7 GAIN | med -1.575 (-7.79 %) 7/7 GAIN | raw -1.395 (-6.89 %) 7/7 GAIN | dropped 6
+P1 UnoQT-OFF c4d3 d0(b4): excl -1.141 (-11.41 %) 7/7 GAIN | med -1.196 (-11.96 %) 7/7 GAIN | raw -1.445 (-14.02 %) 7/7 GAIN | dropped 2
+P1 UnoQT-OFF c8d1: excl -1.297 (-6.94 %) 7/7 GAIN | med -1.238 (-6.63 %) 7/7 GAIN | raw -1.303 (-7.01 %) 7/7 GAIN | dropped 2
+P1 UnoQT-OFF c8d1 d0(b8): excl -1.357 (-11.32 %) 7/7 GAIN | med -1.346 (-11.23 %) 7/7 GAIN | raw -1.460 (-11.97 %) 7/7 GAIN | dropped 1
+P1-VERDICT UNION-QT: PASS: gain at c1d3, c4d3, c8d1
+P1 UnoQF-OFF c1d3: excl -1.338 (-11.08 %) 7/7 GAIN | med -1.345 (-11.13 %) 7/7 GAIN | raw -1.420 (-11.62 %) 7/7 GAIN | dropped 2
+P1 UnoQF-OFF c1d3 d0(b1): excl -0.525 (-6.75 %) 7/7 GAIN | med -0.584 (-7.50 %) 7/7 GAIN | raw -0.526 (-6.68 %) 7/7 GAIN | dropped 0
+P1 UnoQF-OFF c4d3: excl -1.614 (-7.98 %) 7/7 GAIN | med -1.601 (-7.92 %) 7/7 GAIN | raw -1.497 (-7.40 %) 7/7 GAIN | dropped 5
+P1 UnoQF-OFF c4d3 d0(b4): excl -1.096 (-10.96 %) 7/7 GAIN | med -1.151 (-11.51 %) 7/7 GAIN | raw -1.250 (-12.12 %) 7/7 GAIN | dropped 3
+P1 UnoQF-OFF c8d1: excl -1.402 (-7.50 %) 7/7 GAIN | med -1.332 (-7.13 %) 7/7 GAIN | raw -1.326 (-7.13 %) 7/7 GAIN | dropped 2
+P1 UnoQF-OFF c8d1 d0(b8): excl -1.300 (-10.85 %) 7/7 GAIN | med -1.298 (-10.83 %) 7/7 GAIN | raw -1.404 (-11.51 %) 7/7 GAIN | dropped 1
+P1-VERDICT UNION-QF: PASS: gain at c1d3, c4d3, c8d1
+P1 UnoDG-OFF c1d3: excl -1.126 (-9.32 %) 7/7 GAIN | med -1.084 (-8.98 %) 7/7 GAIN | raw -1.209 (-9.89 %) 7/7 GAIN | dropped 2
+P1 UnoDG-OFF c1d3 d0(b1): excl -0.441 (-5.66 %) 7/7 GAIN | med -0.484 (-6.22 %) 7/7 GAIN | raw -0.435 (-5.53 %) 7/7 GAIN | dropped 0
+P1 UnoDG-OFF c4d3: excl -1.389 (-6.87 %) 7/7 GAIN | med -1.356 (-6.71 %) 7/7 GAIN | raw -1.417 (-7.00 %) 7/7 GAIN | dropped 3
+P1 UnoDG-OFF c4d3 d0(b4): excl -0.771 (-7.71 %) 7/7 GAIN | med -0.858 (-8.58 %) 7/7 GAIN | raw -1.077 (-10.44 %) 7/7 GAIN | dropped 2
+P1 UnoDG-OFF c8d1: excl -1.071 (-5.73 %) 7/7 GAIN | med -1.105 (-5.91 %) 7/7 GAIN | raw -1.120 (-6.03 %) 7/7 GAIN | dropped 1
+P1 UnoDG-OFF c8d1 d0(b8): excl -1.079 (-9.00 %) 7/7 GAIN | med -1.068 (-8.91 %) 7/7 GAIN | raw -1.181 (-9.68 %) 7/7 GAIN | dropped 1
+P1-VERDICT UNION-DG: PASS: gain at c1d3, c4d3, c8d1
+P1 UnoMF3-OFF c1d3: excl -1.166 (-9.65 %) 7/7 GAIN | med -1.211 (-10.03 %) 7/7 GAIN | raw -1.212 (-9.92 %) 7/7 GAIN | dropped 3
+P1 UnoMF3-OFF c1d3 d0(b1): excl -0.521 (-6.69 %) 7/7 GAIN | med -0.558 (-7.17 %) 7/7 GAIN | raw -0.468 (-5.95 %) 7/7 GAIN | dropped 1
+P1 UnoMF3-OFF c4d3: excl -1.632 (-8.07 %) 7/7 GAIN | med -1.617 (-8.00 %) 7/7 GAIN | raw -1.544 (-7.63 %) 7/7 GAIN | dropped 5
+P1 UnoMF3-OFF c4d3 d0(b4): excl -0.935 (-9.35 %) 7/7 GAIN | med -0.965 (-9.65 %) 7/7 GAIN | raw -0.998 (-9.68 %) 6/7 flat | dropped 4
+P1 UnoMF3-OFF c8d1: excl -1.153 (-6.17 %) 7/7 GAIN | med -1.193 (-6.38 %) 7/7 GAIN | raw -1.116 (-6.00 %) 7/7 GAIN | dropped 3
+P1 UnoMF3-OFF c8d1 d0(b8): excl -1.146 (-9.56 %) 7/7 GAIN | med -1.164 (-9.71 %) 7/7 GAIN | raw -1.248 (-10.23 %) 7/7 GAIN | dropped 1
+P1-VERDICT UNION-MF3: PASS: gain at c1d3, c4d3, c8d1
+2026-09-24T19:03:03+00:00 [r716b-stack-r3] lcguard engaged in-process (90 lines in the U runs): every served B boot must show it too
+2026-09-24T19:03:20+00:00 [r716b-stack-r3] [A1] booted tabbyapi:stack-r2; 29 EXL3 keys; tier 0; UP on 8022 | warmup 0.391007s | VRAM free MiB 1041/2431/
+2026-09-24T19:04:27+00:00 [r716b-stack-r3] [A1] greedy_streams [gstream] A1 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:06:53+00:00 [r716b-stack-r3] [A1] gate done; rows A 39 B 12/12
+2026-09-24T19:06:53+00:00 [r716b-stack-r3] [A1] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 0; free now 195 1669 
+2026-09-24T19:07:13+00:00 [r716b-stack-r3] [B1] booted tabbyapi:stack-r3; 41 EXL3 keys; tier 0; UP on 8022 | warmup 0.342497s | VRAM free MiB 1033/2421/
+2026-09-24T19:08:16+00:00 [r716b-stack-r3] [B1] greedy_streams [gstream] B1 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:08:16+00:00 [r716b-stack-r3] [B1] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 2; free now 175 1683 
+2026-09-24T19:08:17+00:00 [r716b-stack-r3] [B1] identity vs A1: fn_greedy divergences 0; greedy_streams failing levels 2
+2026-09-24T19:08:17+00:00 [r716b-stack-r3] [B1] DIVERGES: one more daily boot (A/A) before any conclusion
+2026-09-24T19:08:36+00:00 [r716b-stack-r3] [A1b] booted tabbyapi:stack-r2; 29 EXL3 keys; tier 0; UP on 8022 | warmup 0.382483s | VRAM free MiB 1041/2431/
+2026-09-24T19:09:40+00:00 [r716b-stack-r3] [A1b] greedy_streams [gstream] A1b c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:09:40+00:00 [r716b-stack-r3] [A1b] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 0; free now 195 1711 
+2026-09-24T19:09:40+00:00 [r716b-stack-r3] [A1b] A/A vs A1: fn_greedy divergences 0; greedy_streams: GSTREAM A/A A1b vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff [] GSTREAM A/A A1b vs A1 c4: identical 3/8 div 5 early 0 errors 0 first-diff [402, 429, 731, 894, 1570] GSTREAM A/A A1b vs A1 c8: identical 3/16 div 13 early 0 errors 0 first-diff [101, 118, 162, 183, 275, 295, 348, 480, 836, 847, 893, 955, 1029] 
+2026-09-24T19:09:40+00:00 [r716b-stack-r3] [B1] the A/A itself diverges (instrument nondeterministic at some level): continue; greedy_streams is judged BOUNDED there
+2026-09-24T19:10:00+00:00 [r716b-stack-r3] [B1] booted tabbyapi:stack-r3; 41 EXL3 keys; tier 0; UP on 8022 | warmup 0.332728s | VRAM free MiB 1033/2421/
+2026-09-24T19:12:15+00:00 [r716b-stack-r3] [B1] gate done; rows A 39 B 12/12
+2026-09-24T19:12:15+00:00 [r716b-stack-r3] [B1] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 2; free now 229 1719 
+2026-09-24T19:12:35+00:00 [r716b-stack-r3] [A2] booted tabbyapi:stack-r2; 29 EXL3 keys; tier 0; UP on 8022 | warmup 0.366728s | VRAM free MiB 1041/2431/
+2026-09-24T19:13:41+00:00 [r716b-stack-r3] [A2] greedy_streams [gstream] A2 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:16:08+00:00 [r716b-stack-r3] [A2] gate done; rows A 39 B 12/12
+2026-09-24T19:16:08+00:00 [r716b-stack-r3] [A2] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 0; free now 139 1659 
+2026-09-24T19:16:27+00:00 [r716b-stack-r3] [B2] booted tabbyapi:stack-r3; 41 EXL3 keys; tier 0; UP on 8022 | warmup 0.332589s | VRAM free MiB 1033/2421/
+2026-09-24T19:17:31+00:00 [r716b-stack-r3] [B2] greedy_streams [gstream] B2 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:19:46+00:00 [r716b-stack-r3] [B2] gate done; rows A 39 B 12/12
+2026-09-24T19:19:46+00:00 [r716b-stack-r3] [B2] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 2; free now 121 1631 
+2026-09-24T19:20:05+00:00 [r716b-stack-r3] [A3] booted tabbyapi:stack-r2; 29 EXL3 keys; tier 0; UP on 8022 | warmup 0.359349s | VRAM free MiB 1041/2431/
+2026-09-24T19:21:11+00:00 [r716b-stack-r3] [A3] greedy_streams [gstream] A3 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:23:30+00:00 [r716b-stack-r3] [A3] gate done; rows A 39 B 12/12
+2026-09-24T19:23:30+00:00 [r716b-stack-r3] [A3] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 0; free now 195 1667 
+2026-09-24T19:23:50+00:00 [r716b-stack-r3] [B3] booted tabbyapi:stack-r3; 41 EXL3 keys; tier 0; UP on 8022 | warmup 0.330053s | VRAM free MiB 1033/2421/
+2026-09-24T19:24:52+00:00 [r716b-stack-r3] [B3] greedy_streams [gstream] B3 c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:27:00+00:00 [r716b-stack-r3] [B3] gate done; rows A 39 B 12/12
+2026-09-24T19:27:00+00:00 [r716b-stack-r3] [B3] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 2; free now 173 1639 
+2026-09-24T19:27:19+00:00 [r716b-stack-r3] [C] booted tabbyapi:stack-r3; 29 EXL3 keys; tier 0; UP on 8022 | warmup 0.344276s | VRAM free MiB 1041/2431/
+2026-09-24T19:28:25+00:00 [r716b-stack-r3] [C] greedy_streams [gstream] C c8 round 1: 8/8 ok, tokens [None, None, None, None, None, None, None, None]; ramp 36/36 ok
+2026-09-24T19:28:25+00:00 [r716b-stack-r3] [C] container: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard 0; free now 195 1711 
+  [greedy] GREEDY A1b vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY A2 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY A3 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY B1 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY B2 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY B3 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY C vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=ref divergences=0
+  [gstreams] GSTREAM A/A A2 vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff []
+  [gstreams] GSTREAM A/A A3 vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff []
+  [gstreams] GSTREAM A/A A1b vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff []
+  [gstreams] GSTREAM B1 vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff [] -> PASS [strict (A/A identical)]
+  [gstreams] GSTREAM B2 vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff [] -> PASS [strict (A/A identical)]
+  [gstreams] GSTREAM B3 vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff [] -> PASS [strict (A/A identical)]
+  [gstreams] GSTREAM C vs A1 c2: identical 4/4 div 0 early 0 errors 0 first-diff [] -> PASS [strict (A/A identical)]
+  [gstreams] GSTREAM A/A A2 vs A1 c4: identical 2/8 div 6 early 0 errors 0 first-diff [69, 194, 402, 429, 894, 1570]
+  [gstreams] GSTREAM A/A A3 vs A1 c4: identical 3/8 div 5 early 0 errors 0 first-diff [194, 194, 289, 429, 731]
+  [gstreams] GSTREAM A/A A1b vs A1 c4: identical 3/8 div 5 early 0 errors 0 first-diff [402, 429, 731, 894, 1570]
+  [gstreams] GSTREAM B1 vs A1 c4: identical 3/8 div 5 early 0 errors 0 first-diff [289, 402, 731, 894, 1116] -> PASS [BOUNDED (instrument nondeterministic at c4: A/A worst div 6, early 0)]
+  [gstreams] GSTREAM B2 vs A1 c4: identical 5/8 div 3 early 0 errors 0 first-diff [194, 289, 1116] -> PASS [BOUNDED (instrument nondeterministic at c4: A/A worst div 6, early 0)]
+  [gstreams] GSTREAM B3 vs A1 c4: identical 1/8 div 7 early 0 errors 0 first-diff [108, 136, 194, 194, 402, 429, 1328] -> FAIL [BOUNDED (instrument nondeterministic at c4: A/A worst div 6, early 0)]
+  [gstreams] GSTREAM C vs A1 c4: identical 3/8 div 5 early 0 errors 0 first-diff [162, 194, 194, 429, 731] -> PASS [BOUNDED (instrument nondeterministic at c4: A/A worst div 6, early 0)]
+  [gstreams] GSTREAM A/A A2 vs A1 c8: identical 4/16 div 12 early 0 errors 0 first-diff [114, 118, 162, 162, 183, 284, 295, 480, 669, 758, 901, 1029]
+  [gstreams] GSTREAM A/A A3 vs A1 c8: identical 4/16 div 12 early 0 errors 0 first-diff [162, 204, 249, 295, 348, 431, 442, 669, 776, 893, 1029, 1388]
+  [gstreams] GSTREAM A/A A1b vs A1 c8: identical 3/16 div 13 early 0 errors 0 first-diff [101, 118, 162, 183, 275, 295, 348, 480, 836, 847, 893, 955, 1029]
+  [gstreams] GSTREAM B1 vs A1 c8: identical 3/16 div 13 early 0 errors 0 first-diff [118, 162, 295, 431, 442, 577, 602, 710, 758, 770, 776, 893, 1114] -> PASS [BOUNDED (instrument nondeterministic at c8: A/A worst div 13, early 0)]
+  [gstreams] GSTREAM B2 vs A1 c8: identical 1/16 div 15 early 0 errors 0 first-diff [114, 118, 147, 162, 183, 295, 348, 480, 577, 669, 758, 770, 847, 928, 1359] -> FAIL [BOUNDED (instrument nondeterministic at c8: A/A worst div 13, early 0)]
+  [gstreams] GSTREAM B3 vs A1 c8: identical 3/16 div 13 early 0 errors 0 first-diff [114, 118, 147, 162, 183, 275, 284, 295, 431, 480, 770, 955, 1359] -> PASS [BOUNDED (instrument nondeterministic at c8: A/A worst div 13, early 0)]
+  [gstreams] GSTREAM C vs A1 c8: identical 1/16 div 15 early 0 errors 0 first-diff [114, 118, 147, 162, 275, 295, 348, 577, 770, 776, 819, 847, 901, 955, 1273] -> FAIL [BOUNDED (instrument nondeterministic at c8: A/A worst div 13, early 0)]
+  [gstreams] GSTREAM-SUMMARY FAIL ref A1 aa A2 A3 A1b arms B1 B2 B3 C concs [2, 4, 8]
+HEADROOM A1: UP-line free MiB [1041, 2431]
+HEADROOM A2: UP-line free MiB [1041, 2431]
+HEADROOM A3: UP-line free MiB [1041, 2431]
+HEADROOM B1: UP-line free MiB [1033, 2421]
+HEADROOM B2: UP-line free MiB [1033, 2421]
+HEADROOM B3: UP-line free MiB [1033, 2421]
+HEADROOM C: UP-line free MiB [1041, 2431]
+HEADROOM reference (min over A boots): cuda:0 1041 cuda:1 2431 MiB; bar = ref - 32
+HEADROOM B1: ok (delta vs ref -8 / -10 MiB)
+HEADROOM B2: ok (delta vs ref -8 / -10 MiB)
+HEADROOM B3: ok (delta vs ref -8 / -10 MiB)
+HEADROOM C: ok (delta vs ref +0 / +0 MiB)
+SAFETY A1: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY A2: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY A3: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY B1: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY B2: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY B3: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY C: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 0/0 ok, lcguard devices -
+ENV A1: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV A2: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV A3: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV B1: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV B2: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV B3: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV C: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+RATIO leg A pair 1 c1: OFF 232.8 ON 261.5 ON/OFF 1.1236
+RATIO leg A pair 1 c4: OFF 137.2 ON 148.2 ON/OFF 1.0805
+RATIO leg A pair 1 c8: OFF 92.1 ON 100.8 ON/OFF 1.0946
+RATIO leg A pair 2 c1: OFF 215.2 ON 250.4 ON/OFF 1.1639
+RATIO leg A pair 2 c4: OFF 143.3 ON 157.3 ON/OFF 1.0973
+RATIO leg A pair 2 c8: OFF 91.9 ON 100.1 ON/OFF 1.0887
+RATIO leg A pair 3 c1: OFF 327.0 ON 379.2 ON/OFF 1.1596
+RATIO leg A pair 3 c4: OFF 150.8 ON 163.7 ON/OFF 1.0860
+RATIO leg A pair 3 c8: OFF 91.7 ON 98.7 ON/OFF 1.0762
+RATIO leg B pair 1 c4: OFF 136.5 ON 150.3 ON/OFF 1.1006
+RATIO leg B pair 2 c4: OFF 133.1 ON 147.0 ON/OFF 1.1048
+RATIO leg B pair 3 c4: OFF 137.1 ON 151.6 ON/OFF 1.1054
+MEAN leg A c1: 1.1490 (bar 0.98; pairs 1.124 1.164 1.160)
+MEAN leg A c4: 1.0879 (bar 0.99; pairs 1.080 1.097 1.086)
+MEAN leg A c8: 1.0865 (bar 0.99; pairs 1.095 1.089 1.076)
+MEAN leg B c4: 1.1036 (bar 0.99; pairs 1.101 1.105 1.105)
+AGGREGATE mean ON/OFF over cells: 1.1068
+SERVED-VERDICT PASS
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION UNION: REJECT (U): greedy_streams: GSTREAM-SUMMARY FAIL ref A1 aa A2 A3 A1b arms B1 B2 B3 C concs [2, 4, 8];
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION HC2: HOLD (union rejected)
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION RR: HOLD (union rejected)
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION QT: HOLD (P1 marginal: KEEP: marginal gain at c1d3, c8d1; union rejected)
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION QF: HOLD (P1 marginal: KEEP: marginal gain at c1d3; union rejected)
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION DG: HOLD (P1 marginal: KEEP: marginal gain at c1d3, c8d1; union rejected)
+2026-09-24T19:28:26+00:00 [r716b-stack-r3] DECISION MF3: HOLD (P1 marginal: KEEP: marginal gain at c1d3, c8d1; union rejected)
+2026-09-24T19:28:26+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-24T19:28:45+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T19:28:45+00:00 [r716b-stack-r3] === stack-r3 DONE ===

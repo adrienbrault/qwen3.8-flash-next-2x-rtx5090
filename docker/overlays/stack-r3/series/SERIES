@@ -1,0 +1,9 @@
+# stack-r3 patch series over tabbyapi:stack-r2 (slotfix-r1 + hcfast-r1 + moefast-r1). Applied in this order by
+# apply-series.sh at --fuzz=0. Columns: order file sha256 class source.
+# class: core = always; opt:<c> = only when INCLUDE names <c>; auto:dg = with dg1 or dg2. dg1 / dg2 exclude each other.
+01 01-hcfast-r2-on-stack-r2.patch c61d6aa538f025134e242c134b689be4107c721989bb741f631fd3bf618cdd71 core derived: hcfast-r1 -> hcfast-r2 (R702 source)
+02 02-latchain-r1b.patch ad1df0a2628503c8fd3e7ef90b19b79721ebe9fe2663e070af61f49c13623d04 core derived: latchain-r1 re-anchored (sha of latchain-r1.patch 6b15c37221d3)
+03 03-moefast-r3.patch 7188742b0c2d1e7f6a51f65649c625fb1c3986637444a286019a8a03a0ca50dc opt:mf3 verbatim moefast-r3/moefast-r3.patch (R713)
+04 04-densegemm-r1.patch db4854984961fc6891d5af4cb57341563e954ca7c190a6ccb6b741cd8385d1ab opt:dg1 verbatim densegemm-r1/densegemm-r1.patch (R710b: mode 3)
+05 05-densegemm-r2.patch 2bc1580ccd6b5d712b18f05c19970c01c67650d396520f515367f3c069fbe394 opt:dg2 verbatim densegemm-r2/densegemm-r2.patch (R714)
+06 06-dense-lcguard.patch b2eb1cdcdbcc779d25d0d2d6981b4d94d4bcad8a959a148d32e76d18163bee59 auto:dg stack-r3: densegemm side-branch guard for latchain QF

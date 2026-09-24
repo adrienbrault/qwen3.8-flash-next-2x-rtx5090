@@ -1,0 +1,44 @@
+HEADROOM A1: UP-line free MiB [1041, 2431]
+HEADROOM A2: UP-line free MiB [1041, 2431]
+HEADROOM A3: UP-line free MiB [1041, 2431]
+HEADROOM B1: UP-line free MiB [1033, 2421]
+HEADROOM B2: UP-line free MiB [1033, 2421]
+HEADROOM B3: UP-line free MiB [1033, 2421]
+HEADROOM C: UP-line free MiB [1041, 2431]
+HEADROOM reference (min over A boots): cuda:0 1041 cuda:1 2431 MiB; bar = ref - 32
+HEADROOM B1: ok (delta vs ref -8 / -10 MiB)
+HEADROOM B2: ok (delta vs ref -8 / -10 MiB)
+HEADROOM B3: ok (delta vs ref -8 / -10 MiB)
+HEADROOM C: ok (delta vs ref +0 / +0 MiB)
+SAFETY A1: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY A2: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY A3: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices -
+SAFETY B1: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY B2: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY B3: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 12/12 ok, lcguard devices ['0', '1']
+SAFETY C: OOM 0, TORCH_CHECK/c10 0, tracebacks 0, ramp 36/36 ok, leg B 0/0 ok, lcguard devices -
+ENV A1: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV A2: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV A3: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+ENV B1: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV B2: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV B3: 41 EXL3 keys; duplicates -; union keys missing/wrong -
+ENV C: 29 EXL3 keys; duplicates -; stack-r3-only keys present -
+RATIO leg A pair 1 c1: OFF 232.8 ON 261.5 ON/OFF 1.1236
+RATIO leg A pair 1 c4: OFF 137.2 ON 148.2 ON/OFF 1.0805
+RATIO leg A pair 1 c8: OFF 92.1 ON 100.8 ON/OFF 1.0946
+RATIO leg A pair 2 c1: OFF 215.2 ON 250.4 ON/OFF 1.1639
+RATIO leg A pair 2 c4: OFF 143.3 ON 157.3 ON/OFF 1.0973
+RATIO leg A pair 2 c8: OFF 91.9 ON 100.1 ON/OFF 1.0887
+RATIO leg A pair 3 c1: OFF 327.0 ON 379.2 ON/OFF 1.1596
+RATIO leg A pair 3 c4: OFF 150.8 ON 163.7 ON/OFF 1.0860
+RATIO leg A pair 3 c8: OFF 91.7 ON 98.7 ON/OFF 1.0762
+RATIO leg B pair 1 c4: OFF 136.5 ON 150.3 ON/OFF 1.1006
+RATIO leg B pair 2 c4: OFF 133.1 ON 147.0 ON/OFF 1.1048
+RATIO leg B pair 3 c4: OFF 137.1 ON 151.6 ON/OFF 1.1054
+MEAN leg A c1: 1.1490 (bar 0.98; pairs 1.124 1.164 1.160)
+MEAN leg A c4: 1.0879 (bar 0.99; pairs 1.080 1.097 1.086)
+MEAN leg A c8: 1.0865 (bar 0.99; pairs 1.095 1.089 1.076)
+MEAN leg B c4: 1.1036 (bar 0.99; pairs 1.101 1.105 1.105)
+AGGREGATE mean ON/OFF over cells: 1.1068
+SERVED-VERDICT PASS

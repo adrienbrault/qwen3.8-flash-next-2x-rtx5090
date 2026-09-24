@@ -1,0 +1,223 @@
+2026-09-24T12:52:05+00:00 [r710b-densegemm-gv] live env: 27 keys
+2026-09-24T12:52:05+00:00 [r710b-densegemm-gv] queued behind: r709c-drafttopk-r1(pid 97596)
+r711-draft-policy-p3(pid 91622)
+r712-latchain-r1(pid 179721)
+2026-09-24T14:57:34+00:00 [r710b-densegemm-gv] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; base tabbyapi:stack-r2; image tabbyapi:densegemm-r1; patch sha256 db4854984961fc6891d5af4cb57341563e954ca7c190a6ccb6b741cd8385d1ab
+2026-09-24T14:57:34+00:00 [r710b-densegemm-gv] image tabbyapi:densegemm-r1 already built from this patch on tabbyapi:stack-r2
+2026-09-24T14:57:36+00:00 [r710b-densegemm-gv] image tabbyapi:densegemm-r1: landed: dense_v2_revision 1 modes (0, 0) | base: moefast 1 env on -> (1, 1) 
+2026-09-24T14:57:41+00:00 [r710b-densegemm-gv] parity rc=0: PARITY PASS
+  [parity] gemm/attn.index_qk_proj      rows 16: 24/24 equal, V2 engaged 24/24
+  [parity] gemm/attn.o_proj             rows 16: 24/24 equal, V2 engaged 24/24
+  [parity] gemm/gdn.in_proj_qkv         rows 16: 8/8 equal, V2 engaged 8/8
+  [parity] gemm/gdn.in_proj_z           rows 16: 8/8 equal, V2 engaged 8/8
+  [parity] gemm/gdn.out_proj            rows 16: 72/72 equal, V2 engaged 72/72
+  [parity] gemm/shared.down             rows 16: 96/96 equal, V2 engaged 96/96
+  [parity] mgemm/attn.qkv               rows 16: 24/24 equal, V2 engaged 24/24
+  [parity] mgemm/gdn.in_proj_qkvz       rows 16: 72/72 equal, V2 engaged 72/72
+  [parity] mgemm/shared.gate_up         rows 16: 96/96 equal, V2 engaged 96/96
+  [parity] stress: 200 interleaved V2 launches over 6 cells, mismatches at checkpoints: 0
+  [parity] graph: captured 4 V2 launches (counters +3 gemm/mgemm, +1 gemv incl. capture), 20 replays vs eager served: mismatches 0
+  [parity] VRAM: free before 31642.6 MiB, after 31242.6 MiB (includes torch cache; the V2 workspace is 8 MiB + 64 KiB with rows32 on, 4 MiB + 64 KiB without)
+  [parity] cells: 4240, equal 4240, engaged 3824
+2026-09-24T14:58:46+00:00 [r710b-densegemm-gv] P0 rc=0
+  [p0] gdn.in_proj     r 4 copies 36 ( 721.5 MiB)  m0   26.37us  +0.0%  m1  104.16us +295.0%  m2  104.26us +295.4%  m3   26.34us(served)  -0.1%  spread m0 1.34us
+  [p0] gdn.in_proj     r 8 copies 36 ( 721.5 MiB)  m0   26.27us  +0.0%  m1  171.62us +553.2%  m2  171.62us +553.2%  m3   26.30us(served)  +0.1%  spread m0 0.29us
+  [p0] gdn.in_proj     r16 copies 36 ( 721.5 MiB)  m0   28.32us  +0.0%  m1  175.74us +520.6%  m2  175.74us +520.6%  m3   28.32us(served)  +0.0%  spread m0 0.74us
+  [p0] gdn.in_proj     r24 copies 36 ( 721.5 MiB)  m0   44.77us  +0.0%  m1   84.96us +89.8%  m2   84.96us +89.8%  m3   45.25us(served)  +1.1%  spread m0 0.51us
+  [p0] gdn.in_proj     r32 copies 36 ( 721.5 MiB)  m0   46.82us  +0.0%  m1   85.38us +82.4%  m2   85.66us +83.0%  m3   46.82us(served)  +0.0%  spread m0 0.19us
+  [p0] attn.qkv        r 4 copies 12 ( 195.5 MiB)  m0   23.78us  +0.0%  m1  140.96us +492.9%  m2  140.99us +493.0%  m3   24.06us(served)  +1.2%  spread m0 0.58us
+  [p0] attn.qkv        r 8 copies 12 ( 195.5 MiB)  m0   24.22us  +0.0%  m1  142.11us +486.7%  m2  142.24us +487.2%  m3   24.22us(served)  +0.0%  spread m0 1.66us
+  [p0] attn.qkv        r16 copies 12 ( 195.5 MiB)  m0   26.18us  +0.0%  m1  144.77us +453.1%  m2  145.02us +454.0%  m3   25.98us(served)  -0.7%  spread m0 1.57us
+  [p0] attn.qkv        r24 copies 12 ( 195.5 MiB)  m0   40.61us  +0.0%  m1   71.36us +75.7%  m2   71.33us +75.7%  m3   40.35us(served)  -0.6%  spread m0 0.26us
+  [p0] attn.qkv        r32 copies 12 ( 195.5 MiB)  m0   42.37us  +0.0%  m1   73.02us +72.4%  m2   73.28us +73.0%  m3   42.66us(served)  +0.7%  spread m0 1.22us
+  [p0] gdn.out_proj    r 4 copies 36 ( 270.6 MiB)  m0   20.03us  +0.0%  m1   14.21us -29.1%  m2   20.03us(served)  +0.0%  m3   14.24us -28.9%  spread m0 0.00us
+  [p0] gdn.out_proj    r 8 copies 36 ( 270.6 MiB)  m0   20.03us  +0.0%  m1   14.82us -26.0%  m2   20.03us(served)  +0.0%  m3   14.78us -26.2%  spread m0 0.00us
+  [p0] gdn.out_proj    r16 copies 36 ( 270.6 MiB)  m0   20.03us  +0.0%  m1   77.57us +287.2%  m2   77.57us +287.2%  m3   20.03us(served)  +0.0%  spread m0 0.00us
+  [p0] gdn.out_proj    r24 copies 36 ( 270.6 MiB)  m0   32.32us  +0.0%  m1  160.06us +395.2%  m2  160.03us +395.1%  m3   32.32us(served)  +0.0%  spread m0 0.03us
+  [p0] gdn.out_proj    r32 copies 36 ( 270.6 MiB)  m0   33.09us  +0.0%  m1  159.87us +383.2%  m2  159.90us +383.3%  m3   32.80us(served)  -0.9%  spread m0 0.48us
+  [p0] attn.o_proj     r 4 copies 12 (  90.2 MiB)  m0   19.36us  +0.0%  m1   14.05us -27.4%  m2   19.26us(served)  -0.5%  m3   14.05us -27.4%  spread m0 0.38us
+  [p0] attn.o_proj     r 8 copies 12 (  90.2 MiB)  m0   16.80us  +0.0%  m1   13.89us -17.3%  m2   16.80us(served)  +0.0%  m3   13.89us -17.3%  spread m0 0.06us
+  [p0] attn.o_proj     r16 copies 12 (  90.2 MiB)  m0   18.37us  +0.0%  m1   77.47us +321.8%  m2   77.47us +321.8%  m3   18.30us(served)  -0.3%  spread m0 0.10us
+  [p0] attn.o_proj     r24 copies 12 (  90.2 MiB)  m0   31.07us  +0.0%  m1  159.52us +413.4%  m2  159.49us +413.3%  m3   30.98us(served)  -0.3%  spread m0 0.16us
+  [p0] attn.o_proj     r32 copies 12 (  90.2 MiB)  m0   32.32us  +0.0%  m1  160.35us +396.1%  m2  160.29us +395.9%  m3   32.38us(served)  +0.2%  spread m0 0.06us
+  [p0] attn.index_qk   r 4 copies 12 (   9.4 MiB)  m0   11.58us  +0.0%  m1    9.15us -21.0%  m2   11.62us(served)  +0.3%  m3    8.99us -22.4%  spread m0 0.32us
+  [p0] attn.index_qk   r 8 copies 12 (   9.4 MiB)  m0   11.58us  +0.0%  m1    9.54us -17.7%  m2   11.65us(served)  +0.6%  m3    9.50us -18.0%  spread m0 0.35us
+  [p0] attn.index_qk   r16 copies 12 (   9.4 MiB)  m0   13.89us  +0.0%  m1   36.77us +164.7%  m2   36.70us +164.3%  m3   13.89us(served)  +0.0%  spread m0 0.00us
+  [p0] attn.index_qk   r24 copies 12 (   9.4 MiB)  m0   22.27us  +0.0%  m1   66.14us +197.0%  m2   66.11us +196.8%  m3   22.34us(served)  +0.3%  spread m0 0.06us
+  [p0] attn.index_qk   r32 copies 12 (   9.4 MiB)  m0   22.91us  +0.0%  m1   67.14us +193.0%  m2   67.14us +193.0%  m3   22.40us(served)  -2.2%  spread m0 0.58us
+  [p0] shared.gate_up  r 4 copies 48 (  75.6 MiB)  m0   13.70us  +0.0%  m1   38.53us +181.3%  m2   38.53us +181.3%  m3   13.98us(served)  +2.1%  spread m0 0.42us
+  [p0] shared.gate_up  r 8 copies 48 (  75.6 MiB)  m0   14.56us  +0.0%  m1   44.70us +207.0%  m2   44.70us +207.0%  m3   14.05us(served)  -3.5%  spread m0 1.25us
+  [p0] shared.gate_up  r16 copies 48 (  75.6 MiB)  m0   15.71us  +0.0%  m1   42.62us +171.3%  m2   42.66us +171.5%  m3   15.94us(served)  +1.4%  spread m0 0.32us
+  [p0] shared.gate_up  r24 copies 48 (  75.6 MiB)  m0   24.80us  +0.0%  m1   72.06us +190.6%  m2   72.06us +190.6%  m3   25.22us(served)  +1.7%  spread m0 2.30us
+  [p0] shared.gate_up  r32 copies 48 (  75.6 MiB)  m0   26.21us  +0.0%  m1   73.22us +179.4%  m2   73.22us +179.4%  m3   26.27us(served)  +0.2%  spread m0 0.29us
+  [p0] shared.down     r 4 copies 48 (  37.8 MiB)  m0    8.96us  +0.0%  m1    5.79us -35.4%  m2    8.93us(served)  -0.4%  m3    5.79us -35.4%  spread m0 0.13us
+  [p0] shared.down     r 8 copies 48 (  37.8 MiB)  m0    9.57us  +0.0%  m1    5.79us -39.5%  m2    9.54us(served)  -0.3%  m3    5.82us -39.1%  spread m0 0.13us
+  [p0] shared.down     r16 copies 48 (  37.8 MiB)  m0   10.11us  +0.0%  m1   20.38us +101.6%  m2   20.45us +102.2%  m3   10.11us(served)  +0.0%  spread m0 0.22us
+  [p0] shared.down     r24 copies 48 (  37.8 MiB)  m0   14.85us  +0.0%  m1   34.53us +132.5%  m2   34.56us +132.8%  m3   14.88us(served)  +0.2%  spread m0 0.03us
+  [p0] shared.down     r32 copies 48 (  37.8 MiB)  m0   15.94us  +0.0%  m1   34.66us +117.5%  m2   34.66us +117.5%  m3   15.94us(served)  +0.0%  spread m0 0.00us
+  RECOMMEND (critical-path us per step = sum calls/step x us/call; shared expert listed apart)
+     4       2327.0       6231.2       6536.8       2026.0  m3          1087.5       2127.4       2277.9        949.2
+     8       2298.2       8698.0       8947.6       2050.6  m3          1158.1       2423.8       2603.5        953.9
+    16       2441.9      12227.3      12229.6       2438.8  m3          1239.6       3024.4       3029.0       1250.3
+    24       3902.6      12385.2      12382.8       3916.4  m0          1903.1       5116.4       5118.0       1924.6
+    32       4047.7      12435.1      12448.9       4035.5  m3          2022.9       5177.9       5177.9       2026.0
+  m1: rows 16 -9785.5 us/step saved, rows 4 -3904.1 us/step saved -> not eligible
+  m2: rows 16 -9787.8 us/step saved, rows 4 -4209.8 us/step saved -> not eligible
+  m3: rows 16 +3.1 us/step saved, rows 4 +301.1 us/step saved -> eligible
+  RECOMMEND EXL3_DENSE_V2=3 EXL3_DENSE_ROWS32=0 (arm m3)
+  rows32 at rows 24: m1 -8482.6 us/step saved vs served two-pass
+  rows32 at rows 32: m1 -8387.3 us/step saved vs served two-pass
+2026-09-24T14:59:16+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF1 rc=0: d3 19.821475 ms/iterate; d0 11.481747 ms/iterate
+2026-09-24T14:59:45+00:00 [r710b-densegemm-gv]   P1 c4d3-GV1 rc=0: d3 19.288316 ms/iterate; d0 9.592771 ms/iterate
+2026-09-24T15:00:15+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF21 rc=0: d3 20.504359 ms/iterate; d0 9.926942 ms/iterate
+2026-09-24T15:00:15+00:00 [r710b-densegemm-gv]   c4d3 round 1 GV d3: hashes IDENTICAL
+2026-09-24T15:00:15+00:00 [r710b-densegemm-gv]   c4d3 round 1 GV d0: hashes IDENTICAL
+2026-09-24T15:00:15+00:00 [r710b-densegemm-gv]   c4d3 round 1 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:00:15+00:00 [r710b-densegemm-gv]   c4d3 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:00:45+00:00 [r710b-densegemm-gv]   P1 c4d3-GV2 rc=0: d3 19.268683 ms/iterate; d0 9.582603 ms/iterate
+2026-09-24T15:01:15+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF22 rc=0: d3 20.975656 ms/iterate; d0 10.993296 ms/iterate
+2026-09-24T15:01:44+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF2 rc=0: d3 20.725335 ms/iterate; d0 9.881505 ms/iterate
+2026-09-24T15:01:44+00:00 [r710b-densegemm-gv]   c4d3 round 2 GV d3: hashes IDENTICAL
+2026-09-24T15:01:44+00:00 [r710b-densegemm-gv]   c4d3 round 2 GV d0: hashes IDENTICAL
+2026-09-24T15:01:44+00:00 [r710b-densegemm-gv]   c4d3 round 2 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:01:44+00:00 [r710b-densegemm-gv]   c4d3 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:02:14+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF23 rc=0: d3 19.735027 ms/iterate; d0 9.892072 ms/iterate
+2026-09-24T15:02:44+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF3 rc=0: d3 19.556401 ms/iterate; d0 9.906745 ms/iterate
+2026-09-24T15:03:13+00:00 [r710b-densegemm-gv]   P1 c4d3-GV3 rc=0: d3 19.249848 ms/iterate; d0 9.620331 ms/iterate
+2026-09-24T15:03:13+00:00 [r710b-densegemm-gv]   c4d3 round 3 GV d3: hashes IDENTICAL
+2026-09-24T15:03:13+00:00 [r710b-densegemm-gv]   c4d3 round 3 GV d0: hashes IDENTICAL
+2026-09-24T15:03:13+00:00 [r710b-densegemm-gv]   c4d3 round 3 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:03:13+00:00 [r710b-densegemm-gv]   c4d3 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:03:43+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF4 rc=0: d3 20.336763 ms/iterate; d0 9.935738 ms/iterate
+2026-09-24T15:04:13+00:00 [r710b-densegemm-gv]   P1 c4d3-GV4 rc=0: d3 20.681879 ms/iterate; d0 9.588863 ms/iterate
+2026-09-24T15:04:43+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF24 rc=0: d3 20.648227 ms/iterate; d0 9.909695 ms/iterate
+2026-09-24T15:04:43+00:00 [r710b-densegemm-gv]   c4d3 round 4 GV d3: hashes IDENTICAL
+2026-09-24T15:04:43+00:00 [r710b-densegemm-gv]   c4d3 round 4 GV d0: hashes IDENTICAL
+2026-09-24T15:04:43+00:00 [r710b-densegemm-gv]   c4d3 round 4 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:04:43+00:00 [r710b-densegemm-gv]   c4d3 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:05:12+00:00 [r710b-densegemm-gv]   P1 c4d3-GV5 rc=0: d3 20.709276 ms/iterate; d0 9.596263 ms/iterate
+2026-09-24T15:05:42+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF25 rc=0: d3 20.455752 ms/iterate; d0 9.947903 ms/iterate
+2026-09-24T15:06:12+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF5 rc=0: d3 20.531373 ms/iterate; d0 9.855770 ms/iterate
+2026-09-24T15:06:12+00:00 [r710b-densegemm-gv]   c4d3 round 5 GV d3: hashes IDENTICAL
+2026-09-24T15:06:12+00:00 [r710b-densegemm-gv]   c4d3 round 5 GV d0: hashes IDENTICAL
+2026-09-24T15:06:12+00:00 [r710b-densegemm-gv]   c4d3 round 5 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:06:12+00:00 [r710b-densegemm-gv]   c4d3 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:06:42+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF26 rc=0: d3 20.537618 ms/iterate; d0 9.911320 ms/iterate
+2026-09-24T15:07:12+00:00 [r710b-densegemm-gv]   P1 c4d3-OFF6 rc=0: d3 20.437034 ms/iterate; d0 9.901179 ms/iterate
+2026-09-24T15:07:42+00:00 [r710b-densegemm-gv]   P1 c4d3-GV6 rc=0: d3 20.421862 ms/iterate; d0 9.600339 ms/iterate
+2026-09-24T15:07:42+00:00 [r710b-densegemm-gv]   c4d3 round 6 GV d3: hashes IDENTICAL
+2026-09-24T15:07:42+00:00 [r710b-densegemm-gv]   c4d3 round 6 GV d0: hashes IDENTICAL
+2026-09-24T15:07:42+00:00 [r710b-densegemm-gv]   c4d3 round 6 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:07:42+00:00 [r710b-densegemm-gv]   c4d3 round 6 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:08:18+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF1 rc=0: d1 18.337945 ms/iterate; d0 11.982599 ms/iterate
+2026-09-24T15:08:55+00:00 [r710b-densegemm-gv]   P1 c8d1-GV1 rc=0: d1 18.206835 ms/iterate; d0 11.701244 ms/iterate
+2026-09-24T15:09:31+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF21 rc=0: d1 18.395424 ms/iterate; d0 11.964645 ms/iterate
+2026-09-24T15:09:31+00:00 [r710b-densegemm-gv]   c8d1 round 1 GV d1: hashes IDENTICAL
+2026-09-24T15:09:31+00:00 [r710b-densegemm-gv]   c8d1 round 1 GV d0: hashes IDENTICAL
+2026-09-24T15:09:31+00:00 [r710b-densegemm-gv]   c8d1 round 1 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:09:31+00:00 [r710b-densegemm-gv]   c8d1 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:10:08+00:00 [r710b-densegemm-gv]   P1 c8d1-GV2 rc=0: d1 18.509226 ms/iterate; d0 11.638641 ms/iterate
+2026-09-24T15:10:45+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF22 rc=0: d1 19.061141 ms/iterate; d0 11.991239 ms/iterate
+2026-09-24T15:11:21+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF2 rc=0: d1 18.148869 ms/iterate; d0 12.119842 ms/iterate
+2026-09-24T15:11:21+00:00 [r710b-densegemm-gv]   c8d1 round 2 GV d1: hashes IDENTICAL
+2026-09-24T15:11:21+00:00 [r710b-densegemm-gv]   c8d1 round 2 GV d0: hashes IDENTICAL
+2026-09-24T15:11:21+00:00 [r710b-densegemm-gv]   c8d1 round 2 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:11:21+00:00 [r710b-densegemm-gv]   c8d1 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:11:58+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF23 rc=0: d1 18.324424 ms/iterate; d0 12.055174 ms/iterate
+2026-09-24T15:12:34+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF3 rc=0: d1 18.362037 ms/iterate; d0 12.009364 ms/iterate
+2026-09-24T15:13:11+00:00 [r710b-densegemm-gv]   P1 c8d1-GV3 rc=0: d1 19.345523 ms/iterate; d0 11.687592 ms/iterate
+2026-09-24T15:13:11+00:00 [r710b-densegemm-gv]   c8d1 round 3 GV d1: hashes IDENTICAL
+2026-09-24T15:13:11+00:00 [r710b-densegemm-gv]   c8d1 round 3 GV d0: hashes IDENTICAL
+2026-09-24T15:13:11+00:00 [r710b-densegemm-gv]   c8d1 round 3 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:13:11+00:00 [r710b-densegemm-gv]   c8d1 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:13:48+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF4 rc=0: d1 18.566819 ms/iterate; d0 12.002657 ms/iterate
+2026-09-24T15:14:24+00:00 [r710b-densegemm-gv]   P1 c8d1-GV4 rc=0: d1 18.727247 ms/iterate; d0 11.698380 ms/iterate
+2026-09-24T15:15:01+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF24 rc=0: d1 18.341607 ms/iterate; d0 12.021128 ms/iterate
+2026-09-24T15:15:01+00:00 [r710b-densegemm-gv]   c8d1 round 4 GV d1: hashes IDENTICAL
+2026-09-24T15:15:01+00:00 [r710b-densegemm-gv]   c8d1 round 4 GV d0: hashes IDENTICAL
+2026-09-24T15:15:01+00:00 [r710b-densegemm-gv]   c8d1 round 4 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:15:01+00:00 [r710b-densegemm-gv]   c8d1 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:15:37+00:00 [r710b-densegemm-gv]   P1 c8d1-GV5 rc=0: d1 19.445431 ms/iterate; d0 11.715216 ms/iterate
+2026-09-24T15:16:14+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF25 rc=0: d1 19.251727 ms/iterate; d0 12.013939 ms/iterate
+2026-09-24T15:16:50+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF5 rc=0: d1 18.378104 ms/iterate; d0 12.048852 ms/iterate
+2026-09-24T15:16:50+00:00 [r710b-densegemm-gv]   c8d1 round 5 GV d1: hashes IDENTICAL
+2026-09-24T15:16:50+00:00 [r710b-densegemm-gv]   c8d1 round 5 GV d0: hashes IDENTICAL
+2026-09-24T15:16:50+00:00 [r710b-densegemm-gv]   c8d1 round 5 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:16:50+00:00 [r710b-densegemm-gv]   c8d1 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:17:27+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF26 rc=0: d1 18.356736 ms/iterate; d0 12.020009 ms/iterate
+2026-09-24T15:18:04+00:00 [r710b-densegemm-gv]   P1 c8d1-OFF6 rc=0: d1 18.636910 ms/iterate; d0 12.012947 ms/iterate
+2026-09-24T15:18:40+00:00 [r710b-densegemm-gv]   P1 c8d1-GV6 rc=0: d1 18.516176 ms/iterate; d0 11.701536 ms/iterate
+2026-09-24T15:18:40+00:00 [r710b-densegemm-gv]   c8d1 round 6 GV d1: hashes IDENTICAL
+2026-09-24T15:18:40+00:00 [r710b-densegemm-gv]   c8d1 round 6 GV d0: hashes IDENTICAL
+2026-09-24T15:18:40+00:00 [r710b-densegemm-gv]   c8d1 round 6 OFF2 d1: hashes IDENTICAL
+2026-09-24T15:18:40+00:00 [r710b-densegemm-gv]   c8d1 round 6 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:19:05+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF1 rc=0: d3 12.531041 ms/iterate; d0 7.784375 ms/iterate
+2026-09-24T15:19:29+00:00 [r710b-densegemm-gv]   P1 c1d3-GV1 rc=0: d3 12.336977 ms/iterate; d0 7.777783 ms/iterate
+2026-09-24T15:19:54+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF21 rc=0: d3 11.590564 ms/iterate; d0 7.794683 ms/iterate
+2026-09-24T15:19:54+00:00 [r710b-densegemm-gv]   c1d3 round 1 GV d3: hashes IDENTICAL
+2026-09-24T15:19:54+00:00 [r710b-densegemm-gv]   c1d3 round 1 GV d0: hashes IDENTICAL
+2026-09-24T15:19:54+00:00 [r710b-densegemm-gv]   c1d3 round 1 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:19:54+00:00 [r710b-densegemm-gv]   c1d3 round 1 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:20:18+00:00 [r710b-densegemm-gv]   P1 c1d3-GV2 rc=0: d3 11.557802 ms/iterate; d0 7.780663 ms/iterate
+2026-09-24T15:20:43+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF22 rc=0: d3 12.691794 ms/iterate; d0 7.789096 ms/iterate
+2026-09-24T15:21:07+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF2 rc=0: d3 11.616467 ms/iterate; d0 7.829720 ms/iterate
+2026-09-24T15:21:07+00:00 [r710b-densegemm-gv]   c1d3 round 2 GV d3: hashes IDENTICAL
+2026-09-24T15:21:07+00:00 [r710b-densegemm-gv]   c1d3 round 2 GV d0: hashes IDENTICAL
+2026-09-24T15:21:07+00:00 [r710b-densegemm-gv]   c1d3 round 2 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:21:07+00:00 [r710b-densegemm-gv]   c1d3 round 2 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:21:32+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF23 rc=0: d3 12.996735 ms/iterate; d0 7.787034 ms/iterate
+2026-09-24T15:21:56+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF3 rc=0: d3 12.672120 ms/iterate; d0 7.799205 ms/iterate
+2026-09-24T15:22:21+00:00 [r710b-densegemm-gv]   P1 c1d3-GV3 rc=0: d3 11.230042 ms/iterate; d0 7.735824 ms/iterate
+2026-09-24T15:22:21+00:00 [r710b-densegemm-gv]   c1d3 round 3 GV d3: hashes IDENTICAL
+2026-09-24T15:22:21+00:00 [r710b-densegemm-gv]   c1d3 round 3 GV d0: hashes IDENTICAL
+2026-09-24T15:22:21+00:00 [r710b-densegemm-gv]   c1d3 round 3 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:22:21+00:00 [r710b-densegemm-gv]   c1d3 round 3 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:22:45+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF4 rc=0: d3 11.639332 ms/iterate; d0 7.806722 ms/iterate
+2026-09-24T15:23:10+00:00 [r710b-densegemm-gv]   P1 c1d3-GV4 rc=0: d3 12.671391 ms/iterate; d0 7.755801 ms/iterate
+2026-09-24T15:23:35+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF24 rc=0: d3 11.652443 ms/iterate; d0 7.815688 ms/iterate
+2026-09-24T15:23:35+00:00 [r710b-densegemm-gv]   c1d3 round 4 GV d3: hashes IDENTICAL
+2026-09-24T15:23:35+00:00 [r710b-densegemm-gv]   c1d3 round 4 GV d0: hashes IDENTICAL
+2026-09-24T15:23:35+00:00 [r710b-densegemm-gv]   c1d3 round 4 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:23:35+00:00 [r710b-densegemm-gv]   c1d3 round 4 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:23:59+00:00 [r710b-densegemm-gv]   P1 c1d3-GV5 rc=0: d3 11.261599 ms/iterate; d0 7.782332 ms/iterate
+2026-09-24T15:24:24+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF25 rc=0: d3 13.338083 ms/iterate; d0 7.845192 ms/iterate
+2026-09-24T15:24:49+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF5 rc=0: d3 12.745290 ms/iterate; d0 7.842261 ms/iterate
+2026-09-24T15:24:49+00:00 [r710b-densegemm-gv]   c1d3 round 5 GV d3: hashes IDENTICAL
+2026-09-24T15:24:49+00:00 [r710b-densegemm-gv]   c1d3 round 5 GV d0: hashes IDENTICAL
+2026-09-24T15:24:49+00:00 [r710b-densegemm-gv]   c1d3 round 5 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:24:49+00:00 [r710b-densegemm-gv]   c1d3 round 5 OFF2 d0: hashes IDENTICAL
+2026-09-24T15:25:13+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF26 rc=0: d3 11.613898 ms/iterate; d0 7.820353 ms/iterate
+2026-09-24T15:25:38+00:00 [r710b-densegemm-gv]   P1 c1d3-OFF6 rc=0: d3 13.024917 ms/iterate; d0 7.801759 ms/iterate
+2026-09-24T15:26:02+00:00 [r710b-densegemm-gv]   P1 c1d3-GV6 rc=0: d3 11.278064 ms/iterate; d0 7.742628 ms/iterate
+2026-09-24T15:26:02+00:00 [r710b-densegemm-gv]   c1d3 round 6 GV d3: hashes IDENTICAL
+2026-09-24T15:26:02+00:00 [r710b-densegemm-gv]   c1d3 round 6 GV d0: hashes IDENTICAL
+2026-09-24T15:26:02+00:00 [r710b-densegemm-gv]   c1d3 round 6 OFF2 d3: hashes IDENTICAL
+2026-09-24T15:26:02+00:00 [r710b-densegemm-gv]   c1d3 round 6 OFF2 d0: hashes IDENTICAL
+P1 GV c4d3 draft (GV-OFF ms): -0.533 -1.457 -0.307 +0.345 +0.178 -0.015  mean -0.298 (-1.47 %) flat; hashes 6/6  [n=6]
+P1 GV c4d3 d0    (GV-OFF ms): -1.889 -0.299 -0.286 -0.347 -0.260 -0.301  mean -0.564 (-5.55 %) GAIN; hashes 6/6  [n=6]
+P1 GV c8d1 draft (GV-OFF ms): -0.131 +0.360 +0.983 +0.160 +1.067 -0.121  mean +0.387 (+2.10 %) flat; hashes 6/6  [n=6]
+P1 GV c8d1 d0    (GV-OFF ms): -0.281 -0.481 -0.322 -0.304 -0.334 -0.311  mean -0.339 (-2.82 %) GAIN; hashes 6/6  [n=6]
+P1 GV c1d3 draft (GV-OFF ms): -0.194 -0.059 -1.442 +1.032 -1.484 -1.747  mean -0.649 (-5.24 %) flat; hashes 6/6  [n=6]
+P1 GV c1d3 d0    (GV-OFF ms): -0.007 -0.049 -0.063 -0.051 -0.060 -0.059  mean -0.048 (-0.62 %) GAIN; hashes 6/6  [n=6]
+P1 draft-0 cells GV: c4d3 GAIN -5.55 %, c8d1 GAIN -2.82 %, c1d3 GAIN -0.62 %
+P1 VERDICT GV: FLAT (identity + no regression, but no same-sign gain at any shape): not a stack entry
+P1 OFF2 c4d3 draft (OFF2-OFF ms): +0.683 +0.250 +0.179 +0.311 -0.076 +0.101  mean +0.241 (+1.19 %) flat; hashes 6/6  [n=6]
+P1 OFF2 c4d3 d0    (OFF2-OFF ms): -1.555 +1.112 -0.015 -0.026 +0.092 +0.010  mean -0.064 (-0.63 %) flat; hashes 6/6  [n=6]
+P1 OFF2 c8d1 draft (OFF2-OFF ms): +0.057 +0.912 -0.038 -0.225 +0.874 -0.280  mean +0.217 (+1.18 %) flat; hashes 6/6  [n=6]
+P1 OFF2 c8d1 d0    (OFF2-OFF ms): -0.018 -0.129 +0.046 +0.018 -0.035 +0.007  mean -0.018 (-0.15 %) flat; hashes 6/6  [n=6]
+P1 OFF2 c1d3 draft (OFF2-OFF ms): -0.940 +1.075 +0.325 +0.013 +0.593 -1.411  mean -0.058 (-0.47 %) flat; hashes 6/6  [n=6]
+P1 OFF2 c1d3 d0    (OFF2-OFF ms): +0.010 -0.041 -0.012 +0.009 +0.003 +0.019  mean -0.002 (-0.03 %) flat; hashes 6/6  [n=6]
+P1 draft-0 cells OFF2: c4d3 flat -0.63 %, c8d1 flat -0.15 %, c1d3 flat -0.03 %
+P1 VERDICT OFF2: FLAT (identity + no regression, but no same-sign gain at any shape): not a stack entry
+2026-09-24T15:26:48+00:00 [r710b-densegemm-gv]   greedy off: tabbyapi:densegemm-r1; flags in env: ; free 1041 2431 
+2026-09-24T15:27:02+00:00 [r710b-densegemm-gv]   greedy off: OOM 0; tracebacks 0
+2026-09-24T15:27:17+00:00 [r710b-densegemm-gv]   greedy on: tabbyapi:densegemm-r1; flags in env: EXL3_DENSE_V2=3 ; free 1035 2423 
+2026-09-24T15:27:30+00:00 [r710b-densegemm-gv]   greedy on: OOM 0; tracebacks 0
+  [greedy] GREEDY off vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY on vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T15:27:30+00:00 [r710b-densegemm-gv] DECISION GV (EXL3_DENSE_V2=3): FLAT, not a stack entry
+2026-09-24T15:27:30+00:00 [r710b-densegemm-gv] DECISION OFF2 (): FLAT, not a stack entry
+2026-09-24T15:27:31+00:00 [sctl] GPU queue continues (r713-moefast-r3(pid 393677)
+r714-densegemm-r2(pid 2935726)); leaving the GPUs to the next unit
+2026-09-24T15:27:31+00:00 [r710b-densegemm-gv] === densegemm r1 DONE ===

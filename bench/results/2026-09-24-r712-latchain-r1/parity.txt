@@ -1,0 +1,16 @@
+[A] GDN recurrent: 112 case checks over 14 shapes x 2 dtypes x history on/off (12 eager steps + 6 graph replays each)
+[B] bsz=1 q_len=4 ctx=4096: programs=8 splits=17 split_len=128, 11 variants compared
+[B] bsz=1 q_len=4 ctx=32768: programs=8 splits=17 split_len=128, 11 variants compared
+[B] bsz=4 q_len=4 ctx=4096: programs=32 splits=10 split_len=224, 11 variants compared
+[B] bsz=4 q_len=4 ctx=32768: programs=32 splits=10 split_len=224, 11 variants compared
+[B] bsz=8 q_len=2 ctx=4096: programs=32 splits=10 split_len=224, 11 variants compared
+[B] bsz=8 q_len=2 ctx=32768: programs=32 splits=10 split_len=224, 11 variants compared
+[B] bsz=1 q_len=1 ctx=4096: programs=2 splits=17 split_len=128, 11 variants compared
+[B] bsz=1 q_len=1 ctx=32768: programs=2 splits=17 split_len=128, 11 variants compared
+[B] bsz=4 q_len=1 ctx=4096: programs=8 splits=17 split_len=128, 11 variants compared
+[B] bsz=4 q_len=1 ctx=32768: programs=8 splits=17 split_len=128, 11 variants compared
+[B] bsz=8 q_len=1 ctx=4096: programs=16 splits=17 split_len=128, 11 variants compared
+[B] bsz=8 q_len=1 ctx=32768: programs=16 splits=17 split_len=128, 11 variants compared
+[B] QSA split/combine: 156 checks
+comparisons equal: 272/272 (9 s)
+PARITY PASS

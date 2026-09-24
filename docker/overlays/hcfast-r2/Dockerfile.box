@@ -1,0 +1,24 @@
+# hcfast r2: EXL3_HC_MIX_V3=2 routes the decode GatedResidual int8 state-in-up mixer through the r2 kernels in
+# hc_mix_v3.cu (tile knobs DOTS_B / DOTS_J / DOTS_PF / UP_B / UP_Q, optional PDL); EXL3_HC_MIX_V3=1 is r1,
+# unchanged (its 24 kernels compile to the same SASS). Bitwise-identical outputs either way. Unset = the served
+# launches, from an unchanged hc_mix.cu.
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:slotfix-r1 -t tabbyapi:hcfast-r2 .
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:moefast-r1 -t tabbyapi:hcfast-r2-moe .   (hcfast r2 on moefast r1; the gate uses this name with HC_BASE=tabbyapi:moefast-r1)
+#
+# BASE must not carry hcfast r1 (the patch is cumulative over slotfix-r1; install-hcfast.sh refuses).
+# Build context = this directory. No heredocs (legacy builder). The CPU flow test runs during the build (fake ext,
+# no GPU); the parity test and the P0 bench are copied to /opt/hcfast-r2/ for the GPU runs. Every python3 -c
+# imports torch before anything that loads exllamav3_ext (libc10.so).
+ARG BASE=tabbyapi:slotfix-r1
+FROM ${BASE}
+ARG BASE
+ARG MAX_JOBS=4
+COPY hcfast-r2.patch rebuild-native.py install-hcfast.sh test_hcfast_parity.py test_hcfast_flow_cpu.py bench_hcfast_p0.py /opt/hcfast-r2/
+RUN MAX_JOBS=${MAX_JOBS} bash /opt/hcfast-r2/install-hcfast.sh && \
+    python3 -m py_compile /opt/hcfast-r2/test_hcfast_parity.py /opt/hcfast-r2/bench_hcfast_p0.py && \
+    python3 /opt/hcfast-r2/test_hcfast_flow_cpu.py && \
+    python3 -c 'import torch, exllamav3_ext as e; assert e.hc_mix_v3_revision == 2; import exllamav3.modules.hyperconnections as h; assert h._HC_MIX_V3_BUILD == "r2", h._HC_MIX_V3_BUILD; G = h.GatedResidual; assert G.MIX_V3 is False and G.MIX_V3_LEVEL == 0, "must default off"; print("hcfast r2 landed (default off)")' && \
+    EXL3_HC_MIX_V3=1 python3 -c 'import torch, exllamav3.modules.hyperconnections as h; G = h.GatedResidual; assert G.MIX_V3_LEVEL == 1 and G.MIX_V3_DOTS_B[16] == 8; print("EXL3_HC_MIX_V3=1 selects r1")' && \
+    EXL3_HC_MIX_V3=2 python3 -c 'import torch, exllamav3.modules.hyperconnections as h; G = h.GatedResidual; assert G.MIX_V3_LEVEL == 2 and G.MIX_V3_DOTS_B[16] == 2 and G.MIX_V3_DOTS_PF[16] == 1 and G.MIX_V3_UP_Q[16] == 4; print("EXL3_HC_MIX_V3=2 selects r2")'
+LABEL local.hcfast.base="${BASE}" local.hcfast.rev="r2"

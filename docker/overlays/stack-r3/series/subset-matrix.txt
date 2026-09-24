@@ -1,0 +1,11 @@
+# stack-r3 subset matrix 2026-09-24T16:03:23Z; base = src + hcfast-r1 + moefast-r1 (fuzz 0); patch: patch 2.0-12u11-Apple
+INCLUDE='': OK 2 patches; permuted order (02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=1 dg=none
+INCLUDE='mf3': OK 3 patches; permuted order (03-moefast-r3.patch 02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=3 dg=none
+INCLUDE='dg1': OK 4 patches; permuted order (04-densegemm-r1.patch 06-dense-lcguard.patch 02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=1 dg=1 guard=1 guard-first
+INCLUDE='dg2': OK 4 patches; permuted order (05-densegemm-r2.patch 06-dense-lcguard.patch 02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=1 dg=2 guard=1 guard-first
+INCLUDE='mf3 dg1': OK 5 patches; permuted order (04-densegemm-r1.patch 03-moefast-r3.patch 06-dense-lcguard.patch 02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=3 dg=1 guard=1 guard-first
+INCLUDE='mf3 dg2': OK 5 patches; permuted order (05-densegemm-r2.patch 03-moefast-r3.patch 06-dense-lcguard.patch 02-latchain-r1b.patch 01-hcfast-r2-on-stack-r2.patch) identical; markers hc=2 lc=1 mf=3 dg=2 guard=1 guard-first
+INCLUDE='dg1 dg2': refused (OK)
+control: original latchain-r1/latchain-r1.patch then moefast-r3/moefast-r3.patch rejects (the R712 blocker; OK)
+control: original moefast-r3/moefast-r3.patch then latchain-r1/latchain-r1.patch rejects (the R712 blocker; OK)
+SUBSET MATRIX OK

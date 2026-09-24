@@ -1,0 +1,26 @@
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>             118      8 |        128      8 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>             120      8 |        128     32 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              75      8 |        122     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              86      8 |        128     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>             126      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>             124      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              73      8 |        122     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              78      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>            126      8 |        128     24 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>            124      8 |        128      8 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            212      8 |        194     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            212      8 |        242     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>            119      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>            118      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>            128      8 |        128     80 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>            128      8 |        128     56 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128     64 |        128     80 |   30   25    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128     64 |        128     56 |   13   24    0 | ok (rows32)
+BAR install PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS

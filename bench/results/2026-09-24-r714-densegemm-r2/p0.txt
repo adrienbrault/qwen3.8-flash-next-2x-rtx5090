@@ -1,0 +1,104 @@
+[p0] gdn.in_proj     r 4 copies 36 ( 721.5 MiB)  m0   26.02us  +0.0%  m1   24.22us  -6.9%  m2   24.22us  -6.9%  m3   26.27us(served)  +1.0%  m4   26.27us(served)  +1.0%  spread m0 0.32us
+[p0] gdn.in_proj     r 8 copies 36 ( 721.5 MiB)  m0   25.98us  +0.0%  m1   24.06us  -7.4%  m2   24.13us  -7.1%  m3   26.27us(served)  +1.1%  m4   26.27us(served)  +1.1%  spread m0 1.63us
+[p0] gdn.in_proj     r16 copies 36 ( 721.5 MiB)  m0   28.32us  +0.0%  m1   24.22us -14.5%  m2   24.22us -14.5%  m3   28.32us(served)  +0.0%  m4   28.03us(served)  -1.0%  spread m0 0.45us
+[p0] gdn.in_proj     r18 copies 36 ( 721.5 MiB)  m0   44.67us  +0.0%  m1   34.30us -23.2%  m2   34.30us -23.2%  m3   44.64us(served)  -0.1%  m4   34.30us -23.2%  spread m0 2.37us
+[p0] gdn.in_proj     r21 copies 36 ( 721.5 MiB)  m0   44.70us  +0.0%  m1   34.18us -23.6%  m2   34.37us -23.1%  m3   44.70us(served)  +0.0%  m4   34.14us -23.6%  spread m0 1.66us
+[p0] gdn.in_proj     r24 copies 36 ( 721.5 MiB)  m0   45.22us  +0.0%  m1   34.46us -23.8%  m2   34.18us -24.4%  m3   45.25us(served)  +0.1%  m4   34.46us -23.8%  spread m0 1.54us
+[p0] gdn.in_proj     r32 copies 36 ( 721.5 MiB)  m0   46.75us  +0.0%  m1   34.18us -26.9%  m2   34.46us -26.3%  m3   46.75us(served)  +0.0%  m4   34.18us -26.9%  spread m0 1.63us
+[p0] attn.qkv        r 4 copies 12 ( 195.5 MiB)  m0   23.87us  +0.0%  m1   20.16us -15.5%  m2   20.26us -15.1%  m3   23.68us(served)  -0.8%  m4   23.87us(served)  +0.0%  spread m0 1.41us
+[p0] attn.qkv        r 8 copies 12 ( 195.5 MiB)  m0   23.94us  +0.0%  m1   20.93us -12.6%  m2   21.02us -12.2%  m3   23.94us(served)  +0.0%  m4   24.22us(served)  +1.2%  spread m0 0.32us
+[p0] attn.qkv        r16 copies 12 ( 195.5 MiB)  m0   26.21us  +0.0%  m1   22.14us -15.5%  m2   22.18us -15.4%  m3   26.18us(served)  -0.1%  m4   25.89us(served)  -1.2%  spread m0 0.29us
+[p0] attn.qkv        r18 copies 12 ( 195.5 MiB)  m0   39.10us  +0.0%  m1   30.11us -23.0%  m2   30.18us -22.8%  m3   39.71us(served)  +1.6%  m4   28.96us -25.9%  spread m0 1.73us
+[p0] attn.qkv        r21 copies 12 ( 195.5 MiB)  m0   40.29us  +0.0%  m1   30.24us -24.9%  m2   30.21us -25.0%  m3   40.51us(served)  +0.6%  m4   30.05us -25.4%  spread m0 1.25us
+[p0] attn.qkv        r24 copies 12 ( 195.5 MiB)  m0   40.32us  +0.0%  m1   30.30us -24.8%  m2   30.30us -24.8%  m3   40.61us(served)  +0.7%  m4   30.05us -25.5%  spread m0 0.32us
+[p0] attn.qkv        r32 copies 12 ( 195.5 MiB)  m0   42.59us  +0.0%  m1   30.37us -28.7%  m2   30.37us -28.7%  m3   42.66us(served)  +0.2%  m4   30.37us -28.7%  spread m0 0.38us
+[p0] gdn.out_proj    r 4 copies 36 ( 270.6 MiB)  m0   20.03us  +0.0%  m1   14.14us -29.4%  m2   20.03us(served)  +0.0%  m3   14.21us -29.1%  m4   20.03us(served)  +0.0%  spread m0 0.16us
+[p0] gdn.out_proj    r 8 copies 36 ( 270.6 MiB)  m0   20.03us  +0.0%  m1   14.11us -29.6%  m2   20.03us(served)  +0.0%  m3   14.66us -26.8%  m4   20.03us(served)  +0.0%  spread m0 0.03us
+[p0] gdn.out_proj    r16 copies 36 ( 270.6 MiB)  m0   19.87us  +0.0%  m1   16.80us -15.5%  m2   16.83us -15.3%  m3   19.87us(served)  +0.0%  m4   19.87us(served)  +0.0%  spread m0 0.16us
+[p0] gdn.out_proj    r18 copies 36 ( 270.6 MiB)  m0   32.13us  +0.0%  m1   18.18us -43.4%  m2   18.18us -43.4%  m3   32.13us(served)  +0.0%  m4   18.18us -43.4%  spread m0 0.10us
+[p0] gdn.out_proj    r21 copies 36 ( 270.6 MiB)  m0   32.29us  +0.0%  m1   18.18us -43.7%  m2   18.18us -43.7%  m3   32.19us(served)  -0.3%  m4   18.18us -43.7%  spread m0 0.16us
+[p0] gdn.out_proj    r24 copies 36 ( 270.6 MiB)  m0   32.22us  +0.0%  m1   18.18us -43.6%  m2   18.18us -43.6%  m3   32.29us(served)  +0.2%  m4   18.21us -43.5%  spread m0 0.13us
+[p0] gdn.out_proj    r32 copies 36 ( 270.6 MiB)  m0   32.70us  +0.0%  m1   18.21us -44.3%  m2   18.18us -44.4%  m3   32.64us(served)  -0.2%  m4   18.18us -44.4%  spread m0 0.35us
+[p0] attn.o_proj     r 4 copies 12 (  90.2 MiB)  m0   19.17us  +0.0%  m1   14.02us -26.9%  m2   19.14us(served)  -0.2%  m3   14.02us -26.9%  m4   19.17us(served)  +0.0%  spread m0 0.26us
+[p0] attn.o_proj     r 8 copies 12 (  90.2 MiB)  m0   18.14us  +0.0%  m1   13.73us -24.3%  m2   18.14us(served)  +0.0%  m3   13.73us -24.3%  m4   18.14us(served)  +0.0%  spread m0 0.06us
+[p0] attn.o_proj     r16 copies 12 (  90.2 MiB)  m0   18.30us  +0.0%  m1   16.19us -11.5%  m2   16.13us -11.9%  m3   18.34us(served)  +0.2%  m4   18.34us(served)  +0.2%  spread m0 0.32us
+[p0] attn.o_proj     r18 copies 12 (  90.2 MiB)  m0   31.04us  +0.0%  m1   17.82us -42.6%  m2   17.82us -42.6%  m3   31.10us(served)  +0.2%  m4   17.82us -42.6%  spread m0 0.13us
+[p0] attn.o_proj     r21 copies 12 (  90.2 MiB)  m0   30.62us  +0.0%  m1   17.82us -41.8%  m2   17.82us -41.8%  m3   30.59us(served)  -0.1%  m4   17.82us -41.8%  spread m0 0.06us
+[p0] attn.o_proj     r24 copies 12 (  90.2 MiB)  m0   31.17us  +0.0%  m1   17.82us -42.8%  m2   17.82us -42.8%  m3   31.14us(served)  -0.1%  m4   17.82us -42.8%  spread m0 0.13us
+[p0] attn.o_proj     r32 copies 12 (  90.2 MiB)  m0   32.32us  +0.0%  m1   17.82us -44.9%  m2   17.82us -44.9%  m3   32.32us(served)  +0.0%  m4   17.89us -44.7%  spread m0 0.06us
+[p0] attn.index_qk   r 4 copies 12 (   9.4 MiB)  m0   10.62us  +0.0%  m1    8.67us -18.4%  m2   10.66us(served)  +0.3%  m3    8.74us -17.8%  m4   10.66us(served)  +0.3%  spread m0 0.19us
+[p0] attn.index_qk   r 8 copies 12 (   9.4 MiB)  m0   10.75us  +0.0%  m1    9.12us -15.2%  m2   10.72us(served)  -0.3%  m3    8.99us -16.4%  m4   10.75us(served)  +0.0%  spread m0 0.19us
+[p0] attn.index_qk   r16 copies 12 (   9.4 MiB)  m0   13.89us  +0.0%  m1   12.70us  -8.5%  m2   12.64us  -9.0%  m3   13.89us(served)  +0.0%  m4   13.89us(served)  +0.0%  spread m0 0.06us
+[p0] attn.index_qk   r18 copies 12 (   9.4 MiB)  m0   21.92us  +0.0%  m1   14.11us -35.6%  m2   14.18us -35.3%  m3   21.92us(served)  +0.0%  m4   14.05us -35.9%  spread m0 0.03us
+[p0] attn.index_qk   r21 copies 12 (   9.4 MiB)  m0   22.08us  +0.0%  m1   14.18us -35.8%  m2   14.18us -35.8%  m3   22.14us(served)  +0.3%  m4   14.18us -35.8%  spread m0 0.10us
+[p0] attn.index_qk   r24 copies 12 (   9.4 MiB)  m0   22.24us  +0.0%  m1   14.18us -36.3%  m2   14.18us -36.3%  m3   22.24us(served)  +0.0%  m4   14.14us -36.4%  spread m0 0.03us
+[p0] attn.index_qk   r32 copies 12 (   9.4 MiB)  m0   22.40us  +0.0%  m1   14.11us -37.0%  m2   14.08us -37.1%  m3   22.37us(served)  -0.1%  m4   14.08us -37.1%  spread m0 0.10us
+[p0] shared.gate_up  r 4 copies 48 (  75.6 MiB)  m0   13.66us  +0.0%  m1   10.43us -23.7%  m2   10.37us -24.1%  m3   13.66us(served)  +0.0%  m4   14.02us(served)  +2.6%  spread m0 0.38us
+[p0] shared.gate_up  r 8 copies 48 (  75.6 MiB)  m0   13.98us  +0.0%  m1   11.94us -14.6%  m2   11.94us -14.6%  m3   14.08us(served)  +0.7%  m4   14.11us(served)  +0.9%  spread m0 0.13us
+[p0] shared.gate_up  r16 copies 48 (  75.6 MiB)  m0   15.65us  +0.0%  m1   11.94us -23.7%  m2   11.94us -23.7%  m3   15.84us(served)  +1.2%  m4   15.65us(served)  +0.0%  spread m0 0.29us
+[p0] shared.gate_up  r18 copies 48 (  75.6 MiB)  m0   24.19us  +0.0%  m1   14.69us -39.3%  m2   14.75us -39.0%  m3   24.19us(served)  +0.0%  m4   14.69us -39.3%  spread m0 1.22us
+[p0] shared.gate_up  r21 copies 48 (  75.6 MiB)  m0   24.19us  +0.0%  m1   13.98us -42.2%  m2   13.98us -42.2%  m3   23.94us(served)  -1.1%  m4   14.05us -41.9%  spread m0 0.35us
+[p0] shared.gate_up  r24 copies 48 (  75.6 MiB)  m0   24.77us  +0.0%  m1   15.07us -39.1%  m2   14.24us -42.5%  m3   24.70us(served)  -0.3%  m4   15.04us -39.3%  spread m0 0.67us
+[p0] shared.gate_up  r32 copies 48 (  75.6 MiB)  m0   26.27us  +0.0%  m1   15.71us -40.2%  m2   15.71us -40.2%  m3   25.98us(served)  -1.1%  m4   16.00us -39.1%  spread m0 0.42us
+[p0] shared.down     r 4 copies 48 (  37.8 MiB)  m0    8.67us  +0.0%  m1    5.79us -33.2%  m2    8.70us(served)  +0.4%  m3    5.79us -33.2%  m4    8.70us(served)  +0.4%  spread m0 0.16us
+[p0] shared.down     r 8 copies 48 (  37.8 MiB)  m0    8.86us  +0.0%  m1    5.79us -34.7%  m2    8.86us(served)  +0.0%  m3    5.82us -34.3%  m4    8.86us(served)  +0.0%  spread m0 0.83us
+[p0] shared.down     r16 copies 48 (  37.8 MiB)  m0   10.08us  +0.0%  m1    9.02us -10.5%  m2    8.86us -12.1%  m3   10.02us(served)  -0.6%  m4   10.05us(served)  -0.3%  spread m0 0.13us
+[p0] shared.down     r18 copies 48 (  37.8 MiB)  m0   14.69us  +0.0%  m1    9.92us -32.5%  m2    9.89us -32.7%  m3   14.75us(served)  +0.4%  m4    9.92us -32.5%  spread m0 0.16us
+[p0] shared.down     r21 copies 48 (  37.8 MiB)  m0   14.75us  +0.0%  m1    9.92us -32.8%  m2    9.92us -32.8%  m3   14.75us(served)  +0.0%  m4    9.92us -32.8%  spread m0 0.10us
+[p0] shared.down     r24 copies 48 (  37.8 MiB)  m0   14.75us  +0.0%  m1    9.95us -32.5%  m2    9.95us -32.5%  m3   14.75us(served)  +0.0%  m4    9.98us -32.3%  spread m0 0.03us
+[p0] shared.down     r32 copies 48 (  37.8 MiB)  m0   15.74us  +0.0%  m1   10.02us -36.4%  m2    9.98us -36.6%  m3   15.74us(served)  +0.0%  m4   10.05us -36.2%  spread m0 0.13us
+
+RECOMMEND (critical-path us per step = sum calls/step x us/call; shared expert listed apart)
+rows      m0 crit      m1 crit      m2 crit      m3 crit      m4 crit  best        m0 side      m1 side      m2 side      m3 side      m4 side
+   4       2301.7       1895.4       2193.8       2014.5       2311.3  m1          1072.1        778.8        915.5        933.9       1090.6
+   8       2290.6       1899.6       2188.4       2033.3       2304.4  m1          1096.7        850.9        998.4        955.4       1102.8
+  16       2435.7       2089.3       2089.3       2435.7       2421.9  m1          1234.9       1006.1        998.4       1241.1       1233.4
+  18       3869.6       2633.9       2635.4       3876.5       2619.3  m4          1866.2       1181.2       1182.7       1869.3       1181.2
+  21       3887.6       2631.6       2638.1       3887.2       2628.1  m4          1869.3       1147.4       1147.4       1857.0       1150.5
+  24       3912.6       2642.7       2632.3       3919.1       2640.4  m2          1897.0       1201.2       1161.2       1893.9       1201.2
+  32       4028.2       2633.5       2642.3       4026.2       2632.7  m4          2016.8       1234.9       1233.4       2002.9       1250.3
+m1: rows 16 +346.4 us/step saved, rows 4 +406.3 us/step saved -> eligible
+m2: rows 16 +346.4 us/step saved, rows 4 +107.9 us/step saved -> eligible
+m3: rows 16 +0.0 us/step saved, rows 4 +287.2 us/step saved -> not eligible
+RECOMMEND EXL3_DENSE_V2=1 EXL3_DENSE_ROWS32=1 (arm m1)
+P0-CONTROL attn.index_qk r16 m2 12.64 us vs m0 13.89 us (-1.25 us)
+P0-CALL gdn.in_proj r4 m2 24.22 m0 26.02 -6.9 % ok
+P0-CALL gdn.in_proj r16 m2 24.22 m0 28.32 -14.5 % ok
+P0-CALL attn.qkv r4 m2 20.26 m0 23.87 -15.1 % ok
+P0-CALL attn.qkv r16 m2 22.18 m0 26.21 -15.4 % ok
+P0-CALL gdn.out_proj r16 m2 16.83 m0 19.87 -15.3 % ok
+P0-CALL attn.o_proj r16 m2 16.13 m0 18.30 -11.9 % ok
+P0-CALL attn.index_qk r16 m2 12.64 m0 13.89 -9.0 % ok
+P0-ARM GM ELIGIBLE (rows 16 -346.4 us/step, rows 4 -107.9 us/step)
+P0-ARM ON ELIGIBLE (rows 16 -346.4 us/step, rows 4 -406.3 us/step)
+P0-ARMS GM ON
+P0-ROWS32 gdn.in_proj r18 m4 34.30 m0 44.67 -23.2 % ok
+P0-ROWS32 attn.qkv r18 m4 28.96 m0 39.10 -25.9 % ok
+P0-ROWS32 gdn.out_proj r18 m4 18.18 m0 32.13 -43.4 % ok
+P0-ROWS32 attn.o_proj r18 m4 17.82 m0 31.04 -42.6 % ok
+P0-ROWS32 attn.index_qk r18 m4 14.05 m0 21.92 -35.9 % ok
+P0-ROWS32 shared.gate_up r18 m4 14.69 m0 24.19 -39.3 % ok
+P0-ROWS32 shared.down r18 m4 9.92 m0 14.69 -32.5 % ok
+P0-ROWS32 gdn.in_proj r21 m4 34.14 m0 44.70 -23.6 % ok
+P0-ROWS32 attn.qkv r21 m4 30.05 m0 40.29 -25.4 % ok
+P0-ROWS32 gdn.out_proj r21 m4 18.18 m0 32.29 -43.7 % ok
+P0-ROWS32 attn.o_proj r21 m4 17.82 m0 30.62 -41.8 % ok
+P0-ROWS32 attn.index_qk r21 m4 14.18 m0 22.08 -35.8 % ok
+P0-ROWS32 shared.gate_up r21 m4 14.05 m0 24.19 -41.9 % ok
+P0-ROWS32 shared.down r21 m4 9.92 m0 14.75 -32.8 % ok
+P0-ROWS32 gdn.in_proj r24 m4 34.46 m0 45.22 -23.8 % ok
+P0-ROWS32 attn.qkv r24 m4 30.05 m0 40.32 -25.5 % ok
+P0-ROWS32 gdn.out_proj r24 m4 18.21 m0 32.22 -43.5 % ok
+P0-ROWS32 attn.o_proj r24 m4 17.82 m0 31.17 -42.8 % ok
+P0-ROWS32 attn.index_qk r24 m4 14.14 m0 22.24 -36.4 % ok
+P0-ROWS32 shared.gate_up r24 m4 15.04 m0 24.77 -39.3 % ok
+P0-ROWS32 shared.down r24 m4 9.98 m0 14.75 -32.3 % ok
+P0-ROWS32 gdn.in_proj r32 m4 34.18 m0 46.75 -26.9 % ok
+P0-ROWS32 attn.qkv r32 m4 30.37 m0 42.59 -28.7 % ok
+P0-ROWS32 gdn.out_proj r32 m4 18.18 m0 32.70 -44.4 % ok
+P0-ROWS32 attn.o_proj r32 m4 17.89 m0 32.32 -44.7 % ok
+P0-ROWS32 attn.index_qk r32 m4 14.08 m0 22.40 -37.1 % ok
+P0-ROWS32 shared.gate_up r32 m4 16.00 m0 26.27 -39.1 % ok
+P0-ROWS32 shared.down r32 m4 10.05 m0 15.74 -36.2 % ok
+P0-ROWS32-VERDICT READY (r18 crit -1250.3 us/step; r21 crit -1259.5 us/step; r24 crit -1272.2 us/step; engaged cells 15)
+P0 DONE

@@ -1,0 +1,113 @@
+# sass_rounds.py over hcr2.sass: single-TU build of hc_mix_v3.cu md5 4962492d3708fa286c5075a6c332e951 (quick-nvcc.sh, sm_120, 2026-09-24); flan:/srv/qwen5090/scratch/hcfast/r2/hcr2.sass
+# ROUND = loads issued together before the first wait on any of them. dots: the stream up to the first 'EXIT EXIT' is the sum-of-squares CTA; the main CTAs follow. '<loop' closes a rolled loop body (its rounds repeat per iteration: served dots, r1/r2 dots<8>).
+== void hcv3_served::gr_v2_up_i8_state_kernel<8, true>
+   fwd ld1 [R1] w(1) BAR fwd ld4 [R2] w(1) w(1) w(1) w(1) fwd ld4 [R3] w(1) w(1) w(1) w(1) fwd ld4 [R4] w(1) w(1) w(1) w(1) fwd <loop fwd ld4 [R5] w(1) w(1) w(1) w(1) BAR fwd ld1 [R6] w(1) fwd ld2 [R7] w(1) w(1) <loop fwd ld1 [R8] w(1) fwd ld1 [R9] w(1) fwd ld1 [R10] w(1) fwd ld1 [R11] w(1) fwd ld1 [R12] w(1) fwd ld1 [R13] w(1) fwd ld1 [R14] w(1) fwd ld1 [R15] w(1) BAR EXIT EXIT ld8 [R16] w(1) w(1) w(1) w(5) EXIT
+   rounds, static count over all paths in address order: 16
+== void hcv3_served::gr_v2_up_i8_state_kernel<4, true>
+   fwd ld1 [R1] w(1) BAR fwd ld4 [R2] w(1) w(1) w(1) w(1) fwd ld4 [R3] w(1) w(1) w(1) w(1) fwd ld4 [R4] w(1) w(1) w(1) w(1) fwd <loop fwd ld4 [R5] w(1) w(1) w(1) w(1) BAR fwd ld1 [R6] w(1) <loop fwd ld4 [R7] w(1) w(1) w(1) w(1) <loop fwd ld1 [R8] w(1) fwd ld1 [R9] w(1) fwd ld1 [R10] w(1) fwd ld1 [R11] w(1) BAR EXIT EXIT ld8 [R12] w(1) w(1) w(1) w(5) EXIT
+   rounds, static count over all paths in address order: 12
+== void hcv3_served::gr_v2_up_i8_state_kernel<2, true>
+   fwd ld1 [R1] w(1) BAR fwd ld4 [R2] w(1) w(1) w(1) w(1) fwd ld4 [R3] w(1) w(1) w(1) w(1) fwd ld4 [R4] w(1) w(1) w(1) w(1) fwd <loop fwd ld4 [R5] w(1) w(1) w(1) w(1) BAR fwd ld1 [R6] w(1) <loop fwd ld4 [R7] w(1) w(1) w(1) w(1) <loop fwd ld1 [R8] w(1) fwd ld1 [R9] w(1) BAR EXIT EXIT ld8 [R10] w(1) w(1) w(1) w(5) EXIT
+   rounds, static count over all paths in address order: 10
+== void hcv3_served::gr_v2_dots_i8_kernel<8>
+   fwd ld8 [R1] w(1) w(1) w(4) w(2) <loop BAR EXIT EXIT fwd ld4 fwd ld2 fwd [R2] w(6) fwd ld2 fwd [R3] w(2) fwd ld2 fwd [R4] w(2) fwd ld2 fwd [R5] w(2) fwd ld2 fwd [R6] w(2) fwd ld2 fwd [R7] w(2) fwd ld2 fwd [R8] w(2) fwd ld2 fwd [R9] w(2) fwd <loop BAR EXIT EXIT ld1 [R10] w(1) EXIT
+   rounds, static count over all paths in address order: 10
+== void hcv3_served::gr_v2_dots_i8_kernel<4>
+   fwd ld9 [R1] w(1) w(1) ld3 [R2] w(5) w(2) ld3 [R3] w(1) ld1 [R4] w(2) w(1) w(2) w(1) <loop fwd ld8 [R5] w(1) w(1) w(1) w(5) fwd ld4 [R6] w(1) w(1) w(1) w(1) BAR EXIT EXIT fwd ld4 fwd ld2 fwd [R7] w(6) fwd ld2 fwd [R8] w(2) fwd ld2 fwd [R9] w(2) fwd ld2 fwd [R10] w(2) fwd <loop BAR EXIT EXIT ld1 [R11] w(1) EXIT
+   rounds, static count over all paths in address order: 11
+== void hcv3_served::gr_v2_dots_i8_kernel<2>
+   fwd ld2 [R1] w(1) w(1) <loop fwd ld8 [R2] w(1) w(1) w(1) w(5) <loop BAR EXIT EXIT fwd ld4 fwd ld2 fwd [R3] w(6) fwd ld2 fwd [R4] w(2) fwd <loop BAR EXIT EXIT ld1 [R5] w(1) EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv3_served::gr_v2_dots_i8_kernel<1>
+   fwd ld1 [R1] w(1) ld6 [R2] w(1) ld1 [R3] w(2) w(2) w(1) w(1) <loop fwd ld2 [R4] w(1) w(1) fwd ld1 [R5] w(1) fwd ld1 [R6] w(1) fwd ld2 [R7] w(1) w(1) fwd ld1 [R8] w(1) BAR EXIT EXIT fwd ld4 fwd ld2 fwd [R9] w(6) fwd <loop BAR EXIT EXIT ld1 [R10] w(1) EXIT
+   rounds, static count over all paths in address order: 10
+== void hcv4::up_i8_state_v4_kernel<8, 4, true>
+   ld17 [R1] w(1) w(5) fwd w(11) fwd BAR fwd ld9 [R2] w(1) BAR EXIT w(8) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::up_i8_state_v4_kernel<4, 4, true>
+   ld19 [R1] w(1) w(1) w(2) fwd w(15) fwd BAR ld4 fwd BAR EXIT [R2] w(4) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::up_i8_state_v4_kernel<4, 2, true>
+   ld26 [R1] w(2) w(4) fwd w(20) fwd BAR fwd BAR EXIT EXIT
+   rounds, static count over all paths in address order: 1
+== void hcv4::up_i8_state_v4_kernel<2, 4, true>
+   ld18 [R1] w(1) w(1) w(1) fwd w(15) fwd BAR ld4 fwd BAR EXIT [R2] w(4) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::up_i8_state_v4_kernel<2, 2, true>
+   ld19 [R1] w(1) w(2) w(1) fwd w(15) fwd BAR ld4 fwd BAR EXIT [R2] w(4) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::up_i8_state_v4_kernel<1, 4, true>
+   ld17 [R1] w(1) w(1) fwd BAR fwd w(15) ld4 BAR EXIT [R2] w(4) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::up_i8_state_v4_kernel<1, 2, true>
+   ld18 [R1] w(1) w(2) fwd w(15) fwd BAR ld2 fwd ld2 BAR EXIT [R2] w(4) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv4::dots_i8_v4_kernel<8, 4, 0>
+   fwd ld14 [R1] w(1) w(1) w(1) w(11) ld26 [R2] w(1) w(4) w(6) w(15) BAR EXIT EXIT fwd ld1 [R3] w(1) ld4 fwd ld9 [R4] w(4) w(1) w(1) w(7) ld7 [R5] w(1) w(1) w(5) <loop BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv4::dots_i8_v4_kernel<4, 8, 0>
+   fwd ld20 [R1] w(1) w(1) w(1) w(17) BAR EXIT EXIT fwd ld28 [R2] w(1) w(1) w(22) ld8 [R3] w(1) w(1) w(6) ld5 fwd ld4 [R4] w(9) ld2 [R5] w(1) w(1) w(4) ld2 [R6] w(1) w(1) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 6
+== void hcv4::dots_i8_v4_kernel<4, 4, 1>
+   fwd ld20 [R1] w(1) w(1) w(1) w(17) BAR EXIT EXIT fwd ld23 [R2] w(1) w(3) w(18) ld3 [R3] w(1) w(1) ld11 fwd [R4] w(13) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<4, 4, 0>
+   fwd ld20 [R1] w(1) w(3) w(2) w(14) BAR EXIT EXIT fwd ld15 [R2] w(1) w(2) w(11) ld10 [R3] w(1) w(1) w(8) ld4 fwd ld8 [R4] w(5) w(1) w(1) w(6) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<2, 8, 2>
+   fwd ld10 [R1] w(1) w(1) w(2) w(6) BAR EXIT EXIT fwd ld22 [R2] w(1) w(1) w(19) ld3 [R3] w(1) w(1) w(1) ld12 fwd [R4] w(13) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<2, 8, 1>
+   fwd ld10 [R1] w(1) w(2) w(5) w(2) BAR EXIT EXIT fwd ld14 [R2] w(1) w(1) w(11) ld16 [R3] w(5) w(1) w(5) ld7 fwd [R4] w(13) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<2, 8, 0>
+   fwd ld10 [R1] w(1) w(1) w(2) w(6) BAR EXIT EXIT fwd ld13 [R2] w(1) w(1) w(10) ld20 [R3] w(1) w(1) w(10) fwd ld4 [R4] w(9) w(1) w(1) w(2) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<2, 4, 2>
+   fwd ld10 [R1] w(1) w(1) w(2) w(6) BAR EXIT EXIT fwd ld4 [R2] w(1) ld4 [R3] w(1) ld13 [R4] w(1) w(2) w(15) ld4 fwd [R5] w(5) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv4::dots_i8_v4_kernel<2, 4, 1>
+   fwd ld10 [R1] w(1) w(2) w(5) w(2) BAR EXIT EXIT fwd ld21 [R2] w(1) w(1) w(18) ld4 fwd [R3] w(5) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 3
+== void hcv4::dots_i8_v4_kernel<2, 4, 0>
+   fwd ld10 [R1] w(1) w(1) w(1) w(7) BAR EXIT EXIT fwd ld11 [R2] w(1) w(1) w(8) ld7 [R3] w(1) w(2) ld2 [R4] w(4) w(1) w(1) ld1 fwd ld4 [R5] w(2) w(1) w(1) w(2) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv4::dots_i8_v4_kernel<1, 8, 2>
+   fwd ld7 [R1] w(1) w(2) w(2) w(2) BAR EXIT EXIT ld15 [R2] w(1) w(1) ld5 [R3] w(12) ld6 [R4] w(1) w(4) ld1 [R5] w(6) w(1) ld4 fwd [R6] w(5) BAR EXIT EXIT
+   rounds, static count over all paths in address order: 6
+== void hcv4::dots_i8_v4_kernel<1, 8, 1>
+   fwd ld7 [R1] w(1) w(2) w(2) w(2) BAR EXIT EXIT ld10 [R2] w(1) w(3) ld16 [R3] w(5) ld1 [R4] w(1) w(15) w(1) ld4 fwd [R5] w(5) BAR EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv4::dots_i8_v4_kernel<1, 8, 0>
+   fwd ld7 [R1] w(1) w(2) w(2) w(2) BAR EXIT EXIT ld19 [R2] w(3) ld5 [R3] w(8) ld1 [R4] w(7) ld1 [R5] w(5) w(1) w(1) ld3 fwd ld2 [R6] w(4) w(1) w(1) BAR EXIT EXIT
+   rounds, static count over all paths in address order: 6
+== void hcv4::dots_i8_v4_kernel<1, 4, 2>
+   fwd ld7 [R1] w(1) w(2) w(3) w(1) BAR EXIT EXIT ld9 [R2] w(1) w(1) w(6) ld8 [R3] w(1) w(1) w(6) ld2 fwd [R4] w(3) BAR EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv4::dots_i8_v4_kernel<1, 4, 1>
+   fwd ld7 [R1] w(1) w(3) w(2) w(1) BAR EXIT EXIT ld7 [R2] w(1) w(1) ld1 [R3] w(4) ld9 [R4] w(1) w(1) w(8) ld2 fwd [R5] w(3) BAR EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv4::dots_i8_v4_kernel<1, 4, 0>
+   fwd ld7 [R1] w(1) w(3) w(2) w(1) BAR EXIT EXIT ld9 [R2] w(1) w(1) w(6) ld8 [R3] w(1) w(1) w(6) fwd ld2 [R4] w(1) w(1) BAR EXIT w(1) EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv3::up_i8_state_v3_kernel<4, 320, true>
+   ld12 [R1] w(1) w(1) fwd ld1 fwd [R2] w(11) ld1 [R3] w(1) fwd ld1 fwd [R4] w(1) ld1 [R5] w(1) fwd ld1 fwd [R6] w(1) BAR fwd ld8 fwd ld1 [R7] w(1) BAR EXIT w(8) EXIT
+   rounds, static count over all paths in address order: 7
+== void hcv3::up_i8_state_v3_kernel<2, 320, true>
+   ld14 [R1] w(1) w(1) fwd w(12) fwd BAR ld8 fwd ld1 [R2] w(1) BAR EXIT w(8) EXIT
+   rounds, static count over all paths in address order: 2
+== void hcv3::dots_i8_v3_kernel<8, 2560>
+   fwd ld14 [R1] w(1) ld1 [R2] w(2) ld2 [R3] w(1) ld2 [R4] w(10) ld21 [R5] w(3) w(1) w(2) w(20) BAR EXIT EXIT fwd ld1 [R6] w(1) ld4 fwd ld9 [R7] w(4) w(1) w(1) w(7) ld7 [R8] w(1) w(1) w(5) <loop BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 8
+== void hcv3::dots_i8_v3_kernel<4, 2560>
+   fwd ld20 [R1] w(1) w(1) w(1) w(17) BAR EXIT EXIT fwd ld21 [R2] w(1) w(1) w(18) ld1 [R3] w(1) ld7 [R4] w(1) w(1) w(1) fwd ld8 [R5] w(5) w(1) w(2) w(5) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 5
+== void hcv3::dots_i8_v3_kernel<2, 2560>
+   fwd ld10 [R1] w(1) w(3) w(4) w(2) BAR EXIT EXIT fwd ld12 [R2] w(1) w(1) w(8) ld7 [R3] w(1) w(1) w(5) ld2 fwd ld4 [R4] w(4) w(1) w(1) w(2) BAR EXIT EXIT EXIT
+   rounds, static count over all paths in address order: 4
+== void hcv3::dots_i8_v3_kernel<1, 2560>
+   fwd ld2 [R1] w(1) w(1) fwd ld1 [R2] w(1) fwd ld1 [R3] w(1) fwd ld1 [R4] w(1) BAR EXIT EXIT ld11 [R5] w(1) w(1) w(9) ld6 [R6] w(1) w(1) w(3) fwd ld2 [R7] w(1) w(1) BAR EXIT w(1) EXIT
+   rounds, static count over all paths in address order: 7
+== void hcv3::up_i8_state_v3_kernel<8, 320, true>
+   ld11 [R1] w(1) ld10 [R2] w(1) fwd ld1 fwd [R3] w(20) fwd BAR fwd ld9 [R4] w(1) BAR EXIT w(8) EXIT
+   rounds, static count over all paths in address order: 4

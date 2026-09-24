@@ -1,0 +1,24 @@
+# latchain r1: latency-chain levers for Flash-Next decode, all opt-in and default off, on top of the served stack-r2
+# (slotfix-r1 + hcfast-r1 + moefast-r1):
+#   EXL3_LC_GDN_RR=1              register-resident GDN recurrent kernel (read per launch)
+#   EXL3_LC_QSA_FORK=1            QSA indexer chain captured as a parallel graph branch (read at graph capture)
+#   EXL3_LC_GDN_FORK=1            GDN b/a GEMV captured as a parallel graph branch (read at graph capture)
+#   EXL3_LC_QSA_SPLIT_STAGES=N    QSA sparse split kernel num_stages (served 2; read at import)
+#   EXL3_LC_QSA_COMBINE_STAGES=N  QSA sparse combine kernel num_stages (served 1; read at import)
+#   EXL3_LC_QSA_DIV16=1           divisibility hints on both kernels' aligned args (read at import)
+# Unset = the served path.
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:stack-r2 -t tabbyapi:stack-latchain-r1 .
+#
+# Build context = this directory. No heredocs (legacy builder). The CPU test runs during the build; the GPU parity
+# test, the model-level parity script and the P0 bench are copied to /opt/latchain-r1/.
+ARG BASE=tabbyapi:stack-r2
+FROM ${BASE}
+ARG BASE
+ARG MAX_JOBS=4
+COPY latchain-r1.patch rebuild-native.py install-latchain.sh test_latchain_cpu.py test_latchain_parity.py bench_latchain_p0.py lc_model_parity.py /opt/latchain-r1/
+RUN MAX_JOBS=${MAX_JOBS} bash /opt/latchain-r1/install-latchain.sh && \
+    python3 /opt/latchain-r1/test_latchain_cpu.py && \
+    python3 -m py_compile /opt/latchain-r1/test_latchain_parity.py /opt/latchain-r1/bench_latchain_p0.py /opt/latchain-r1/lc_model_parity.py && \
+    python3 -c 'import torch, exllamav3_ext as e; assert e.latchain_revision == 1; print("latchain r1 landed (default off: EXL3_LC_* unset)")'
+LABEL local.latchain.base="${BASE}"

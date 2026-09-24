@@ -1,0 +1,50 @@
+# patch composition 2026-09-24T08:42:38Z; pristine = exllamav3 tree; patch -p1 --fuzz=0
+== order: hcfast
+-- hcfast dry run rc=0
+   patching file 'exllamav3_ext/bindings.cpp'
+   patching file 'exllamav3_ext/hc_mix_v3.cu'
+   patching file 'exllamav3_ext/hc_mix_v3.cuh'
+   patching file 'modules/hyperconnections.py'
+-- .rej/.orig files: 1 (pristine tree has 1)
+   bindings.cpp:69:#include "hc_mix_v3.cuh"
+   bindings.cpp:131:    m.attr("hc_mix_v3_revision") = 2;
+   bindings.cpp md5 3d2d9136954accb5fb92a0fb62356e51
+== order: moefast hcfast
+-- moefast dry run rc=0
+   patching file 'exllamav3_ext/bindings.cpp'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k2.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k3.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k4.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh'
+   patching file 'exllamav3_ext/quant/exl3_moe_coop.cu'
+   patching file 'exllamav3_ext/quant/exl3_moe_coop_v3_kernel.cuh'
+-- hcfast dry run rc=0
+   patching file 'exllamav3_ext/bindings.cpp'
+   patching file 'exllamav3_ext/hc_mix_v3.cu'
+   patching file 'exllamav3_ext/hc_mix_v3.cuh'
+   patching file 'modules/hyperconnections.py'
+-- .rej/.orig files: 1 (pristine tree has 1)
+   bindings.cpp:69:#include "hc_mix_v3.cuh"
+   bindings.cpp:131:    m.attr("hc_mix_v3_revision") = 2;
+   bindings.cpp:275:    m.attr("moe_coop_v3_revision") = 1;   // moefast r1: EXL3_MOE_COOP_V3 kernels present (default off)
+   bindings.cpp md5 ee33785aa4678ef3ff1c64644473a189
+== order: hcfast moefast
+-- hcfast dry run rc=0
+   patching file 'exllamav3_ext/bindings.cpp'
+   patching file 'exllamav3_ext/hc_mix_v3.cu'
+   patching file 'exllamav3_ext/hc_mix_v3.cuh'
+   patching file 'modules/hyperconnections.py'
+-- moefast dry run rc=0
+   patching file 'exllamav3_ext/bindings.cpp'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k2.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k3.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_k4.cu'
+   patching file 'exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh'
+   patching file 'exllamav3_ext/quant/exl3_moe_coop.cu'
+   patching file 'exllamav3_ext/quant/exl3_moe_coop_v3_kernel.cuh'
+-- .rej/.orig files: 1 (pristine tree has 1)
+   bindings.cpp:69:#include "hc_mix_v3.cuh"
+   bindings.cpp:131:    m.attr("hc_mix_v3_revision") = 2;
+   bindings.cpp:275:    m.attr("moe_coop_v3_revision") = 1;   // moefast r1: EXL3_MOE_COOP_V3 kernels present (default off)
+   bindings.cpp md5 ee33785aa4678ef3ff1c64644473a189
+COMPOSITION OK

@@ -1,0 +1,24 @@
+# moefast r3 on the served stack: BASE=tabbyapi:stack-r2 (slotfix-r1 + hcfast-r1 + moefast-r1, DAILY_IMG since R701).
+# moefast-r3.patch is cumulative over stack-r2: r2's kernels (EXL3_MOE_COOP_V3=3) + r3's shared-expert overlap
+# sub-flags (EXL3_SHARED_EXPERT_EARLY=1, EXL3_SHARED_EXPERT_PRIO=1; both need EXL3_SHARED_EXPERT_OVERLAP=1),
+# the diagnostic head kernel (EXL3_MOE_COOP_V3_HEAD=<ns>, mode 3) and the test entry exl3_moe_coop_ev. All default off:
+# unset = the served kernels and the served late fork; the served SASS is checked unchanged during the build.
+#
+#   docker build -f Dockerfile.box --build-arg BASE=tabbyapi:stack-r2 \
+#     --build-arg PATCH_SHA=$(sha256sum moefast-r3.patch | cut -c1-64) -t tabbyapi:stack-moefast-r3 .
+#
+# Build context = this directory. No heredocs (legacy builder). The CPU tests run during the build (part 2 of
+# test_moefast_r3_cpu.py imports the installed exllamav3: the early-fork guard in BlockSparseMLP.forward).
+ARG BASE=tabbyapi:stack-r2
+FROM ${BASE}
+ARG BASE
+ARG MAX_JOBS=4
+ARG PATCH_SHA=unset
+COPY moefast-r3.patch rebuild-native.py install-moefast.sh sass_hashes.py sass_identity.py test_moefast_parity.py bench_moefast_p0.py moefast_r3_side.py test_moefast_trace_cpu.py test_moefast_r3_cpu.py moe_timeline.py quick-nvcc.sh /opt/moefast-r3/
+COPY d0/d0_microbench.py /opt/moefast-r3/d0/
+RUN MAX_JOBS=${MAX_JOBS} MOEFAST_INSTALL_OUT=/opt/moefast-r3/install bash /opt/moefast-r3/install-moefast.sh && \
+    python3 /opt/moefast-r3/test_moefast_trace_cpu.py && \
+    MOEFAST_R3_REQUIRE_PART2=1 python3 /opt/moefast-r3/test_moefast_r3_cpu.py && \
+    python3 -m py_compile /opt/moefast-r3/test_moefast_parity.py /opt/moefast-r3/bench_moefast_p0.py /opt/moefast-r3/moefast_r3_side.py /opt/moefast-r3/moe_timeline.py && \
+    python3 -c 'import torch, exllamav3_ext as e; assert e.moe_coop_v3_revision == 3; print("moefast r3 landed (default off)")'
+LABEL local.moefast.base="${BASE}" local.moefast.round="r3" local.moefast.patch_sha256="${PATCH_SHA}"

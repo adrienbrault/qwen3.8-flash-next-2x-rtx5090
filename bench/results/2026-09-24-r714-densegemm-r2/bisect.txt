@@ -1,0 +1,174 @@
+W0924 16:20:07.349000 30 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+compiled r2 gemm
+compiled r2 mgemm
+compiled r2-ai gemm
+compiled r1 gemm
+compiled r2-ai mgemm
+compiled r1 mgemm
+compiled r2-nobpro gemm
+compiled r2-nobpro mgemm
+compiled r2-nobpro-ai gemm
+compiled r2-nobpro-ai mgemm
+bisect: compiles done in 26 s
+== r1 ()
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>              40   1752 |        128      8 |  706  582  170 | FAIL (> 8 + 64)
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>              40   1752 |        128     32 |  668  533  170 | FAIL (> 32 + 64)
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             255    640 |        179     16 |  454  547   57 | FAIL (> 16 + 64)
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             255    760 |        179     16 |  364  570   57 | FAIL (> 16 + 64)
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              40   1088 |        122     16 |  444  379  102 | FAIL (> 16 + 64)
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              40   1072 |        128     16 |  418  346  102 | FAIL (> 16 + 64)
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>              40   1368 |        128     56 |  666  638   66 | FAIL (> 56 + 64)
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>              40   1368 |        128     56 |  659  618   66 | FAIL (> 56 + 64)
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              64    784 |        122     16 |  739  592   42 | FAIL (> 16 + 64) (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              64    784 |        128     16 |  777  637   42 | FAIL (> 16 + 64) (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128    544 |        128     56 |  231  425   45 | FAIL (> 56 + 64) (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128    544 |        128     56 |  231  425   45 | FAIL (> 56 + 64) (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>             40   1824 |        128     24 |  746  638  170 | FAIL (> 24 + 64)
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>             40   1832 |        128      8 |  761  613  170 | FAIL (> 8 + 64)
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            255    768 |        194     16 |  518  619   57 | FAIL (> 16 + 64)
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            255    864 |        242     16 |  437  638   57 | FAIL (> 16 + 64)
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>             40   1168 |        128     16 |  490  427  102 | FAIL (> 16 + 64)
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>             40   1168 |        128     16 |  500  416  102 | FAIL (> 16 + 64)
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>             40   1528 |        128     80 |  755  700   66 | FAIL (> 80 + 64)
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>             40   1512 |        128     56 |  749  676   66 | FAIL (> 56 + 64)
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>             64    832 |        128     16 |  792  628   42 | FAIL (> 16 + 64) (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>             64    864 |        128     16 |  893  716   42 | FAIL (> 16 + 64) (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128    648 |        128     80 |  289  474   45 | FAIL (> 80 + 64) (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128    648 |        128     56 |  283  468   45 | FAIL (> 56 + 64) (rows32)
+BAR r1 FAIL rows16 0/16 rows32 0/8 max_stack16 1832 ROWS32 FAIL
+   ptxas:       1 1072 bytes stack frame, 1900 bytes spill stores, 1884 bytes spill loads
+   ptxas:       1 1088 bytes stack frame, 2056 bytes spill stores, 2012 bytes spill loads
+   ptxas:       1 1168 bytes stack frame, 2204 bytes spill stores, 2204 bytes spill loads
+   ptxas:       1 1168 bytes stack frame, 2252 bytes spill stores, 2176 bytes spill loads
+   ptxas:       1 1368 bytes stack frame, 3036 bytes spill stores, 2864 bytes spill loads
+   ptxas:       1 1368 bytes stack frame, 3116 bytes spill stores, 2892 bytes spill loads
+   ptxas:       1 1512 bytes stack frame, 3284 bytes spill stores, 3272 bytes spill loads
+   ptxas:       1 1528 bytes stack frame, 3380 bytes spill stores, 3296 bytes spill loads
+   ptxas:       1 1752 bytes stack frame, 2984 bytes spill stores, 2952 bytes spill loads
+   ptxas:       1 1752 bytes stack frame, 3200 bytes spill stores, 3092 bytes spill loads
+   ptxas:       1 1824 bytes stack frame, 3380 bytes spill stores, 3140 bytes spill loads
+   ptxas:       1 1832 bytes stack frame, 3280 bytes spill stores, 3200 bytes spill loads
+== r2 ()
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>             118      8 |        128      8 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>             120      8 |        128     32 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              75      8 |        122     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              86      8 |        128     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>             126      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>             124      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              73      8 |        122     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              78      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>            126      8 |        128     24 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>            124      8 |        128      8 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            212      8 |        194     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            212      8 |        242     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>            119      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>            118      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>            128      8 |        128     80 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>            128      8 |        128     56 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128     64 |        128     80 |   30   25    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128     64 |        128     56 |   13   24    0 | ok (rows32)
+BAR r2 PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 120 bytes spill loads
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 72 bytes spill loads
+   ptxas:      22 8 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+== r2-ai (-DDGV2_LAMBDA_AI=1)
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>             118      8 |        128      8 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>             120      8 |        128     32 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              75      8 |        122     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              86      8 |        128     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>             126      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>             124      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              73      8 |        122     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              78      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>            126      8 |        128     24 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>            124      8 |        128      8 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            212      8 |        194     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            212      8 |        242     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>            119      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>            118      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>            128      8 |        128     80 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>            128      8 |        128     56 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>            123      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128     64 |        128     80 |   30   25    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128     64 |        128     56 |   13   24    0 | ok (rows32)
+BAR r2-ai PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 120 bytes spill loads
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 72 bytes spill loads
+   ptxas:      22 8 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+== r2-nobpro (-DDGV2_BPRO=0)
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>             119      8 |        128      8 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>             122      8 |        128     32 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              81      8 |        122     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              86      8 |        128     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>             126      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>             124      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              81      8 |        122     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              80      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>            126      8 |        128     24 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>            125      8 |        128      8 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            212      8 |        194     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            212      8 |        242     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>            114      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>            117      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>            128      8 |        128     80 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>            128      8 |        128     56 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>            124      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>            124      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128     64 |        128     80 |   31   26    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128     64 |        128     56 |   13   24    0 | ok (rows32)
+BAR r2-nobpro PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 72 bytes spill loads
+   ptxas:       1 64 bytes stack frame, 96 bytes spill stores, 124 bytes spill loads
+   ptxas:      22 8 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+== r2-nobpro-ai (-DDGV2_BPRO=0 -DDGV2_LAMBDA_AI=1)
+twin                                                  REG  STACK | served REG  STACK |  LDL  STL CALL | verdict
+exl3_gemm_v2_kernel<fp32=0,16,16,128,6,5>             119      8 |        128      8 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,128,6,5>             122      8 |        128     32 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,16,512,4,3>             128      8 |        179     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,128,4,3>              81      8 |        122     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,128,4,3>              86      8 |        128     16 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,16,32,256,4,3>             126      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=1,16,32,256,4,3>             124      8 |        128     56 |    0    2    0 | ok
+exl3_gemm_v2_kernel<fp32=0,32,32,128,4,3>              81      8 |        122     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,128,4,3>              80      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=0,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_gemm_v2_kernel<fp32=1,32,32,256,4,3>             128      8 |        128     56 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,16,16,128,6,5>            126      8 |        128     24 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,128,6,5>            125      8 |        128      8 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,16,512,4,3>            212      8 |        194     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,16,512,4,3>            212      8 |        242     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,128,4,3>            114      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,128,4,3>            117      8 |        128     16 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,16,32,256,4,3>            128      8 |        128     80 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=1,16,32,256,4,3>            128      8 |        128     56 |    0    2    0 | ok
+exl3_mgemm_v2_kernel<fp32=0,32,32,128,4,3>            124      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,128,4,3>            124      8 |        128     16 |    0    2    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=0,32,32,256,4,3>            128     64 |        128     80 |   31   26    0 | ok (rows32)
+exl3_mgemm_v2_kernel<fp32=1,32,32,256,4,3>            128     64 |        128     56 |   13   24    0 | ok (rows32)
+BAR r2-nobpro-ai PASS rows16 16/16 rows32 8/8 max_stack16 8 ROWS32 PASS
+   ptxas:       1 64 bytes stack frame, 92 bytes spill stores, 72 bytes spill loads
+   ptxas:       1 64 bytes stack frame, 96 bytes spill stores, 124 bytes spill loads
+   ptxas:      22 8 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+PROBE VALID (r1 must fail the bar, as its R710 build did)
+BISECT-CHOICE r2 none
+ROWS32-COMPILE PASS r2

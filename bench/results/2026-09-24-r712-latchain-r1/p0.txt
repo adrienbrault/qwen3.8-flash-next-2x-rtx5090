@@ -1,0 +1,21 @@
+[p0] GDN c1d3 (bsz 1, 4 rows/job, history 1): served 14.93 us, rr 9.92 us (-33.5 %), per step x36 -180.2 us
+[p0] GDN c4d3 (bsz 4, 4 rows/job, history 1): served 27.85 us, rr 19.96 us (-28.3 %), per step x36 -283.9 us
+[p0] GDN c8d1 (bsz 8, 2 rows/job, history 1): served 27.24 us, rr 24.39 us (-10.5 %), per step x36 -102.5 us
+[p0] GDN c1d0 (bsz 1, 1 rows/job, history 0): served 3.53 us, rr 3.31 us (-6.3 %), per step x36 -8.0 us
+[p0] GDN c4d0 (bsz 4, 1 rows/job, history 0): served 9.14 us, rr 8.84 us (-3.2 %), per step x36 -10.5 us
+[p0] GDN c8d0 (bsz 8, 1 rows/job, history 0): served 18.62 us, rr 15.96 us (-14.3 %), per step x36 -95.9 us
+[p0] QSA c1d3 (R 4, 8x17 CTAs, 23 copies): split+combine us: s2c1d0 29.10 s2c1d1 20.51 s2c2d0 29.09 s2c2d1 20.52 s3c1d0 29.50 s3c1d1 20.59 s3c2d0 29.50 s3c2d1 20.57 s4c1d0 31.49 s4c1d1 20.53 s4c2d0 31.47 s4c2d1 20.53
+[p0] QSA c1d3 best s2c1d1 20.51 us vs served 29.10 (-29.5 %; x12 layers -103.1 us/step)
+[p0] QSA c4d3 (R 16, 32x10 CTAs, 6 copies): split+combine us: s2c1d0 53.66 s2c1d1 37.68 s2c2d0 53.69 s2c2d1 37.69 s3c1d0 57.00 s3c1d1 37.96 s3c2d0 57.13 s3c2d1 37.96 s4c1d0 62.05 s4c1d1 38.93 s4c2d0 62.05 s4c2d1 38.98
+[p0] QSA c4d3 best s2c1d1 37.68 us vs served 53.66 (-29.8 %; x12 layers -191.7 us/step)
+[p0] QSA c8d1 (R 16, 32x10 CTAs, 6 copies): split+combine us: s2c1d0 54.89 s2c1d1 40.21 s2c2d0 54.92 s2c2d1 40.27 s3c1d0 58.16 s3c1d1 40.68 s3c2d0 58.09 s3c2d1 40.76 s4c1d0 62.98 s4c1d1 41.07 s4c2d0 62.88 s4c2d1 41.11
+[p0] QSA c8d1 best s2c1d1 40.21 us vs served 54.89 (-26.7 %; x12 layers -176.2 us/step)
+[p0] QSA c1d0 (R 1, 2x17 CTAs, 64 copies): split+combine us: s2c1d0 28.82 s2c1d1 20.29 s2c2d0 28.81 s2c2d1 20.31 s3c1d0 29.25 s3c1d1 20.52 s3c2d0 29.24 s3c2d1 20.54 s4c1d0 30.81 s4c1d1 20.15 s4c2d0 30.80 s4c2d1 20.15
+[p0] QSA c1d0 best s4c1d1 20.15 us vs served 28.82 (-30.1 %; x12 layers -104.0 us/step)
+[p0] QSA c4d0 (R 4, 8x17 CTAs, 23 copies): split+combine us: s2c1d0 29.95 s2c1d1 22.36 s2c2d0 29.95 s2c2d1 22.35 s3c1d0 31.02 s3c1d1 22.67 s3c2d0 31.03 s3c2d1 22.67 s4c1d0 32.43 s4c1d1 22.09 s4c2d0 32.35 s4c2d1 22.09
+[p0] QSA c4d0 best s4c2d1 22.09 us vs served 29.95 (-26.2 %; x12 layers -94.3 us/step)
+[p0] QSA c8d0 (R 8, 16x17 CTAs, 12 copies): split+combine us: s2c1d0 38.91 s2c1d1 29.46 s2c2d0 38.92 s2c2d1 29.46 s3c1d0 41.55 s3c1d1 30.17 s3c2d0 41.54 s3c2d1 30.21 s4c1d0 43.86 s4c1d1 29.86 s4c2d0 43.89 s4c2d1 29.84
+[p0] QSA c8d0 best s2c2d1 29.46 us vs served 38.91 (-24.3 %; x12 layers -113.4 us/step)
+[p0] QT summed drafting-shape us: served 137.65, s2c1d1 98.40
+[p0] QT choice EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1
+[p0] done in 3 s -> /results/p0/p0.json

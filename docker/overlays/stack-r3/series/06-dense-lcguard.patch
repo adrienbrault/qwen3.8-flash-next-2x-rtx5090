@@ -1,0 +1,206 @@
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -168,6 +168,8 @@
+     m.def("dense_v2_set_mode", &dense_v2_set_mode, "dense_v2_set_mode");
+     m.def("dense_v2_launch_counts", &dense_v2_launch_counts, "dense_v2_launch_counts");
+     m.def("dense_v2_reset_counts", &dense_v2_reset_counts, "dense_v2_reset_counts");
++    m.attr("dense_v2_lc_guard") = DENSE_V2_LC_GUARD;   // stack-r3: latchain side-branch dense calls use their own V2 scratch
++    m.def("dense_v2_lc_side_counts", &dense_v2_lc_side_counts, "dense_v2_lc_side_counts");
+     m.def("exl3_gemm_num_kernel_shapes", &exl3_gemm_num_kernel_shapes, "exl3_gemm_num_kernel_shapes");
+     m.def("exl3_gemm_shape_compat", &exl3_gemm_shape_compat, "exl3_gemm_shape_compat");
+     m.def("g_get_cc", &g_get_cc, "g_get_cc");
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/quant/exl3_dense_v2.cu b/exllamav3_ext/quant/exl3_dense_v2.cu
+--- a/exllamav3_ext/quant/exl3_dense_v2.cu
++++ b/exllamav3_ext/quant/exl3_dense_v2.cu
+@@ -9,6 +9,7 @@
+ #include "coop_autotune.cuh"
+ #include "exl3_gemm_inner_v2.cuh"   // SMEM_MAX, exl3_dense_v2_slot_floats
+ #include <atomic>
++#include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
+ #include <map>
+@@ -33,6 +34,10 @@
+ // captured later find it; never during graph capture, never when both flags are off
+ #define DENSE_V2_WS_BYTES        ((size_t) 4 << 20)
+ #define DENSE_V2_WS_BYTES_ROWS32 ((size_t) 8 << 20)
++// stack-r3 lcguard: side-branch slot region, allocated behind the main slots only when a gemm / mgemm twin can run
++// (EXL3_DENSE_V2 = 1 | 2 or EXL3_DENSE_ROWS32) AND latchain's QSA fork is requested (EXL3_LC_QSA_FORK=1, read as a
++// plain env string: no latchain symbol). Mode 3 (gemv twin only) or no fork: 0 bytes, the r1/r2 layout unchanged
++#define DENSE_V2_WS_SIDE_BYTES   ((size_t) 2 << 20)
+ 
+ // --------------------------------------------------------------------------------------------- modes
+ 
+@@ -40,6 +45,8 @@
+ static std::atomic<int> g_rows32{-1};
+ static std::atomic<int64_t> g_count_gemm{0};
+ static std::atomic<int64_t> g_count_gemv{0};
++static std::atomic<int64_t> g_count_side_twin{0};
++static std::atomic<int64_t> g_count_side_served{0};
+ 
+ static int parse_flag(const char* name, int max_value)
+ {
+@@ -94,14 +101,40 @@
+ {
+     g_count_gemm.store(0);
+     g_count_gemv.store(0);
++    g_count_side_twin.store(0);
++    g_count_side_served.store(0);
+ }
+ 
++std::tuple<int64_t, int64_t> dense_v2_lc_side_counts()
++{
++    return std::make_tuple(g_count_side_twin.load(), g_count_side_served.load());
++}
++
++// stack-r3 lcguard (exl3_dense_v2.cuh): true = this call runs on latchain's QSA side branch and must use the side
++// scratch. Logged once per device, so a served container log shows that the side path was taken.
++static bool lc_side_branch(void** kernel_args, int device)
++{
++    if (!dense_v2_on_side_branch(kernel_args, DevCtx::instance().get_locks(device))) return false;
++    static std::atomic<bool> logged[MAX_DEVICES];
++    if (!logged[device].exchange(true))
++        fprintf(stderr, "densegemm lcguard: device %d: dense calls on the QSA side branch use the side scratch (hctr upper half, side slots)\n", device);
++    return true;
++}
++
++static bool lc_fork_requested()
++{
++    const char* e = std::getenv("EXL3_LC_QSA_FORK");
++    return e && !std::strcmp(e, "1");
++}
++
+ // --------------------------------------------------------------------------------------------- workspace
+ 
+ struct DenseV2Ws
+ {
+     float* slots = nullptr;
+     size_t slot_bytes = 0;
++    float* side_slots = nullptr;    // stack-r3 lcguard: latchain side-branch gemm twins (0 bytes unless requested)
++    size_t side_bytes = 0;
+     int* hctr = nullptr;
+     bool tried = false;
+ };
+@@ -127,15 +160,16 @@
+     w.tried = true;
+ 
+     size_t slot_bytes = dense_v2_rows32() ? DENSE_V2_WS_BYTES_ROWS32 : DENSE_V2_WS_BYTES;
++    size_t side_bytes = ((dense_v2_gemm_on() || dense_v2_rows32()) && lc_fork_requested()) ? DENSE_V2_WS_SIDE_BYTES : 0;
+     size_t hctr_bytes = (size_t) DENSE_V2_GEMV_MAX_HBLOCKS * sizeof(int);
+ 
+     // Relaxed capture mode around the allocation, in case another stream of this thread is capturing
+     cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
+     cudaThreadExchangeStreamCaptureMode(&mode);
+     void* p = nullptr;
+-    cudaError_t e = cudaMalloc(&p, slot_bytes + hctr_bytes);
++    cudaError_t e = cudaMalloc(&p, slot_bytes + side_bytes + hctr_bytes);
+     // Zeroed and complete before any stream can use it (the first caller may be a side stream)
+-    if (e == cudaSuccess) e = cudaMemsetAsync((char*) p + slot_bytes, 0, hctr_bytes, stream);
++    if (e == cudaSuccess) e = cudaMemsetAsync((char*) p + slot_bytes + side_bytes, 0, hctr_bytes, stream);
+     if (e == cudaSuccess) e = cudaStreamSynchronize(stream);
+     cudaThreadExchangeStreamCaptureMode(&mode);
+ 
+@@ -149,7 +183,9 @@
+     }
+     w.slots = (float*) p;
+     w.slot_bytes = slot_bytes;
+-    w.hctr = (int*) ((char*) p + slot_bytes);
++    w.side_slots = side_bytes ? (float*) ((char*) p + slot_bytes) : nullptr;
++    w.side_bytes = side_bytes;
++    w.hctr = (int*) ((char*) p + slot_bytes + side_bytes);
+     return true;
+ }
+ 
+@@ -224,6 +260,7 @@
+     int device, cudaStream_t stream, int* out_tag
+ )
+ {
++    bool side = lc_side_branch(kernel_args, device);    // stack-r3 lcguard
+     (void) ws_ready(device, stream);    // any shape, so the workspace exists before decode graphs are captured
+     CoopAutotuneLaunch cfg;
+     int tm, tn;
+@@ -233,8 +270,14 @@
+     if (cfg.num_sms > tiles) return nullptr;
+ 
+     size_t need = (size_t) cfg.num_sms * exl3_dense_v2_slot_floats(tm, tn, size_m) * sizeof(float);
+-    if (!ws_ready(device, stream) || need > g_ws[device].slot_bytes) return nullptr;
+-    float* ws = g_ws[device].slots;
++    if (!ws_ready(device, stream)) return nullptr;
++    if (side && need > g_ws[device].side_bytes)
++    {
++        g_count_side_served.fetch_add(1, std::memory_order_relaxed);
++        return nullptr;                 // no side region (or too small): the served kernel, as without densegemm
++    }
++    if (!side && need > g_ws[device].slot_bytes) return nullptr;
++    float* ws = side ? g_ws[device].side_slots : g_ws[device].slots;
+ 
+     void* args[11];
+     for (int i = 0; i < 10; ++i) args[i] = kernel_args[i];
+@@ -243,6 +286,7 @@
+     ensure_smem_attr(kernel, device);
+     cuda_check(cudaLaunchCooperativeKernel(kernel, dim3(cfg.num_sms, 1, 1), cfg.block_dim, args, SMEM_MAX, stream));
+     g_count_gemm.fetch_add(1, std::memory_order_relaxed);
++    if (side) g_count_side_twin.fetch_add(1, std::memory_order_relaxed);
+     *out_tag = cfg.tag;
+     return kernel;
+ }
+@@ -283,9 +327,12 @@
+     int block_dim, int cols, int device, cudaStream_t stream
+ )
+ {
++    bool side = lc_side_branch(kernel_args, device);    // stack-r3 lcguard
+     if (!dense_v2_gemv_on() || K != 4 || cb != 2) return nullptr;
+     if (mmode < 0 || mmode > 1 || cfg < 0 || cfg > 1) return nullptr;
+-    if (size_n % 128 || size_n / 128 > DENSE_V2_GEMV_MAX_HBLOCKS) return nullptr;
++    // stack-r3 lcguard: each branch owns half of the counters (main [0, H/2), side [H/2, H)); the largest served
++    // dense K4 gemv call needs 20 blocks (size_n 2560)
++    if (size_n % 128 || size_n / 128 > DENSE_V2_GEMV_MAX_HBLOCKS / 2) return nullptr;
+     const uint16_t* B_ptr = *((const uint16_t* const*) kernel_args[1]);
+     if (((uintptr_t) B_ptr) & 15) return nullptr;   // 16-byte cp.async of the weight rows
+ 
+@@ -298,12 +345,13 @@
+     int grid = MIN(size_n / cols, max_blocks);
+     if (grid < 1) return nullptr;
+ 
+-    int* hctr = g_ws[device].hctr;
++    int* hctr = g_ws[device].hctr + (side ? DENSE_V2_GEMV_MAX_HBLOCKS / 2 : 0);
+     void* args[11];
+     for (int i = 0; i < 10; ++i) args[i] = kernel_args[i];
+     args[10] = (void*) &hctr;
+ 
+     cuda_check(cudaLaunchCooperativeKernel(kernel, dim3(grid), dim3(block_dim), args, 0, stream));
+     g_count_gemv.fetch_add(1, std::memory_order_relaxed);
++    if (side) g_count_side_twin.fetch_add(1, std::memory_order_relaxed);
+     return kernel;
+ }
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/quant/exl3_dense_v2.cuh b/exllamav3_ext/quant/exl3_dense_v2.cuh
+--- a/exllamav3_ext/quant/exl3_dense_v2.cuh
++++ b/exllamav3_ext/quant/exl3_dense_v2.cuh
+@@ -27,6 +27,26 @@
+ inline bool dense_v2_gemm_on() { int m = dense_v2_mode(); return m == 1 || m == 2; }
+ inline bool dense_v2_gemv_on() { int m = dense_v2_mode(); return m == 1 || m == 3; }
+ 
++// stack-r3 lcguard (latchain EXL3_LC_QSA_FORK x densegemm). latchain captures the QSA indexer chain of each
++// attention layer on a side stream that runs concurrently with the main branch's q/k/v projections; its one dense
++// call, exl3_gemm_gr(index_qk), passes locks = the device's lock base + LC_LOCKS_ALT_OFFSET (libtorch/lc_fork.h).
++// The V2 twins keep per-device scratch (g_ws in exl3_dense_v2.cu): partial-sum slots (gemm / mgemm twins) and
++// output-block arrival counters (gemv twin), one copy each, so a twin on the side branch would share them with a
++// concurrent main-branch twin. A side-branch call therefore gets its own scratch: the gemv twin counts in the upper
++// half of hctr (the main branch uses the lower half; both halves are bounded to DENSE_V2_GEMV_MAX_HBLOCKS / 2
++// output blocks), the gemm twin writes a separate side slot region; a call that does not fit takes the served
++// kernel. Same kernels, same grids, same arithmetic: only the scratch addresses differ, baked into the captured
++// node like every other argument. The branch is read from the call's own locks argument (index 6 of the 10
++// exl3_gemm_kernel arguments), so this compiles with or without latchain: without it, and on every main-branch
++// call, locks is the base pointer and nothing changes. exl3_mgemm_gr never runs on the side branch.
++#define DENSE_V2_LC_GUARD 1
++inline bool dense_v2_on_side_branch(void* const* kernel_args, const int* base_locks)
++{
++    const int* locks = *((const int* const*) kernel_args[6]);
++    return locks != base_locks;
++}
++std::tuple<int64_t, int64_t> dense_v2_lc_side_counts();   // (side-branch twin launches, side calls sent to served), tests
++
+ // V2 twin of the autotuned exl3_gemm_kernel launch this call would get (cache hit only). Returns
+ // the launched kernel (for graph parameter recording) and sets *out_tag, or nullptr (nothing launched)
+ void* dense_v2_launch_gemm

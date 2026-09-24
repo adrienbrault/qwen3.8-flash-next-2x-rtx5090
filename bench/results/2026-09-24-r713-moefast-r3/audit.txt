@@ -1,0 +1,633 @@
+2026-09-24T12:53:03+00:00 [r713-moefast-r3] queued behind: r709c-drafttopk-r1(pid 97596)
+r710b-densegemm-gv(pid 332366)
+r711-draft-policy-p3(pid 91622)
+r712-latchain-r1(pid 179721)
+2026-09-24T15:27:31+00:00 [r713-moefast-r3] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; BASE tabbyapi:stack-r2; IMG tabbyapi:stack-moefast-r3; patch sha 7188742b0c2d1e7f6a51f65649c625fb1c3986637444a286019a8a03a0ca50dc; rounds 6; c2d3 0
+2026-09-24T15:27:31+00:00 [r713-moefast-r3] building tabbyapi:stack-moefast-r3 on tabbyapi:stack-r2
+  [build] Step 8/9 : RUN MAX_JOBS=${MAX_JOBS} MOEFAST_INSTALL_OUT=/opt/moefast-r3/install bash /opt/moefast-r3/install-moefast.sh &&     python3 /opt/moefast-r3/test_moefast_trace_cpu.py &&     MOEFAST_R3_REQUIRE_PART2=1 python3 /opt/moefast-r3/test_moefast_r3_cpu.py &&     python3 -m py_compile /opt/moefast-r3/test_moefast_parity.py /opt/moefast-r3/bench_moefast_p0.py /opt/moefast-r3/moefast_r3_side.py /opt/moefast-r3/moe_timeline.py &&     python3 -c 'import torch, exllamav3_ext as e; assert e.moe_coop_v3_revision == 3; print("moefast r3 landed (default off)")'
+  [build] moefast-r3: base functions 1533; unchanged 1533; changed or missing 0; new 37 (r2 A/B 36, r3 head 1, other 0)
+  [build] moefast-r3: served SASS identical (whitespace collapsed); 36 r2 kernels + 1 head kernel added
+  [build] moefast r3 landed: patch applied over stack-r2, exllamav3_ext rebuilt for sm_120, moe_coop_v3_revision=3, served SASS identical, 36 r2 + 1 head kernels (all flags default off)
+  [build] CPU TESTS PASS
+  [build] moefast r3 landed (default off)
+2026-09-24T15:36:39+00:00 [r713-moefast-r3] image tabbyapi:stack-moefast-r3: moefast 3 hcfast r1
+2026-09-24T15:36:50+00:00 [r713-moefast-r3] parity rc=0: [parity] join stress real:model.language_model.layers.20.mlp K2 rows 16 mode 3: 200/200 launches equal [parity] side real:model.language_model.layers.3.mlp K3: 231/231 equal (arms ['late-V2', 'late-m2', 'late-m3', 'early-m3', 'earlyP-m3', 'early-m2', 'earlyP-m2', 'lateP-m3', 'head1-m3', 'head2000-m3', 'serial-m3']) [parity] join stress real:model.language_model.layers.3.mlp K3 rows 4 mode 2: 200/200 launches equal [parity] join stress real:model.language_model.layers.3.mlp K3 rows 4 mode 3: 200/200 launches equal [parity] join stress real:model.language_model.layers.3.mlp K3 rows 16 mode 2: 200/200 launches equal [parity] join stress real:model.language_model.layers.3.mlp K3 rows 16 mode 3: 200/200 launches equal [parity] 10208/10208 comparisons equal; dispatch ok PARITY PASS 
+2026-09-24T15:39:10+00:00 [r713-moefast-r3] P0 rc=0
+  [side] 48 shared experts K=[4] I=640 codebook mcg=False mul1=True; all tensors real
+  [p0] side streams: served priority 0, high -3 (range (0, -3))
+  [p0] K2/r1/D10      ref   58.18  m2   58.08  m3   58.02  m3H   58.18  m3H2   57.95  m3P   58.85  m3E   46.40  m3EP   46.69  m2E   46.40  m2EP   46.53  ser   68.96
+  [p0]   ref   gap   10.4  sh-A0   11.4  sh-A1    8.3  sh span   20.5  moe span   48.5  call   56.9  head/rot/A/B 0.0/0.0/23.6/14.4
+  [p0]   m2    gap   10.4  sh-A0   11.3  sh-A1    8.3  sh span   20.5  moe span   48.7  call   56.9  head/rot/A/B 0.0/0.0/23.5/14.5
+  [p0]   m3    gap   10.5  sh-A0   11.4  sh-A1    8.3  sh span   20.5  moe span   48.5  call   56.9  head/rot/A/B 0.0/0.0/23.5/14.5
+  [p0]   m3H   gap   10.5  sh-A0   11.3  sh-A1    8.4  sh span   20.5  moe span   48.5  call   56.9  head/rot/A/B 0.0/0.0/23.5/14.5
+  [p0]   m3H2  gap   10.4  sh-A0   11.4  sh-A1    8.2  sh span   20.5  moe span   48.4  call   56.8  head/rot/A/B 0.0/0.0/23.5/14.5
+  [p0]   m3P   gap   10.5  sh-A0   11.3  sh-A1    8.4  sh span   20.6  moe span   48.4  call   56.8  head/rot/A/B 0.0/0.0/23.5/14.4
+  [p0]   m3E   gap    1.9  sh-A0   -6.2  sh-A1   -2.0  sh span   24.0  moe span   36.3  call   44.7  head/rot/A/B 0.0/0.0/19.9/14.5
+  [p0]   m3EP  gap    1.8  sh-A0   -6.2  sh-A1   -2.7  sh span   23.3  moe span   36.3  call   44.7  head/rot/A/B 0.0/0.0/19.9/14.5
+  [p0]   m2E   gap    1.9  sh-A0   -6.2  sh-A1   -2.0  sh span   23.9  moe span   36.2  call   44.6  head/rot/A/B 0.0/0.0/19.9/14.4
+  [p0]   m2EP  gap    1.9  sh-A0   -6.2  sh-A1   -2.6  sh span   23.2  moe span   36.3  call   44.7  head/rot/A/B 0.0/0.0/19.9/14.4
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -21.9  sh span   20.9  moe span   35.3  call   67.1  head/rot/A/B 0.0/0.0/20.5/14.5
+  [p0] K2/r4/D28      ref   89.50  m2   77.50  m3   75.23  m3H   77.09  m3H2   78.11  m3P   75.55  m3E   71.04  m3EP   71.33  m2E   70.59  m2EP   70.98  ser   88.86
+  [p0]   ref   gap    1.5  sh-A0   -1.5  sh-A1   -7.8  sh span   32.5  moe span   79.0  call   88.1  head/rot/A/B 0.0/3.6/38.8/35.3
+  [p0]   m2    gap    1.0  sh-A0   -1.8  sh-A1   -9.8  sh span   29.1  moe span   67.0  call   76.0  head/rot/A/B 0.0/3.6/37.3/24.8
+  [p0]   m3    gap   12.8  sh-A0   19.6  sh-A1   11.2  sh span   21.2  moe span   66.2  call   75.3  head/rot/A/B 0.0/0.0/29.5/23.9
+  [p0]   m3H   gap   12.5  sh-A0   19.5  sh-A1   11.1  sh span   21.2  moe span   66.9  call   75.8  head/rot/A/B 0.7/0.0/29.5/24.0
+  [p0]   m3H2  gap    1.4  sh-A0   -0.7  sh-A1  -10.8  sh span   29.3  moe span   68.2  call   77.1  head/rot/A/B 2.7/0.0/39.6/24.0
+  [p0]   m3P   gap   12.6  sh-A0   19.5  sh-A1   11.0  sh span   21.1  moe span   65.7  call   74.7  head/rot/A/B 0.0/0.0/29.5/24.0
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1   -6.2  sh span   34.4  moe span   60.5  call   69.4  head/rot/A/B 0.0/0.0/35.0/24.0
+  [p0]   m3EP  gap    1.7  sh-A0   -5.5  sh-A1   -6.3  sh span   34.3  moe span   60.6  call   69.5  head/rot/A/B 0.0/0.0/35.1/24.0
+  [p0]   m2E   gap    1.8  sh-A0   -9.2  sh-A1   -1.7  sh span   36.8  moe span   59.5  call   68.6  head/rot/A/B 0.0/3.4/29.3/24.8
+  [p0]   m2EP  gap    2.0  sh-A0   -9.2  sh-A1   -2.0  sh span   36.7  moe span   59.6  call   68.7  head/rot/A/B 0.0/3.4/29.3/24.8
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -30.9  sh span   21.3  moe span   54.1  call   87.1  head/rot/A/B 0.0/0.0/29.7/24.2
+  [p0] K2/r16/D77     ref  141.79  m2  132.51  m3  142.75  m3H  143.23  m3H2  136.64  m3P  142.72  m3E  130.91  m3EP  132.42  m2E  130.53  m2EP  130.56  ser  156.61
+  [p0]   ref   gap    1.4  sh-A0   -5.8  sh-A1   -5.7  sh span   72.9  moe span  131.7  call  140.5  head/rot/A/B 0.0/7.7/72.8/49.3
+  [p0]   m2    gap    4.4  sh-A0   -5.5  sh-A1    2.4  sh span   70.2  moe span  121.6  call  130.7  head/rot/A/B 0.0/7.8/62.3/47.3
+  [p0]   m3    gap   15.9  sh-A0   58.3  sh-A1   14.4  sh span   24.1  moe span  132.2  call  141.3  head/rot/A/B 0.0/0.0/67.9/48.4
+  [p0]   m3H   gap   16.0  sh-A0   58.4  sh-A1   14.4  sh span   24.0  moe span  133.2  call  142.3  head/rot/A/B 0.7/0.0/68.0/48.6
+  [p0]   m3H2  gap    2.1  sh-A0   -0.6  sh-A1    0.3  sh span   72.9  moe span  126.0  call  134.8  head/rot/A/B 2.7/0.0/71.9/48.6
+  [p0]   m3P   gap   15.8  sh-A0   58.5  sh-A1   14.4  sh span   24.0  moe span  132.5  call  141.4  head/rot/A/B 0.0/0.0/68.0/48.6
+  [p0]   m3E   gap    3.8  sh-A0   -6.1  sh-A1    2.5  sh span   76.4  moe span  120.0  call  129.0  head/rot/A/B 0.0/0.0/67.8/48.5
+  [p0]   m3EP  gap    3.8  sh-A0   -6.1  sh-A1    2.4  sh span   76.3  moe span  120.5  call  129.4  head/rot/A/B 0.0/0.0/67.7/48.5
+  [p0]   m2E   gap    1.9  sh-A0  -14.1  sh-A1   -2.6  sh span   73.7  moe span  120.5  call  129.8  head/rot/A/B 0.0/7.7/62.4/48.2
+  [p0]   m2EP  gap    1.5  sh-A0  -14.1  sh-A1   -2.4  sh span   74.2  moe span  119.4  call  128.8  head/rot/A/B 0.0/7.7/62.1/48.2
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1  -70.6  sh span   24.2  moe span  117.7  call  154.4  head/rot/A/B 0.0/0.0/68.6/48.6
+  [p0] K2/r2/D20      ref   69.31  m2   62.88  m3   66.98  m3H   67.26  m3H2   65.54  m3P   67.90  m3E   62.66  m3EP   62.91  m2E   60.83  m2EP   61.12  ser   83.62
+  [p0]   ref   gap    2.4  sh-A0   -0.9  sh-A1    0.6  sh span   31.4  moe span   60.1  call   69.2  head/rot/A/B 0.0/3.2/29.9/24.0
+  [p0]   m2    gap    4.4  sh-A0   -1.8  sh-A1    2.5  sh span   30.0  moe span   52.3  call   61.2  head/rot/A/B 0.0/3.2/25.8/18.8
+  [p0]   m3    gap    3.9  sh-A0   13.5  sh-A1    2.7  sh span   22.6  moe span   56.6  call   65.5  head/rot/A/B 0.0/0.0/33.3/19.3
+  [p0]   m3H   gap    4.5  sh-A0   13.5  sh-A1    2.7  sh span   22.6  moe span   58.2  call   67.2  head/rot/A/B 0.7/0.0/33.3/19.3
+  [p0]   m3H2  gap    1.5  sh-A0   -0.2  sh-A1   -0.4  sh span   32.2  moe span   56.3  call   65.3  head/rot/A/B 2.7/0.0/32.2/19.3
+  [p0]   m3P   gap    3.8  sh-A0   13.5  sh-A1    2.7  sh span   22.5  moe span   56.4  call   65.3  head/rot/A/B 0.0/0.0/33.3/19.3
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1   -0.1  sh span   36.7  moe span   52.0  call   61.1  head/rot/A/B 0.0/0.0/31.2/19.2
+  [p0]   m3EP  gap    2.2  sh-A0   -5.5  sh-A1   -8.5  sh span   29.1  moe span   53.9  call   63.1  head/rot/A/B 0.0/0.0/32.0/19.3
+  [p0]   m2E   gap    3.4  sh-A0   -8.9  sh-A1    1.5  sh span   34.7  moe span   50.0  call   59.1  head/rot/A/B 0.0/3.1/24.4/18.9
+  [p0]   m2EP  gap    2.4  sh-A0   -8.9  sh-A1   -5.7  sh span   30.1  moe span   51.6  call   60.9  head/rot/A/B 0.0/3.1/27.0/18.9
+  [p0]   ser   gap    0.3  sh-A0  -24.4  sh-A1  -30.1  sh span   22.5  moe span   48.3  call   83.5  head/rot/A/B 0.0/0.0/28.4/19.5
+  [p0] K2/r3/D28      ref   87.46  m2   73.41  m3   79.04  m3H   79.52  m3H2   79.52  m3P   79.87  m3E   75.55  m3EP   76.58  m2E   71.46  m2EP   73.38  ser   95.17
+  [p0]   ref   gap    1.5  sh-A0   -1.5  sh-A1   -0.3  sh span   39.1  moe span   77.0  call   85.9  head/rot/A/B 0.0/3.4/38.0/33.9
+  [p0]   m2    gap    1.4  sh-A0   -0.9  sh-A1   -0.5  sh span   34.7  moe span   62.9  call   71.9  head/rot/A/B 0.0/3.4/34.2/23.6
+  [p0]   m3    gap    1.7  sh-A0   18.6  sh-A1   -1.2  sh span   22.5  moe span   68.7  call   77.7  head/rot/A/B 0.0/0.0/42.5/24.5
+  [p0]   m3H   gap    1.4  sh-A0   18.5  sh-A1   -1.2  sh span   22.6  moe span   69.4  call   78.3  head/rot/A/B 0.7/0.0/42.5/24.5
+  [p0]   m3H2  gap    1.5  sh-A0   -0.7  sh-A1   -2.1  sh span   39.6  moe span   69.9  call   78.6  head/rot/A/B 2.7/0.0/40.8/24.4
+  [p0]   m3P   gap    1.6  sh-A0   18.5  sh-A1   -1.4  sh span   22.4  moe span   68.7  call   77.6  head/rot/A/B 0.0/0.0/42.4/24.4
+  [p0]   m3E   gap    1.5  sh-A0   -5.5  sh-A1   -1.0  sh span   43.9  moe span   65.1  call   74.0  head/rot/A/B 0.0/0.0/39.3/24.4
+  [p0]   m3EP  gap    2.3  sh-A0   -5.5  sh-A1  -10.8  sh span   34.4  moe span   66.6  call   75.6  head/rot/A/B 0.0/0.0/39.7/24.4
+  [p0]   m2E   gap    2.5  sh-A0   -9.0  sh-A1    1.1  sh span   41.1  moe span   60.5  call   69.8  head/rot/A/B 0.0/3.2/31.0/23.6
+  [p0]   m2EP  gap    1.5  sh-A0   -9.0  sh-A1   -8.9  sh span   34.0  moe span   62.6  call   71.7  head/rot/A/B 0.0/3.2/34.0/23.6
+  [p0]   ser   gap    0.3  sh-A0  -22.4  sh-A1  -37.4  sh span   21.3  moe span   60.9  call   94.0  head/rot/A/B 0.0/0.0/36.1/24.5
+  [p0] K2/r4/D10      ref   59.58  m2   55.33  m3   54.72  m3H   56.00  m3H2   55.07  m3P   55.07  m3E   52.45  m3EP   52.48  m2E   52.58  m2EP   52.10  ser   73.47
+  [p0]   ref   gap    1.7  sh-A0   -1.2  sh-A1   -2.5  sh span   21.8  moe span   50.0  call   59.0  head/rot/A/B 0.0/3.5/23.2/21.2
+  [p0]   m2    gap    4.1  sh-A0   -2.1  sh-A1    2.6  sh span   22.1  moe span   44.0  call   53.0  head/rot/A/B 0.0/3.6/17.4/18.7
+  [p0]   m3    gap    4.7  sh-A0    2.9  sh-A1    3.6  sh span   21.5  moe span   44.4  call   53.3  head/rot/A/B 0.0/0.0/20.9/18.9
+  [p0]   m3H   gap    5.2  sh-A0    2.9  sh-A1    3.6  sh span   21.5  moe span   46.0  call   55.0  head/rot/A/B 0.7/0.0/20.8/19.0
+  [p0]   m3H2  gap    2.5  sh-A0   -1.4  sh-A1    0.7  sh span   22.7  moe span   45.4  call   54.6  head/rot/A/B 2.7/0.0/20.9/18.9
+  [p0]   m3P   gap    4.7  sh-A0    2.9  sh-A1    3.6  sh span   21.4  moe span   44.4  call   53.1  head/rot/A/B 0.0/0.0/20.8/18.9
+  [p0]   m3E   gap    1.7  sh-A0   -5.5  sh-A1   -1.0  sh span   25.6  moe span   41.7  call   50.9  head/rot/A/B 0.0/0.0/21.2/18.9
+  [p0]   m3EP  gap    1.7  sh-A0   -5.5  sh-A1   -1.1  sh span   25.6  moe span   41.8  call   50.9  head/rot/A/B 0.0/0.0/21.2/18.9
+  [p0]   m2E   gap    1.9  sh-A0   -9.2  sh-A1   -0.9  sh span   25.8  moe span   41.8  call   50.9  head/rot/A/B 0.0/3.4/17.5/18.7
+  [p0]   m2EP  gap    2.0  sh-A0   -9.2  sh-A1   -0.9  sh span   25.8  moe span   41.8  call   50.9  head/rot/A/B 0.0/3.4/17.4/18.8
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -21.7  sh span   21.2  moe span   40.0  call   73.4  head/rot/A/B 0.0/0.0/20.7/19.0
+  [p0] K2/r4/D20      ref   71.36  m2   64.13  m3   69.02  m3H   69.25  m3H2   62.98  m3P   69.12  m3E   60.77  m3EP   60.77  m2E   64.29  m2EP   64.00  ser   84.35
+  [p0]   ref   gap    1.4  sh-A0   -1.6  sh-A1   -8.0  sh span   22.5  moe span   60.6  call   69.5  head/rot/A/B 0.0/3.6/28.8/26.4
+  [p0]   m2    gap    0.9  sh-A0   -1.8  sh-A1   -6.5  sh span   22.5  moe span   52.5  call   61.4  head/rot/A/B 0.0/3.6/27.2/20.5
+  [p0]   m3    gap   10.6  sh-A0   17.2  sh-A1    8.5  sh span   21.0  moe span   60.4  call   69.3  head/rot/A/B 0.0/0.0/29.6/20.0
+  [p0]   m3H   gap    9.9  sh-A0   17.1  sh-A1    8.5  sh span   20.9  moe span   60.4  call   69.3  head/rot/A/B 0.7/0.0/29.6/20.0
+  [p0]   m3H2  gap    2.2  sh-A0   -0.4  sh-A1   -7.1  sh span   22.4  moe span   54.2  call   63.2  head/rot/A/B 2.7/0.0/29.2/19.9
+  [p0]   m3P   gap   10.6  sh-A0   17.1  sh-A1    8.4  sh span   20.9  moe span   60.2  call   69.3  head/rot/A/B 0.0/0.0/29.6/20.0
+  [p0]   m3E   gap    1.1  sh-A0   -5.5  sh-A1  -11.8  sh span   22.8  moe span   50.1  call   59.1  head/rot/A/B 0.0/0.0/29.1/19.9
+  [p0]   m3EP  gap    1.2  sh-A0   -5.5  sh-A1  -11.6  sh span   22.7  moe span   50.3  call   59.2  head/rot/A/B 0.0/0.0/29.0/19.9
+  [p0]   m2E   gap    0.9  sh-A0   -9.2  sh-A1  -12.1  sh span   24.2  moe span   52.4  call   61.4  head/rot/A/B 0.0/3.4/27.2/20.5
+  [p0]   m2EP  gap    0.9  sh-A0   -9.2  sh-A1  -12.1  sh span   24.2  moe span   52.5  call   61.5  head/rot/A/B 0.0/3.4/27.2/20.6
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -30.8  sh span   21.3  moe span   50.1  call   83.5  head/rot/A/B 0.0/0.0/29.7/20.1
+  [p0] K2/r4/D40      ref  108.99  m2   81.70  m3   85.38  m3H   85.73  m3H2   79.52  m3P   85.60  m3E   75.39  m3EP   75.14  m2E   81.57  m2EP   81.50  ser   99.07
+  [p0]   ref   gap    1.8  sh-A0   -1.8  sh-A1  -12.0  sh span   37.5  moe span   98.8  call  107.6  head/rot/A/B 0.0/3.6/47.6/45.5
+  [p0]   m2    gap    1.7  sh-A0   -2.3  sh-A1   -3.5  sh span   36.9  moe span   71.0  call   79.8  head/rot/A/B 0.0/3.7/38.3/27.2
+  [p0]   m3    gap   11.3  sh-A0   27.6  sh-A1   10.0  sh span   21.0  moe span   75.9  call   85.2  head/rot/A/B 0.0/0.0/38.5/25.8
+  [p0]   m3H   gap   11.7  sh-A0   27.5  sh-A1   10.0  sh span   21.0  moe span   76.7  call   85.7  head/rot/A/B 0.7/0.0/38.4/25.7
+  [p0]   m3H2  gap    1.7  sh-A0   -0.2  sh-A1   -5.0  sh span   35.2  moe span   70.5  call   79.5  head/rot/A/B 2.7/0.0/40.1/25.6
+  [p0]   m3P   gap   11.0  sh-A0   27.5  sh-A1    9.9  sh span   20.9  moe span   75.4  call   84.1  head/rot/A/B 0.0/0.0/38.5/25.7
+  [p0]   m3E   gap    1.0  sh-A0   -5.5  sh-A1   -2.6  sh span   40.9  moe span   64.5  call   73.6  head/rot/A/B 0.0/0.0/37.9/25.6
+  [p0]   m3EP  gap    1.2  sh-A0   -5.5  sh-A1   -2.4  sh span   40.9  moe span   64.7  call   73.6  head/rot/A/B 0.0/0.0/37.9/25.6
+  [p0]   m2E   gap    1.5  sh-A0   -9.4  sh-A1   -6.8  sh span   40.6  moe span   70.7  call   79.7  head/rot/A/B 0.0/3.6/38.0/27.2
+  [p0]   m2EP  gap    1.5  sh-A0   -9.5  sh-A1   -6.8  sh span   40.7  moe span   70.7  call   79.7  head/rot/A/B 0.0/3.6/38.0/27.3
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -40.0  sh span   21.3  moe span   64.8  call   98.2  head/rot/A/B 0.0/0.0/38.8/25.8
+  [p0] K2/r8/D40      ref  115.14  m2   84.26  m3   90.62  m3H   91.58  m3H2   85.79  m3P   90.66  m3E   81.28  m3EP   81.25  m2E   84.45  m2EP   84.35  ser  106.11
+  [p0]   ref   gap    1.4  sh-A0   -3.1  sh-A1  -12.1  sh span   38.8  moe span  104.8  call  113.5  head/rot/A/B 0.0/4.8/47.9/49.8
+  [p0]   m2    gap    2.0  sh-A0   -3.2  sh-A1   -6.0  sh span   35.5  moe span   74.7  call   83.6  head/rot/A/B 0.0/4.8/38.3/29.3
+  [p0]   m3    gap   10.8  sh-A0   28.5  sh-A1    8.9  sh span   21.5  moe span   80.9  call   89.8  head/rot/A/B 0.0/0.0/41.0/29.2
+  [p0]   m3H   gap   10.0  sh-A0   28.5  sh-A1    8.9  sh span   21.5  moe span   81.2  call   90.0  head/rot/A/B 0.7/0.0/41.1/29.2
+  [p0]   m3H2  gap    1.4  sh-A0   -1.2  sh-A1   -5.9  sh span   36.7  moe span   75.0  call   83.8  head/rot/A/B 2.7/0.0/41.4/29.1
+  [p0]   m3P   gap   10.7  sh-A0   28.5  sh-A1    8.9  sh span   21.4  moe span   80.9  call   89.6  head/rot/A/B 0.0/0.0/41.0/29.2
+  [p0]   m3E   gap    1.4  sh-A0   -6.0  sh-A1   -3.1  sh span   43.2  moe span   70.8  call   79.6  head/rot/A/B 0.0/0.0/40.3/29.0
+  [p0]   m3EP  gap    1.5  sh-A0   -6.0  sh-A1   -3.0  sh span   43.4  moe span   70.8  call   79.6  head/rot/A/B 0.0/0.0/40.3/29.0
+  [p0]   m2E   gap    2.0  sh-A0  -11.0  sh-A1   -7.6  sh span   41.8  moe span   74.7  call   83.7  head/rot/A/B 0.0/4.7/38.3/29.4
+  [p0]   m2EP  gap    2.1  sh-A0  -10.9  sh-A1   -7.5  sh span   41.6  moe span   74.7  call   83.6  head/rot/A/B 0.0/4.7/38.2/29.3
+  [p0]   ser   gap    0.3  sh-A0  -24.3  sh-A1  -43.7  sh span   21.9  moe span   71.0  call  106.2  head/rot/A/B 0.0/0.0/41.4/29.3
+  [p0] K2/r12/D60     ref  155.04  m2  129.44  m3  124.22  m3H  124.93  m3H2  130.37  m3P  124.22  m3E  122.18  m3EP  122.30  m2E  122.14  m2EP  122.37  ser  142.05
+  [p0]   ref   gap    1.7  sh-A0   -4.1  sh-A1   -5.2  sh span   62.7  moe span  145.0  call  154.1  head/rot/A/B 0.0/6.1/63.8/73.5
+  [p0]   m2    gap    2.1  sh-A0   -4.1  sh-A1   -7.5  sh span   58.7  moe span  119.2  call  127.6  head/rot/A/B 0.0/6.1/62.1/49.2
+  [p0]   m3    gap   10.0  sh-A0   42.3  sh-A1    8.4  sh span   23.4  moe span  113.7  call  122.7  head/rot/A/B 0.0/0.0/57.2/46.9
+  [p0]   m3H   gap    9.8  sh-A0   42.2  sh-A1    8.5  sh span   23.4  moe span  114.3  call  123.0  head/rot/A/B 0.7/0.0/57.1/46.6
+  [p0]   m3H2  gap    1.9  sh-A0   -0.7  sh-A1   -8.2  sh span   60.7  moe span  119.4  call  128.3  head/rot/A/B 2.7/0.0/68.2/46.8
+  [p0]   m3P   gap    9.8  sh-A0   42.3  sh-A1    8.4  sh span   23.4  moe span  113.8  call  122.7  head/rot/A/B 0.0/0.0/57.2/46.9
+  [p0]   m3E   gap    1.8  sh-A0   -6.0  sh-A1   -7.6  sh span   60.7  moe span  110.5  call  119.6  head/rot/A/B 0.0/0.0/62.4/46.7
+  [p0]   m3EP  gap    1.6  sh-A0   -6.0  sh-A1   -7.5  sh span   61.2  moe span  110.9  call  119.9  head/rot/A/B 0.0/0.0/62.6/46.9
+  [p0]   m2E   gap    1.9  sh-A0  -12.4  sh-A1   -7.3  sh span   58.8  moe span  110.8  call  120.0  head/rot/A/B 0.0/6.0/53.8/49.0
+  [p0]   m2EP  gap    1.8  sh-A0  -12.3  sh-A1   -7.2  sh span   59.0  moe span  110.9  call  120.0  head/rot/A/B 0.0/6.0/53.9/49.0
+  [p0]   ser   gap    0.3  sh-A0  -24.4  sh-A1  -59.3  sh span   23.6  moe span  104.7  call  139.7  head/rot/A/B 0.0/0.0/57.6/46.8
+  [p0] K2/r16/D40     ref  101.79  m2   87.81  m3  103.10  m3H  103.81  m3H2   95.71  m3P  103.01  m3E   91.42  m3EP   91.42  m2E   88.64  m2EP   87.94  ser  119.33
+  [p0]   ref   gap    1.9  sh-A0   -5.9  sh-A1  -10.6  sh span   43.4  moe span   91.0  call   99.9  head/rot/A/B 0.0/7.7/48.2/32.8
+  [p0]   m2    gap    1.4  sh-A0   -5.9  sh-A1   -2.4  sh span   41.9  moe span   77.3  call   86.2  head/rot/A/B 0.0/7.8/38.5/29.3
+  [p0]   m3    gap   12.9  sh-A0   34.4  sh-A1   11.3  sh span   24.2  moe span   93.1  call  102.0  head/rot/A/B 0.0/0.0/47.2/33.0
+  [p0]   m3H   gap   12.5  sh-A0   34.3  sh-A1   11.3  sh span   24.1  moe span   93.4  call  102.2  head/rot/A/B 0.7/0.0/47.1/32.9
+  [p0]   m3H2  gap    1.5  sh-A0   -0.7  sh-A1   -5.1  sh span   43.8  moe span   85.2  call   94.0  head/rot/A/B 2.7/0.0/48.1/32.6
+  [p0]   m3P   gap   12.9  sh-A0   34.4  sh-A1   11.2  sh span   24.1  moe span   93.0  call  102.0  head/rot/A/B 0.0/0.0/47.2/33.1
+  [p0]   m3E   gap    1.8  sh-A0   -6.1  sh-A1   -2.8  sh span   49.4  moe span   80.5  call   89.6  head/rot/A/B 0.0/0.0/46.1/32.7
+  [p0]   m3EP  gap    1.6  sh-A0   -6.1  sh-A1   -2.8  sh span   49.6  moe span   80.6  call   89.7  head/rot/A/B 0.0/0.0/46.2/32.8
+  [p0]   m2E   gap    1.8  sh-A0  -14.1  sh-A1   -4.9  sh span   48.2  moe span   78.3  call   87.4  head/rot/A/B 0.0/7.7/39.0/29.3
+  [p0]   m2EP  gap    1.4  sh-A0  -14.0  sh-A1   -4.9  sh span   48.2  moe span   77.7  call   86.8  head/rot/A/B 0.0/7.7/39.0/29.3
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1  -49.4  sh span   24.2  moe span   80.5  call  117.2  head/rot/A/B 0.0/0.0/47.5/32.9
+  [p0] K2/r16/D160    ref  247.07  m2  240.99  m3  228.74  m3H  229.06  m3H2  233.47  m3P  228.77  m3E  226.59  m3EP  227.20  m2E  241.92  m2EP  241.34  ser  247.42
+  [p0]   ref   gap    1.5  sh-A0   -5.8  sh-A1  -17.9  sh span  131.4  moe span  239.7  call  248.7  head/rot/A/B 0.0/7.9/143.6/86.5
+  [p0]   m2    gap    1.7  sh-A0   -5.5  sh-A1  -16.2  sh span  127.2  moe span  229.5  call  238.9  head/rot/A/B 0.0/8.1/138.1/81.6
+  [p0]   m3    gap   10.8  sh-A0  113.2  sh-A1    9.3  sh span   25.0  moe span  218.7  call  227.6  head/rot/A/B 0.0/0.0/129.0/78.9
+  [p0]   m3H   gap   10.7  sh-A0  113.3  sh-A1    9.5  sh span   25.1  moe span  219.5  call  228.5  head/rot/A/B 0.7/0.0/128.9/78.8
+  [p0]   m3H2  gap    1.7  sh-A0   -0.6  sh-A1  -14.3  sh span  126.8  moe span  223.9  call  232.7  head/rot/A/B 2.7/0.0/140.0/78.8
+  [p0]   m3P   gap   10.9  sh-A0  113.3  sh-A1    9.4  sh span   24.9  moe span  218.4  call  227.5  head/rot/A/B 0.0/0.0/128.9/78.8
+  [p0]   m3E   gap    1.6  sh-A0   -6.2  sh-A1  -14.2  sh span  126.6  moe span  215.7  call  224.9  head/rot/A/B 0.0/0.0/134.7/79.1
+  [p0]   m3EP  gap    1.6  sh-A0   -6.2  sh-A1  -14.2  sh span  126.8  moe span  215.8  call  224.7  head/rot/A/B 0.0/0.0/134.8/79.2
+  [p0]   m2E   gap    1.6  sh-A0  -14.6  sh-A1  -18.5  sh span  134.6  moe span  230.9  call  240.3  head/rot/A/B 0.0/8.0/138.9/81.8
+  [p0]   m2EP  gap    1.6  sh-A0  -14.6  sh-A1  -18.1  sh span  134.7  moe span  230.5  call  240.0  head/rot/A/B 0.0/8.0/138.7/81.7
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1 -130.6  sh span   24.5  moe span  208.8  call  245.5  head/rot/A/B 0.0/0.0/129.1/79.5
+  [p0] K3/r1/D10      ref   62.91  m2   62.82  m3   62.82  m3H   62.91  m3H2   62.91  m3P   62.88  m3E   50.91  m3EP   52.61  m2E   50.98  m2EP   52.77  ser   75.36
+  [p0]   ref   gap    8.0  sh-A0   13.2  sh-A1    6.9  sh span   20.7  moe span   52.6  call   61.1  head/rot/A/B 0.0/0.0/27.0/17.4
+  [p0]   m2    gap    8.2  sh-A0   13.3  sh-A1    6.9  sh span   20.7  moe span   52.7  call   61.1  head/rot/A/B 0.0/0.0/27.0/17.4
+  [p0]   m3    gap    8.2  sh-A0   13.3  sh-A1    7.0  sh span   20.7  moe span   52.6  call   61.1  head/rot/A/B 0.0/0.0/27.0/17.4
+  [p0]   m3H   gap    8.2  sh-A0   13.3  sh-A1    6.9  sh span   20.6  moe span   52.7  call   61.1  head/rot/A/B 0.0/0.0/26.9/17.4
+  [p0]   m3H2  gap    8.1  sh-A0   13.2  sh-A1    6.8  sh span   20.6  moe span   52.7  call   61.1  head/rot/A/B 0.0/0.0/26.9/17.6
+  [p0]   m3P   gap    8.0  sh-A0   13.3  sh-A1    6.9  sh span   20.7  moe span   52.7  call   61.1  head/rot/A/B 0.0/0.0/26.9/17.4
+  [p0]   m3E   gap    1.9  sh-A0   -7.1  sh-A1   -3.1  sh span   26.6  moe span   42.3  call   50.8  head/rot/A/B 0.0/0.0/22.8/17.4
+  [p0]   m3EP  gap    2.1  sh-A0   -6.2  sh-A1   -3.9  sh span   24.7  moe span   42.5  call   51.0  head/rot/A/B 0.0/0.0/23.0/17.4
+  [p0]   m2E   gap    1.8  sh-A0   -7.0  sh-A1   -3.1  sh span   26.7  moe span   42.1  call   50.6  head/rot/A/B 0.0/0.0/22.8/17.4
+  [p0]   m2EP  gap    2.2  sh-A0   -6.3  sh-A1   -3.9  sh span   24.7  moe span   42.6  call   51.0  head/rot/A/B 0.0/0.0/22.9/17.4
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -25.1  sh span   20.9  moe span   41.6  call   73.3  head/rot/A/B 0.0/0.0/23.8/17.4
+  [p0] K3/r4/D28      ref  101.79  m2   83.68  m3   83.17  m3H   83.62  m3H2   84.35  m3P   83.30  m3E   77.09  m3EP   77.18  m2E   76.03  m2EP   77.18  ser   94.75
+  [p0]   ref   gap    1.7  sh-A0   -1.8  sh-A1   -9.0  sh span   37.3  moe span   91.5  call  100.2  head/rot/A/B 0.0/3.6/44.7/41.5
+  [p0]   m2    gap    1.2  sh-A0   -1.4  sh-A1  -12.0  sh span   31.1  moe span   74.6  call   83.5  head/rot/A/B 0.0/3.6/41.9/27.7
+  [p0]   m3    gap   13.3  sh-A0   24.1  sh-A1   11.9  sh span   21.2  moe span   72.8  call   81.8  head/rot/A/B 0.0/0.0/33.3/26.3
+  [p0]   m3H   gap   13.4  sh-A0   24.2  sh-A1   11.8  sh span   21.2  moe span   73.9  call   82.7  head/rot/A/B 0.7/0.0/33.4/26.3
+  [p0]   m3H2  gap    1.6  sh-A0   -0.7  sh-A1  -12.3  sh span   32.1  moe span   74.6  call   83.4  head/rot/A/B 2.7/0.0/43.6/26.3
+  [p0]   m3P   gap   13.3  sh-A0   24.0  sh-A1   11.8  sh span   21.2  moe span   73.0  call   82.0  head/rot/A/B 0.0/0.0/33.3/26.4
+  [p0]   m3E   gap    1.7  sh-A0   -5.5  sh-A1   -6.9  sh span   37.0  moe span   66.3  call   75.3  head/rot/A/B 0.0/0.0/38.3/26.3
+  [p0]   m3EP  gap    1.8  sh-A0   -5.5  sh-A1   -7.0  sh span   37.0  moe span   66.6  call   75.3  head/rot/A/B 0.0/0.0/38.5/26.4
+  [p0]   m2E   gap    1.8  sh-A0   -9.2  sh-A1   -3.1  sh span   39.0  moe span   66.0  call   75.1  head/rot/A/B 0.0/3.5/33.0/27.6
+  [p0]   m2EP  gap    1.8  sh-A0   -9.2  sh-A1   -3.2  sh span   39.0  moe span   65.9  call   74.9  head/rot/A/B 0.0/3.4/33.0/27.6
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -34.6  sh span   21.3  moe span   60.1  call   93.2  head/rot/A/B 0.0/0.0/33.4/26.3
+  [p0] K3/r16/D77     ref  167.58  m2  147.10  m3  155.01  m3H  155.97  m3H2  151.17  m3P  155.01  m3E  144.03  m3EP  144.74  m2E  148.42  m2EP  147.39  ser  170.69
+  [p0]   ref   gap    1.7  sh-A0   -5.6  sh-A1   -8.3  sh span   85.4  moe span  156.8  call  165.4  head/rot/A/B 0.0/7.7/88.6/58.3
+  [p0]   m2    gap    2.4  sh-A0   -5.5  sh-A1    0.4  sh span   78.8  moe span  136.8  call  145.9  head/rot/A/B 0.0/7.8/72.7/53.1
+  [p0]   m3    gap   13.7  sh-A0   65.5  sh-A1   12.1  sh span   24.4  moe span  144.9  call  153.9  head/rot/A/B 0.0/0.0/77.7/53.3
+  [p0]   m3H   gap   14.1  sh-A0   65.6  sh-A1   12.4  sh span   24.4  moe span  145.5  call  154.3  head/rot/A/B 0.7/0.0/77.6/53.0
+  [p0]   m3H2  gap    4.1  sh-A0   -0.8  sh-A1    2.3  sh span   82.8  moe span  140.2  call  149.1  head/rot/A/B 2.7/0.0/79.9/53.3
+  [p0]   m3P   gap   13.8  sh-A0   65.6  sh-A1   12.2  sh span   24.4  moe span  144.8  call  153.6  head/rot/A/B 0.0/0.0/77.6/53.4
+  [p0]   m3E   gap    2.2  sh-A0   -6.2  sh-A1    0.6  sh span   84.2  moe span  133.4  call  142.7  head/rot/A/B 0.0/0.0/77.3/53.9
+  [p0]   m3EP  gap    2.5  sh-A0   -6.2  sh-A1    0.8  sh span   84.3  moe span  133.6  call  142.8  head/rot/A/B 0.0/0.0/77.2/53.6
+  [p0]   m2E   gap    1.7  sh-A0  -14.3  sh-A1   -4.7  sh span   83.2  moe span  136.3  call  145.6  head/rot/A/B 0.0/7.8/73.6/52.6
+  [p0]   m2EP  gap    1.8  sh-A0  -14.3  sh-A1   -4.9  sh span   83.3  moe span  137.0  call  146.5  head/rot/A/B 0.0/7.9/73.8/53.6
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1  -80.1  sh span   24.3  moe span  131.9  call  168.5  head/rot/A/B 0.0/0.0/78.1/53.4
+  [p0] K3/r2/D20      ref   79.23  m2   66.98  m3   69.76  m3H   70.98  m3H2   69.06  m3P   71.07  m3E   65.76  m3EP   67.01  m2E   64.90  m2EP   66.94  ser   87.71
+  [p0]   ref   gap    1.4  sh-A0   -1.3  sh-A1   -1.6  sh span   34.6  moe span   68.7  call   77.5  head/rot/A/B 0.0/3.3/34.8/28.5
+  [p0]   m2    gap    3.4  sh-A0   -1.8  sh-A1    1.9  sh span   32.4  moe span   56.5  call   65.4  head/rot/A/B 0.0/3.2/28.8/21.0
+  [p0]   m3    gap    3.8  sh-A0   14.4  sh-A1    2.2  sh span   23.1  moe span   60.3  call   69.3  head/rot/A/B 0.0/0.0/35.3/21.3
+  [p0]   m3H   gap    3.6  sh-A0   14.2  sh-A1    2.0  sh span   23.3  moe span   60.7  call   69.5  head/rot/A/B 0.7/0.0/35.0/21.2
+  [p0]   m3H2  gap    1.7  sh-A0   -1.4  sh-A1   -1.1  sh span   34.0  moe span   60.0  call   69.0  head/rot/A/B 2.7/0.0/33.9/21.2
+  [p0]   m3P   gap    3.7  sh-A0   14.3  sh-A1    2.2  sh span   23.1  moe span   60.4  call   69.2  head/rot/A/B 0.0/0.0/35.2/21.2
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1   -0.8  sh span   37.8  moe span   56.0  call   65.2  head/rot/A/B 0.0/0.0/33.2/21.2
+  [p0]   m3EP  gap    2.1  sh-A0   -5.6  sh-A1  -10.5  sh span   29.7  moe span   58.1  call   67.2  head/rot/A/B 0.0/0.0/34.7/21.2
+  [p0]   m2E   gap    2.7  sh-A0   -9.0  sh-A1    0.9  sh span   37.0  moe span   54.2  call   63.3  head/rot/A/B 0.0/3.1/27.1/21.0
+  [p0]   m2EP  gap    2.3  sh-A0   -8.9  sh-A1   -6.3  sh span   32.7  moe span   56.4  call   65.4  head/rot/A/B 0.0/3.1/30.2/21.1
+  [p0]   ser   gap    0.3  sh-A0  -24.4  sh-A1  -31.8  sh span   22.5  moe span   51.8  call   86.2  head/rot/A/B 0.0/0.0/30.1/21.4
+  [p0] K3/r3/D28      ref   99.97  m2   79.58  m3   84.64  m3H   85.38  m3H2   85.66  m3P   84.67  m3E   81.28  m3EP   81.34  m2E   77.38  m2EP   79.23  ser  101.12
+  [p0]   ref   gap    1.5  sh-A0   -1.3  sh-A1   -1.8  sh span   44.4  moe span   89.7  call   98.4  head/rot/A/B 0.0/3.4/45.1/39.8
+  [p0]   m2    gap    1.3  sh-A0   -1.1  sh-A1   -1.1  sh span   38.3  moe span   70.1  call   79.1  head/rot/A/B 0.0/3.4/38.4/26.1
+  [p0]   m3    gap    1.8  sh-A0   20.3  sh-A1   -2.2  sh span   22.8  moe span   74.7  call   83.6  head/rot/A/B 0.0/0.0/45.6/27.0
+  [p0]   m3H   gap    1.4  sh-A0   20.3  sh-A1   -2.1  sh span   22.9  moe span   75.0  call   83.7  head/rot/A/B 0.7/0.0/45.5/27.0
+  [p0]   m3H2  gap    1.5  sh-A0   -1.1  sh-A1   -1.9  sh span   42.8  moe span   75.1  call   84.0  head/rot/A/B 2.7/0.0/43.8/26.9
+  [p0]   m3P   gap    2.1  sh-A0   20.3  sh-A1   -2.2  sh span   22.9  moe span   74.8  call   83.7  head/rot/A/B 0.0/0.0/45.5/27.1
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1   -1.2  sh span   46.5  moe span   70.8  call   79.7  head/rot/A/B 0.0/0.0/42.3/26.9
+  [p0]   m3EP  gap    1.7  sh-A0   -5.5  sh-A1  -13.6  sh span   34.7  moe span   71.4  call   80.2  head/rot/A/B 0.0/0.0/42.7/26.9
+  [p0]   m2E   gap    2.3  sh-A0   -9.0  sh-A1    0.7  sh span   44.4  moe span   66.7  call   75.8  head/rot/A/B 0.0/3.2/34.7/26.1
+  [p0]   m2EP  gap    2.0  sh-A0   -9.0  sh-A1  -10.7  sh span   35.3  moe span   68.6  call   77.7  head/rot/A/B 0.0/3.2/37.2/26.0
+  [p0]   ser   gap    0.3  sh-A0  -22.4  sh-A1  -40.5  sh span   21.3  moe span   66.7  call  100.2  head/rot/A/B 0.0/0.0/39.4/27.1
+  [p0] K3/r4/D10      ref   65.31  m2   55.68  m3   56.86  m3H   56.99  m3H2   58.69  m3P   57.06  m3E   56.26  m3EP   55.07  m2E   54.85  m2EP   54.69  ser   77.60
+  [p0]   ref   gap    1.5  sh-A0   -1.2  sh-A1   -6.1  sh span   22.2  moe span   56.3  call   65.2  head/rot/A/B 0.0/3.6/27.0/23.8
+  [p0]   m2    gap    3.3  sh-A0   -1.5  sh-A1    2.5  sh span   22.9  moe span   46.3  call   55.2  head/rot/A/B 0.0/3.6/19.0/20.0
+  [p0]   m3    gap    3.7  sh-A0    2.9  sh-A1    2.3  sh span   22.5  moe span   46.9  call   55.5  head/rot/A/B 0.0/0.0/23.1/20.1
+  [p0]   m3H   gap    4.0  sh-A0    2.9  sh-A1    2.3  sh span   22.4  moe span   48.1  call   57.1  head/rot/A/B 0.7/0.0/23.0/20.2
+  [p0]   m3H2  gap    1.7  sh-A0   -0.7  sh-A1   -0.0  sh span   23.9  moe span   48.0  call   57.0  head/rot/A/B 2.7/0.0/23.3/20.1
+  [p0]   m3P   gap    4.4  sh-A0    2.9  sh-A1    2.3  sh span   22.5  moe span   47.3  call   56.1  head/rot/A/B 0.0/0.0/23.0/20.1
+  [p0]   m3E   gap    2.0  sh-A0   -5.5  sh-A1   -3.2  sh span   25.4  moe span   45.5  call   54.7  head/rot/A/B 0.0/0.0/23.4/20.1
+  [p0]   m3EP  gap    2.0  sh-A0   -5.5  sh-A1   -3.1  sh span   25.6  moe span   45.6  call   54.8  head/rot/A/B 0.0/0.0/23.3/20.1
+  [p0]   m2E   gap    1.2  sh-A0   -9.2  sh-A1   -1.6  sh span   26.7  moe span   43.9  call   53.0  head/rot/A/B 0.0/3.5/19.1/19.9
+  [p0]   m2EP  gap    1.2  sh-A0   -9.2  sh-A1   -1.6  sh span   26.8  moe span   44.0  call   53.0  head/rot/A/B 0.0/3.4/19.1/20.0
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -24.0  sh span   21.3  moe span   43.4  call   75.7  head/rot/A/B 0.0/0.0/23.0/20.2
+  [p0] K3/r4/D20      ref   81.54  m2   69.28  m3   73.22  m3H   75.17  m3H2   69.22  m3P   74.18  m3E   65.22  m3EP   66.62  m2E   69.09  m2EP   69.18  ser   89.89
+  [p0]   ref   gap    1.7  sh-A0   -1.7  sh-A1  -13.4  sh span   22.8  moe span   70.7  call   79.6  head/rot/A/B 0.0/3.6/34.4/30.7
+  [p0]   m2    gap    1.3  sh-A0   -2.0  sh-A1   -8.9  sh span   23.4  moe span   58.4  call   67.3  head/rot/A/B 0.0/3.6/30.4/22.8
+  [p0]   m3    gap    9.1  sh-A0   19.7  sh-A1    7.4  sh span   21.1  moe span   64.4  call   73.4  head/rot/A/B 0.0/0.0/33.2/22.1
+  [p0]   m3H   gap    8.9  sh-A0   19.7  sh-A1    7.5  sh span   21.0  moe span   64.9  call   73.7  head/rot/A/B 0.7/0.0/33.2/22.2
+  [p0]   m3H2  gap    1.7  sh-A0   -0.4  sh-A1  -10.0  sh span   23.3  moe span   59.0  call   67.7  head/rot/A/B 2.7/0.0/32.8/22.0
+  [p0]   m3P   gap    9.0  sh-A0   19.7  sh-A1    7.4  sh span   21.0  moe span   64.5  call   73.4  head/rot/A/B 0.0/0.0/33.2/22.1
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1  -15.1  sh span   23.0  moe span   56.2  call   65.3  head/rot/A/B 0.0/0.0/32.6/22.1
+  [p0]   m3EP  gap    1.5  sh-A0   -5.5  sh-A1  -15.1  sh span   23.0  moe span   56.3  call   65.2  head/rot/A/B 0.0/0.0/32.7/22.0
+  [p0]   m2E   gap    1.4  sh-A0   -9.2  sh-A1  -14.5  sh span   25.1  moe span   58.2  call   67.3  head/rot/A/B 0.0/3.5/30.2/22.9
+  [p0]   m2EP  gap    1.5  sh-A0   -9.2  sh-A1  -14.5  sh span   24.9  moe span   58.2  call   67.3  head/rot/A/B 0.0/3.4/30.2/22.8
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -34.4  sh span   21.4  moe span   55.9  call   88.4  head/rot/A/B 0.0/0.0/33.4/22.2
+  [p0] K3/r4/D40      ref  126.69  m2   91.55  m3   93.54  m3H   94.85  m3H2   87.42  m3P   93.73  m3E   85.31  m3EP   85.31  m2E   92.74  m2EP   92.58  ser  109.28
+  [p0]   ref   gap    1.5  sh-A0   -1.8  sh-A1  -16.0  sh span   43.2  moe span  116.4  call  125.3  head/rot/A/B 0.0/3.6/57.4/53.6
+  [p0]   m2    gap    1.6  sh-A0   -2.0  sh-A1   -2.9  sh span   43.3  moe span   80.4  call   89.4  head/rot/A/B 0.0/3.8/43.9/30.7
+  [p0]   m3    gap    8.1  sh-A0   32.3  sh-A1    6.9  sh span   21.1  moe span   83.0  call   91.9  head/rot/A/B 0.0/0.0/46.5/28.5
+  [p0]   m3H   gap    8.8  sh-A0   32.2  sh-A1    6.9  sh span   21.1  moe span   84.8  call   93.8  head/rot/A/B 0.7/0.0/46.4/28.4
+  [p0]   m3H2  gap    1.3  sh-A0   -0.7  sh-A1   -3.8  sh span   41.0  moe span   76.8  call   85.7  head/rot/A/B 2.7/0.0/44.0/28.4
+  [p0]   m3P   gap    8.2  sh-A0   32.3  sh-A1    6.9  sh span   21.0  moe span   83.1  call   92.0  head/rot/A/B 0.0/0.0/46.4/28.4
+  [p0]   m3E   gap    1.6  sh-A0   -5.5  sh-A1   -5.1  sh span   45.2  moe span   74.8  call   83.8  head/rot/A/B 0.0/0.0/44.9/28.4
+  [p0]   m3EP  gap    1.7  sh-A0   -5.5  sh-A1   -5.1  sh span   45.2  moe span   74.8  call   83.8  head/rot/A/B 0.0/0.0/44.9/28.4
+  [p0]   m2E   gap    1.3  sh-A0   -9.4  sh-A1   -8.3  sh span   46.2  moe span   81.1  call   90.1  head/rot/A/B 0.0/3.7/45.0/30.7
+  [p0]   m2EP  gap    1.6  sh-A0   -9.5  sh-A1   -8.1  sh span   46.0  moe span   81.2  call   90.0  head/rot/A/B 0.0/3.6/44.8/30.7
+  [p0]   ser   gap    0.3  sh-A0  -22.3  sh-A1  -47.5  sh span   21.4  moe span   75.0  call  108.4  head/rot/A/B 0.0/0.0/46.3/28.5
+  [p0] K3/r8/D40      ref  133.18  m2   94.91  m3   97.66  m3H   98.02  m3H2   91.90  m3P   97.73  m3E   89.73  m3EP   89.54  m2E   95.94  m2EP   95.81  ser  116.38
+  [p0]   ref   gap    1.5  sh-A0   -3.1  sh-A1  -16.2  sh span   44.8  moe span  123.6  call  131.9  head/rot/A/B 0.0/4.8/57.9/58.2
+  [p0]   m2    gap    1.6  sh-A0   -3.0  sh-A1   -7.3  sh span   39.6  moe span   83.3  call   92.2  head/rot/A/B 0.0/4.9/44.0/32.8
+  [p0]   m3    gap    7.4  sh-A0   33.0  sh-A1    6.2  sh span   21.6  moe span   87.7  call   96.5  head/rot/A/B 0.0/0.0/48.6/31.9
+  [p0]   m3H   gap    7.5  sh-A0   33.1  sh-A1    6.0  sh span   21.7  moe span   89.2  call   98.0  head/rot/A/B 0.7/0.0/48.5/31.9
+  [p0]   m3H2  gap    1.3  sh-A0   -0.2  sh-A1   -6.7  sh span   40.2  moe span   83.1  call   91.8  head/rot/A/B 2.7/0.0/46.8/31.9
+  [p0]   m3P   gap    7.5  sh-A0   33.1  sh-A1    6.0  sh span   21.5  moe span   88.0  call   96.4  head/rot/A/B 0.0/0.0/48.4/32.0
+  [p0]   m3E   gap    2.0  sh-A0   -6.0  sh-A1   -5.6  sh span   47.4  moe span   80.7  call   89.8  head/rot/A/B 0.0/0.0/46.9/31.9
+  [p0]   m3EP  gap    2.0  sh-A0   -6.1  sh-A1   -5.4  sh span   47.3  moe span   80.9  call   89.8  head/rot/A/B 0.0/0.0/46.8/31.9
+  [p0]   m2E   gap    1.6  sh-A0  -11.0  sh-A1   -7.7  sh span   49.7  moe span   85.0  call   94.0  head/rot/A/B 0.0/4.7/45.7/32.8
+  [p0]   m2EP  gap    1.6  sh-A0  -11.0  sh-A1   -8.4  sh span   47.8  moe span   84.9  call   93.9  head/rot/A/B 0.0/4.7/45.5/33.0
+  [p0]   ser   gap    0.3  sh-A0  -24.3  sh-A1  -50.6  sh span   21.9  moe span   80.8  call  115.3  head/rot/A/B 0.0/0.0/48.5/32.0
+  [p0] K3/r12/D60     ref  177.92  m2  141.15  m3  136.42  m3H  136.64  m3H2  142.59  m3P  136.42  m3E  134.34  m3EP  134.53  m2E  132.83  m2EP  134.24  ser  154.14
+  [p0]   ref   gap    1.5  sh-A0   -4.1  sh-A1   -5.8  sh span   73.6  moe span  168.3  call  177.2  head/rot/A/B 0.0/6.2/75.5/85.5
+  [p0]   m2    gap    1.4  sh-A0   -3.7  sh-A1   -8.6  sh span   64.7  moe span  131.1  call  140.0  head/rot/A/B 0.0/6.1/70.1/53.8
+  [p0]   m3    gap    9.9  sh-A0   49.4  sh-A1    8.3  sh span   23.6  moe span  125.1  call  134.0  head/rot/A/B 0.0/0.0/64.6/51.2
+  [p0]   m3H   gap    9.8  sh-A0   49.3  sh-A1    8.3  sh span   23.6  moe span  126.3  call  135.1  head/rot/A/B 0.7/0.0/64.7/51.1
+  [p0]   m3H2  gap    1.9  sh-A0   -0.9  sh-A1   -9.7  sh span   67.1  moe span  131.8  call  140.7  head/rot/A/B 2.7/0.0/75.9/51.1
+  [p0]   m3P   gap    9.8  sh-A0   49.4  sh-A1    8.4  sh span   23.6  moe span  125.0  call  133.8  head/rot/A/B 0.0/0.0/64.6/51.1
+  [p0]   m3E   gap    1.7  sh-A0   -6.1  sh-A1   -8.3  sh span   67.8  moe span  122.3  call  131.4  head/rot/A/B 0.0/0.0/70.0/51.1
+  [p0]   m3EP  gap    1.7  sh-A0   -6.1  sh-A1   -8.8  sh span   67.5  moe span  122.5  call  131.5  head/rot/A/B 0.0/0.0/70.2/51.0
+  [p0]   m2E   gap    1.4  sh-A0  -12.4  sh-A1  -10.0  sh span   64.1  moe span  122.8  call  131.9  head/rot/A/B 0.0/6.0/61.6/54.0
+  [p0]   m2EP  gap    1.6  sh-A0  -12.4  sh-A1   -9.5  sh span   64.3  moe span  122.2  call  131.3  head/rot/A/B 0.0/6.0/61.3/53.8
+  [p0]   ser   gap    0.3  sh-A0  -25.6  sh-A1  -67.0  sh span   23.7  moe span  116.5  call  152.2  head/rot/A/B 0.0/0.0/65.3/51.2
+  [p0] K3/r16/D40     ref  118.05  m2   97.66  m3  109.92  m3H  110.24  m3H2  102.98  m3P  109.89  m3E   99.71  m3EP   99.65  m2E   99.71  m2EP   99.23  ser  128.10
+  [p0]   ref   gap    1.7  sh-A0   -5.9  sh-A1  -14.5  sh span   49.9  moe span  107.2  call  116.1  head/rot/A/B 0.0/7.7/58.4/38.8
+  [p0]   m2    gap    1.7  sh-A0   -5.7  sh-A1   -3.9  sh span   46.0  moe span   86.3  call   95.2  head/rot/A/B 0.0/7.8/44.4/32.4
+  [p0]   m3    gap   10.3  sh-A0   38.6  sh-A1    8.6  sh span   24.2  moe span   99.3  call  108.2  head/rot/A/B 0.0/0.0/53.9/35.2
+  [p0]   m3H   gap   10.0  sh-A0   38.5  sh-A1    8.6  sh span   24.1  moe span  100.3  call  109.3  head/rot/A/B 0.7/0.0/54.1/35.1
+  [p0]   m3H2  gap    1.1  sh-A0   -0.9  sh-A1   -4.9  sh span   48.6  moe span   92.0  call  100.6  head/rot/A/B 2.7/0.0/52.4/35.1
+  [p0]   m3P   gap   10.1  sh-A0   38.6  sh-A1    8.6  sh span   24.1  moe span   99.4  call  108.3  head/rot/A/B 0.0/0.0/54.0/35.2
+  [p0]   m3E   gap    1.9  sh-A0   -6.1  sh-A1   -4.6  sh span   53.5  moe span   88.9  call   98.0  head/rot/A/B 0.0/0.0/51.9/35.1
+  [p0]   m3EP  gap    1.7  sh-A0   -6.1  sh-A1   -4.5  sh span   53.5  moe span   88.5  call   97.6  head/rot/A/B 0.0/0.0/51.9/35.0
+  [p0]   m2E   gap    2.0  sh-A0  -14.0  sh-A1   -7.5  sh span   52.6  moe span   88.3  call   97.5  head/rot/A/B 0.0/7.7/46.0/32.4
+  [p0]   m2EP  gap    1.6  sh-A0  -14.0  sh-A1   -7.4  sh span   52.7  moe span   87.8  call   97.1  head/rot/A/B 0.0/7.7/46.0/32.4
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1  -55.8  sh span   24.3  moe span   89.5  call  126.2  head/rot/A/B 0.0/0.0/54.0/35.2
+  [p0] K3/r16/D160    ref  292.54  m2  270.02  m3  256.99  m3H  257.34  m3H2  264.00  m3P  256.32  m3E  256.35  m3EP  257.38  m2E  269.57  m2EP  267.94  ser  277.50
+  [p0]   ref   gap    1.8  sh-A0   -5.8  sh-A1  -22.8  sh span  155.2  moe span  285.0  call  293.9  head/rot/A/B 0.0/7.9/171.7/103.1
+  [p0]   m2    gap    1.6  sh-A0   -5.6  sh-A1  -18.1  sh span  142.5  moe span  258.8  call  268.2  head/rot/A/B 0.0/8.3/155.2/93.3
+  [p0]   m3    gap    7.1  sh-A0  131.7  sh-A1    5.7  sh span   25.8  moe span  246.1  call  255.3  head/rot/A/B 0.0/0.0/151.6/87.4
+  [p0]   m3H   gap    7.3  sh-A0  131.3  sh-A1    5.9  sh span   25.7  moe span  247.1  call  256.2  head/rot/A/B 0.7/0.0/151.2/87.3
+  [p0]   m3H2  gap    1.8  sh-A0   -0.7  sh-A1  -17.7  sh span  145.9  moe span  254.5  call  263.5  head/rot/A/B 2.7/0.0/162.8/86.9
+  [p0]   m3P   gap    7.3  sh-A0  131.8  sh-A1    5.8  sh span   25.7  moe span  246.5  call  255.6  head/rot/A/B 0.0/0.0/151.5/87.5
+  [p0]   m3E   gap    1.6  sh-A0   -6.3  sh-A1  -17.3  sh span  145.2  moe span  245.6  call  254.9  head/rot/A/B 0.0/0.0/156.3/87.6
+  [p0]   m3EP  gap    1.6  sh-A0   -6.3  sh-A1  -17.4  sh span  145.2  moe span  245.7  call  255.0  head/rot/A/B 0.0/0.0/156.4/87.5
+  [p0]   m2E   gap    1.6  sh-A0  -15.1  sh-A1  -14.3  sh span  154.1  moe span  257.9  call  267.5  head/rot/A/B 0.0/8.2/153.7/94.1
+  [p0]   m2EP  gap    1.7  sh-A0  -15.2  sh-A1  -16.2  sh span  153.3  moe span  257.7  call  267.1  head/rot/A/B 0.0/8.2/153.8/93.5
+  [p0]   ser   gap    0.3  sh-A0  -26.4  sh-A1 -151.6  sh span   24.6  moe span  237.6  call  274.8  head/rot/A/B 0.0/0.0/150.3/87.0
+  [p0] control K2/r1/D10: {'ref': 1.0, 'm2': 0.9983498224090018, 'm3': 0.9972497040150031, 'm3H': 1.0, 'm3H2': 0.9961496496558352}  ok
+  [p0] control K3/r1/D10: {'ref': 1.0, 'm2': 0.998474047437288, 'm3': 0.998474047437288, 'm3H': 1.0, 'm3H2': 1.0}  ok
+  [p0] r1 D10: 48-layer MoE ref 2.901  m2 2.897  m3 2.895  m3H 2.901  m3H2 2.896  m3P 2.917  m3E 2.331  m3EP 2.377  m2E 2.332  m2EP 2.377  ser 3.457 ms  -> best m3E (-0.566 ms vs m2)
+  [p0] r2 D20: 48-layer MoE ref 3.555  m2 3.112  m3 3.279  m3H 3.314  m3H2 3.227  m3P 3.332  m3E 3.079  m3EP 3.114  m2E 3.013  m2EP 3.068  ser 4.108 ms  -> best m2E (-0.099 ms vs m2)
+  [p0] r3 D28: 48-layer MoE ref 4.486  m2 3.666  m3 3.923  m3H 3.952  m3H2 3.958  m3P 3.944  m3E 3.758  m3EP 3.785  m2E 3.566  m2EP 3.657  ser 4.705 ms  -> best m2E (-0.100 ms vs m2)
+  [p0] r4 D10: 48-layer MoE ref 2.992  m2 2.664  m3 2.676  m3H 2.711  m3H2 2.727  m3P 2.689  m3E 2.605  m3EP 2.579  m2E 2.576  m2EP 2.560  ser 3.622 ms  -> best m2EP (-0.104 ms vs m2)
+  [p0] r4 D20: 48-layer MoE ref 3.659  m2 3.197  m3 3.410  m3H 3.460  m3H2 3.166  m3P 3.434  m3E 3.019  m3EP 3.052  m2E 3.196  m2EP 3.191  ser 4.176 ms  -> best m3E (-0.177 ms vs m2)
+  [p0] r4 D28: 48-layer MoE ref 4.579  m2 3.862  m3 3.794  m3H 3.850  m3H2 3.893  m3P 3.805  m3E 3.549  m3EP 3.558  m2E 3.514  m2EP 3.550  ser 4.401 ms  -> best m2E (-0.349 ms vs m2)
+  [p0] r4 D40: 48-layer MoE ref 5.639  m2 4.148  m3 4.286  m3H 4.325  m3H2 3.999  m3P 4.296  m3E 3.847  m3EP 3.841  m2E 4.172  m2EP 4.167  ser 4.990 ms  -> best m3EP (-0.308 ms vs m2)
+  [p0] r8 D40: 48-layer MoE ref 5.942  m2 4.289  m3 4.512  m3H 4.544  m3H2 4.259  m3P 4.514  m3E 4.096  m3EP 4.091  m2E 4.318  m2EP 4.312  ser 5.330 ms  -> best m3EP (-0.199 ms vs m2)
+  [p0] r12 D60: 48-layer MoE ref 7.968  m2 6.482  m3 6.243  m3H 6.266  m3H2 6.539  m3P 6.243  m3E 6.144  m3EP 6.152  m2E 6.109  m2EP 6.147  ser 7.097 ms  -> best m2E (-0.374 ms vs m2)
+  [p0] r16 D40: 48-layer MoE ref 5.260  m2 4.441  m3 5.106  m3H 5.131  m3H2 4.761  m3P 5.103  m3E 4.579  m3EP 4.578  m2E 4.509  m2EP 4.481  ser 5.929 ms  -> best m2 (+0.000 ms vs m2)
+  [p0] r16 D77: 48-layer MoE ref 7.399  m2 6.696  m3 7.134  m3H 7.168  m3H2 6.893  m3P 7.133  m3E 6.586  m3EP 6.639  m2E 6.677  m2EP 6.654  ser 7.841 ms  -> best m3E (-0.111 ms vs m2)
+  [p0] r16 D160: 48-layer MoE ref 12.905  m2 12.235  m3 11.629  m3H 11.645  m3H2 11.909  m3P 11.615  m3E 11.561  m3EP 11.600  m2E 12.248  m2EP 12.196  ser 12.568 ms  -> best m3E (-0.674 ms vs m2)
+  [p0] INSTRUMENT K2/r4/D28: A->B gap m2 0.9920000000001892 m3 12.784000000000106 us (m3 - m2 11.791999999999916; R703b nsys c1d3: 1.9 -> 14.1)
+  [p0] INSTRUMENT K3/r4/D28: A->B gap m2 1.1520000000000152 m3 13.263999999999896 us (m3 - m2 12.111999999999881; R703b nsys c1d3: 1.9 -> 14.1)
+  [p0] INSTRUMENT OK: reproduces the r2 overlap loss
+  [p0] PICK lever E; 2-4: m2E 3.514 vs m3E 3.549 ms -> mode 2; 5-12: m2E 10.426 vs m3E 10.240 ms -> mode 3; 13-16: m2E 6.677 vs m3E 6.586 ms -> mode 3
+  [p0] R3_ENV=EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T15:39:10+00:00 [r713-moefast-r3] R3 = P0 pick: EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1
+2026-09-24T15:39:13+00:00 [r713-moefast-r3] L2 probe rc=0
+  [p0] l2probe K2/r4/D28 victim 32 MB: hot 10.2 cold 29.7 us | ref 10.2  m2 18.4  m3 10.2
+  [p0] l2probe K2/r4/D28 victim 64 MB: hot 24.6 cold 49.2 us | ref 38.9  m2 47.1  m3 38.9
+  [p0] l2probe K2/r16/D77 victim 32 MB: hot 10.2 cold 29.7 us | ref 10.2  m2 26.6  m3 10.2
+  [p0] l2probe K2/r16/D77 victim 64 MB: hot 24.4 cold 51.2 us | ref 41.0  m2 47.1  m3 41.0
+  [p0] l2probe K3/r4/D28 victim 32 MB: hot 10.2 cold 28.7 us | ref 10.2  m2 22.5  m3 10.2
+  [p0] l2probe K3/r4/D28 victim 64 MB: hot 24.6 cold 53.2 us | ref 38.9  m2 47.1  m3 36.9
+  [p0] l2probe K3/r16/D77 victim 32 MB: hot 10.2 cold 30.7 us | ref 10.2  m2 26.6  m3 10.2
+  [p0] l2probe K3/r16/D77 victim 64 MB: hot 24.6 cold 51.2 us | ref 41.0  m2 47.1  m3 38.9
+2026-09-24T15:39:13+00:00 [r713-moefast-r3] arms: OFF='EXL3_MOE_COOP_V3=0' M2='EXL3_MOE_COOP_V3=2' R3='EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1' (nsys only: M2E='EXL3_MOE_COOP_V3=2 EXL3_SHARED_EXPERT_EARLY=1 '); common = served env minus arm keys
+2026-09-24T15:39:35+00:00 [r713-moefast-r3]   nsys c1d3 OFF rc=0: 40198144 bytes
+2026-09-24T15:39:57+00:00 [r713-moefast-r3]   nsys c1d3 M2 rc=0: 40202240 bytes
+2026-09-24T15:40:20+00:00 [r713-moefast-r3]   nsys c1d3 R3 rc=0: 40202240 bytes
+2026-09-24T15:40:42+00:00 [r713-moefast-r3]   nsys c1d3 M2E rc=0: 40210432 bytes
+2026-09-24T15:40:45+00:00 [r713-moefast-r3]   timeline c1d3 (rc=0):
+    [c1d3] per-layer medians (us); p90 in brackets
+    [c1d3]                                            OFF                  M2                  R3                 M2E
+    [c1d3] layers / est. steps              1392 /   29.0       1392 /   29.0       1392 /   29.0       1392 /   29.0
+    [c1d3] rot                              3.52 [  3.78]       3.58 [  4.16]       3.36 [  3.58]       3.36 [  3.62]
+    [c1d3] A                               40.13 [ 47.78]      38.21 [ 43.39]      30.96 [ 35.52]      30.94 [ 35.87]
+    [c1d3] B                               38.37 [ 48.13]      26.10 [ 30.56]      26.08 [ 30.62]      26.08 [ 30.46]
+    [c1d3] A->B gap                         1.95 [  2.82]       1.82 [  2.69]       1.82 [  2.72]       1.92 [  2.88]
+    [c1d3] layer                           85.36 [101.57]      70.34 [ 79.71]      62.86 [ 72.90]      63.34 [ 72.64]
+    [c1d3] shared span                     34.74 [ 43.46]      31.26 [ 36.90]      25.38 [ 42.62]      26.50 [ 43.81]
+    [c1d3] shared start - A start          -3.55 [ -1.70]      -3.58 [ -1.66]     -14.62 [-10.14]     -10.46 [-10.08]
+    [c1d3] shared end - A end              -9.26 [ -4.00]      -9.46 [ -6.21]     -17.25 [ -0.64]     -13.58 [ -0.51]
+    [c1d3] 
+    [c1d3] kernel device ms per decode step (window), deltas vs OFF
+    [c1d3] kernel                                                                 OFF          M2          R3         M2E        d M2        d R3       d M2E
+    [c1d3] exl3_moe_coop_a_kernel                                              2.0682      0.0798      0.0693      0.0686     -1.9885     -1.9990     -1.9996
+    [c1d3] void exl3_mgemm_kernel                                              1.9652      1.9779      1.9500      1.9447     +0.0126     -0.0152     -0.0206
+    [c1d3] exl3_moe_coop_b_kernel                                              1.9167      0.0462      0.0462      0.0462     -1.8705     -1.8705     -1.8706
+    [c1d3] exl3_moe_coop_v3_a_kernel                                           0.0000      1.8146      1.5380      1.5473     +1.8146     +1.5380     +1.5473
+    [c1d3] void exl3_gemv_kernel                                               1.4437      1.5167      1.5064      1.5162     +0.0730     +0.0627     +0.0725
+    [c1d3] exl3_moe_coop_v3_b_kernel                                           0.0000      1.2648      1.2680      1.2666     +1.2648     +1.2680     +1.2666
+    [c1d3] up_i8_state_v3_kernel                                               0.5199      0.5207      0.5210      0.5206     +0.0008     +0.0011     +0.0007
+    [c1d3] dots_i8_v3_kernel                                                   0.5014      0.5025      0.5026      0.5022     +0.0011     +0.0011     +0.0007
+    [c1d3] void cuda_recurrent_gated_delta_rule_kernel_128                     0.5000      0.4986      0.4975      0.4979     -0.0014     -0.0025     -0.0021
+    [c1d3] void exl3_gemm_kernel                                               0.3768      0.3733      0.3741      0.3738     -0.0035     -0.0027     -0.0029
+    [c1d3] _qsa_sparse_split_kernel                                            0.3522      0.3517      0.3522      0.3517     -0.0006     -0.0000     -0.0005
+    [c1d3] void exl3_gemv_int8_sq_kernel                                       0.3483      0.3506      0.3495      0.3493     +0.0023     +0.0012     +0.0010
+    [c1d3] Kernel2                                                             0.2862      0.2872      0.3072      0.3161     +0.0010     +0.0209     +0.0298
+    [c1d3] exl3_moe_coop_rot_kernel                                            0.1704      0.1762      0.1623      0.1632     +0.0058     -0.0081     -0.0072
+    [c1d3] routing_std_topk_kernel                                             0.1543      0.1544      0.1578      0.1586     +0.0001     +0.0035     +0.0043
+    [c1d3] _paged_attn_decode_combine_kernel                                   0.1208      0.1218      0.1214      0.1215     +0.0010     +0.0006     +0.0007
+    [c1d3] void conv1d_update_kernel                                           0.1059      0.1112      0.1112      0.1111     +0.0053     +0.0053     +0.0052
+    [c1d3] void hc_apply_kernel                                                0.0950      0.0966      0.0965      0.0965     +0.0016     +0.0015     +0.0015
+    [c1d3] void gdn_ba_gemv_kernel                                             0.0919      0.0904      0.0899      0.0900     -0.0014     -0.0020     -0.0019
+    [c1d3] void rope_kernel                                                    0.0662      0.0663      0.0664      0.0663     +0.0000     +0.0001     +0.0000
+    [c1d3] void dsa_topk_kernel                                                0.0644      0.0644      0.0644      0.0644     -0.0000     -0.0001     +0.0000
+    [c1d3] void gated_rms_norm_kernel                                          0.0577      0.0576      0.0576      0.0577     -0.0002     -0.0001     -0.0001
+    [c1d3] splitKreduce_kernel                                                 0.0549      0.0550      0.0541      0.0548     +0.0001     -0.0008     -0.0001
+    [c1d3] void act_mul_kernel_h                                               0.0431      0.0465      0.0431      0.0466     +0.0034     +0.0000     +0.0035
+    [c1d3] void gated_delta_net_fused_op_3_kernel                              0.0465      0.0464      0.0464      0.0465     -0.0000     -0.0000     +0.0000
+    [c1d3] _dsa_indexer_fewq_kernel                                            0.0403      0.0401      0.0400      0.0399     -0.0002     -0.0004     -0.0004
+    [c1d3] _qsa_pool_update_ring_bc_kernel                                     0.0358      0.0358      0.0358      0.0358     -0.0000     -0.0000     -0.0000
+    [c1d3] reduce_kernel                                                       0.0319      0.0320      0.0318      0.0318     +0.0001     -0.0001     -0.0000
+    [c1d3] elementwise_kernel                                                  0.0270      0.0271      0.0272      0.0272     +0.0001     +0.0002     +0.0002
+    [c1d3] void quant_cache_paged_kernel                                       0.0248      0.0248      0.0248      0.0248     +0.0000     -0.0000     +0.0000
+    [c1d3] GAP OFF 1.95 OK (target <= 4.0 us)
+    [c1d3] GAP M2 1.82 OK (target <= 4.0 us)
+    [c1d3] GAP R3 1.82 OK (target <= 4.0 us)
+    [c1d3] GAP M2E 1.92 OK (target <= 4.0 us)
+    [c1d3] OFF: MoE kernels 4.155 ms/step, all other kernels 7.529 ms/step
+    [c1d3] M2: MoE kernels 3.382 ms/step, all other kernels 7.623 ms/step
+    [c1d3] R3: MoE kernels 3.084 ms/step, all other kernels 7.602 ms/step
+    [c1d3] M2E: MoE kernels 3.092 ms/step, all other kernels 7.619 ms/step
+2026-09-24T15:41:11+00:00 [r713-moefast-r3]   nsys c4d3 OFF rc=0: 49360896 bytes
+2026-09-24T15:41:38+00:00 [r713-moefast-r3]   nsys c4d3 M2 rc=0: 49360896 bytes
+2026-09-24T15:42:01+00:00 [r713-moefast-r3]   nsys c4d3 R3 rc=0: 49049600 bytes
+2026-09-24T15:42:03+00:00 [r713-moefast-r3]   timeline c4d3 (rc=0):
+    [c4d3] per-layer medians (us); p90 in brackets
+    [c4d3]                                            OFF                  M2                  R3
+    [c4d3] layers / est. steps              1479 /   30.8       1479 /   30.8       1479 /   30.8
+    [c4d3] rot                              7.78 [  8.10]       8.00 [  8.35]       0.00 [  0.00]
+    [c4d3] A                               92.00 [111.20]      82.53 [102.24]      97.25 [111.36]
+    [c4d3] B                               61.02 [ 73.92]      57.47 [ 66.98]      57.15 [ 65.54]
+    [c4d3] A->B gap                         1.82 [  2.69]       2.14 [  4.38]       1.92 [  2.75]
+    [c4d3] layer                          162.50 [195.01]     152.00 [179.74]     156.19 [177.54]
+    [c4d3] shared span                     83.78 [110.21]      81.22 [101.38]      85.18 [104.77]
+    [c4d3] shared start - A start          -5.73 [ -2.62]      -5.34 [ -3.07]      -7.33 [ -6.66]
+    [c4d3] shared end - A end             -12.54 [ -3.36]      -6.78 [  1.25]     -15.17 [ -4.70]
+    [c4d3] 
+    [c4d3] kernel device ms per decode step (window), deltas vs OFF
+    [c4d3] kernel                                                                 OFF          M2          R3        d M2        d R3
+    [c4d3] exl3_moe_coop_a_kernel                                              4.4626      0.0000      0.0000     -4.4626     -4.4626
+    [c4d3] exl3_moe_coop_r2_a_kernel                                           0.0000      0.0000      4.4504     +0.0000     +4.4504
+    [c4d3] exl3_moe_coop_v3_a_kernel                                           0.0000      4.0019      0.1433     +4.0019     +0.1433
+    [c4d3] exl3_moe_coop_b_kernel                                              2.9575      0.0000      0.0000     -2.9575     -2.9575
+    [c4d3] exl3_moe_coop_v3_b_kernel                                           0.0000      2.7322      0.0937     +2.7322     +0.0937
+    [c4d3] exl3_moe_coop_r2_b_kernel                                           0.0000      0.0000      2.6195     +0.0000     +2.6195
+    [c4d3] void exl3_gemm_kernel                                               2.1725      2.1862      2.1820     +0.0137     +0.0094
+    [c4d3] void exl3_mgemm_kernel                                              1.9884      2.0203      1.9781     +0.0319     -0.0103
+    [c4d3] dots_i8_v3_kernel                                                   1.2947      1.3019      1.2956     +0.0072     +0.0010
+    [c4d3] up_i8_state_v3_kernel                                               0.9188      0.9236      0.9246     +0.0047     +0.0057
+    [c4d3] void cuda_recurrent_gated_delta_rule_kernel_128                     0.9140      0.9095      0.9137     -0.0045     -0.0003
+    [c4d3] _qsa_sparse_split_kernel                                            0.6791      0.6770      0.6805     -0.0020     +0.0014
+    [c4d3] exl3_moe_coop_rot_kernel                                            0.3633      0.3713      0.0096     +0.0080     -0.3537
+    [c4d3] Kernel2                                                             0.2546      0.2314      0.2750     -0.0231     +0.0205
+    [c4d3] routing_std_topk_kernel                                             0.1475      0.1477      0.1505     +0.0002     +0.0030
+    [c4d3] void hc_apply_kernel                                                0.1123      0.1446      0.1131     +0.0323     +0.0008
+    [c4d3] void gdn_ba_gemv_kernel                                             0.1368      0.1336      0.1370     -0.0032     +0.0002
+    [c4d3] void conv1d_update_kernel                                           0.1295      0.1328      0.1305     +0.0033     +0.0010
+    [c4d3] _paged_attn_decode_combine_kernel                                   0.0946      0.0945      0.0952     -0.0001     +0.0006
+    [c4d3] void act_mul_kernel_h                                               0.0768      0.0772      0.0830     +0.0003     +0.0061
+    [c4d3] splitKreduce_kernel                                                 0.0791      0.0791      0.0796     +0.0000     +0.0005
+    [c4d3] batched_state_rewind_kernel                                         0.0695      0.0589      0.0695     -0.0107     -0.0001
+    [c4d3] void rope_kernel                                                    0.0677      0.0681      0.0681     +0.0004     +0.0004
+    [c4d3] void dsa_topk_kernel                                                0.0673      0.0674      0.0675     +0.0001     +0.0002
+    [c4d3] void gated_delta_net_fused_op_3_kernel                              0.0611      0.0611      0.0610     +0.0000     -0.0001
+    [c4d3] void gated_rms_norm_kernel                                          0.0562      0.0563      0.0564     +0.0000     +0.0001
+    [c4d3] elementwise_kernel                                                  0.0483      0.0482      0.0482     -0.0001     -0.0001
+    [c4d3] _dsa_indexer_fewq_kernel                                            0.0462      0.0459      0.0466     -0.0003     +0.0004
+    [c4d3] void exl3_gemv_kernel                                               0.0396      0.0399      0.0405     +0.0004     +0.0009
+    [c4d3] _qsa_pool_update_ring_bc_kernel                                     0.0396      0.0404      0.0404     +0.0008     +0.0008
+    [c4d3] GAP OFF 1.82 OK (target <= 4.0 us)
+    [c4d3] GAP M2 2.14 OK (target <= 4.0 us)
+    [c4d3] GAP R3 1.92 OK (target <= 4.0 us)
+    [c4d3] OFF: MoE kernels 7.783 ms/step, all other kernels 9.778 ms/step
+    [c4d3] M2: MoE kernels 7.105 ms/step, all other kernels 9.829 ms/step
+    [c4d3] R3: MoE kernels 7.316 ms/step, all other kernels 9.822 ms/step
+2026-09-24T15:42:38+00:00 [r713-moefast-r3]   P1 c4d3-W1 rc=0: events: 635.721104 ms capture, 19.866284 ms/iterate | d0 events: 378.832704 ms capture, 11.838522 ms/iterate
+2026-09-24T15:43:09+00:00 [r713-moefast-r3]   P1 c4d3-OFF1 rc=0: events: 671.546719 ms capture, 20.985835 ms/iterate | d0 events: 344.360208 ms capture, 10.761256 ms/iterate
+2026-09-24T15:43:40+00:00 [r713-moefast-r3]   P1 c4d3-M21 rc=0: events: 617.299989 ms capture, 19.290625 ms/iterate | d0 events: 352.698594 ms capture, 11.021831 ms/iterate
+2026-09-24T15:44:10+00:00 [r713-moefast-r3]   P1 c4d3-R31 rc=0: events: 653.454465 ms capture, 20.420452 ms/iterate | d0 events: 304.689242 ms capture, 9.521539 ms/iterate
+2026-09-24T15:44:10+00:00 [r713-moefast-r3]   c4d3 round 1 M2 d3: hashes IDENTICAL
+2026-09-24T15:44:10+00:00 [r713-moefast-r3]   c4d3 round 1 M2 d0: hashes IDENTICAL
+2026-09-24T15:44:10+00:00 [r713-moefast-r3]   c4d3 round 1 R3 d3: hashes IDENTICAL
+2026-09-24T15:44:10+00:00 [r713-moefast-r3]   c4d3 round 1 R3 d0: hashes IDENTICAL
+2026-09-24T15:44:41+00:00 [r713-moefast-r3]   P1 c4d3-W2 rc=0: events: 617.901890 ms capture, 19.309434 ms/iterate | d0 events: 351.842581 ms capture, 10.995081 ms/iterate
+2026-09-24T15:45:11+00:00 [r713-moefast-r3]   P1 c4d3-M22 rc=0: events: 657.995237 ms capture, 20.562351 ms/iterate | d0 events: 317.449584 ms capture, 9.920300 ms/iterate
+2026-09-24T15:45:42+00:00 [r713-moefast-r3]   P1 c4d3-R32 rc=0: events: 616.780268 ms capture, 19.274383 ms/iterate | d0 events: 304.339162 ms capture, 9.510599 ms/iterate
+2026-09-24T15:46:12+00:00 [r713-moefast-r3]   P1 c4d3-OFF2 rc=0: events: 663.768810 ms capture, 20.742775 ms/iterate | d0 events: 378.735408 ms capture, 11.835481 ms/iterate
+2026-09-24T15:46:12+00:00 [r713-moefast-r3]   c4d3 round 2 M2 d3: hashes IDENTICAL
+2026-09-24T15:46:12+00:00 [r713-moefast-r3]   c4d3 round 2 M2 d0: hashes IDENTICAL
+2026-09-24T15:46:12+00:00 [r713-moefast-r3]   c4d3 round 2 R3 d3: hashes IDENTICAL
+2026-09-24T15:46:12+00:00 [r713-moefast-r3]   c4d3 round 2 R3 d0: hashes IDENTICAL
+2026-09-24T15:46:42+00:00 [r713-moefast-r3]   P1 c4d3-W3 rc=0: events: 638.099922 ms capture, 19.940623 ms/iterate | d0 events: 303.547173 ms capture, 9.485849 ms/iterate
+2026-09-24T15:47:11+00:00 [r713-moefast-r3]   P1 c4d3-R33 rc=0: events: 626.087202 ms capture, 19.565225 ms/iterate | d0 events: 342.722479 ms capture, 10.710077 ms/iterate
+2026-09-24T15:47:41+00:00 [r713-moefast-r3]   P1 c4d3-OFF3 rc=0: events: 637.146907 ms capture, 19.910841 ms/iterate | d0 events: 379.141413 ms capture, 11.848169 ms/iterate
+2026-09-24T15:48:11+00:00 [r713-moefast-r3]   P1 c4d3-M23 rc=0: events: 644.242817 ms capture, 20.132588 ms/iterate | d0 events: 317.145257 ms capture, 9.910789 ms/iterate
+2026-09-24T15:48:11+00:00 [r713-moefast-r3]   c4d3 round 3 M2 d3: hashes IDENTICAL
+2026-09-24T15:48:11+00:00 [r713-moefast-r3]   c4d3 round 3 M2 d0: hashes IDENTICAL
+2026-09-24T15:48:11+00:00 [r713-moefast-r3]   c4d3 round 3 R3 d3: hashes IDENTICAL
+2026-09-24T15:48:11+00:00 [r713-moefast-r3]   c4d3 round 3 R3 d0: hashes IDENTICAL
+2026-09-24T15:48:41+00:00 [r713-moefast-r3]   P1 c4d3-W4 rc=0: events: 668.057169 ms capture, 20.876787 ms/iterate | d0 events: 345.644178 ms capture, 10.801381 ms/iterate
+2026-09-24T15:49:11+00:00 [r713-moefast-r3]   P1 c4d3-OFF4 rc=0: events: 644.240398 ms capture, 20.132512 ms/iterate | d0 events: 345.144670 ms capture, 10.785771 ms/iterate
+2026-09-24T15:49:41+00:00 [r713-moefast-r3]   P1 c4d3-M24 rc=0: events: 640.210641 ms capture, 20.006583 ms/iterate | d0 events: 317.568712 ms capture, 9.924022 ms/iterate
+2026-09-24T15:50:11+00:00 [r713-moefast-r3]   P1 c4d3-R34 rc=0: events: 623.562247 ms capture, 19.486320 ms/iterate | d0 events: 305.843780 ms capture, 9.557618 ms/iterate
+2026-09-24T15:50:11+00:00 [r713-moefast-r3]   c4d3 round 4 M2 d3: hashes IDENTICAL
+2026-09-24T15:50:11+00:00 [r713-moefast-r3]   c4d3 round 4 M2 d0: hashes IDENTICAL
+2026-09-24T15:50:11+00:00 [r713-moefast-r3]   c4d3 round 4 R3 d3: hashes IDENTICAL
+2026-09-24T15:50:11+00:00 [r713-moefast-r3]   c4d3 round 4 R3 d0: hashes IDENTICAL
+2026-09-24T15:50:41+00:00 [r713-moefast-r3]   P1 c4d3-W5 rc=0: events: 630.581632 ms capture, 19.705676 ms/iterate | d0 events: 317.478990 ms capture, 9.921218 ms/iterate
+2026-09-24T15:51:11+00:00 [r713-moefast-r3]   P1 c4d3-M25 rc=0: events: 622.665697 ms capture, 19.458303 ms/iterate | d0 events: 318.676106 ms capture, 9.958628 ms/iterate
+2026-09-24T15:51:41+00:00 [r713-moefast-r3]   P1 c4d3-R35 rc=0: events: 630.029018 ms capture, 19.688407 ms/iterate | d0 events: 338.860218 ms capture, 10.589382 ms/iterate
+2026-09-24T15:52:11+00:00 [r713-moefast-r3]   P1 c4d3-OFF5 rc=0: events: 640.023348 ms capture, 20.000730 ms/iterate | d0 events: 379.452212 ms capture, 11.857882 ms/iterate
+2026-09-24T15:52:11+00:00 [r713-moefast-r3]   c4d3 round 5 M2 d3: hashes IDENTICAL
+2026-09-24T15:52:11+00:00 [r713-moefast-r3]   c4d3 round 5 M2 d0: hashes IDENTICAL
+2026-09-24T15:52:11+00:00 [r713-moefast-r3]   c4d3 round 5 R3 d3: hashes IDENTICAL
+2026-09-24T15:52:11+00:00 [r713-moefast-r3]   c4d3 round 5 R3 d0: hashes IDENTICAL
+2026-09-24T15:52:41+00:00 [r713-moefast-r3]   P1 c4d3-W6 rc=0: events: 631.716913 ms capture, 19.741154 ms/iterate | d0 events: 338.487708 ms capture, 10.577741 ms/iterate
+2026-09-24T15:53:10+00:00 [r713-moefast-r3]   P1 c4d3-R36 rc=0: events: 617.360393 ms capture, 19.292512 ms/iterate | d0 events: 303.926236 ms capture, 9.497695 ms/iterate
+2026-09-24T15:53:40+00:00 [r713-moefast-r3]   P1 c4d3-OFF6 rc=0: events: 659.012079 ms capture, 20.594127 ms/iterate | d0 events: 345.783307 ms capture, 10.805728 ms/iterate
+2026-09-24T15:54:10+00:00 [r713-moefast-r3]   P1 c4d3-M26 rc=0: events: 624.484020 ms capture, 19.515126 ms/iterate | d0 events: 354.180429 ms capture, 11.068138 ms/iterate
+2026-09-24T15:54:10+00:00 [r713-moefast-r3]   c4d3 round 6 M2 d3: hashes IDENTICAL
+2026-09-24T15:54:10+00:00 [r713-moefast-r3]   c4d3 round 6 M2 d0: hashes IDENTICAL
+2026-09-24T15:54:10+00:00 [r713-moefast-r3]   c4d3 round 6 R3 d3: hashes IDENTICAL
+2026-09-24T15:54:10+00:00 [r713-moefast-r3]   c4d3 round 6 R3 d0: hashes IDENTICAL
+2026-09-24T15:54:47+00:00 [r713-moefast-r3]   P1 c8d1-W1 rc=0: events: 612.209734 ms capture, 19.131554 ms/iterate | d0 events: 419.492618 ms capture, 13.109144 ms/iterate
+2026-09-24T15:55:24+00:00 [r713-moefast-r3]   P1 c8d1-OFF1 rc=0: events: 604.440566 ms capture, 18.888768 ms/iterate | d0 events: 420.730290 ms capture, 13.147822 ms/iterate
+2026-09-24T15:56:00+00:00 [r713-moefast-r3]   P1 c8d1-M21 rc=0: events: 594.740553 ms capture, 18.585642 ms/iterate | d0 events: 384.927261 ms capture, 12.028977 ms/iterate
+2026-09-24T15:56:37+00:00 [r713-moefast-r3]   P1 c8d1-R31 rc=0: events: 586.106488 ms capture, 18.315828 ms/iterate | d0 events: 370.151032 ms capture, 11.567220 ms/iterate
+2026-09-24T15:56:37+00:00 [r713-moefast-r3]   c8d1 round 1 M2 d1: hashes IDENTICAL
+2026-09-24T15:56:37+00:00 [r713-moefast-r3]   c8d1 round 1 M2 d0: hashes IDENTICAL
+2026-09-24T15:56:37+00:00 [r713-moefast-r3]   c8d1 round 1 R3 d1: hashes IDENTICAL
+2026-09-24T15:56:37+00:00 [r713-moefast-r3]   c8d1 round 1 R3 d0: hashes IDENTICAL
+2026-09-24T15:57:13+00:00 [r713-moefast-r3]   P1 c8d1-W2 rc=0: events: 592.518954 ms capture, 18.516217 ms/iterate | d0 events: 383.779132 ms capture, 11.993098 ms/iterate
+2026-09-24T15:57:50+00:00 [r713-moefast-r3]   P1 c8d1-M22 rc=0: events: 590.306269 ms capture, 18.447071 ms/iterate | d0 events: 384.639527 ms capture, 12.019985 ms/iterate
+2026-09-24T15:58:27+00:00 [r713-moefast-r3]   P1 c8d1-R32 rc=0: events: 581.672991 ms capture, 18.177281 ms/iterate | d0 events: 371.122549 ms capture, 11.597580 ms/iterate
+2026-09-24T15:59:04+00:00 [r713-moefast-r3]   P1 c8d1-OFF2 rc=0: events: 606.973144 ms capture, 18.967911 ms/iterate | d0 events: 455.717445 ms capture, 14.241170 ms/iterate
+2026-09-24T15:59:04+00:00 [r713-moefast-r3]   c8d1 round 2 M2 d1: hashes IDENTICAL
+2026-09-24T15:59:04+00:00 [r713-moefast-r3]   c8d1 round 2 M2 d0: hashes IDENTICAL
+2026-09-24T15:59:04+00:00 [r713-moefast-r3]   c8d1 round 2 R3 d1: hashes IDENTICAL
+2026-09-24T15:59:04+00:00 [r713-moefast-r3]   c8d1 round 2 R3 d0: hashes IDENTICAL
+2026-09-24T15:59:40+00:00 [r713-moefast-r3]   P1 c8d1-W3 rc=0: events: 590.086123 ms capture, 18.440191 ms/iterate | d0 events: 371.136895 ms capture, 11.598028 ms/iterate
+2026-09-24T16:00:17+00:00 [r713-moefast-r3]   P1 c8d1-R33 rc=0: events: 584.515869 ms capture, 18.266121 ms/iterate | d0 events: 372.240556 ms capture, 11.632517 ms/iterate
+2026-09-24T16:00:53+00:00 [r713-moefast-r3]   P1 c8d1-OFF3 rc=0: events: 601.405485 ms capture, 18.793921 ms/iterate | d0 events: 419.713092 ms capture, 13.116034 ms/iterate
+2026-09-24T16:01:30+00:00 [r713-moefast-r3]   P1 c8d1-M23 rc=0: events: 585.661355 ms capture, 18.301917 ms/iterate | d0 events: 384.746073 ms capture, 12.023315 ms/iterate
+2026-09-24T16:01:30+00:00 [r713-moefast-r3]   c8d1 round 3 M2 d1: hashes IDENTICAL
+2026-09-24T16:01:30+00:00 [r713-moefast-r3]   c8d1 round 3 M2 d0: hashes IDENTICAL
+2026-09-24T16:01:30+00:00 [r713-moefast-r3]   c8d1 round 3 R3 d1: hashes IDENTICAL
+2026-09-24T16:01:30+00:00 [r713-moefast-r3]   c8d1 round 3 R3 d0: hashes IDENTICAL
+2026-09-24T16:02:07+00:00 [r713-moefast-r3]   P1 c8d1-W4 rc=0: events: 610.003329 ms capture, 19.062604 ms/iterate | d0 events: 419.806254 ms capture, 13.118945 ms/iterate
+2026-09-24T16:02:43+00:00 [r713-moefast-r3]   P1 c8d1-OFF4 rc=0: events: 630.627539 ms capture, 19.707111 ms/iterate | d0 events: 420.150421 ms capture, 13.129701 ms/iterate
+2026-09-24T16:03:20+00:00 [r713-moefast-r3]   P1 c8d1-M24 rc=0: events: 589.623352 ms capture, 18.425730 ms/iterate | d0 events: 386.816800 ms capture, 12.088025 ms/iterate
+2026-09-24T16:03:56+00:00 [r713-moefast-r3]   P1 c8d1-R34 rc=0: events: 588.639235 ms capture, 18.394976 ms/iterate | d0 events: 370.443646 ms capture, 11.576364 ms/iterate
+2026-09-24T16:03:56+00:00 [r713-moefast-r3]   c8d1 round 4 M2 d1: hashes IDENTICAL
+2026-09-24T16:03:56+00:00 [r713-moefast-r3]   c8d1 round 4 M2 d0: hashes IDENTICAL
+2026-09-24T16:03:56+00:00 [r713-moefast-r3]   c8d1 round 4 R3 d1: hashes IDENTICAL
+2026-09-24T16:03:56+00:00 [r713-moefast-r3]   c8d1 round 4 R3 d0: hashes IDENTICAL
+2026-09-24T16:04:33+00:00 [r713-moefast-r3]   P1 c8d1-W5 rc=0: events: 671.936063 ms capture, 20.998002 ms/iterate | d0 events: 383.788057 ms capture, 11.993377 ms/iterate
+2026-09-24T16:05:09+00:00 [r713-moefast-r3]   P1 c8d1-M25 rc=0: events: 590.155361 ms capture, 18.442355 ms/iterate | d0 events: 384.367386 ms capture, 12.011481 ms/iterate
+2026-09-24T16:05:46+00:00 [r713-moefast-r3]   P1 c8d1-R35 rc=0: events: 577.582448 ms capture, 18.049452 ms/iterate | d0 events: 371.430031 ms capture, 11.607188 ms/iterate
+2026-09-24T16:06:23+00:00 [r713-moefast-r3]   P1 c8d1-OFF5 rc=0: events: 604.997077 ms capture, 18.906159 ms/iterate | d0 events: 420.504023 ms capture, 13.140751 ms/iterate
+2026-09-24T16:06:23+00:00 [r713-moefast-r3]   c8d1 round 5 M2 d1: hashes IDENTICAL
+2026-09-24T16:06:23+00:00 [r713-moefast-r3]   c8d1 round 5 M2 d0: hashes IDENTICAL
+2026-09-24T16:06:23+00:00 [r713-moefast-r3]   c8d1 round 5 R3 d1: hashes IDENTICAL
+2026-09-24T16:06:23+00:00 [r713-moefast-r3]   c8d1 round 5 R3 d0: hashes IDENTICAL
+2026-09-24T16:06:59+00:00 [r713-moefast-r3]   P1 c8d1-W6 rc=0: events: 589.814880 ms capture, 18.431715 ms/iterate | d0 events: 370.910319 ms capture, 11.590947 ms/iterate
+2026-09-24T16:07:36+00:00 [r713-moefast-r3]   P1 c8d1-R36 rc=0: events: 581.819430 ms capture, 18.181857 ms/iterate | d0 events: 372.493950 ms capture, 11.640436 ms/iterate
+2026-09-24T16:08:12+00:00 [r713-moefast-r3]   P1 c8d1-OFF6 rc=0: events: 621.986680 ms capture, 19.437084 ms/iterate | d0 events: 419.917207 ms capture, 13.122413 ms/iterate
+2026-09-24T16:08:49+00:00 [r713-moefast-r3]   P1 c8d1-M26 rc=0: events: 637.957888 ms capture, 19.936184 ms/iterate | d0 events: 384.002341 ms capture, 12.000073 ms/iterate
+2026-09-24T16:08:49+00:00 [r713-moefast-r3]   c8d1 round 6 M2 d1: hashes IDENTICAL
+2026-09-24T16:08:49+00:00 [r713-moefast-r3]   c8d1 round 6 M2 d0: hashes IDENTICAL
+2026-09-24T16:08:49+00:00 [r713-moefast-r3]   c8d1 round 6 R3 d1: hashes IDENTICAL
+2026-09-24T16:08:49+00:00 [r713-moefast-r3]   c8d1 round 6 R3 d0: hashes IDENTICAL
+2026-09-24T16:09:13+00:00 [r713-moefast-r3]   P1 c1d3-W1 rc=0: events: 409.335268 ms capture, 12.791727 ms/iterate | d0 events: 251.606550 ms capture, 7.862705 ms/iterate
+2026-09-24T16:09:38+00:00 [r713-moefast-r3]   P1 c1d3-OFF1 rc=0: events: 398.640642 ms capture, 12.457520 ms/iterate | d0 events: 250.268486 ms capture, 7.820890 ms/iterate
+2026-09-24T16:10:02+00:00 [r713-moefast-r3]   P1 c1d3-M21 rc=0: events: 383.816635 ms capture, 11.994270 ms/iterate | d0 events: 249.149626 ms capture, 7.785926 ms/iterate
+2026-09-24T16:10:27+00:00 [r713-moefast-r3]   P1 c1d3-R31 rc=0: events: 391.219204 ms capture, 12.225600 ms/iterate | d0 events: 242.445499 ms capture, 7.576422 ms/iterate
+2026-09-24T16:10:27+00:00 [r713-moefast-r3]   c1d3 round 1 M2 d3: hashes IDENTICAL
+2026-09-24T16:10:27+00:00 [r713-moefast-r3]   c1d3 round 1 M2 d0: hashes IDENTICAL
+2026-09-24T16:10:27+00:00 [r713-moefast-r3]   c1d3 round 1 R3 d3: hashes IDENTICAL
+2026-09-24T16:10:27+00:00 [r713-moefast-r3]   c1d3 round 1 R3 d0: hashes IDENTICAL
+2026-09-24T16:10:51+00:00 [r713-moefast-r3]   P1 c1d3-W2 rc=0: events: 382.849765 ms capture, 11.964055 ms/iterate | d0 events: 250.180173 ms capture, 7.818130 ms/iterate
+2026-09-24T16:11:16+00:00 [r713-moefast-r3]   P1 c1d3-M22 rc=0: events: 371.899797 ms capture, 11.621869 ms/iterate | d0 events: 295.598677 ms capture, 9.237459 ms/iterate
+2026-09-24T16:11:40+00:00 [r713-moefast-r3]   P1 c1d3-R32 rc=0: events: 364.798329 ms capture, 11.399948 ms/iterate | d0 events: 241.371175 ms capture, 7.542849 ms/iterate
+2026-09-24T16:12:05+00:00 [r713-moefast-r3]   P1 c1d3-OFF2 rc=0: events: 410.000044 ms capture, 12.812501 ms/iterate | d0 events: 250.700428 ms capture, 7.834388 ms/iterate
+2026-09-24T16:12:05+00:00 [r713-moefast-r3]   c1d3 round 2 M2 d3: hashes IDENTICAL
+2026-09-24T16:12:05+00:00 [r713-moefast-r3]   c1d3 round 2 M2 d0: hashes IDENTICAL
+2026-09-24T16:12:05+00:00 [r713-moefast-r3]   c1d3 round 2 R3 d3: hashes IDENTICAL
+2026-09-24T16:12:05+00:00 [r713-moefast-r3]   c1d3 round 2 R3 d0: hashes IDENTICAL
+2026-09-24T16:12:29+00:00 [r713-moefast-r3]   P1 c1d3-W3 rc=0: events: 359.016784 ms capture, 11.219275 ms/iterate | d0 events: 240.701984 ms capture, 7.521937 ms/iterate
+2026-09-24T16:12:54+00:00 [r713-moefast-r3]   P1 c1d3-R33 rc=0: events: 409.179169 ms capture, 12.786849 ms/iterate | d0 events: 241.718643 ms capture, 7.553708 ms/iterate
+2026-09-24T16:13:18+00:00 [r713-moefast-r3]   P1 c1d3-OFF3 rc=0: events: 433.378428 ms capture, 13.543076 ms/iterate | d0 events: 251.535626 ms capture, 7.860488 ms/iterate
+2026-09-24T16:13:43+00:00 [r713-moefast-r3]   P1 c1d3-M23 rc=0: events: 373.621834 ms capture, 11.675682 ms/iterate | d0 events: 249.340856 ms capture, 7.791902 ms/iterate
+2026-09-24T16:13:43+00:00 [r713-moefast-r3]   c1d3 round 3 M2 d3: hashes IDENTICAL
+2026-09-24T16:13:43+00:00 [r713-moefast-r3]   c1d3 round 3 M2 d0: hashes IDENTICAL
+2026-09-24T16:13:43+00:00 [r713-moefast-r3]   c1d3 round 3 R3 d3: hashes IDENTICAL
+2026-09-24T16:13:43+00:00 [r713-moefast-r3]   c1d3 round 3 R3 d0: hashes IDENTICAL
+2026-09-24T16:14:07+00:00 [r713-moefast-r3]   P1 c1d3-W4 rc=0: events: 398.088898 ms capture, 12.440278 ms/iterate | d0 events: 249.952110 ms capture, 7.811003 ms/iterate
+2026-09-24T16:14:32+00:00 [r713-moefast-r3]   P1 c1d3-OFF4 rc=0: events: 407.086636 ms capture, 12.721457 ms/iterate | d0 events: 249.950749 ms capture, 7.810961 ms/iterate
+2026-09-24T16:14:56+00:00 [r713-moefast-r3]   P1 c1d3-M24 rc=0: events: 407.367126 ms capture, 12.730223 ms/iterate | d0 events: 249.950148 ms capture, 7.810942 ms/iterate
+2026-09-24T16:15:21+00:00 [r713-moefast-r3]   P1 c1d3-R34 rc=0: events: 356.517165 ms capture, 11.141161 ms/iterate | d0 events: 242.440279 ms capture, 7.576259 ms/iterate
+2026-09-24T16:15:21+00:00 [r713-moefast-r3]   c1d3 round 4 M2 d3: hashes IDENTICAL
+2026-09-24T16:15:21+00:00 [r713-moefast-r3]   c1d3 round 4 M2 d0: hashes IDENTICAL
+2026-09-24T16:15:21+00:00 [r713-moefast-r3]   c1d3 round 4 R3 d3: hashes IDENTICAL
+2026-09-24T16:15:21+00:00 [r713-moefast-r3]   c1d3 round 4 R3 d0: hashes IDENTICAL
+2026-09-24T16:15:45+00:00 [r713-moefast-r3]   P1 c1d3-W5 rc=0: events: 381.067757 ms capture, 11.908367 ms/iterate | d0 events: 251.159341 ms capture, 7.848729 ms/iterate
+2026-09-24T16:16:10+00:00 [r713-moefast-r3]   P1 c1d3-M25 rc=0: events: 377.570891 ms capture, 11.799090 ms/iterate | d0 events: 250.795755 ms capture, 7.837367 ms/iterate
+2026-09-24T16:16:34+00:00 [r713-moefast-r3]   P1 c1d3-R35 rc=0: events: 355.749449 ms capture, 11.117170 ms/iterate | d0 events: 241.617939 ms capture, 7.550561 ms/iterate
+2026-09-24T16:16:59+00:00 [r713-moefast-r3]   P1 c1d3-OFF5 rc=0: events: 448.626329 ms capture, 14.019573 ms/iterate | d0 events: 251.218544 ms capture, 7.850579 ms/iterate
+2026-09-24T16:16:59+00:00 [r713-moefast-r3]   c1d3 round 5 M2 d3: hashes IDENTICAL
+2026-09-24T16:16:59+00:00 [r713-moefast-r3]   c1d3 round 5 M2 d0: hashes IDENTICAL
+2026-09-24T16:16:59+00:00 [r713-moefast-r3]   c1d3 round 5 R3 d3: hashes IDENTICAL
+2026-09-24T16:16:59+00:00 [r713-moefast-r3]   c1d3 round 5 R3 d0: hashes IDENTICAL
+2026-09-24T16:17:23+00:00 [r713-moefast-r3]   P1 c1d3-W6 rc=0: events: 392.006640 ms capture, 12.250208 ms/iterate | d0 events: 242.511817 ms capture, 7.578494 ms/iterate
+2026-09-24T16:17:48+00:00 [r713-moefast-r3]   P1 c1d3-R36 rc=0: events: 372.668375 ms capture, 11.645887 ms/iterate | d0 events: 242.093849 ms capture, 7.565433 ms/iterate
+2026-09-24T16:18:12+00:00 [r713-moefast-r3]   P1 c1d3-OFF6 rc=0: events: 401.679723 ms capture, 12.552491 ms/iterate | d0 events: 250.444786 ms capture, 7.826400 ms/iterate
+2026-09-24T16:18:37+00:00 [r713-moefast-r3]   P1 c1d3-M26 rc=0: events: 378.309439 ms capture, 11.822170 ms/iterate | d0 events: 249.223922 ms capture, 7.788248 ms/iterate
+2026-09-24T16:18:37+00:00 [r713-moefast-r3]   c1d3 round 6 M2 d3: hashes IDENTICAL
+2026-09-24T16:18:37+00:00 [r713-moefast-r3]   c1d3 round 6 M2 d0: hashes IDENTICAL
+2026-09-24T16:18:37+00:00 [r713-moefast-r3]   c1d3 round 6 R3 d3: hashes IDENTICAL
+2026-09-24T16:18:37+00:00 [r713-moefast-r3]   c1d3 round 6 R3 d0: hashes IDENTICAL
+P1 c4d3 d R3-M2 ms: +1.130 -1.288 -0.567 -0.520 +0.230 -0.223  median -0.371 (-1.88 % of M2 median 19.761); mean -0.206; mixed [4/6 negative]
+P1 c4d3 d M2-OFF ms: -1.695 -0.180 +0.222 -0.126 -0.542 -1.079  median -0.361 (-1.77 % of OFF median 20.363); mean -0.567; mixed [5/6 negative]
+P1 c4d3 d R3-OFF ms: -0.565 -1.468 -0.346 -0.646 -0.312 -1.302  median -0.606 (-2.97 % of OFF median 20.363); mean -0.773; GAIN [6/6 negative]
+P1 c4d3 d M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c4d3 d R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c4d3 d0 R3-M2 ms: -1.500 -0.410 +0.799 -0.366 +0.631 -1.570  median -0.388 (-3.90 % of M2 median 9.941); mean -0.403; mixed [4/6 negative]
+P1 c4d3 d0 M2-OFF ms: +0.261 -1.915 -1.937 -0.862 -1.899 +0.262  median -1.381 (-12.19 % of OFF median 11.321); mean -1.015; mixed [4/6 negative]
+P1 c4d3 d0 R3-OFF ms: -1.240 -2.325 -1.138 -1.228 -1.268 -1.308  median -1.254 (-11.08 % of OFF median 11.321); mean -1.418; GAIN [6/6 negative]
+P1 c4d3 d0 M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c4d3 d0 R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c8d1 d R3-M2 ms: -0.270 -0.270 -0.036 -0.031 -0.393 -1.754  median -0.270 (-1.46 % of M2 median 18.445); mean -0.459; GAIN [6/6 negative]
+P1 c8d1 d M2-OFF ms: -0.303 -0.521 -0.492 -1.281 -0.464 +0.499  median -0.478 (-2.52 % of OFF median 18.937); mean -0.427; mixed [5/6 negative]
+P1 c8d1 d R3-OFF ms: -0.573 -0.791 -0.528 -1.312 -0.857 -1.255  median -0.824 (-4.35 % of OFF median 18.937); mean -0.886; GAIN [6/6 negative]
+P1 c8d1 d M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c8d1 d R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c8d1 d0 R3-M2 ms: -0.462 -0.422 -0.391 -0.512 -0.404 -0.360  median -0.413 (-3.44 % of M2 median 12.022); mean -0.425; GAIN [6/6 negative]
+P1 c8d1 d0 M2-OFF ms: -1.119 -2.221 -1.093 -1.042 -1.129 -1.122  median -1.121 (-8.53 % of OFF median 13.135); mean -1.288; GAIN [6/6 negative]
+P1 c8d1 d0 R3-OFF ms: -1.581 -2.644 -1.484 -1.553 -1.534 -1.482  median -1.543 (-11.75 % of OFF median 13.135); mean -1.713; GAIN [6/6 negative]
+P1 c8d1 d0 M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c8d1 d0 R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c1d3 d R3-M2 ms: +0.231 -0.222 +1.111 -1.589 -0.682 -0.176  median -0.199 (-1.69 % of M2 median 11.811); mean -0.221; mixed [4/6 negative]
+P1 c1d3 d M2-OFF ms: -0.463 -1.191 -1.867 +0.009 -2.220 -0.730  median -0.960 (-7.52 % of OFF median 12.767); mean -1.077; mixed [5/6 negative]
+P1 c1d3 d R3-OFF ms: -0.232 -1.413 -0.756 -1.580 -2.902 -0.907  median -1.160 (-9.08 % of OFF median 12.767); mean -1.298; GAIN [6/6 negative]
+P1 c1d3 d M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c1d3 d R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c1d3 d0 R3-M2 ms: -0.210 -1.695 -0.238 -0.235 -0.287 -0.223  median -0.236 (-3.03 % of M2 median 7.801); mean -0.481; GAIN [6/6 negative]
+P1 c1d3 d0 M2-OFF ms: -0.035 +1.403 -0.069 -0.000 -0.013 -0.038  median -0.024 (-0.31 % of OFF median 7.830); mean +0.208; mixed [5/6 negative]
+P1 c1d3 d0 R3-OFF ms: -0.244 -0.292 -0.307 -0.235 -0.300 -0.261  median -0.276 (-3.53 % of OFF median 7.830); mean -0.273; GAIN [6/6 negative]
+P1 c1d3 d0 M2 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 c1d3 d0 R3 hashes vs OFF: 6/6 identical, 0 DIFFER, 0 missing
+P1 VERDICT: PASS: identity, no same-sign regression, gain at c8d1
+2026-09-24T16:19:22+00:00 [r713-moefast-r3]   greedy on: tabbyapi:stack-moefast-r3; effective env: EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_SHARED_EXPERT_OVERLAP=1 
+  [greedy on] GREEDY on vs ref: 6 identical, IDENTICAL
+  [greedy on] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T16:19:36+00:00 [r713-moefast-r3]   greedy on: OOM 0; tracebacks 0; free 291 1845 
+2026-09-24T16:19:51+00:00 [r713-moefast-r3]   greedy off: tabbyapi:stack-moefast-r3; effective env: EXL3_MOE_COOP_V3=2 EXL3_SHARED_EXPERT_OVERLAP=1 
+  [greedy off] GREEDY off vs ref: 6 identical, IDENTICAL
+  [greedy off] GREEDY-SUMMARY reference=ref divergences=0
+2026-09-24T16:20:05+00:00 [r713-moefast-r3]   greedy off: OOM 0; tracebacks 0; free 291 1845 
+2026-09-24T16:20:05+00:00 [r713-moefast-r3] DECISION: ACCEPT into the stack ledger | P1 VERDICT: PASS: identity, no same-sign regression, gain at c8d1 | greedy on/off 0 divergences | R3='EXL3_MOE_COOP_V3=3 EXL3_MOE_COOP_V3_MAP=2-4:2 EXL3_SHARED_EXPERT_EARLY=1'
+2026-09-24T16:20:05+00:00 [sctl] GPU queue continues (r714-densegemm-r2(pid 2935726)
+r715-harness-gc-aa(pid 2677054)); leaving the GPUs to the next unit
+2026-09-24T16:20:05+00:00 [r713-moefast-r3] === moefast r3 DONE ===

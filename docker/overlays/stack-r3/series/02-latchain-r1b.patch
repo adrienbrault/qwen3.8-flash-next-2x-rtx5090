@@ -1,0 +1,822 @@
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -1,6 +1,7 @@
+ #include <cuda_fp16.h>
+ 
+ #include <torch/extension.h>
++#include <ATen/cuda/CUDAContext.h>
+ #include <pybind11/pybind11.h>
+ #include <pybind11/stl.h>
+ 
+@@ -277,6 +278,7 @@
+     m.def("bighead_attn", &bighead_attn, "bighead_attn");
+     m.def("bighead_attn_paged", &bighead_attn_paged, "bighead_attn_paged");
+     m.def("bighead_attn_workspace_size", &bighead_attn_workspace_size, "bighead_attn_workspace_size");
++    m.attr("latchain_revision") = 1;      // latchain r1: EXL3_LC_GDN_RR / _QSA_FORK / _GDN_FORK present (default off)
+ 
+     #include "libtorch/linear_bc.h"
+     #include "libtorch/gated_delta_net_bc.h"
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/gdn.cu b/exllamav3_ext/gdn.cu
+--- a/exllamav3_ext/gdn.cu
++++ b/exllamav3_ext/gdn.cu
+@@ -9,6 +9,7 @@
+ #include "graph.cuh"
+ #include "gdn.cuh"
+ #include <cstdlib>
++#include <cstring>
+ #include <cmath>
+ 
+ using bfloat16 = __nv_bfloat16;
+@@ -861,6 +862,248 @@
+     }
+ }
+ 
++// latchain r1 (EXL3_LC_GDN_RR=1): cuda_recurrent_gated_delta_rule_kernel_128 (per-head decay, no
++// CHANNELWISE) with the same thread layout, the same per-token arithmetic and the same stores,
++// minus two memory round trips per token:
++//   * the recurrent state is carried in registers from one token to the next. The served kernel
++//     re-reads it twice per token (the kv_mem dot, then the update) from the slot/history buffer it
++//     wrote at the previous token; each thread reads and writes only its own 32 state elements, so
++//     the value it reads back is exactly the value it stored, rounded by store_state. The register
++//     copy is rounded the same way (lc_state_reload), so every read sees the same bits;
++//   * token s + 1's q/k/v/g/beta are loaded (as raw bf16/fp32) while token s computes, and the
++//     token's v/g/beta are no longer loaded behind the dot-1 barrier.
++// Every expression that produces a stored or output value is textually the served one (same
++// operand order, same fp contraction opportunities), and the stores (history slots, final state,
++// output) are the served ones in the served order per thread. Graph parameters: identical
++// signature, so the state (3) and slots (12) patch sites are unchanged.
++__device__ __forceinline__ float lc_state_reload(const float*, float x)
++{
++    return x;
++}
++
++__device__ __forceinline__ float lc_state_reload(const bfloat16*, float x)
++{
++    return __bfloat162float(__float2bfloat16_rn(x));
++}
++
++template <bool save_history, int V_SPLIT, typename state_t = float>
++__global__ __launch_bounds__(128 * SUBK)
++void cuda_recurrent_gated_delta_rule_kernel_128_rr
++(
++                                                // k_head_dim = v_head_dim = 128
++    const bfloat16* __restrict__ mixed_qkv,     // [bsz, seqlen, (k_dim + k_dim + v_dim)]
++    const float* __restrict__ g,                // [bsz, seqlen, (group * num_k_heads)]
++    const bfloat16* __restrict__ beta,          // [bsz, seqlen, (group * num_k_heads)]
++    state_t* __restrict__ recurrent_state,      // [num_slots, max_history + 1, (group * num_k_heads), 128, 128]
++    bfloat16* __restrict__ core_attn_out,       // [bsz, seqlen, num_v_heads, 128]
++    const int bsz,
++    const int seqlen,
++    const int num_k_heads,
++    const int num_v_heads,
++    const int k_head_dim,
++    const int v_head_dim,
++    const float scale,
++    const int* __restrict__ slots,              // [bsz]
++    const int history_stride,                   // max_history + 1
++    const float* __restrict__ D                 // unused, matches the generic kernel signature
++)
++{
++    constexpr int HEAD_DIM = 128;
++    constexpr int V_CHUNK_DIM = HEAD_DIM / V_SPLIT;
++    constexpr int BTS = HEAD_DIM / SUBK;
++
++    int group = num_v_heads / num_k_heads;
++    constexpr size_t HEAD_STATE_SIZE = HEAD_DIM * HEAD_DIM;
++    const size_t state_size = group * num_k_heads * HEAD_STATE_SIZE;
++    const size_t slot_size = (size_t) history_stride * state_size;
++
++    int bi = blockIdx.x;
++    mixed_qkv +=        bi * seqlen * (3 * HEAD_DIM * num_k_heads + HEAD_DIM * (num_v_heads - num_k_heads));
++    g +=                (size_t) bi * seqlen * (group * num_k_heads);
++    beta +=             bi * seqlen * (group * num_k_heads);
++    int state_slot = slots ? slots[bi] : bi;
++    state_t* slot_state = recurrent_state + (size_t) state_slot * slot_size;
++    state_t* final_state = slot_state;
++    core_attn_out +=    bi * seqlen * num_v_heads * HEAD_DIM;
++
++    int t = threadIdx.x;
++    int bt = threadIdx.y;
++    int lane = t % 32;
++    int warp = t / 32;
++    int head = blockIdx.y;
++    int k_head = head / group;
++    int v_chunk = blockIdx.z;
++    int v_start = v_chunk * V_CHUNK_DIM;
++    const bool active = t < V_CHUNK_DIM;
++    const int qkv_stride = 2 * HEAD_DIM * num_k_heads + HEAD_DIM * num_v_heads;
++    const int q_off = k_head * HEAD_DIM + t;
++    const int k_off = (num_k_heads + k_head) * HEAD_DIM + t;
++    const int v_off = (2 * num_k_heads * HEAD_DIM) + head * HEAD_DIM + v_start + t;
++
++    __shared__ float sh_red[2][HEAD_DIM / 32];
++    __shared__ float sh_k[HEAD_DIM];
++    __shared__ float sh_q[HEAD_DIM];
++    // Per-k-slice partials, reduced in a fixed order by the consumer (see the generic kernel)
++    __shared__ float sh_dot1[SUBK][HEAD_DIM];
++    __shared__ float sh_dot2[SUBK][HEAD_DIM];
++
++    // The state token 0 reads: the slot's current state in both modes (history: first == true).
++    // Element e of this thread is row bt * BTS + e, column v_start + t
++    float st[BTS];
++    if (active)
++    {
++        const state_t* rs0 = final_state + head * HEAD_STATE_SIZE + v_start + t + bt * BTS * HEAD_DIM;
++        #pragma unroll
++        for (int e = 0; e < BTS; ++e)
++            st[e] = as_float(rs0[e * HEAD_DIM]);
++    }
++
++    // Token 0 operands, kept raw so the loads are only waited on at first use
++    bfloat16 nx_q = mixed_qkv[q_off];
++    bfloat16 nx_k = mixed_qkv[k_off];
++    bfloat16 nx_v = active ? mixed_qkv[v_off] : mixed_qkv[q_off];
++    float nx_g = g[head];
++    bfloat16 nx_beta = beta[head];
++
++    for (int s = 0; s < seqlen; ++s)
++    {
++        bfloat16* out = core_attn_out + head * HEAD_DIM + v_start;
++
++        state_t* gl_rs_w;
++        if constexpr (save_history)
++        {
++            bool last = (s == seqlen - 1);
++            state_t* history_w = last  ? final_state : slot_state + (size_t) (s + 1) * state_size;
++            gl_rs_w = history_w + head * HEAD_STATE_SIZE;
++        }
++        else
++        {
++            gl_rs_w = final_state + head * HEAD_STATE_SIZE;
++        }
++
++        const bfloat16 cu_q = nx_q;
++        const bfloat16 cu_k = nx_k;
++        const bfloat16 cu_v = nx_v;
++        const float cu_g = nx_g;
++        const bfloat16 cu_beta = nx_beta;
++
++        // Next token's operands: issued now, consumed one token later
++        if (s + 1 < seqlen)
++        {
++            const bfloat16* nq = mixed_qkv + qkv_stride;
++            nx_q = nq[q_off];
++            nx_k = nq[k_off];
++            nx_v = active ? nq[v_off] : nq[q_off];
++            nx_g = g[num_v_heads + head];
++            nx_beta = beta[num_v_heads + head];
++        }
++
++        float q = __bfloat162float(cu_q);
++        float k = __bfloat162float(cu_k);
++
++        float sumq = q * q;
++        float sumk = k * k;
++        #pragma unroll
++        for(int offset = 16; offset > 0; offset /= 2)
++        {
++            sumq += __shfl_xor_sync(0xffffffff, sumq, offset);
++            sumk += __shfl_xor_sync(0xffffffff, sumk, offset);
++        }
++        if (lane == 0)
++        {
++            sh_red[0][warp] = sumq;
++            sh_red[1][warp] = sumk;
++        }
++        __syncthreads();
++
++        sumq = lane < HEAD_DIM / 32 ? sh_red[0][lane] : 0.0f;
++        sumk = lane < HEAD_DIM / 32 ? sh_red[1][lane] : 0.0f;
++        #pragma unroll
++        for(int offset = 16; offset > 0; offset /= 2)
++        {
++            sumq += __shfl_xor_sync(0xffffffff, sumq, offset);
++            sumk += __shfl_xor_sync(0xffffffff, sumk, offset);
++        }
++
++        q = q * rsqrtf(sumq + 1e-6f);
++        k = k * rsqrtf(sumk + 1e-6f);
++        sh_k[t] = k;
++        sh_q[t] = q;
++
++        __syncthreads();
++
++        if (t < V_CHUNK_DIM)
++        {
++            float sum = 0.0f;
++            float* sh_k_rd = sh_k + bt * BTS;
++
++            #pragma unroll
++            for (int i = 0; i < HEAD_DIM / 8 / SUBK; ++i)
++            {
++                #pragma unroll
++                for (int j = 0; j < 8; ++j, sh_k_rd++)
++                {
++                    sum = sum + *sh_k_rd * st[i * 8 + j];
++                }
++            }
++            sh_dot1[bt][t] = sum;
++        }
++        __syncthreads();
++
++        if (t < V_CHUNK_DIM)
++        {
++            float g_h = __expf(cu_g);
++            float beta_h = __bfloat162float(cu_beta);
++            float dot1 = 0.0f;
++            #pragma unroll
++            for (int s = 0; s < SUBK; ++s) dot1 += sh_dot1[s][t];
++            float v = __bfloat162float(cu_v) - dot1 * g_h;
++            float v_out = 0.0f;
++            float* sh_k_rd = sh_k + bt * BTS;
++            float* sh_q_rd = sh_q + bt * BTS;
++            state_t* rs_w = gl_rs_w + v_start + t + bt * BTS * HEAD_DIM;
++
++            #pragma unroll
++            for (int i = 0; i < HEAD_DIM / 8 / SUBK; ++i)
++            {
++                #pragma unroll
++                for (int j = 0; j < 8; ++j, rs_w += HEAD_DIM, sh_k_rd++, sh_q_rd++)
++                {
++                    float state = st[i * 8 + j];
++                    state = state * g_h + *sh_k_rd * v * beta_h;
++                    store_state(rs_w, state);
++                    st[i * 8 + j] = lc_state_reload(rs_w, state);
++                    v_out = v_out + *sh_q_rd * state;
++                }
++            }
++            sh_dot2[bt][t] = v_out;
++        }
++        __syncthreads();
++
++        if (t < V_CHUNK_DIM && bt == 0)
++        {
++            float v_out = 0.0f;
++            #pragma unroll
++            for (int s = 0; s < SUBK; ++s) v_out += sh_dot2[s][t];
++            out[t] = __float2bfloat16_rz(v_out * scale);
++        }
++
++        mixed_qkv +=        qkv_stride;
++        g +=                num_v_heads;
++        beta +=             num_v_heads;
++        core_attn_out +=    num_v_heads * HEAD_DIM;
++    }
++}
++
++// EXL3_LC_GDN_RR: read per launch (a captured graph keeps the kernel it was captured with)
++static bool lc_gdn_rr_enabled()
++{
++    const char* e = std::getenv("EXL3_LC_GDN_RR");
++    if (!e || !*e || !std::strcmp(e, "0")) return false;
++    TORCH_CHECK(!std::strcmp(e, "1"), "EXL3_LC_GDN_RR must be 0 or 1");
++    return true;
++}
++
+ void cuda_recurrent_gated_delta_rule_gr
+ (
+     const at::Tensor& mixed_qkv,
+@@ -947,6 +1190,8 @@
+ 
+     int v_split = (bsz == 1 && k_head_dim <= 128 && v_head_dim == 128 && num_v_heads <= 64) ? 4 : 1;
+     TORCH_CHECK(v_head_dim % v_split == 0, "v_head_dim must be divisible by v_split");
++    // latchain r1: register-resident state variant of the 128 kernel (per-head decay only)
++    const bool lc_rr = !channelwise && lc_gdn_rr_enabled();
+ 
+     dim3 blocks(bsz, num_v_heads, v_split);  // group * num_k_heads
+     dim3 threads(MAX(k_head_dim, v_head_dim / v_split), SUBK);
+@@ -989,8 +1234,13 @@
+ 
+         if (!history)
+         {
+-            if (k_head_dim == 128 && v_head_dim == 128)
++            if (k_head_dim == 128 && v_head_dim == 128 && lc_rr)
+             {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128_rr<false, 4, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128_rr<false, 1, bfloat16>)
++            }
++            else if (k_head_dim == 128 && v_head_dim == 128)
++            {
+                 if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<false, 4, false, bfloat16>)
+                 else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<false, 1, false, bfloat16>)
+             }
+@@ -1005,8 +1255,13 @@
+         }
+         else
+         {
+-            if (k_head_dim == 128 && v_head_dim == 128)
++            if (k_head_dim == 128 && v_head_dim == 128 && lc_rr)
+             {
++                if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128_rr<true, 4, bfloat16>)
++                else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128_rr<true, 1, bfloat16>)
++            }
++            else if (k_head_dim == 128 && v_head_dim == 128)
++            {
+                 if (v_split == 4) LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<true, 4, false, bfloat16>)
+                 else              LAUNCH_RULE_BF16(cuda_recurrent_gated_delta_rule_kernel_128<true, 1, false, bfloat16>)
+             }
+@@ -1070,8 +1325,13 @@
+     }
+     else if (!history)
+     {
+-        if (k_head_dim == 128 && v_head_dim == 128)
++        if (k_head_dim == 128 && v_head_dim == 128 && lc_rr)
+         {
++            if (v_split == 4) LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128_rr<false, 4>)
++            else              LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128_rr<false, 1>)
++        }
++        else if (k_head_dim == 128 && v_head_dim == 128)
++        {
+             if (v_split == 4) LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128<false, 4>)
+             else              LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128<false, 1>)
+         }
+@@ -1086,7 +1346,12 @@
+     }
+     else
+     {
+-        if (k_head_dim == 128 && v_head_dim == 128)
++        if (k_head_dim == 128 && v_head_dim == 128 && lc_rr)
++        {
++            if (v_split == 4) LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128_rr<true, 4>)
++            else              LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128_rr<true, 1>)
++        }
++        else if (k_head_dim == 128 && v_head_dim == 128)
+         {
+             if (v_split == 4) LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128<true, 4>)
+             else              LAUNCH_RULE(cuda_recurrent_gated_delta_rule_kernel_128<true, 1>)
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/libtorch/attention.cpp b/exllamav3_ext/libtorch/attention.cpp
+--- a/exllamav3_ext/libtorch/attention.cpp
++++ b/exllamav3_ext/libtorch/attention.cpp
+@@ -13,6 +13,7 @@
+ #include "../activation.cuh"
+ #include "../norm.cuh"
+ #include "../dsa_topk.cuh"
++#include "lc_fork.h"
+ 
+ BC_Attention::BC_Attention
+ (
+@@ -430,6 +431,34 @@
+         x2 = xp2;
+     }
+ 
++    // latchain r1 (EXL3_LC_QSA_FORK=1, captured runs only): the QSA indexer chain (index_qk
++    // projection, stage, raw-ring append, pool update, then in regime 1 the indexer-query rope,
++    // scoring, top-k and expansion) depends only on x2 and the caller's seqlens/block table/
++    // positions, and nothing on the q/k/v branch reads what it writes. It is captured on a side
++    // stream forked here and joined before the attention kernels, so the graph runs it
++    // concurrently with the q/k/v projection, rope and cache append. Same kernels, same arguments,
++    // same host call order (so the same recorded graph sites); the branch GEMM gets its own
++    // hadamard scratch (upper half of xh) and tile locks (LC_LOCKS_ALT_OFFSET)
++    LcFork* lcf = nullptr;
++    bool lc_joined = true;
++    if (graph && qsa && lc_env_flag("EXL3_LC_QSA_FORK"))
++    {
++        lcf = lc_fork_get(x.device().index());
++        int64_t half_xh = xh_flat.numel() / 2;
++        TORCH_CHECK((int64_t) R * hs <= half_xh &&
++                    (int64_t) MAX(qkv_num_src, 2) * R * hs <= half_xh,
++                    "BC_Attention: EXL3_LC_QSA_FORK needs the upper half of xh free");
++        lcf->fork(stream);
++        lc_joined = false;
++    }
++    auto lc_join = [&]()
++    {
++        if (lc_joined) return;
++        graph->capture_stream = stream;
++        lcf->join(stream);
++        lc_joined = true;
++    };
++
+     // Q (and gate) projections into the static buffers
+     at::Tensor xh_q = xh_flat.narrow(0, 0, (int64_t) R * hs).view({R, hs});
+     bool use_qg_mgemm = gate_mode == 2 && qg_ptrs_trellis.has_value() && R <= 32;
+@@ -593,12 +622,30 @@
+     // QSA indexer planes (both regimes, so the selection has complete history once it
+     // activates): fused q/raw-key projection, staging split + per-head q norm, raw-key plane
+     // append and the pooled keys touched by this append
++    cudaStream_t qstream = stream;
++    if (lcf)
++    {
++        // Every _gr call below takes its stream from graph->capture_stream: point it at the branch
++        qstream = lcf->side;
++        graph->capture_stream = qstream;
++    }
+     if (qsa)
+     {
+-        exl3_gemm_gr(x2, qsa_qk_proj->trellis, s.qsa_qk, qsa_qk_proj->suh,
+-                     xh_flat.narrow(0, 0, (int64_t) R * hs).view({R, hs}),
+-                     qsa_qk_proj->svh, -1, qsa_qk_proj->mcg, qsa_qk_proj->mul1, 0, graph);
++        if (lcf)
+         {
++            struct LocksReset { ~LocksReset() { exl3_gemm_set_locks_offset(0); } } locks_reset;
++            exl3_gemm_set_locks_offset(LC_LOCKS_ALT_OFFSET);
++            exl3_gemm_gr(x2, qsa_qk_proj->trellis, s.qsa_qk, qsa_qk_proj->suh,
++                         xh_flat.narrow(0, xh_flat.numel() / 2, (int64_t) R * hs).view({R, hs}),
++                         qsa_qk_proj->svh, -1, qsa_qk_proj->mcg, qsa_qk_proj->mul1, 0, graph);
++        }
++        else
++        {
++            exl3_gemm_gr(x2, qsa_qk_proj->trellis, s.qsa_qk, qsa_qk_proj->suh,
++                         xh_flat.narrow(0, 0, (int64_t) R * hs).view({R, hs}),
++                         qsa_qk_proj->svh, -1, qsa_qk_proj->mcg, qsa_qk_proj->mul1, 0, graph);
++        }
++        {
+             std::vector<void*> args =
+             {
+                 (void*) s.qsa_qk.data_ptr(),
+@@ -607,7 +654,7 @@
+                 (void*) s.qsa_kraw.data_ptr(),
+                 (void*) (intptr_t) R,
+             };
+-            s.k_qsa_stage->launch(R, qsa_n_heads + 1, 1, args, stream);
++            s.k_qsa_stage->launch(R, qsa_n_heads + 1, 1, args, qstream);
+         }
+         {
+             std::vector<void*> args =
+@@ -619,7 +666,7 @@
+                 (void*) (intptr_t) (int) block_table.size(1),
+                 (void*) (intptr_t) q_len,
+             };
+-            s.k_qsa_raw_append->launch(R, 1, 1, args, stream);
++            s.k_qsa_raw_append->launch(R, 1, 1, args, qstream);
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_raw_append->handle(), GP_attn_block_table, 2);
+@@ -641,7 +688,7 @@
+                 (void*) (intptr_t) q_len,
+             };
+             // grid height = compiled MAXPOOLS = q_len / P + 1
+-            s.k_qsa_pool_update->launch(bsz, q_len / qsa_cr + 1, 1, args, stream);
++            s.k_qsa_pool_update->launch(bsz, q_len / qsa_cr + 1, 1, args, qstream);
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_pool_update->handle(), GP_attn_block_table, 4);
+@@ -682,7 +729,7 @@
+                 (void*) block_table.data_ptr(),
+                 (void*) (uintptr_t) (uint32_t) (int) block_table.size(1),
+             };
+-            s.k_qsa_fewq->launch(R, s.qsa_fewq_gy, 1, args, stream);
++            s.k_qsa_fewq->launch(R, s.qsa_fewq_gy, 1, args, qstream);
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_fewq->handle(), GP_dsa_T, 4, 4);
+@@ -706,13 +753,14 @@
+                 (void*) cache_seqlens.data_ptr(),
+             };
+             int k_pad = (int) s.qsa_indices.size(1);
+-            s.k_qsa_expand->launch(R, CEIL_DIVIDE(k_pad, 256), 1, args, stream);
++            s.k_qsa_expand->launch(R, CEIL_DIVIDE(k_pad, 256), 1, args, qstream);
+             if (graph)
+             {
+                 graph->record_param(s.k_qsa_expand->handle(), GP_attn_seqlens, 2);
+                 graph->record_param(s.k_qsa_expand->handle(), GP_end, 0);
+             }
+         }
++        lc_join();
+         {
+             // Use the live job-table stride. The gather's SEQ constexpr maps each query
+             // row back to its job; the selection and output remain per-query.
+@@ -757,6 +805,7 @@
+     }
+     else
+     {
++    lc_join();
+ 
+     // Flash-decoding split kernel + combine, with the split configuration derived from the
+     // current block-table bound per call
+@@ -817,6 +866,7 @@
+     }
+ 
+     }   // regime == 0
++    lc_join();
+ 
+     // Output gate
+     if (gate_mode == 1)
+@@ -881,6 +931,9 @@
+ 
+     if (!s.graph->ready)
+     {
++        // latchain r1: the QSA fork's side stream/events must exist before capture begins
++        if (qsa && lc_env_flag("EXL3_LC_QSA_FORK"))
++            lc_fork_prepare(x.device().index());
+         s.graph->capture_begin();
+         run_gr(bsz, q_len, s, x, y, cache_seqlens, block_table, position, positions, position_ids, inv_freq_override, regime, t_total, s.graph.get());
+         s.graph->capture_end();
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/libtorch/attention_bc.h b/exllamav3_ext/libtorch/attention_bc.h
+--- a/exllamav3_ext/libtorch/attention_bc.h
++++ b/exllamav3_ext/libtorch/attention_bc.h
+@@ -5,7 +5,19 @@
+     py::arg("name"),
+     py::arg("num_warps"),
+     py::arg("shared_bytes")
+-);
++)
++// latchain r1: launch on the current stream from Python, for kernel-level parity/bench of the AOT
++// cubins the BC graphs use. args = the non-constexpr parameters in signature order, each a device
++// pointer or an int (one 8-byte slot per parameter, as TritonKernel::launch expects)
++.def("launch_py", [](TritonKernel& k, int gx, int gy, int gz, std::vector<int64_t> args)
++{
++    std::vector<void*> a;
++    a.reserve(args.size() + 2);
++    for (int64_t v : args) a.push_back((void*) (intptr_t) v);
++    k.launch(gx, gy, gz, a, at::cuda::getCurrentCUDAStream().stream());
++})
++.def_readonly("shared_bytes", &TritonKernel::shared_bytes)
++.def_readonly("num_warps", &TritonKernel::num_warps);
+ 
+ py::class_<BC_Attention, std::shared_ptr<BC_Attention>>(m, "BC_Attention").def
+ (
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/libtorch/gated_delta_net.cpp b/exllamav3_ext/libtorch/gated_delta_net.cpp
+--- a/exllamav3_ext/libtorch/gated_delta_net.cpp
++++ b/exllamav3_ext/libtorch/gated_delta_net.cpp
+@@ -8,6 +8,7 @@
+ #include "../quant/exl3_gemm.cuh"
+ #include "../gdn.cuh"
+ #include "../add.cuh"
++#include "lc_fork.h"
+ 
+ using namespace torch::indexing;
+ 
+@@ -228,6 +229,18 @@
+     int R = (int) (x.size(0) * x.size(1));
+     bool use_qkvz = qkvz_ptrs_trellis.has_value() && !kda && R <= 32;
+ 
++    // latchain r1 (EXL3_LC_GDN_FORK=1, captured runs only): the b/a GEMV reads only x and writes
++    // only s.ba, which nothing before gated_delta_net_fused_op_3 reads, so it is captured on a side
++    // stream forked at the head of the graph and joined before fused_op_3: it runs concurrently
++    // with the qkv/z projection. Same kernels, arguments and host call order (lc_fork.h)
++    LcFork* lcf = nullptr;
++    cudaStream_t lc_main = graph ? graph->capture_stream : nullptr;
++    if (graph && !kda && lc_env_flag("EXL3_LC_GDN_FORK"))
++    {
++        lcf = lc_fork_get(x.device().index());
++        lcf->fork(lc_main);
++    }
++
+     // qkv/z projections: bypass BC_LinearEXL3::run_gr, which hard-refuses graph capture above 1
+     // row -- call exl3_gemm_gr directly with this slot's own xh scratch instead, exactly like
+     // BC_GatedMLP::run_bszN_gr does for shared-expert projections
+@@ -275,7 +288,13 @@
+                 add_gr(s.z_flat, z_proj->bias.value(), s.z_flat, graph);
+         }
+ 
++        if (lcf) graph->capture_stream = lcf->side;
+         gdn_ba_gemv_gr(x, ba_weight_t, ba_bias, s.ba, graph);
++        if (lcf)
++        {
++            graph->capture_stream = lc_main;
++            lcf->join(lc_main);
++        }
+ 
+         gated_delta_net_fused_op_3_gr
+         (
+@@ -365,6 +384,9 @@
+ 
+     if (!s.graph->ready)
+     {
++        // latchain r1: the b/a fork's side stream/events must exist before capture begins
++        if (!kda && lc_env_flag("EXL3_LC_GDN_FORK"))
++            lc_fork_prepare(x.device().index());
+         s.graph->capture_begin();
+         run_bszN_gr(x, y, conv_state, recurrent_state, slots, history, s, s.graph.get());
+         s.graph->capture_end();
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/libtorch/lc_fork.h b/exllamav3_ext/libtorch/lc_fork.h
+--- a/exllamav3_ext/libtorch/lc_fork.h
++++ b/exllamav3_ext/libtorch/lc_fork.h
+@@ -0,0 +1,85 @@
++#pragma once
++
++// latchain r1: fork/join of an independent kernel chain onto a side stream while a BC graph is
++// being CAPTURED, so the captured graph gets two parallel branches instead of one serial chain.
++// The kernels, their arguments and the host call order are unchanged (Graph::capture_end matches
++// recorded sites to nodes in creation order, which is still the host call order), so the graph
++// computes the same values; only the node dependencies change. Eager runs (graph == nullptr)
++// never fork.
++//
++// One side stream and one event pair per device: BC graphs on a device are captured one at a
++// time and replayed in stream order, so branches of different graphs never overlap. Create the
++// objects (lc_fork_prepare) OUTSIDE stream capture; lc_fork_get only returns them.
++
++#include <cuda_runtime.h>
++#include <c10/cuda/CUDAException.h>
++#include <c10/cuda/CUDAGuard.h>
++#include <c10/util/Exception.h>
++#include <cstdlib>
++#include <cstring>
++#include <mutex>
++#include "../quant/exl3_devctx.cuh"
++
++// Tile-lock offset for an EXL3 GEMM launched on a side branch: exl3_gemm_kernel uses only
++// locks[0, tiles) of the per-device lock buffer (barrier counters are an mgemm feature), and
++// every GEMM of a decode graph has far fewer than MAX_TILES_C / 2 tiles, so the upper half of the
++// tile region is free for a concurrent branch GEMM (zero extra VRAM; the region is zeroed at
++// allocation and each GEMM leaves its locks at zero)
++#define LC_LOCKS_ALT_OFFSET (MAX_TILES_C / 2)
++
++static inline bool lc_env_flag(const char* name)
++{
++    const char* e = std::getenv(name);
++    if (!e || !*e || !std::strcmp(e, "0")) return false;
++    TORCH_CHECK(!std::strcmp(e, "1"), name, " must be 0 or 1");
++    return true;
++}
++
++struct LcFork
++{
++    cudaStream_t side = nullptr;
++    cudaEvent_t ev_fork = nullptr;
++    cudaEvent_t ev_join = nullptr;
++
++    // Record on main, make side wait: everything launched on side after this depends on the
++    // work already issued to main (and nothing else)
++    void fork(cudaStream_t main)
++    {
++        C10_CUDA_CHECK(cudaEventRecord(ev_fork, main));
++        C10_CUDA_CHECK(cudaStreamWaitEvent(side, ev_fork, 0));
++    }
++
++    // Record on side, make main wait: work issued to main after this depends on the branch
++    void join(cudaStream_t main)
++    {
++        C10_CUDA_CHECK(cudaEventRecord(ev_join, side));
++        C10_CUDA_CHECK(cudaStreamWaitEvent(main, ev_join, 0));
++    }
++};
++
++inline LcFork* lc_fork_slot(int device)
++{
++    static LcFork forks[MAX_DEVICES];
++    TORCH_CHECK(device >= 0 && device < MAX_DEVICES, "lc_fork: bad device ", device);
++    return &forks[device];
++}
++
++// Outside capture only (stream/event creation)
++inline void lc_fork_prepare(int device)
++{
++    static std::mutex mtx;
++    std::lock_guard<std::mutex> lock(mtx);
++    LcFork* f = lc_fork_slot(device);
++    if (f->side) return;
++    c10::cuda::CUDAGuard guard((c10::DeviceIndex) device);
++    C10_CUDA_CHECK(cudaStreamCreateWithFlags(&f->side, cudaStreamNonBlocking));
++    C10_CUDA_CHECK(cudaEventCreateWithFlags(&f->ev_fork, cudaEventDisableTiming));
++    C10_CUDA_CHECK(cudaEventCreateWithFlags(&f->ev_join, cudaEventDisableTiming));
++}
++
++inline LcFork* lc_fork_get(int device)
++{
++    LcFork* f = lc_fork_slot(device);
++    TORCH_CHECK(f->side, "lc_fork: side stream not prepared for device ", device, " (call lc_fork_prepare before capture)");
++    return f;
++}
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/quant/exl3_gemm.cu b/exllamav3_ext/quant/exl3_gemm.cu
+--- a/exllamav3_ext/quant/exl3_gemm.cu
++++ b/exllamav3_ext/quant/exl3_gemm.cu
+@@ -107,6 +107,16 @@
+     return h;
+ }
+ 
++// latchain r1: tile-lock offset for the calling thread's next exl3_gemm_gr launches (0 = served).
++// A GEMM captured on a side branch of a BC graph (EXL3_LC_QSA_FORK) runs concurrently with the
++// main branch's GEMMs, so it must not share their tile locks (libtorch/lc_fork.h)
++static thread_local int lc_gemm_locks_offset = 0;
++
++void exl3_gemm_set_locks_offset(int offset)
++{
++    lc_gemm_locks_offset = offset;
++}
++
+ int exl3_gemm_gr
+ (
+     const at::Tensor& A,
+@@ -155,7 +165,7 @@
+     cudaGetDevice(&device);
+     int num_sms = force_num_sms ? force_num_sms : DevCtx::instance().get_num_sms(device);
+     int cc = DevCtx::instance().get_cc(device);
+-    int* locks = DevCtx::instance().get_locks(device);
++    int* locks = DevCtx::instance().get_locks(device) + lc_gemm_locks_offset;
+ 
+     // Dispatch
+     int K = B.size(2) / 16;
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/quant/exl3_gemm.cuh b/exllamav3_ext/quant/exl3_gemm.cuh
+--- a/exllamav3_ext/quant/exl3_gemm.cuh
++++ b/exllamav3_ext/quant/exl3_gemm.cuh
+@@ -3,6 +3,9 @@
+ #include <ATen/Tensor.h>
+ #include "../graph.cuh"
+ 
++// latchain r1 (lc_fork.h): tile-lock offset for this thread's following exl3_gemm_gr calls; 0 = served
++void exl3_gemm_set_locks_offset(int offset);
++
+ int exl3_gemm_gr
+ (
+     const at::Tensor& A,
+diff -ruN -x __pycache__ -x *.orig a/modules/attention_fn/bc_attn.py b/modules/attention_fn/bc_attn.py
+--- a/modules/attention_fn/bc_attn.py
++++ b/modules/attention_fn/bc_attn.py
+@@ -53,6 +53,39 @@
+ MAX_QLEN = 16
+ MAX_R = MAX_BSZ * MAX_QLEN
+ 
++# latchain r1: AOT compile options of the QSA sparse-regime kernels (gathered split, combine). Unset
++# = the served options (split num_stages 2, combine num_stages 1, no divisibility hints). Neither
++# option changes the kernels' arithmetic: num_stages only software-pipelines the loop's loads
++# (the dot/reduction layouts come from num_warps and the tile shapes, both unchanged), and a
++# divisibility hint only lets the compiler vectorize loads of 16-byte aligned rows.
++#   EXL3_LC_QSA_SPLIT_STAGES=N    num_stages of _qsa_sparse_split_kernel (served 2)
++#   EXL3_LC_QSA_COMBINE_STAGES=N  num_stages of the sparse slots' _paged_attn_decode_combine_kernel (served 1)
++#   EXL3_LC_QSA_DIV16=1           ":16" on the aligned pointer args (and K_pad / split_len) of both
++def _lc_stages(name: str) -> int:
++    v = os.environ.get(name, "")
++    if v in ("", "0"):
++        return 0
++    n = int(v)
++    assert 1 <= n <= 6, f"{name} must be 1..6 (or unset)"
++    return n
++
++_LC_QSA_SPLIT_STAGES = _lc_stages("EXL3_LC_QSA_SPLIT_STAGES")
++_LC_QSA_COMBINE_STAGES = _lc_stages("EXL3_LC_QSA_COMBINE_STAGES")
++_LC_QSA_DIV16 = os.environ.get("EXL3_LC_QSA_DIV16", "0") not in ("", "0")
++assert os.environ.get("EXL3_LC_QSA_DIV16", "0") in ("", "0", "1"), "EXL3_LC_QSA_DIV16 must be 0 or 1"
++LC_BUILD = "latchain-r1"
++
++
++def _lc_div16(sig: dict, names) -> dict:
++    """Signature copy with a 16-divisibility hint on the named entries (_compile_kernel ':16')."""
++    return {k: (v + ":16" if k in names and not v.endswith(":16") else v) for k, v in sig.items()}
++
++
++def _lc_check_aligned(what: str, *tensors):
++    for t in tensors:
++        if t is not None:
++            assert t.data_ptr() % 16 == 0, f"EXL3_LC_QSA_DIV16: {what} is not 16-byte aligned"
++
+ _kernel_cache = {}
+ _sm_count = {}
+ 
+@@ -371,6 +404,7 @@
+             pn_o, pn_ml = self._qsa_partial_sizes(bsz * q_len)
+         partial_o = g_tensor_cache.get_bucketed(dev, pn_o, torch.float, "bca_po")
+         partial_ml = g_tensor_cache.get_bucketed(dev, pn_ml, torch.float, "bca_ml")
++        self._lc_slot_statics = (q, o, partial_o, partial_ml)
+ 
+         # Padded hidden dim: zero-padded input staging and padded o_proj output. The pad columns
+         # of xp are zeroed here and never written afterwards (the graph copies only the exact
+@@ -522,11 +556,29 @@
+             # Quantized K/V: the gather reads the packed pages through the shared QC
+             # loaders (scales + H32 appended to the runtime args, same as the dense slots)
+             ct = "*i32" if self.quant else "*fp16"
++            sig_sp = {"q": "*fp16", "k_cache": ct, "v_cache": ct, "block_table": "*i32",
++                      "indices": "*i32", "partial_o": "*fp32", "partial_ml": "*fp32",
++                      "k_len": "i32", "num_pages_per_seq": "i32", "num_splits": "i32",
++                      "split_len": "i32", "k_scales": "*fp16", "v_scales": "*fp16", "h32": "*fp16"}
++            sig_cb = {"partial_o": "*fp32", "partial_ml": "*fp32", "out": "*fp16", "h32": "*fp16",
++                      "num_splits": "i32", "sinks": "*fp32"}
++            if _LC_QSA_DIV16:
++                # block_table (a caller tensor, may be a row slice), num_pages_per_seq and
++                # num_splits carry no hint; everything hinted is a slot/cache static checked here
++                # (K_pad and split_len are multiples of 32 by construction)
++                from .triton_paged import _get_h32
++                q_st, o_st, po_st, pml_st = self._lc_slot_statics
++                _lc_check_aligned("QSA sparse statics", q_st, o_st, po_st, pml_st, indices,
++                                  self.cache_k, self.cache_v, self.k_scales, self.v_scales,
++                                  _get_h32(dev) if self.quant else None)
++                assert k_pad % 16 == 0 and split_len % 16 == 0
++                sig_sp = _lc_div16(sig_sp, ("q", "k_cache", "v_cache", "indices", "partial_o", "partial_ml",
++                                            "k_len", "split_len") +
++                                           (("k_scales", "v_scales", "h32") if self.quant else ()))
++                sig_cb = _lc_div16(sig_cb, ("partial_o", "partial_ml", "out") +
++                                           (("h32",) if self.quant else ()))
+             k_sp_split = _compile_kernel(dev, _qsa_sparse_split_kernel,
+-                {"q": "*fp16", "k_cache": ct, "v_cache": ct, "block_table": "*i32",
+-                 "indices": "*i32", "partial_o": "*fp32", "partial_ml": "*fp32",
+-                 "k_len": "i32", "num_pages_per_seq": "i32", "num_splits": "i32",
+-                 "split_len": "i32", "k_scales": "*fp16", "v_scales": "*fp16", "h32": "*fp16"}
++                sig_sp
+                 | {n: "constexpr" for n in (
+                     "n_q_heads", "n_kv_heads", "page_size", "head_dim", "K_pad", "scale",
+                     "BLOCK_H", "BLOCK_N", "PAGED", "QCK", "QCV", "SEQ")},
+@@ -534,11 +586,10 @@
+                      page_size = PAGE_SIZE, head_dim = self.head_dim, K_pad = k_pad,
+                      scale = float(self.sm_scale), BLOCK_H = block_h, BLOCK_N = block_n,
+                      PAGED = 1, QCK = self.k_bits, QCV = self.v_bits, SEQ = q_len),
+-                4, 2)
++                4, _LC_QSA_SPLIT_STAGES or 2)
+ 
+             k_sp_combine = _compile_kernel(dev, _paged_attn_decode_combine_kernel,
+-                {"partial_o": "*fp32", "partial_ml": "*fp32", "out": "*fp16", "h32": "*fp16",
+-                 "num_splits": "i32", "sinks": "*fp32"}
++                sig_cb
+                 | {n: "constexpr" for n in (
+                     "QCV", "HAS_SINKS", "q_len", "n_q_heads", "n_kv_heads", "head_dim", "HD_PAD",
+                     "BLOCK_M", "BLOCK_H", "BLOCK_ROWS")},
+@@ -548,7 +599,7 @@
+                 dict(QCV = self.v_bits, HAS_SINKS = False, q_len = 1,
+                      n_q_heads = self.num_q_heads, n_kv_heads = self.num_kv_heads,
+                      head_dim = self.head_dim, HD_PAD = self.head_dim, BLOCK_M = 1, BLOCK_H = block_h,
+-                     BLOCK_ROWS = block_h), 4, 1)
++                     BLOCK_ROWS = block_h), 4, _LC_QSA_COMBINE_STAGES or 1)
+ 
+         self.bc.configure_slot_qsa(
+             bsz, q_len, regime,

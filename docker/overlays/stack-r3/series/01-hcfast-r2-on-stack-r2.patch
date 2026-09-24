@@ -1,0 +1,886 @@
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -128,7 +128,7 @@
+     m.def("gr_mix_v2_fused", &gr_mix_v2_fused, "gr_mix_v2_fused");
+     m.attr("hc_mix_v2_revision") = 2;
+     m.def("gr_mix_v2_int8_v3", &gr_mix_v2_int8_v3, "gr_mix_v2_int8_v3");
+-    m.attr("hc_mix_v3_revision") = 1;
++    m.attr("hc_mix_v3_revision") = 2;
+     m.def("routing_std", &routing_std, "routing_std");
+     m.def("routing_std_logits", &routing_std_logits, "routing_std_logits");
+ 
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/hc_mix_v3.cu b/exllamav3_ext/hc_mix_v3.cu
+--- a/exllamav3_ext/hc_mix_v3.cu
++++ b/exllamav3_ext/hc_mix_v3.cu
+@@ -450,6 +450,564 @@
+ 
+ } // namespace hcv3
+ 
++// =============================================================================================
++// hcfast r2 (EXL3_HC_MIX_V3=2, mode bits 4 / 8 / 16). Same per-output arithmetic as V3 (hence
++// as the served kernels): every accumulator is the same fmaf chain over the same operands in the
++// same order, every reduction the same tree. What r2 changes is where loads are issued and how
++// the (bitwise-neutral) output tiles are cut:
++//
++//   dots
++//     * J (fn rows per CTA) is a template parameter, 4 (served) or 8. Each (row, j) accumulator is
++//       independent of every other j, so J only decides which outputs share a CTA. J = 8 halves the
++//       number of CTAs that re-read each stream row from L2 (82 -> 42 per (row tile, h)).
++//     * PF: stream rows of the next PF column iterations are in flight while the current one is
++//       consumed (r1 issued each iteration's streams at its own top: one exposed round per
++//       iteration). PF = 2 issues all three iterations' loads before the first FMA.
++//     * streams are issued before the weight words in program order (ptxas keeps global loads in
++//       program order but hoists ALU consumers of a weight into the gaps; weights first split the
++//       batch into two rounds), and stream row addresses are formed up front.
++//     * B = 8 keeps r1's rolled loop (the unrolled form does not fit 128 registers without spills).
++//   up
++//     * Q (column quads per CTA) is a template parameter, 2 (served) or 4. Q = 4 halves the number
++//       of CTAs that re-derive the same state rows from `dots` (the prelude is 28 % of up's samples,
++//       R697) and doubles the warps per row in the prelude.
++//     * the prelude's dots loads are issued before the rmr load is consumed (r1 at B = 8: the rsqrt
++//       round, then the d4 round; r2: one round).
++//     * the per-element prelude is branch-free (served expressions evaluated on zeros for absent
++//       elements, results discarded), so ptxas keeps the d4 loads batched.
++//   PDL (mode bit 16): both launches carry cudaLaunchAttributeProgrammaticStreamSerialization; each
++//     kernel executes griddepcontrol.wait before its first read of data produced by earlier stream
++//     work, and dots executes griddepcontrol.launch_dependents right after its wait, so the up grid
++//     is launched and resident when dots retires (the kernel-boundary gap is hidden). ptxas places
++//     the wait (ACQBULK) ahead of the constant loads too, so no load overlaps the previous kernel;
++//     what PDL buys here is the launch gap only. Without the attribute both instructions are no-ops.
++//     Nothing is written before the wait.
++
++namespace hcv4 {
++
++using hcv3::H;
++using hcv3::WARP;
++using hcv3::DOTS_THREADS;
++using hcv3::V;
++using hcv3::D_FIX;
++using hcv3::LR_FIX;
++using hcv3::i8f;
++using hcv3::sigmoidf_;
++using hcv3::UpStride;
++
++__device__ __forceinline__ void pdl_wait()
++{
++#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 900)
++    asm volatile("griddepcontrol.wait;" ::: "memory");
++#endif
++}
++
++__device__ __forceinline__ void pdl_launch_dependents()
++{
++#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 900)
++    asm volatile("griddepcontrol.launch_dependents;" ::: "memory");
++#endif
++}
++
++template <int B, int J, int PF>
++struct DotsCfg
++{
++    static constexpr int C8 = D_FIX / 8, C4 = D_FIX / 4;
++    static constexpr int ITERS = (C8 + DOTS_THREADS - 1) / DOTS_THREADS;      // 3
++    static constexpr int ITERS4 = (C4 + DOTS_THREADS - 1) / DOTS_THREADS;     // 5
++    static constexpr bool ROLLED = B == 8;
++    // Weight prefetch depth (iterations ahead): r1's double buffer (1), or all three iterations where
++    // that fits next to the streams (B = 1 at J = 4, and PF = 2 at B = 2, J = 4).
++    static constexpr int WD = ROLLED ? 0 : (J == 4 && (B == 1 || (B == 2 && PF == 2)) ? ITERS - 1 : 1);
++    // Resident CTAs per SM the register allocation is held to (ptxas -v in ptxas-r2.log: no spills).
++    // PF = 0 at B <= 2, J = 4 keeps r1's 8 CTAs / SM (64 registers).
++    static constexpr int MINB =
++        B == 1 ? (J == 4 ? 8 : (PF == 0 ? 6 : 5)) :
++        B == 2 ? (J == 4 ? (PF == 0 ? 8 : (PF == 1 ? 6 : 5)) : (PF == 0 ? 6 : (PF == 1 ? 5 : 4))) :
++        B == 4 ? (J == 4 && PF == 0 ? 5 : 4) : 4;
++    // Sum-of-squares CTA: stream iterations in flight (all five at B <= 2).
++    static constexpr int SQPF = B <= 2 ? ITERS4 - 1 : (B == 4 ? 1 : 0);
++};
++
++template <int B, int J, int PF>
++__global__ __launch_bounds__(DOTS_THREADS, DotsCfg<B, J, PF>::MINB)
++void dots_i8_v4_kernel
++(
++    const float* __restrict__ streams, const int8_t* __restrict__ fn_q,
++    const float* __restrict__ fn_s, float* __restrict__ dots,
++    const int R, const int M
++)
++{
++    using Cfg = DotsCfg<B, J, PF>;
++    constexpr int D = D_FIX, C8 = Cfg::C8, C4 = Cfg::C4, ITERS = Cfg::ITERS, ITERS4 = Cfg::ITERS4;
++    constexpr int WD = Cfg::WD, SQPF = Cfg::SQPF;
++    const int tid = threadIdx.x, lane = tid % WARP, warp = tid / WARP;
++    const int h = blockIdx.z, r0 = blockIdx.y * B;
++    const int j0 = blockIdx.x * J;
++    __shared__ float red[B][J][V];
++
++    // Sum-of-squares CTA: served statements (fmaf nest per float4, iterations ascending); the loads of
++    // SQPF + 1 iterations are in flight together. Rows >= R load zeros into discarded accumulators.
++    if (blockIdx.x == (M + J - 1) / J)
++    {
++        pdl_wait();
++        pdl_launch_dependents();
++        float4 sq[ITERS4][B];
++        auto load_sq = [&](int it)
++        {
++            const int c = tid + it * DOTS_THREADS;
++            #pragma unroll
++            for (int b = 0; b < B; ++b)
++                sq[it][b] = (r0 + b < R && c < C4)
++                    ? ((const float4*) streams)[((size_t) (r0 + b) * H + h) * (D / 4) + c]
++                    : make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++        };
++        float a[B] = {};
++        #pragma unroll
++        for (int it = 0; it <= SQPF; ++it) load_sq(it);
++        #pragma unroll
++        for (int it = 0; it < ITERS4; ++it)
++        {
++            if (it > 0 && it + SQPF < ITERS4) load_sq(it + SQPF);
++            const int c = tid + it * DOTS_THREADS;
++            if ((it + 1) * DOTS_THREADS <= C4 || c < C4)
++            {
++                #pragma unroll
++                for (int b = 0; b < B; ++b)
++                {
++                    const float4 s = sq[it][b];
++                    a[b] = fmaf(s.x, s.x, fmaf(s.y, s.y,
++                           fmaf(s.z, s.z, fmaf(s.w, s.w, a[b]))));
++                }
++            }
++        }
++        #pragma unroll
++        for (int b = 0; b < B; ++b)
++        {
++            for (int offset = 16; offset > 0; offset >>= 1)
++                a[b] += __shfl_down_sync(0xffffffffu, a[b], offset);
++            if (lane == 0) red[b][0][warp] = a[b];
++        }
++        __syncthreads();
++        if (tid < B && r0 + tid < R)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < V; ++v) sum += red[tid][0][v];
++            dots[((size_t) (r0 + tid) * (M + 1) + M) * H + h] = sum;
++        }
++        return;
++    }
++
++    // Constants first (independent of the preceding kernel): the finalizer's scale and the weights.
++    float fs = 0.0f;
++    if (tid < B * J && j0 + tid % J < M) fs = fn_s[j0 + tid % J];
++
++    float a[B][J] = {};
++
++    if constexpr (Cfg::ROLLED)
++    {
++        // B = 8: r1's rolled loop, streams and weights of one iteration issued together.
++        pdl_wait();
++        pdl_launch_dependents();
++        #pragma unroll 1
++        for (int it = 0; it < ITERS; ++it)
++        {
++            const int c = tid + it * DOTS_THREADS;
++            uint32_t wx[J][2];
++            #pragma unroll
++            for (int j = 0; j < J; ++j)
++            {
++                int2 pk = make_int2(0, 0);
++                if (j0 + j < M && c < C8)
++                    pk = ((const int2*) (fn_q + ((size_t) (j0 + j) * H + h) * D))[c];
++                wx[j][0] = ((uint32_t) pk.x) ^ 0x80808080u;
++                wx[j][1] = ((uint32_t) pk.y) ^ 0x80808080u;
++            }
++            if ((it + 1) * DOTS_THREADS <= C8 || c < C8)
++            {
++                float4 s0[B], s1[B];
++                #pragma unroll
++                for (int b = 0; b < B; ++b)
++                {
++                    if (r0 + b < R)
++                    {
++                        const float4* s4 = (const float4*) (streams + ((size_t) (r0 + b) * H + h) * D);
++                        s0[b] = s4[2 * c];
++                        s1[b] = s4[2 * c + 1];
++                    }
++                    else
++                    {
++                        s0[b] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++                        s1[b] = s0[b];
++                    }
++                }
++                #pragma unroll
++                for (int j = 0; j < J; ++j)
++                {
++                    const float f0 = i8f(wx[j][0], 0), f1 = i8f(wx[j][0], 1);
++                    const float f2 = i8f(wx[j][0], 2), f3 = i8f(wx[j][0], 3);
++                    const float f4 = i8f(wx[j][1], 0), f5 = i8f(wx[j][1], 1);
++                    const float f6 = i8f(wx[j][1], 2), f7 = i8f(wx[j][1], 3);
++                    #pragma unroll
++                    for (int b = 0; b < B; ++b)
++                    {
++                        a[b][j] = fmaf(s0[b].x, f0, a[b][j]);
++                        a[b][j] = fmaf(s0[b].y, f1, a[b][j]);
++                        a[b][j] = fmaf(s0[b].z, f2, a[b][j]);
++                        a[b][j] = fmaf(s0[b].w, f3, a[b][j]);
++                        a[b][j] = fmaf(s1[b].x, f4, a[b][j]);
++                        a[b][j] = fmaf(s1[b].y, f5, a[b][j]);
++                        a[b][j] = fmaf(s1[b].z, f6, a[b][j]);
++                        a[b][j] = fmaf(s1[b].w, f7, a[b][j]);
++                    }
++                }
++            }
++        }
++    }
++    else
++    {
++        // B <= 4: fully unrolled; iteration k's weights are issued WD iterations ahead (all of them
++        // before the PDL wait when WD = ITERS - 1) and its streams PF iterations ahead.
++        uint32_t wx[ITERS][J][2];
++        float4 s0[ITERS][B], s1[ITERS][B];
++        auto load_w = [&](int it)
++        {
++            const int c = tid + it * DOTS_THREADS;
++            #pragma unroll
++            for (int j = 0; j < J; ++j)
++            {
++                int2 pk = make_int2(0, 0);
++                if (j0 + j < M && c < C8)
++                    pk = ((const int2*) (fn_q + ((size_t) (j0 + j) * H + h) * D))[c];
++                // Raw words: the 0x80808080 bias is applied at use, so no instruction consumes a
++                // weight load before the stream loads are issued (one load round, not two).
++                wx[it][j][0] = (uint32_t) pk.x;
++                wx[it][j][1] = (uint32_t) pk.y;
++            }
++        };
++        // Stream row addresses computed up front (the kernel-parameter load and address arithmetic
++        // then sit before the weight loads, not between the PDL wait and the stream loads).
++        const float4* srow[B];
++        #pragma unroll
++        for (int b = 0; b < B; ++b)
++            srow[b] = (const float4*) (streams + ((size_t) (r0 + b) * H + h) * D) + 2 * tid;
++        auto load_s = [&](int it)
++        {
++            const int c = tid + it * DOTS_THREADS;
++            #pragma unroll
++            for (int b = 0; b < B; ++b)
++            {
++                if (r0 + b < R && c < C8)
++                {
++                    s0[it][b] = srow[b][2 * it * DOTS_THREADS];
++                    s1[it][b] = srow[b][2 * it * DOTS_THREADS + 1];
++                }
++                else
++                {
++                    s0[it][b] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++                    s1[it][b] = s0[it][b];
++                }
++            }
++        };
++        // Program order: streams, then weights, of every iteration issued ahead. ptxas keeps global
++        // loads in program order but hoists ALU consumers of a weight word into the gaps between
++        // loads; with the weights first, such a consumer lands before the stream loads and splits the
++        // batch into two rounds (weights, then streams). Streams first keeps it one round. (ptxas also
++        // sinks the weight loads below griddepcontrol.wait, so issuing them before the wait bought
++        // nothing: sass_rounds.py on hcr2.sass.)
++        pdl_wait();
++        pdl_launch_dependents();
++        #pragma unroll
++        for (int it = 0; it <= PF && it < ITERS; ++it) load_s(it);
++        #pragma unroll
++        for (int it = 0; it <= WD; ++it) load_w(it);
++        #pragma unroll
++        for (int it = 0; it < ITERS; ++it)
++        {
++            if (it > 0 && it + PF < ITERS) load_s(it + PF);
++            if (it > 0 && it + WD < ITERS) load_w(it + WD);
++            const int c = tid + it * DOTS_THREADS;
++            if ((it + 1) * DOTS_THREADS <= C8 || c < C8)
++            {
++                #pragma unroll
++                for (int j = 0; j < J; ++j)
++                {
++                    // Served: (float) q[k] for q = bytes of packed[j] (little-endian), once per row b.
++                    const uint32_t x0 = wx[it][j][0] ^ 0x80808080u, x1 = wx[it][j][1] ^ 0x80808080u;
++                    const float f0 = i8f(x0, 0), f1 = i8f(x0, 1), f2 = i8f(x0, 2), f3 = i8f(x0, 3);
++                    const float f4 = i8f(x1, 0), f5 = i8f(x1, 1), f6 = i8f(x1, 2), f7 = i8f(x1, 3);
++                    #pragma unroll
++                    for (int b = 0; b < B; ++b)
++                    {
++                        a[b][j] = fmaf(s0[it][b].x, f0, a[b][j]);
++                        a[b][j] = fmaf(s0[it][b].y, f1, a[b][j]);
++                        a[b][j] = fmaf(s0[it][b].z, f2, a[b][j]);
++                        a[b][j] = fmaf(s0[it][b].w, f3, a[b][j]);
++                        a[b][j] = fmaf(s1[it][b].x, f4, a[b][j]);
++                        a[b][j] = fmaf(s1[it][b].y, f5, a[b][j]);
++                        a[b][j] = fmaf(s1[it][b].z, f6, a[b][j]);
++                        a[b][j] = fmaf(s1[it][b].w, f7, a[b][j]);
++                    }
++                }
++            }
++        }
++    }
++
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++        #pragma unroll
++        for (int j = 0; j < J; ++j)
++        {
++            for (int offset = 16; offset > 0; offset >>= 1)
++                a[b][j] += __shfl_down_sync(0xffffffffu, a[b][j], offset);
++            if (lane == 0) red[b][j][warp] = a[b][j];
++        }
++    __syncthreads();
++    if (tid < B * J)
++    {
++        const int b = tid / J, j = tid % J;
++        if (r0 + b < R && j0 + j < M)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < V; ++v) sum += red[b][j][v];
++            dots[((size_t) (r0 + b) * (M + 1) + j0 + j) * H + h] = sum * fs;
++        }
++    }
++}
++
++// up, r2. Same per-output arithmetic as V3 up; Q column quads per CTA (H * Q warps). Not instantiated
++// at B = 8, Q = 2: every r2 form there spilled 4-16 bytes at the 64-register budget (ptxas), so that
++// tile runs r1's V3 up kernel (launched without PDL, since it has no griddepcontrol.wait).
++template <int B, int Q, bool HALF_OUT>
++__global__ __launch_bounds__(H * Q * WARP, Q == 2 ? 4 : 2)
++void up_i8_state_v4_kernel
++(
++    const float* __restrict__ streams, const float* __restrict__ dots,
++    float* __restrict__ state, float* __restrict__ post,
++    const int8_t* __restrict__ up_q, const float* __restrict__ up_s,
++    const half* __restrict__ w, void* __restrict__ mixed,
++    const int R, const int D, const float rms_eps
++)
++{
++    constexpr int LR = LR_FIX;
++    constexpr int THREADS = H * Q * WARP, NW = THREADS / WARP;
++    constexpr int S = UpStride<B>::S;
++    constexpr int NI = LR / WARP;
++    constexpr int WPR = NW / B;                         // prelude warps per row
++    constexpr int NP = (LR + H + WARP * WPR - 1) / (WARP * WPR);
++    constexpr int NV = 4 * B;                           // gate values per lane
++    constexpr int SPAN = 32 / NV;                       // lanes holding the same reduced value
++    static_assert(NW % B == 0, "prelude warps must divide into rows");
++    const int lane = threadIdx.x % WARP, warp = threadIdx.x / WARP;
++    const int h = warp % H, cq = warp / H;
++    const int c = blockIdx.x * Q + cq, r0 = blockIdx.y * B;
++    const int M = LR + (post ? H : 0);
++    const bool col_ok = c < D / 4;
++    extern __shared__ float4 hcv4_smem4[];
++    float* headT = (float*) hcv4_smem4;                 // [LR][S]
++    __shared__ float gates[B][Q][H][4];
++    __shared__ float rmr_s[B][H];
++
++    // 1. Constants, before the PDL wait: this lane's up_q words, its gate scale, the epilogue's w.
++    uint32_t wq[NI];
++    #pragma unroll
++    for (int n = 0; n < NI; ++n)
++        wq[n] = col_ok
++            ? *(const uint32_t*) (up_q + ((((size_t) h * (D / 4) + c) * LR + lane + n * WARP) * 4))
++            : 0u;
++    // The gate scale and the epilogue w are constants too; at B = 8 they are loaded after the prelude
++    // instead (as r1), which keeps the 64-register budget without spills.
++    constexpr bool EARLY = B <= 4;
++    bool writer, e_on;
++    int wb, wk, eb, eq, ek, ed;
++    float scale = 1.0f;
++    half ew[H];
++    auto load_consts = [&]()
++    {
++        const int widx = lane / SPAN, et = threadIdx.x;
++        writer = (lane & (SPAN - 1)) == 0;
++        wb = widx / 4;
++        wk = widx % 4;
++        eb = et / (Q * 4);
++        eq = (et / 4) % Q;
++        ek = et % 4;
++        ed = (blockIdx.x * Q + eq) * 4 + ek;
++        e_on = et < B * Q * 4 && r0 + eb < R && ed < D;
++        scale = (writer && col_ok) ? up_s[(size_t) h * D + 4 * c + wk] : 1.0f;
++        #pragma unroll
++        for (int hs = 0; hs < H; ++hs) ew[hs] = e_on ? w[hs * D + ed] : __float2half(0.0f);
++    };
++    if constexpr (EARLY) load_consts();
++
++    pdl_wait();
++
++    // 2. State prelude, 16 / B (Q = 4) or 8 / B (Q = 2) warps per row. The d4 loads do not depend on
++    //    rm, so they are issued before the rsqrt consumes the sum-of-squares load: one load round (r1
++    //    at B = 8 issued them after it: two).
++    {
++        const int b = warp / WPR, sub = warp % WPR, r = r0 + b;
++        const float* dr = dots + (size_t) r * (M + 1) * H;
++        float4 d4[NP];
++        auto load_d4 = [&]()
++        {
++            #pragma unroll
++            for (int n = 0; n < NP; ++n)
++            {
++                const int i = sub * WARP + lane + n * WARP * WPR;
++                d4[n] = (r < R && i < M) ? *(const float4*) (dr + (size_t) i * H)
++                                         : make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++            }
++        };
++        load_d4();
++        float rm = 0.0f;
++        if (lane < H && r < R)
++            rm = rsqrtf(dots[((size_t) r * (M + 1) + M) * H + lane] / (float) D + rms_eps);
++        float rmr[H];
++        #pragma unroll
++        for (int hh = 0; hh < H; ++hh) rmr[hh] = __shfl_sync(0xffffffffu, rm, hh);
++        if (sub == 0 && lane < H)
++        {
++            rmr_s[b][lane] = rm;
++            if (blockIdx.x == 0 && r < R) state[(size_t) r * (LR + H) + LR + lane] = rm;
++        }
++        // Branch-free per element (the served expressions, evaluated on zeros where the element does
++        // not exist and then discarded), so ptxas keeps all NP loads ahead of the first use instead of
++        // sinking each one into its own conditional block.
++        #pragma unroll
++        for (int n = 0; n < NP; ++n)
++        {
++            const int i = sub * WARP + lane + n * WARP * WPR;
++            const bool ok = r < R && i < M;
++            float v = 0.0f;
++            v = fmaf(rmr[0], d4[n].x, v);
++            v = fmaf(rmr[1], d4[n].y, v);
++            v = fmaf(rmr[2], d4[n].z, v);
++            v = fmaf(rmr[3], d4[n].w, v);
++            v *= 1.0f / (float) H;
++            const float sg = sigmoidf_(v);
++            const float o = (ok && i < LR) ? v * sg : 0.0f;
++            if (ok && i >= LR && blockIdx.x == 0) post[(size_t) r * H + i - LR] = 2.0f * sg;
++            if (i < LR)
++            {
++                headT[i * S + b] = o;
++                if (blockIdx.x == 0 && r < R) state[(size_t) r * (LR + H) + i] = o;
++            }
++        }
++    }
++    // Epilogue streams (hc_apply's output): after the wait; before the barrier at B <= 4, after the
++    // rank loop at B = 8 (as r1: register budget).
++    float es[H];
++    auto load_es = [&]()
++    {
++        #pragma unroll
++        for (int hs = 0; hs < H; ++hs)
++            es[hs] = e_on ? streams[((size_t) (r0 + eb) * H + hs) * D + ed] : 0.0f;
++    };
++    if constexpr (EARLY) load_es();
++    __syncthreads();
++
++    // 3. Rank loop: served fmaf(ti, q, g) chain per (b, component), i ascending per lane.
++    float4 g[B];
++    #pragma unroll
++    for (int b = 0; b < B; ++b) g[b] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++    if (col_ok)
++    {
++        #pragma unroll
++        for (int n = 0; n < NI; ++n)
++        {
++            const int i = lane + n * WARP;
++            const uint32_t wx = wq[n] ^ 0x80808080u;
++            const float u0 = i8f(wx, 0), u1 = i8f(wx, 1), u2 = i8f(wx, 2), u3 = i8f(wx, 3);
++            float t[B];
++            if constexpr (B == 8)
++            {
++                const float4 ta = *(const float4*) (headT + i * S);
++                const float4 tb = *(const float4*) (headT + i * S + 4);
++                t[0] = ta.x; t[1] = ta.y; t[2] = ta.z; t[3] = ta.w;
++                t[4] = tb.x; t[5] = tb.y; t[6] = tb.z; t[7] = tb.w;
++            }
++            else if constexpr (B == 4)
++            {
++                const float4 ta = *(const float4*) (headT + i * S);
++                t[0] = ta.x; t[1] = ta.y; t[2] = ta.z; t[3] = ta.w;
++            }
++            else if constexpr (B == 2)
++            {
++                const float2 ta = *(const float2*) (headT + i * S);
++                t[0] = ta.x; t[1] = ta.y;
++            }
++            else
++                t[0] = headT[i * S];
++            #pragma unroll
++            for (int b = 0; b < B; ++b)
++            {
++                g[b].x = fmaf(t[b], u0, g[b].x);
++                g[b].y = fmaf(t[b], u1, g[b].y);
++                g[b].z = fmaf(t[b], u2, g[b].z);
++                g[b].w = fmaf(t[b], u3, g[b].w);
++            }
++        }
++    }
++
++    if constexpr (!EARLY)
++    {
++        load_consts();
++        load_es();
++    }
++
++    // 4. Reduce-scatter over the served xor tree (16, 8, 4, 2, 1), as V3.
++    float val[NV];
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++    {
++        val[4 * b + 0] = g[b].x;
++        val[4 * b + 1] = g[b].y;
++        val[4 * b + 2] = g[b].z;
++        val[4 * b + 3] = g[b].w;
++    }
++    #pragma unroll
++    for (int lvl = 0; lvl < 5; ++lvl)
++    {
++        const int off = 16 >> lvl;
++        const int cur = NV >> lvl;
++        if (cur >= 2)
++        {
++            const int half_n = cur / 2;
++            const bool upper = (lane & off) != 0;
++            #pragma unroll
++            for (int k = 0; k < half_n; ++k)
++            {
++                const float send = upper ? val[k] : val[k + half_n];
++                const float keep = upper ? val[k + half_n] : val[k];
++                val[k] = keep + __shfl_xor_sync(0xffffffffu, send, off);
++            }
++        }
++        else
++            val[0] += __shfl_xor_sync(0xffffffffu, val[0], off);
++    }
++    if (writer) gates[wb][cq][h][wk] = val[0] * scale;
++    __syncthreads();
++
++    // 5. Epilogue: served statements; head's LR + hs entry is rmr_s[b][hs].
++    if (e_on)
++    {
++        float o = 0.0f;
++        #pragma unroll
++        for (int hs = 0; hs < H; ++hs)
++        {
++            float s = es[hs];
++            float coef = rmr_s[eb][hs] * (1.0f / (float) H);
++            o = fmaf(sigmoidf_(gates[eb][eq][hs][ek]) * coef * __half2float(ew[hs]), s, o);
++        }
++        if (HALF_OUT) ((half*) mixed)[(size_t) (r0 + eb) * D + ed] = __float2half_rn(o);
++        else ((float*) mixed)[(size_t) (r0 + eb) * D + ed] = o;
++    }
++}
++
++} // namespace hcv4
++
+ // ---------------------------------------------------------------------------------------------
+ // Verbatim copies of the served kernels (hc_mix.cu: gr_v2_dots_i8_kernel, gr_v2_up_i8_state_kernel,
+ // sigmoidf_), renamed. Used for the mode bits that keep one launch served, and as the fallback.
+@@ -835,6 +1393,102 @@
+     #undef HCV3_UP
+ }
+ 
++// ---- r2 launches ----
++
++// <<<>>> without PDL; with PDL, cudaLaunchKernelEx + programmatic stream serialization (the kernel
++// then overlaps the previous kernel's tail up to its griddepcontrol.wait).
++template <typename... KArgs, typename... Args>
++void launch_k(void (*k)(KArgs...), dim3 grid, int threads, int smem, cudaStream_t stream, bool pdl, Args... args)
++{
++    if (!pdl)
++    {
++        k<<<grid, threads, smem, stream>>>(args...);
++        return;
++    }
++    cudaLaunchConfig_t cfg = {};
++    cfg.gridDim = grid;
++    cfg.blockDim = dim3(threads);
++    cfg.dynamicSmemBytes = smem;
++    cfg.stream = stream;
++    cudaLaunchAttribute attr[1];
++    attr[0].id = cudaLaunchAttributeProgrammaticStreamSerialization;
++    attr[0].val.programmaticStreamSerializationAllowed = 1;
++    cfg.attrs = attr;
++    cfg.numAttrs = 1;
++    C10_CUDA_CHECK(cudaLaunchKernelEx(&cfg, k, args...));
++}
++
++// r2 dots: B in {1, 2, 4, 8}, J in {4, 8}, PF in {0, 1, 2}. Clamped to the instantiated set:
++// B = 8 runs J = 4, PF = 0 (rolled); B = 4 runs PF <= 1 at J = 4 and PF = 0 at J = 8.
++void resolve_dots_v4(int B, int& J, int& PF)
++{
++    J = J >= 8 ? 8 : 4;
++    PF = PF < 0 ? 0 : (PF > 2 ? 2 : PF);
++    if (B == 8) { J = 4; PF = 0; }
++    else if (B == 4) PF = J == 8 ? 0 : (PF > 1 ? 1 : PF);
++}
++
++void launch_dots_v4(int B, int J, int PF, bool pdl, const float* streams, const int8_t* fn_q,
++                    const float* fn_s, float* dots, int R, int M, cudaStream_t stream)
++{
++    resolve_dots_v4(B, J, PF);
++    const dim3 grid((M + J - 1) / J + 1, (R + B - 1) / B, hcv3::H);
++    #define HCV4_D(BB, JJ, PP) launch_k(hcv4::dots_i8_v4_kernel<BB, JJ, PP>, grid, hcv3::DOTS_THREADS, 0, stream, pdl, \
++                                        streams, fn_q, fn_s, dots, R, M)
++    const int key = B * 100 + J * 10 + PF;
++    switch (key)
++    {
++        case 140: HCV4_D(1, 4, 0); break;
++        case 141: HCV4_D(1, 4, 1); break;
++        case 142: HCV4_D(1, 4, 2); break;
++        case 180: HCV4_D(1, 8, 0); break;
++        case 181: HCV4_D(1, 8, 1); break;
++        case 182: HCV4_D(1, 8, 2); break;
++        case 240: HCV4_D(2, 4, 0); break;
++        case 241: HCV4_D(2, 4, 1); break;
++        case 242: HCV4_D(2, 4, 2); break;
++        case 280: HCV4_D(2, 8, 0); break;
++        case 281: HCV4_D(2, 8, 1); break;
++        case 282: HCV4_D(2, 8, 2); break;
++        case 440: HCV4_D(4, 4, 0); break;
++        case 441: HCV4_D(4, 4, 1); break;
++        case 480: HCV4_D(4, 8, 0); break;
++        default:  HCV4_D(8, 4, 0); break;
++    }
++    #undef HCV4_D
++}
++
++// r2 up (half output only; the float-output form keeps the V3 kernel): B in {1, 2, 4, 8}, Q in {2, 4}.
++// B = 8, Q = 2 is r1's V3 kernel, never with PDL (no griddepcontrol.wait in it). Returns true if an r2 kernel ran.
++bool launch_up_v4(int B, int Q, bool pdl, const float* streams, const float* dots, float* state, float* post,
++                  const int8_t* up_q, const float* up_s, const half* w, void* mixed,
++                  int R, int D, float rms_eps, cudaStream_t stream)
++{
++    Q = Q >= 4 ? 4 : 2;
++    #define HCV4_U(BB, QQ) launch_k(hcv4::up_i8_state_v4_kernel<BB, QQ, true>, \
++        dim3((D / 4 + QQ - 1) / QQ, (R + BB - 1) / BB), hcv3::H * QQ * hcv3::WARP, \
++        hcv3::LR_FIX * hcv3::UpStride<BB>::S * (int) sizeof(float), stream, pdl, \
++        streams, dots, state, post, up_q, up_s, w, mixed, R, D, rms_eps)
++    switch (B * 10 + Q)
++    {
++        case 12: HCV4_U(1, 2); break;
++        case 14: HCV4_U(1, 4); break;
++        case 22: HCV4_U(2, 2); break;
++        case 24: HCV4_U(2, 4); break;
++        case 42: HCV4_U(4, 2); break;
++        case 44: HCV4_U(4, 4); break;
++        case 84: HCV4_U(8, 4); break;
++        default:
++            hcv3::up_i8_state_v3_kernel<8, hcv3::LR_FIX, true>
++                <<<dim3((D / 4 + hcv3::Q - 1) / hcv3::Q, (R + 7) / 8), hcv3::UP_THREADS,
++                   hcv3::LR_FIX * hcv3::UpStride<8>::S * (int) sizeof(float), stream>>>
++                (streams, dots, state, post, up_q, up_s, w, mixed, R, D, rms_eps);
++            return false;
++    }
++    #undef HCV4_U
++    return true;
++}
++
+ } // namespace
+ 
+ int64_t gr_mix_v2_int8_v3
+@@ -843,7 +1497,8 @@
+     const at::Tensor& up_q, const at::Tensor& up_s, const at::Tensor& w,
+     double rms_eps, at::Tensor dots, at::Tensor state,
+     c10::optional<at::Tensor> post, at::Tensor mixed,
+-    int64_t mode, int64_t dots_bmax, int64_t up_bmax
++    int64_t mode, int64_t dots_bmax, int64_t up_bmax,
++    int64_t dots_j, int64_t dots_pf, int64_t up_qn
+ )
+ {
+     const at::cuda::OptionalCUDAGuard device_guard(streams.device());
+@@ -918,6 +1573,54 @@
+     void* mixed_p = mixed.data_ptr();
+ 
+     int64_t ran = 0;
++    const bool pdl = (mode & 16) != 0;
++    // r2 (mode bits 4 / 8): the hcv4 kernels. Caps 1/2/4/8 as in r1; 0 (auto) is r1-only and runs the
++    // served tile here. The float-output up form and a misaligned dots workspace keep the r1 selection.
++    const bool v4_dots = (mode & 4) != 0 && D == hcv3::D_FIX;
++    const bool v4_up = (mode & 8) != 0 && dots_aligned && LR == hcv3::LR_FIX && mixed.dtype() == at::kHalf;
++    if (v4_dots || v4_up)
++    {
++        const int bd = tile_rows(R, dots_bmax == 0 ? 8 : dots_bmax);
++        if (v4_dots)
++        {
++            launch_dots_v4(bd, (int) dots_j, (int) dots_pf, pdl, streams_p, fn_q_p, fn_s_p, dots_p, R, M, stream);
++            ran |= 4;
++        }
++        else
++        {
++            bool d3 = false;
++            switch (bd)
++            {
++                case 1: d3 = launch_dots<1>(v3_dots, streams_p, fn_q_p, fn_s_p, dots_p, R, D, M, stream); break;
++                case 2: d3 = launch_dots<2>(v3_dots, streams_p, fn_q_p, fn_s_p, dots_p, R, D, M, stream); break;
++                case 4: d3 = launch_dots<4>(v3_dots, streams_p, fn_q_p, fn_s_p, dots_p, R, D, M, stream); break;
++                default: d3 = launch_dots<8>(v3_dots, streams_p, fn_q_p, fn_s_p, dots_p, R, D, M, stream); break;
++            }
++            if (d3) ran |= 1;
++        }
++        C10_CUDA_CHECK(cudaPeekAtLastError());
++        const int bu = tile_rows(R, up_bmax == 0 ? 8 : up_bmax);
++        bool up_pdl = false;
++        if (v4_up)
++        {
++            up_pdl = launch_up_v4(bu, (int) up_qn, pdl, streams_p, dots_p, state_p, post_p, up_q_p, up_s_p, w_p,
++                                  mixed_p, R, D, (float) rms_eps, stream);
++            ran |= up_pdl ? 8 : 2;                      // B = 8, Q = 2 ran r1's V3 up
++        }
++        else
++        {
++            const bool u3 = mixed.dtype() == at::kHalf
++                ? launch_up_b<true>(bu, v3_up, streams_p, dots_p, state_p, post_p, up_q_p, up_s_p, w_p, mixed_p,
++                                    R, D, LR, (float) rms_eps, stream)
++                : launch_up_b<false>(bu, v3_up, streams_p, dots_p, state_p, post_p, up_q_p, up_s_p, w_p, mixed_p,
++                                     R, D, LR, (float) rms_eps, stream);
++            if (u3) ran |= 2;
++        }
++        C10_CUDA_CHECK(cudaPeekAtLastError());
++        if (pdl && (v4_dots || up_pdl)) ran |= 16;  // at least one launch carried the PDL attribute
++        return ran;
++    }
++
+     const int dev = streams.get_device();
+     const int sms = at::cuda::getDeviceProperties(dev)->multiProcessorCount;
+     const bool dots_v3_kernel = v3_dots && D == hcv3::D_FIX;
+diff -ruN -x __pycache__ -x *.orig a/exllamav3_ext/hc_mix_v3.cuh b/exllamav3_ext/hc_mix_v3.cuh
+--- a/exllamav3_ext/hc_mix_v3.cuh
++++ b/exllamav3_ext/hc_mix_v3.cuh
+@@ -2,7 +2,7 @@
+ 
+ #include <ATen/Tensor.h>
+ 
+-// hcfast r1 (EXL3_HC_MIX_V3): decode GatedResidual mixer, int8 V2 weights, state-in-up.
++// hcfast r1/r2 (EXL3_HC_MIX_V3=1/2): decode GatedResidual mixer, int8 V2 weights, state-in-up.
+ // Same two launches, same grids at the default tile caps, bitwise-identical dots/state/post/mixed
+ // to gr_mix_v2_int8_statein (hc_mix.cu). See hc_mix_v3.cu for the per-output argument.
+ //
+@@ -12,8 +12,16 @@
+ //   smallest rows-per-CTA (<= the served one) whose whole grid fits one wave on this device. A smaller
+ //   tile only changes which rows a CTA owns; every per-row reduction chain is unchanged, and the CTA
+ //   count is >= the served one.
+-// Returns the mask of launches that actually ran V3 (a shape outside D = 2560 / LR = 320, or a
+-// misaligned workspace, falls back to the copied served kernel for that launch).
++// mode bit 2 (hcfast r2): dots runs the r2 kernel (hcv4) with dots_j fn rows per CTA (4 or 8) and
++//   dots_pf stream iterations prefetched (0, 1 or 2; clamped to the instantiated set, see
++//   resolve_dots_v4); cap 0 runs the served tile.
++// mode bit 3 (hcfast r2): up runs the r2 kernel with up_qn column quads per CTA (2 or 4); half output only.
++// mode bit 4: the r2 launches use programmatic dependent launch (griddepcontrol.wait before any read of
++//   earlier stream work; nothing is written before it).
++// Returns the mask of launches that actually ran: 1 dots V3, 2 up V3, 4 dots r2, 8 up r2, 16 PDL on at
++// least one launch (mode bit 3 at up B = 8, Q = 2 runs r1's V3 up without PDL and reports 2)
++// (a shape outside D = 2560 / LR = 320, or a misaligned workspace, falls back to the copied served
++// kernel for that launch).
+ int64_t gr_mix_v2_int8_v3
+ (
+     const at::Tensor& streams,
+@@ -29,5 +37,8 @@
+     at::Tensor mixed,
+     int64_t mode,
+     int64_t dots_bmax,
+-    int64_t up_bmax
++    int64_t up_bmax,
++    int64_t dots_j,
++    int64_t dots_pf,
++    int64_t up_qn
+ );
+diff -ruN -x __pycache__ -x *.orig a/modules/hyperconnections.py b/modules/hyperconnections.py
+--- a/modules/hyperconnections.py
++++ b/modules/hyperconnections.py
+@@ -9,16 +9,41 @@
+ from ..ext import exllamav3_ext as ext
+ from ..util.tensor import g_tensor_cache
+ 
+-# hcfast r1 landing marker (EXL3_HC_MIX_V3, hc_mix_v3.cu). Default off.
+-_HC_MIX_V3_BUILD = "r1"
++# hcfast landing marker (EXL3_HC_MIX_V3, hc_mix_v3.cu). Default off. r2 keeps r1's EXL3_HC_MIX_V3=1
++# path unchanged and adds EXL3_HC_MIX_V3=2.
++_HC_MIX_V3_BUILD = "r2"
+ 
+ 
+-def _hc_mix_v3_cap(name: str) -> int:
+-    v = int(os.environ.get(name, "8"))
+-    if v not in (0, 1, 2, 4, 8):
+-        raise ValueError(f"{name} must be 0 (auto), 1, 2, 4 or 8")
+-    return v
++def _hc_mix_v3_level() -> int:
++    # Only the literal values "1" and "2" opt in (anything else, including "true", is off).
++    return {"1": 1, "2": 2}.get(os.environ.get("EXL3_HC_MIX_V3", "0"), 0)
+ 
++
++def _hc_mix_v3_table(name: str, default: str, allowed: tuple) -> tuple:
++    """A knob is one value ("2") or a per-row-count table ("4:4,32:2": R <= 4 -> 4, R <= 32 -> 2; the
++    last entry covers every larger R). Returns the value for R = 0..32 as a tuple."""
++    spec = os.environ.get(name, default).strip()
++    err = f"{name} must be one of {allowed} or a table like '4:{allowed[-1]},32:{allowed[-1]}'"
++    try:
++        if ":" not in spec:
++            pairs = [(32, int(spec))]
++        else:
++            pairs = [tuple(int(x) for x in item.split(":")) for item in spec.split(",") if item.strip()]
++    except ValueError:
++        raise ValueError(err) from None
++    if not pairs or any(len(p) != 2 or p[1] not in allowed or p[0] < 1 for p in pairs) \
++            or any(pairs[i][0] >= pairs[i + 1][0] for i in range(len(pairs) - 1)):
++        raise ValueError(err)
++    out = []
++    for r in range(33):
++        v = next((val for lim, val in pairs if r <= lim), pairs[-1][1])
++        out.append(v)
++    return tuple(out)
++
++
++def _hc_mix_v3_cap(name: str, default: str = "8") -> tuple:
++    return _hc_mix_v3_table(name, default, (0, 1, 2, 4, 8))
++
+ # mHC (manifold-constrained hyper-connections, DeepSeek-V4): the residual is carried as
+ # hc_mult parallel fp32 streams shaped (bsz, seq, hc_mult, hidden). ExpandStreams broadcasts
+ # the embedding into the streams, each sublayer site mixes them through a HyperConnection
+@@ -257,11 +282,23 @@
+     MIX_V2_INT8 = os.environ.get("EXL3_HC_MIX_V2_INT8", "0") == "1"
+     STATE_REGRID = os.environ.get("EXL3_GR_STATE_REGRID", "0") == "1"
+     STATE_IN_UP = os.environ.get("EXL3_GR_STATE_IN_UP", "0") == "1"
+-    # hcfast r1: the int8 state-in-up mixer through hc_mix_v3.cu (same launches and grids,
+-    # bitwise-identical outputs). The caps bound rows per CTA (8 = served tiling, 0 = one-wave auto).
+-    MIX_V3 = os.environ.get("EXL3_HC_MIX_V3", "0") == "1"
+-    MIX_V3_DOTS_B = _hc_mix_v3_cap("EXL3_HC_MIX_V3_DOTS_B")
++    # hcfast: the int8 state-in-up mixer through hc_mix_v3.cu, bitwise-identical outputs.
++    #   EXL3_HC_MIX_V3=1: r1 kernels (caps bound rows per CTA; 8 = served tiling, 0 = one-wave auto).
++    #   EXL3_HC_MIX_V3=2: r2 kernels (hcv4): DOTS_B / DOTS_J / DOTS_PF / UP_B / UP_Q tile and prefetch
++    #     knobs, EXL3_HC_MIX_V3_PDL=1 adds programmatic dependent launch. Every knob takes one value or
++    #     a per-row-count table (see _hc_mix_v3_table); values are resolved per R at launch.
++    MIX_V3_LEVEL = _hc_mix_v3_level()
++    MIX_V3 = MIX_V3_LEVEL > 0
++    MIX_V3_DOTS_B = _hc_mix_v3_cap("EXL3_HC_MIX_V3_DOTS_B", "2" if MIX_V3_LEVEL == 2 else "8")
+     MIX_V3_UP_B = _hc_mix_v3_cap("EXL3_HC_MIX_V3_UP_B")
++    MIX_V3_DOTS_J = _hc_mix_v3_table("EXL3_HC_MIX_V3_DOTS_J", "4", (4, 8))
++    # r2 default PF = 1: at DOTS_B = 2, J = 4 it is the form ptxas schedules as 2 load rounds (PF = 0: 4,
++    # PF = 2: 4; r1: 3; sass-rounds-r2.txt), at 80 registers (6 CTAs / SM), no spills.
++    MIX_V3_DOTS_PF = _hc_mix_v3_table("EXL3_HC_MIX_V3_DOTS_PF", "1" if MIX_V3_LEVEL == 2 else "0", (0, 1, 2))
++    # r2 default UP_Q = 4: at UP_B = 8 only Q = 4 runs the r2 up kernel (2 load rounds against r1's 4;
++    # sass-rounds-r2.txt; 64 registers, no spills). UP_B = 8, UP_Q = 2 falls back to the r1 up kernel.
++    MIX_V3_UP_Q = _hc_mix_v3_table("EXL3_HC_MIX_V3_UP_Q", "4" if MIX_V3_LEVEL == 2 else "2", (2, 4))
++    MIX_V3_PDL = os.environ.get("EXL3_HC_MIX_V3_PDL", "0") == "1"
+     if MIX_V2_MIN_R < 1:
+         raise ValueError("EXL3_HC_MIX_V2_MIN_R must be >= 1")
+ 
+@@ -437,10 +474,15 @@
+                     # `dots` in-CTA, dropping the separate state/regrid launch
+                     # (3 launches -> 2 per site). Off: the existing selection.
+                     if self.MIX_V3 and self.STATE_IN_UP:
++                        if self.MIX_V3_LEVEL == 1:
++                            mode, dj, dpf, uq = 3, 4, 0, 2
++                        else:
++                            mode = 15 | (16 if self.MIX_V3_PDL else 0)
++                            dj, dpf, uq = self.MIX_V3_DOTS_J[R], self.MIX_V3_DOTS_PF[R], self.MIX_V3_UP_Q[R]
+                         ext.gr_mix_v2_int8_v3(
+                             s3, self.fn_q, self.fn_s, self.upx_q, self.upx_s,
+                             self.w_h, self.rms_eps, dots, state, post, mixed,
+-                            3, self.MIX_V3_DOTS_B, self.MIX_V3_UP_B,
++                            mode, self.MIX_V3_DOTS_B[R], self.MIX_V3_UP_B[R], dj, dpf, uq,
+                         )
+                     else:
+                         mix_fn = ext.gr_mix_v2_int8_statein if self.STATE_IN_UP else (
