@@ -6,30 +6,25 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Served since 2026-09-24 10:46 CEST ([R701][r701]): image `tabbyapi:stack-r2` (`slotfix-r1` from [R676][r676] plus two bitwise-identical decode-kernel overlays, one for the hyper-connection mixer and one for the routed-expert MoE kernels; `slotfix-r1` is `stack-r1` from [R653][r653], which is `bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching, with the recurrent-state slot pool made exception-safe; greedy output identical to `slotfix-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]` with the MTP draft component on the second GPU ([R694][r694]), MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. The decode figure is the served launcher on two boots in [R704][r704] (2026-09-24, results `2026-09-24-r704-decode-curve-ab`): `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, NVMe tier off. It draws two metrics. The decode rate per stream is the median over requests of (tokens − 1) / (time of the last token − time of the first token), the streaming rate after the first token. The decode aggregate is the sum of the decode rates of the requests running together. At 2 to 8 streams every stream is decoding during 96.3 to 100 % of the round's mean decode window (96.8 to 100 % with code and prose pooled per stream count), so the sum overstates the rate the streams sustain together by at most about 4 %. The time to the first token and the end-to-end burst aggregate (all streams' tokens over the round's wall time, the headline metric here until R704) are in the table under the figure. The prefill figure is one boot of the launcher served on 2026-09-20 ([R580][r580]): three salted cold prompts per depth, counted by the server, NVMe tier off; its decode-at-depth points are [R554][r554]. R701's overlays change decode kernels only, and R704 measured the same time to the first token on short prompts before and after R701. The table after the figures lists the measurements they do not show.
+Decode on the served configuration, 2026-09-24 ([R704][r704]): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+
+| streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose |
+| ---: | ---: | ---: | ---: |
+| 1 | 237 / 227 | 237 / 226 | 0.13 / 0.13 |
+| 2 | 199 / 209 | 398 / 419 | 0.23 / 0.22 |
+| 4 | 148 / 141 | 592 / 569 | 0.44 / 0.42 |
+| 6 | 110 / 107 | 659 / 644 | 0.60 / 0.57 |
+| 8 | 96 / 95 | 764 / 761 | 0.72 / 0.67 |
 
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
-| streams | decode rate per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose | end-to-end burst aggregate, t/s, code / prose |
-| ---: | ---: | ---: | ---: | ---: |
-| 1 | 236.7 / 227.0 | 237 / 226 | 0.13 / 0.13 | 230 / 220 |
-| 2 | 199.2 / 209.4 | 398 / 419 | 0.23 / 0.22 | 381 / 401 |
-| 3 | 164.4 / 160.5 | 495 / 482 | 0.34 / 0.31 | 467 / 459 |
-| 4 | 147.9 / 141.1 | 592 / 569 | 0.44 / 0.42 | 556 / 534 |
-| 5 | 139.1 / 130.3 | 688 / 648 | 0.54 / 0.51 | 632 / 604 |
-| 6 | 109.7 / 107.2 | 659 / 644 | 0.60 / 0.57 | 617 / 609 |
-| 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
-| 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
-
-The decode aggregate falls from 5 to 6 streams on code (688 to 659 t/s) and is flat on prose (648 to 644), where the draft policy drops from two draft tokens to one. The decode rate per stream falls by 21 % on code and 18 % on prose from 5 to 6 streams, and by a further 13 % and 11 % from 6 to 8 streams. Against the configuration served before R701, measured in the same session on two alternating boots per arm, the decode rate per stream is 1.05 to 1.15 times higher at 1 to 8 streams, code and prose, and the slower boot of the served configuration is faster than the faster boot of the previous one at every shape ([R704][r704]). R580 published the end-to-end burst aggregate for prose at 8 streams as 630 t/s on 2026-09-20; R704 re-measured it as 676 on the configuration served before R701 and 714 on the served one, with the same instrument ([R704][r704]).
+- The per-stream rate is 1.05 to 1.15 times the configuration served before R701, at every shape from 1 to 8 streams, code and prose ([R704][r704]).
+- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy drops from two draft tokens to one ([Conditions](#conditions)). All eight stream counts are in [How the numbers are measured](#how-the-numbers-are-measured).
+- These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
 
-Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 s, 240,047 in 22.8 s ([R580][r580]). Decode on an already-prefilled context keeps its rate at every depth measured ([R554][r554]). A longer prompt adds time to the first token and does not lower the token rate.
-
-Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
-
-**Decode figures are for a steady-state batch on an otherwise idle server, and agent traffic runs slower.** Every decode figure above is greedy, on uncached prompts, at a fixed output length, with all streams starting at the same instant. On the same server, one 3,000-token generation at ~10k context decodes at 236 tokens/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). A three-agent session delivered 65.6 tokens/s per stream, as generated tokens over generation time in the server's own request log (2026-09-20, [R583][r583]). The loss comes from prefill interleaved with decode: a 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode. Context depth and generation length do not account for it ([R583][r583]).
+Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 s, 240,047 in 22.8 s (2026-09-20, [R580][r580]). Decode on an already-prefilled context keeps its rate at every depth measured ([R554][r554]).
 
 | | value | source |
 | --- | --- | --- |
@@ -48,14 +43,22 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 
 Also passing: structured output (`json_schema`, `response_format`, `regex_pattern`, thinking on and off, [R453][r453]); `tool_choice` `required` 48/48, named 4/4, 8/8 concurrent ([R529][r529]); a long prompt prefilled twice gives identical output ([R535][r535]).
 
-Conditions behind the figures and the table:
+### Conditions
 
-- The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip in the end-to-end burst aggregate from 5 to 6 streams; it is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
-- Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft is one token deep, which caps what acceptance can add.
-- 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
-- 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
-- The page pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moved the boundary layer to the other card, added 32,768 pool tokens and made that other card the bounding one ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
-- GSM8K figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
+- **Agent traffic.** On the same server, one 3,000-token generation at ~10k context decodes at 236 t/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). The three-agent figure is generated tokens over generation time in the server's own request log ([R583][r583]). A 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode; context depth and generation length do not account for the loss ([R583][r583]).
+- **Draft depth.** The draft policy drops to one draft token at 6 streams because a deeper draft would exceed the 16 verify rows the cooperative MoE decode kernels take ([R560][r560], [R562][r562]). Drafting 2 tokens at 5 streams moved the dip from 5 to 6 streams; it is served since R576 ([R570][r570], [R571][r571], [R576][r576]).
+- **Code and prose.** Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft is one token deep, which caps what acceptance can add.
+- **Slots.** 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
+- **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
+- **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers. Windowing the MTP draft cache moved the boundary layer to the other card, added 32,768 pool tokens and made that other card the bounding one ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
+- **GSM8K history.** Figures published here before 2026-09-18 evening (0.9158 at n=1319, 0.925, 0.935) used lm-eval's stop strings, which cut reasoning and undercount by 7–18 % of questions ([R509][r509]).
+
+## Served configuration
+
+- Since 2026-09-24 10:46 CEST ([R701][r701]): image `tabbyapi:stack-r2`, launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- 8 slots, 999,424-token page pool, 8-bit KV.
+- MTP draft depth 3 up to 4 jobs, 2 at 5 jobs, 1 above; a windowed draft cache of 16,384 tokens per slot (`EXL3_MTP_KV_WINDOW=16384`).
+- Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
 
 ## What the stack is
 
@@ -124,6 +127,31 @@ Each entry names the change and the number that kept it out of the served config
 - K8V4: +18 % pool for −11 % code at c1 ([R480][r480]).
 - [exllamav3#303][pr303] MTP hot vocabulary ([R377][r377]); [exllamav3#246][pr246] and [#290][pr290] ([R365][r365]); a 32-row MoE decode envelope written for this stack ([R366][r366]).
 - The same checkpoint on vLLM through [vllm-exl3][vllm-exl3]: 0.62× the c1 and 1.06–1.12× the c4 of this stack's 3.05 bpw configuration of 2026-09-18. Work on that route stopped the same day ([vLLM route][vllm-route]).
+
+## How the numbers are measured
+
+**Decode** ([R704][r704], 2026-09-24, results `2026-09-24-r704-decode-curve-ab`, driver [`scripts/r704-decode-curve-ab.sh`](scripts/r704-decode-curve-ab.sh)): `fn_bench` ([`bench/probe.py`][probe]) against the served launcher on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off.
+
+- **Decode rate per stream**: the median over requests of (tokens − 1) / (time of the last token − time of the first token).
+- **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 96.3 to 100 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 4 %.
+- **End-to-end burst aggregate**: all streams' tokens over the round's wall time, including time to the first token and the tail after the first stream finishes. It was this README's headline metric until R704. R580 published it for prose at 8 streams as 630 t/s on 2026-09-20; R704 re-measured 676 on the configuration served before R701 and 714 on the served one.
+
+| streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose | end-to-end burst aggregate, t/s, code / prose |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 236.7 / 227.0 | 237 / 226 | 0.13 / 0.13 | 230 / 220 |
+| 2 | 199.2 / 209.4 | 398 / 419 | 0.23 / 0.22 | 381 / 401 |
+| 3 | 164.4 / 160.5 | 495 / 482 | 0.34 / 0.31 | 467 / 459 |
+| 4 | 147.9 / 141.1 | 592 / 569 | 0.44 / 0.42 | 556 / 534 |
+| 5 | 139.1 / 130.3 | 688 / 648 | 0.54 / 0.51 | 632 / 604 |
+| 6 | 109.7 / 107.2 | 659 / 644 | 0.60 / 0.57 | 617 / 609 |
+| 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
+| 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
+
+The before/after-R701 comparison ran both configurations in the same session on two alternating boots per arm; the slower boot of the served configuration is faster than the faster boot of the previous one at every shape ([R704][r704]).
+
+**Prefill** ([R580][r580], 2026-09-20, one boot of the launcher served then): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. R701's overlays change decode kernels only, and R704 measured the same time to the first token on short prompts before and after R701.
+
+Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
 ## Reproducing a boot
 
