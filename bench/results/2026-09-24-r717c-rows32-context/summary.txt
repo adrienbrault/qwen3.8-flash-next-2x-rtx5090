@@ -1,0 +1,13 @@
+CELL c6 code ctx 4000: A 125.8 127.5 127.1 | P 147.5 146.8 147.0 | P/A pairs 1.172 1.151 1.157 mean 1.160
+CELL c6 prose ctx 4000: A 127.6 127.1 122.1 | P 148.2 152.8 154.0 | P/A pairs 1.162 1.202 1.261 mean 1.208
+CELL c8 code ctx 4000: A 107.2 106.3 105.8 | P 107.0 108.3 109.4 | P/A pairs 0.999 1.019 1.034 mean 1.017
+CELL c8 prose ctx 4000: A 100.9 102.4 100.7 | P 105.8 106.7 107.0 | P/A pairs 1.048 1.043 1.063 mean 1.051
+CELL c6 code ctx 16000: A 121.9 120.8 122.9 | P 121.2 123.8 122.3 | P/A pairs 0.994 1.025 0.995 mean 1.005
+CELL c6 prose ctx 16000: A 117.5 115.9 115.8 | P 121.6 124.6 124.1 | P/A pairs 1.035 1.075 1.072 mean 1.060
+CELL c8 code ctx 16000: A 101.5 101.7 102.8 | P 103.3 105.2 104.6 | P/A pairs 1.018 1.035 1.017 mean 1.023
+CELL c8 prose ctx 16000: A 101.3 99.6 99.4 | P 105.9 106.0 105.3 | P/A pairs 1.046 1.065 1.059 mean 1.056
+CELL c6 code ctx 32000: A 114.4 114.1 113.5 | P 120.7 119.8 119.8 | P/A pairs 1.055 1.050 1.055 mean 1.054
+CELL c6 prose ctx 32000: A 112.0 113.9 112.2 | P 115.3 116.3 114.7 | P/A pairs 1.030 1.022 1.022 mean 1.025
+CELL c8 code ctx 32000: A 98.1 97.9 98.5 | P 102.4 102.2 101.6 | P/A pairs 1.044 1.044 1.031 mean 1.040
+CELL c8 prose ctx 32000: A 99.0 96.8 98.3 | P 99.2 98.0 98.0 | P/A pairs 1.002 1.012 0.997 mean 1.004
+DECISION: MARGINAL (16k/32k mean 1.033; the user decides with the table)

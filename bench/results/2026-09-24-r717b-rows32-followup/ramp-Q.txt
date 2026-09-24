@@ -1,0 +1,17 @@
+tag=ramp url=http://127.0.0.1:8022/v1 conc=[1, 2, 3, 4, 5, 6, 7, 8] forced_tokens=256 ctx~[4000] kind=prose endpoint=chat runs=1 temp=0.0
+  c=1 run0 ctx~4000: {"conc": 1, "ctx_requested": 4000, "n_ok": 1, "tokens_median": 256, "prompt_tokens": 3126, "aggregate_tps": 175.4, "per_stream_wall_tps": 175.6, "decode_tps": 343.4, "ttft_s": 0.716}
+  warmup c=1 ctx~4000: 1/1 ok
+  c=2 run0 ctx~4000: {"conc": 2, "ctx_requested": 4000, "n_ok": 2, "tokens_median": 256.0, "prompt_tokens": 3092, "aggregate_tps": 304.8, "per_stream_wall_tps": 154.0, "decode_tps": 279.6, "ttft_s": 0.749}
+  warmup c=2 ctx~4000: 2/2 ok
+  c=3 run0 ctx~4000: {"conc": 3, "ctx_requested": 4000, "n_ok": 3, "tokens_median": 256, "prompt_tokens": 3092, "aggregate_tps": 360.6, "per_stream_wall_tps": 129.5, "decode_tps": 213.2, "ttft_s": 0.781}
+  warmup c=3 ctx~4000: 3/3 ok
+  c=4 run0 ctx~4000: {"conc": 4, "ctx_requested": 4000, "n_ok": 4, "tokens_median": 256.0, "prompt_tokens": 3092, "aggregate_tps": 382.5, "per_stream_wall_tps": 103.4, "decode_tps": 201.8, "ttft_s": 1.212}
+  warmup c=4 ctx~4000: 4/4 ok
+  c=5 run0 ctx~4000: {"conc": 5, "ctx_requested": 4000, "n_ok": 5, "tokens_median": 256, "prompt_tokens": 3092, "aggregate_tps": 449.3, "per_stream_wall_tps": 95.9, "decode_tps": 133.9, "ttft_s": 0.604}
+  warmup c=5 ctx~4000: 5/5 ok
+  c=6 run0 ctx~4000: {"conc": 6, "ctx_requested": 4000, "n_ok": 6, "tokens_median": 256.0, "prompt_tokens": 3092, "aggregate_tps": 501.1, "per_stream_wall_tps": 84.4, "decode_tps": 113.0, "ttft_s": 0.672}
+  warmup c=6 ctx~4000: 6/6 ok
+  c=7 run0 ctx~4000: {"conc": 7, "ctx_requested": 4000, "n_ok": 7, "tokens_median": 256, "prompt_tokens": 3092, "aggregate_tps": 545.4, "per_stream_wall_tps": 79.4, "decode_tps": 96.4, "ttft_s": 0.406}
+  warmup c=7 ctx~4000: 7/7 ok
+  c=8 run0 ctx~4000: {"conc": 8, "ctx_requested": 4000, "n_ok": 8, "tokens_median": 256.0, "prompt_tokens": 3095, "aggregate_tps": 574.4, "per_stream_wall_tps": 73.6, "decode_tps": 84.4, "ttft_s": 0.469}
+  warmup c=8 ctx~4000: 8/8 ok

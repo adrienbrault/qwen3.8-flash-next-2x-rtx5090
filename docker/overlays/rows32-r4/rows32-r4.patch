@@ -1,0 +1,228 @@
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/bindings.cpp b/exllamav3_ext/bindings.cpp
+--- a/exllamav3_ext/bindings.cpp
++++ b/exllamav3_ext/bindings.cpp
+@@ -106,6 +106,10 @@
+     m.def("moe_split_map", &moe_split_map, "moe_split_map");
+     m.def("moe_split_issue", &moe_split_issue, "moe_split_issue");
+     m.def("moe_split_collect_add", &moe_split_collect_add, "moe_split_collect_add");
++    // rows32 r4 (r3 rebased on stack-r3): EXL3_MOE_COOP_ROWS32 / EXL3_SHARED_EXPERT_ROWS32 (MTP verify at 17-32 rows;
++    // default off). Revision 2 = r3 + the start_shared bound + the 4 MiB lcguard side region with EXL3_DENSE_ROWS32
++    m.def("exl3_moe_coop_rows_cap", &exl3_moe_coop_rows_cap, "exl3_moe_coop_rows_cap");
++    m.attr("moe_rows32_revision") = 2;
+     m.def("dsv4_compress", &dsv4_compress, "dsv4_compress");
+     m.def("dsv4_pool_quant_scatter", &dsv4_pool_quant_scatter, "dsv4_pool_quant_scatter");
+     m.def("dsv4_ring_append", &dsv4_ring_append, "dsv4_ring_append");
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/libtorch/blocksparse_mlp.cpp b/exllamav3_ext/libtorch/blocksparse_mlp.cpp
+--- a/exllamav3_ext/libtorch/blocksparse_mlp.cpp
++++ b/exllamav3_ext/libtorch/blocksparse_mlp.cpp
+@@ -60,7 +60,11 @@
+     TORCH_CHECK(!shared_started, "start_shared: the previous early shared-expert launch was never joined by run_bszN");
+     TORCH_CHECK(y.dim() == 2, "start_shared: y must be (bsz, hidden)");
+     int num_tokens = (int) y.size(0);
+-    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN, "start_shared: bsz out of supported range");
++    // rows32 r4: the same bounds as run_bszN (the scratch python sized), checked BEFORE launch_shared slices
++    // out_d_sh: a slice past its rows would clamp, not raise
++    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN && num_tokens <= out_bszn.size(0),
++                "start_shared: bsz out of supported range");
++    TORCH_CHECK(!shared_experts || out_d_sh.value().size(1) >= num_tokens, "start_shared: shared expert output scratch too small");
+     c10::cuda::CUDAGuard device_guard(y.device());
+     launch_shared(y, num_tokens);
+     shared_started = true;
+@@ -134,7 +138,11 @@
+     // (out-of-range picks contribute exact zeros to the partial sum) handled inside. Nothing is
+     // captured or patched: routing tensors are read directly, so no per-bsz statics or graphs
+     int num_tokens = (int) y.size(0);
+-    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN, "run_bszN: bsz out of supported range");
++    // rows32 r3: bounded by the scratch python sized (block_sparse_mlp.py MAX_BSZN: 16, or 32 with
++    // EXL3_MOE_COOP_ROWS32=1); exl3_moe_coop_run checks the slot scratch and counters the same way
++    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN && num_tokens <= out_bszn.size(0),
++                "run_bszN: bsz out of supported range");
++    TORCH_CHECK(!shared_experts || out_d_sh.value().size(1) >= num_tokens, "run_bszN: shared expert output scratch too small");
+ 
+     c10::cuda::CUDAGuard device_guard(y.device());
+ 
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/libtorch/mlp.cpp b/exllamav3_ext/libtorch/mlp.cpp
+--- a/exllamav3_ext/libtorch/mlp.cpp
++++ b/exllamav3_ext/libtorch/mlp.cpp
+@@ -24,12 +24,20 @@
+     // fused mgemm kernel's raw j*size_m*size_k slot addressing for any num_tokens != MAX_BSZN --
+     // use exactly-shaped, lazily-cached buffers instead (a/down_xh have no such issue: their slot
+     // dim is size 1, so slicing the token dim -- the true leading dim there -- stays contiguous)
++    // rows32 r3: above 16 rows (EXL3_SHARED_EXPERT_ROWS32=1) the exactly-shaped buffers are views of the head
++    // of the (2, 32, width) statics instead of per-layer allocations: 2 * n * width contiguous elements
++    // reshaped to (2, n, width) keep the slot-1 offset at n * width. The statics are shared by every layer
++    // on the device, as a / down_xh already are (calls are stream-ordered). <= 16 rows: unchanged
++    auto head_view = [num_tokens] (const at::Tensor& t)
++    {
++        return t.view({-1}).narrow(0, 0, 2 * (int64_t) num_tokens * t.size(2)).view({2, num_tokens, t.size(2)});
++    };
+     at::Tensor& guh_n_ref = guh_cache[num_tokens - 1];
+     if (!guh_n_ref.defined())
+-        guh_n_ref = at::empty({2, num_tokens, guh.size(2)}, guh.options());
++        guh_n_ref = num_tokens > 16 ? head_view(guh) : at::empty({2, num_tokens, guh.size(2)}, guh.options());
+     at::Tensor& gu_n_ref = gu_cache[num_tokens - 1];
+     if (!gu_n_ref.defined())
+-        gu_n_ref = at::empty({2, num_tokens, gu.size(2)}, gu.options());
++        gu_n_ref = num_tokens > 16 ? head_view(gu) : at::empty({2, num_tokens, gu.size(2)}, gu.options());
+     at::Tensor guh_n     = guh_n_ref;
+     at::Tensor gu_n      = gu_n_ref;
+     at::Tensor a_n       = a.slice(1, 0, num_tokens);
+@@ -97,7 +105,10 @@
+ )
+ {
+     int num_tokens = (int) x.numel() / (int) x.size(-1);
+-    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN, "run_bszN: bsz out of supported range");
++    // rows32 r3: MAX_BSZN (mlp.h) sizes the graph table; the rows a call may use are the statics' rows
++    // (modules/mlp.py MAX_BSZN: 16, or 32 with EXL3_SHARED_EXPERT_ROWS32=1). A slice past them would clamp
++    TORCH_CHECK(num_tokens >= 1 && num_tokens <= MAX_BSZN && num_tokens <= a.size(1) && num_tokens <= down_xh.size(1),
++                "run_bszN: bsz out of supported range");
+     int graphidx = num_tokens - 1;
+ 
+     c10::cuda::CUDAGuard device_guard(x.device());
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/libtorch/mlp.h b/exllamav3_ext/libtorch/mlp.h
+--- a/exllamav3_ext/libtorch/mlp.h
++++ b/exllamav3_ext/libtorch/mlp.h
+@@ -8,7 +8,11 @@
+ #include "linear.h"
+ #include "../graph.cuh"
+ 
+-#define MAX_BSZN 16   // must match MAX_BSZN in blocksparse_mlp.h / BlockSparseMLP.py
++// Compile-time capacity of the multi-row paths (the graph table below, BC_BlockSparseMLP::run_bszN).
++// rows32 r3: 32 (was 16). The rows a call may use are bounded at run time by the statics python allocates:
++// MAX_BSZN in modules/mlp.py / modules/block_sparse_mlp.py = 16 (served), or 32 with
++// EXL3_SHARED_EXPERT_ROWS32=1 / EXL3_MOE_COOP_ROWS32=1
++#define MAX_BSZN 32
+ 
+ // Gate and up projections run as one fused MGEMM when the pointer tables are given, otherwise
+ // as two separate GEMV/GEMM calls -- for num_tokens > 1 these go directly through exl3_gemm_gr
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_dense_v2.cu b/exllamav3_ext/quant/exl3_dense_v2.cu
+--- a/exllamav3_ext/quant/exl3_dense_v2.cu
++++ b/exllamav3_ext/quant/exl3_dense_v2.cu
+@@ -37,7 +37,10 @@
+ // stack-r3 lcguard: side-branch slot region, allocated behind the main slots only when a gemm / mgemm twin can run
+ // (EXL3_DENSE_V2 = 1 | 2 or EXL3_DENSE_ROWS32) AND latchain's QSA fork is requested (EXL3_LC_QSA_FORK=1, read as a
+ // plain env string: no latchain symbol). Mode 3 (gemv twin only) or no fork: 0 bytes, the r1/r2 layout unchanged
+-#define DENSE_V2_WS_SIDE_BYTES   ((size_t) 2 << 20)
++// rows32 r4: 4 MiB when EXL3_DENSE_ROWS32 is on. The side call is index_qk (k 2560, n 640: tag 2, TILESIZE_N 128);
++// at 17-32 rows its twin uses 32-row slots, 32 x 128 x 4 B = 16 KiB per CTA, so 2 MiB holds only 128 CTAs and the
++// autotuner may pick up to 170 (min(tiles 400, SMs 170)): 2.7 MiB. 4 MiB holds 256. Without rows32: 2 MiB, unchanged
++#define DENSE_V2_WS_SIDE_BYTES   (dense_v2_rows32() ? ((size_t) 4 << 20) : ((size_t) 2 << 20))
+ 
+ // --------------------------------------------------------------------------------------------- modes
+ 
+@@ -274,6 +277,12 @@
+     if (side && need > g_ws[device].side_bytes)
+     {
+         g_count_side_served.fetch_add(1, std::memory_order_relaxed);
++        // rows32 r4: say so once per device (the gates read container / harness logs, not the counters)
++        static std::atomic<bool> logged_served[MAX_DEVICES];
++        if (!logged_served[device].exchange(true))
++            fprintf(stderr, "densegemm lcguard: device %d: side call m %d k %d n %d needs %zu B of side slots (%d CTAs), "
++                    "region %zu B: served kernel\n", device, size_m, size_k, size_n, need, cfg.num_sms,
++                    g_ws[device].side_bytes);
+         return nullptr;                 // no side region (or too small): the served kernel, as without densegemm
+     }
+     if (!side && need > g_ws[device].slot_bytes) return nullptr;
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_moe_coop.cu b/exllamav3_ext/quant/exl3_moe_coop.cu
+--- a/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -97,6 +97,26 @@
+     done[kernel] = smem;
+ }
+ 
++// rows32 r3 (EXL3_MOE_COOP_ROWS32, read per launch like V2 / V3; unset = 16, the served cap). With it on, a
++// 17-32-row call takes the same V2/V3 launch as a 13-16-row one: one rotation, one A and one B launch over
++// all slots, so each expert's weights are read once per run of <= ROWS slots instead of once per 16-row
++// span. Nothing in the kernels is 16-row specific: the run table has one thread per slot (MAX_SLOTS 512 >=
++// 32 x top-10), counters and slot scratch come from the caller and are checked in exl3_moe_coop_run. At
++// >= 13 rows x top-10 both stages pick the wide tile, the geometry every row of a served 16-row call gets,
++// and a row's arithmetic depends only on its own slots (MMA rows are independent; the down reduction sums a
++// row's slots in slot order), so each row is bitwise the row a 16-row call computes (test_rows32_parity.py)
++// rows32 r4 (stack-r3): moefast r3's mode 3 (EXL3_MOE_COOP_V3=3, r2 kernels) never runs above 16 rows: its
++// block-local run table holds R2_MAX_ROWS 16 rows / R2_MAX_SLOTS 192 slots, so moe_coop_r2_launch declines a
++// 17-32-row call and the launcher runs mode 2 (the V3 kernels). The served rows32 env pins that explicitly with
++// EXL3_MOE_COOP_V3_MAP=...,17-32:2; both routes launch the same kernels (test_rows32_parity.py dispatch)
++int exl3_moe_coop_rows_cap()
++{
++    const char* env = std::getenv("EXL3_MOE_COOP_ROWS32");
++    if (!env || !std::strcmp(env, "0")) return 16;
++    TORCH_CHECK(!std::strcmp(env, "1"), "EXL3_MOE_COOP_ROWS32 must be 0 or 1");
++    return 32;
++}
++
+ // Read per launch so tests can compare OFF/ON in one process. A captured graph
+ // keeps the mode selected at capture, as it keeps every other launch parameter.
+ static int moe_coop_v2_mode()
+@@ -355,7 +375,7 @@
+ {
+     const int v2 = moe_coop_v2_mode();
+     // Preserve the served fallback, including diagnostics and unsupported architectures.
+-    if (v2 && p_in.bsz >= 1 && p_in.bsz <= 16 &&
++    if (v2 && p_in.bsz >= 1 && (p_in.bsz <= 16 || p_in.bsz <= exl3_moe_coop_rows_cap()) &&
+         at::cuda::getDeviceProperties(device)->major == 12 &&
+         at::cuda::getDeviceProperties(device)->minor == 0 && !std::getenv("EXL3_MOE_COOP_DBG"))
+     {
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/exllamav3_ext/quant/exl3_moe_coop.cuh b/exllamav3_ext/quant/exl3_moe_coop.cuh
+--- a/exllamav3_ext/quant/exl3_moe_coop.cuh
++++ b/exllamav3_ext/quant/exl3_moe_coop.cuh
+@@ -86,6 +86,10 @@
+     cudaEvent_t wait_before_b = nullptr
+ );
+ 
++// rows32 r3: token rows the sm_120 V2/V3 launch accepts, read per launch like EXL3_MOE_COOP_V2 / _V3:
++// 16 (served) or, with EXL3_MOE_COOP_ROWS32=1 (strict 0/1), 32. Calls above it keep the generic kernels
++int exl3_moe_coop_rows_cap();
++
+ // Static part of the parameter block, validated once from the module's tensors (BC construction);
+ // K_gu / K_d / cb come back through the out-params. Gate tables/scratch are ignored when
+ // gated == false but must still be valid tensors (pass the up ones)
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/modules/block_sparse_mlp.py b/modules/block_sparse_mlp.py
+--- a/modules/block_sparse_mlp.py
++++ b/modules/block_sparse_mlp.py
+@@ -54,7 +54,17 @@
+ # weighted fp32 slot mode) and one reduction sums each token's top-k slots in router order, so a
+ # prompt's prefill output no longer depends on CTA scheduling. Unset = today's atomic E3, unchanged
+ MOE_PREFILL_E3_DET = os.environ.get("EXL3_MOE_PREFILL_E3_DET", "0") == "1"
+-MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/blocksparse_mlp.h
++# Rows of the fused decode path (bc.run_bszN: routed coop kernels + the embedded shared expert); sizes its
++# scratch below. rows32 r3 (EXL3_MOE_COOP_ROWS32=1, read once here and per launch by the C++ launcher,
++# default off): 1..32 rows in one launch instead of 1..16 (MTP verify at 6-8 streams x depth 2-3). Needs
++# EXL3_SHARED_EXPERT_ROWS32=1: the embedded shared expert runs the same rows through BC_GatedMLP
++from .mlp import _rows32_flag, MAX_BSZN as _MLP_MAX_BSZN
++MOE_COOP_ROWS32 = _rows32_flag("EXL3_MOE_COOP_ROWS32")
++if MOE_COOP_ROWS32 and getattr(ext, "moe_rows32_revision", 0) < 2:
++    raise RuntimeError("EXL3_MOE_COOP_ROWS32=1 needs the rows32 r4 extension (moe_rows32_revision >= 2)")
++if MOE_COOP_ROWS32 and _MLP_MAX_BSZN < 32:
++    raise RuntimeError("EXL3_MOE_COOP_ROWS32=1 requires EXL3_SHARED_EXPERT_ROWS32=1 (shared expert rows)")
++MAX_BSZN = 32 if MOE_COOP_ROWS32 else 16
+ 
+ @dataclass
+ class FusedBuffers:
+diff -ruN -x __pycache__ -x *.orig -x *.rej a/modules/mlp.py b/modules/mlp.py
+--- a/modules/mlp.py
++++ b/modules/mlp.py
+@@ -12,7 +12,23 @@
+ from .multilinear import MultiLinear
+ from ..util.tensor import g_tensor_cache
+ 
+-MAX_BSZN = 16  # must match MAX_BSZN in exllamav3_ext/libtorch/mlp.h and block_sparse_mlp.py
++def _rows32_flag(name: str) -> bool:
++    import os
++    v = os.environ.get(name, "")
++    if v in ("", "0"):
++        return False
++    if v != "1":
++        raise ValueError(f"{name} must be 0 or 1 (got {v!r})")
++    return True
++
++# Rows of the bound class's multi-row path (BC_GatedMLP.run_bszN: one graph per row count, statics below).
++# rows32 r3 (EXL3_SHARED_EXPERT_ROWS32=1, read once at import, default off): 1..32 instead of 1..16, so MTP
++# verify at 6-8 streams x depth 2-3 (18-32 rows) keeps the shared expert on its graph. libtorch/mlp.h's
++# MAX_BSZN is the compiled capacity (32); each call is bounded by these statics
++SHARED_EXPERT_ROWS32 = _rows32_flag("EXL3_SHARED_EXPERT_ROWS32")
++if SHARED_EXPERT_ROWS32 and getattr(ext, "moe_rows32_revision", 0) < 2:
++    raise RuntimeError("EXL3_SHARED_EXPERT_ROWS32=1 needs the rows32 r4 extension (moe_rows32_revision >= 2)")
++MAX_BSZN = 32 if SHARED_EXPERT_ROWS32 else 16
+ 
+ class MLP(Module):
+ 

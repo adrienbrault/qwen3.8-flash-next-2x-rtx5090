@@ -1,0 +1,99 @@
+[rows32-extra] dense: densegemm-r2/test_densegemm_parity.py with ROWS = [1, 4, 8, 16, 17, 18, 21, 24, 32]
+[parity] modes at entry (env): (1, 0)
+[parity] gemm/gdn.out_proj: 36 K4 linears
+[parity] skip mtp.layers.0.self_attn.o_proj: K=6
+[parity] gemm/attn.o_proj: 12 K4 linears
+[parity] gemm/attn.index_qk_proj: 12 K4 linears
+[parity] gemm/shared.down: 48 K4 linears
+[parity] gemm/gdn.in_proj_qkv: 4 K4 linears
+[parity] gemm/gdn.in_proj_z: 4 K4 linears
+[parity] mgemm/gdn.in_proj_qkvz: 36 groups
+[parity] skip mtp.layers.0.self_attn: K=[6, 6, 6]
+[parity] mgemm/attn.qkv: 12 groups
+[parity] mgemm/shared.gate_up: 864 cells
+[parity] gemm/attn.index_qk_proj      rows  1: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows  4: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows  8: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 16: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 17: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 18: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 21: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 24: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.index_qk_proj      rows 32: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows  1: 24/24 equal, V2 engaged 0/24
+[parity] gemm/attn.o_proj             rows  4: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows  8: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 16: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 17: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 18: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 21: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 24: 24/24 equal, V2 engaged 24/24
+[parity] gemm/attn.o_proj             rows 32: 24/24 equal, V2 engaged 24/24
+[parity] gemm/gdn.in_proj_qkv         rows  1: 8/8 equal, V2 engaged 0/8
+[parity] gemm/gdn.in_proj_qkv         rows  4: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows  8: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 16: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 17: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 18: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 21: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 24: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_qkv         rows 32: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows  1: 8/8 equal, V2 engaged 0/8
+[parity] gemm/gdn.in_proj_z           rows  4: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows  8: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 16: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 17: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 18: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 21: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 24: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.in_proj_z           rows 32: 8/8 equal, V2 engaged 8/8
+[parity] gemm/gdn.out_proj            rows  1: 72/72 equal, V2 engaged 0/72
+[parity] gemm/gdn.out_proj            rows  4: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows  8: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 16: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 17: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 18: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 21: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 24: 72/72 equal, V2 engaged 72/72
+[parity] gemm/gdn.out_proj            rows 32: 72/72 equal, V2 engaged 72/72
+[parity] gemm/shared.down             rows  1: 96/96 equal, V2 engaged 0/96
+[parity] gemm/shared.down             rows  4: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows  8: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 16: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 17: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 18: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 21: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 24: 96/96 equal, V2 engaged 96/96
+[parity] gemm/shared.down             rows 32: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/attn.qkv               rows  1: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows  4: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows  8: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 16: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 17: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 18: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 21: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 24: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/attn.qkv               rows 32: 24/24 equal, V2 engaged 24/24
+[parity] mgemm/gdn.in_proj_qkvz       rows  1: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows  4: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows  8: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 16: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 17: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 18: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 21: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 24: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/gdn.in_proj_qkvz       rows 32: 72/72 equal, V2 engaged 72/72
+[parity] mgemm/shared.gate_up         rows  1: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows  4: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows  8: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 16: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 17: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 18: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 21: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 24: 96/96 equal, V2 engaged 96/96
+[parity] mgemm/shared.gate_up         rows 32: 96/96 equal, V2 engaged 96/96
+[parity] stress: 200 interleaved V2 launches over 6 cells, mismatches at checkpoints: 0
+[parity] graph: captured 4 V2 launches (counters +3 gemm/mgemm, +1 gemv incl. capture), 20 replays vs eager served: mismatches 0
+[parity] VRAM: free before 31642.6 MiB, after 31368.6 MiB (includes torch cache; the V2 workspace is 8 MiB + 64 KiB with rows32 on, 4 MiB + 64 KiB without)
+[parity] cells: 3816, equal 3816, engaged 3608
+PARITY PASS

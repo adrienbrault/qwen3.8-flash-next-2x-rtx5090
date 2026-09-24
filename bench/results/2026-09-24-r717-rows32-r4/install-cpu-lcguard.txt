@@ -1,0 +1,61 @@
+== tree: /opt/venv/lib/python3.12/site-packages/exllamav3
+PASS exl3_gemm_gr locks line is the latchain form: int* locks = DevCtx::instance().get_locks(device) + lc_gemm_locks_offset;
+PASS C++ harness compiles (c++) with code extracted from the tree
+PASS C++: exl3_gemm_gr at offset 0 (main branch / no latchain) -> main scratch
+PASS C++: exl3_gemm_gr at LC_LOCKS_ALT_OFFSET (latchain side branch) -> side scratch
+PASS C++: any non-zero offset -> side
+PASS C++: standalone exl3_gemv entry (base locks) -> main
+PASS C++: offset reset to 0 -> main again
+PASS mode 0 rows32 0 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 0 rows32 0 fork 1: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 0 rows32 1 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 0 rows32 1 fork 1: side slots 4194304 B, ranges disjoint and inside the allocation
+PASS mode 1 rows32 0 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 1 rows32 0 fork 1: side slots 2097152 B, ranges disjoint and inside the allocation
+PASS mode 1 rows32 1 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 1 rows32 1 fork 1: side slots 4194304 B, ranges disjoint and inside the allocation
+PASS mode 2 rows32 0 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 2 rows32 0 fork 1: side slots 2097152 B, ranges disjoint and inside the allocation
+PASS mode 2 rows32 1 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 2 rows32 1 fork 1: side slots 4194304 B, ranges disjoint and inside the allocation
+PASS mode 3 rows32 0 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 3 rows32 0 fork 1: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 3 rows32 1 fork 0: side slots 0 B, ranges disjoint and inside the allocation
+PASS mode 3 rows32 1 fork 1: side slots 4194304 B, ranges disjoint and inside the allocation
+PASS C++: side hctr = main hctr + H/2
+PASS C++: 20 (largest served gemv) and 5 (index_qk) blocks fit a half
+PASS C++ harness cases
+PASS the side path is logged once per device (got 1 lines)
+PASS dense_v2_launch_gemm: side detection is the first statement
+PASS dense_v2_launch_gemv: side detection is the first statement
+PASS dense_v2_launch_mgemm untouched (22-arg layout; mgemm never on the side branch), keeps g_ws.slots
+PASS densegemm files reference no latchain symbol in code (none; the fork flag is read as an env string)
+PASS bindings expose dense_v2_lc_guard = DENSE_V2_LC_GUARD (1)
+PASS the only non-zero exl3_gemm_set_locks_offset is latchain's side-branch call, RAII-reset ([('attention.cpp', '0'), ('attention.cpp', 'LC_LOCKS_ALT_OFFSET'), ('exl3_gemm.cu', 'int offset'), ('exl3_gemm.cuh', 'int offset')])
+== resource model
+PASS model QF window, served (fused qkv mgemm), mode 1, 4 rows, guarded: no shared array (main ['slots'], side ['hctr-side'])
+PASS model QF window, served (fused qkv mgemm), mode 1, 16 rows, guarded: no shared array (main ['slots'], side ['slots-side'])
+INFO model QF window, served (fused qkv mgemm), mode 1, 16 rows, UNGUARDED: shares ['slots']
+PASS model QF window, served (fused qkv mgemm), mode 2, 4 rows, guarded: no shared array (main ['slots'], side -)
+PASS model QF window, served (fused qkv mgemm), mode 2, 16 rows, guarded: no shared array (main ['slots'], side ['slots-side'])
+INFO model QF window, served (fused qkv mgemm), mode 2, 16 rows, UNGUARDED: shares ['slots']
+PASS model QF window, served (fused qkv mgemm), mode 3, 4 rows, guarded: no shared array (main -, side ['hctr-side'])
+PASS model QF window, served (fused qkv mgemm), mode 3, 16 rows, guarded: no shared array (main -, side -)
+PASS model QF window, unfused q/k/v gemm_gr, mode 1, 4 rows, guarded: no shared array (main ['hctr'], side ['hctr-side'])
+INFO model QF window, unfused q/k/v gemm_gr, mode 1, 4 rows, UNGUARDED: shares ['hctr']
+PASS model QF window, unfused q/k/v gemm_gr, mode 1, 16 rows, guarded: no shared array (main ['slots'], side ['slots-side'])
+INFO model QF window, unfused q/k/v gemm_gr, mode 1, 16 rows, UNGUARDED: shares ['slots']
+PASS model QF window, unfused q/k/v gemm_gr, mode 2, 4 rows, guarded: no shared array (main -, side -)
+PASS model QF window, unfused q/k/v gemm_gr, mode 2, 16 rows, guarded: no shared array (main ['slots'], side ['slots-side'])
+INFO model QF window, unfused q/k/v gemm_gr, mode 2, 16 rows, UNGUARDED: shares ['slots']
+PASS model QF window, unfused q/k/v gemm_gr, mode 3, 4 rows, guarded: no shared array (main ['hctr'], side ['hctr-side'])
+INFO model QF window, unfused q/k/v gemm_gr, mode 3, 4 rows, UNGUARDED: shares ['hctr']
+PASS model QF window, unfused q/k/v gemm_gr, mode 3, 16 rows, guarded: no shared array (main -, side -)
+PASS model moefast shared window (EARLY or late), mode 1, 4 rows, guarded: no shared array (main -, side ['hctr', 'slots'])
+PASS model moefast shared window (EARLY or late), mode 1, 16 rows, guarded: no shared array (main -, side ['slots'])
+PASS model moefast shared window (EARLY or late), mode 2, 4 rows, guarded: no shared array (main -, side ['slots'])
+PASS model moefast shared window (EARLY or late), mode 2, 16 rows, guarded: no shared array (main -, side ['slots'])
+PASS model moefast shared window (EARLY or late), mode 3, 4 rows, guarded: no shared array (main -, side ['hctr'])
+PASS model moefast shared window (EARLY or late), mode 3, 16 rows, guarded: no shared array (main -, side -)
+PASS model: without the guard some configuration races (the model is not vacuous)
+LCGUARD CPU PASS

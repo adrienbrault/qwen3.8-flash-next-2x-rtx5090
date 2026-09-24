@@ -1,0 +1,41 @@
+2026-09-24T21:56:07+00:00 [r717b-rows32-followup] A env (39 keys); B env (42 keys); B - A: EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_ROWS32=1
+2026-09-24T21:56:07+00:00 [r717b-rows32-followup] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T21:56:44+00:00 [r717b-rows32-followup]   P1 c7-SRV1 rc=0: d1 15.816907 ms/iterate
+2026-09-24T21:57:19+00:00 [r717b-rows32-followup]   P1 c7-R321 rc=0: d2 20.274002 ms/iterate
+2026-09-24T21:57:54+00:00 [r717b-rows32-followup]   P1 c7-ON11 rc=0: d1 16.356116 ms/iterate
+2026-09-24T21:57:54+00:00 [r717b-rows32-followup]   c7d1 round 1 ON1 vs SRV: IDENTICAL
+2026-09-24T21:58:29+00:00 [r717b-rows32-followup]   P1 c7-R322 rc=0: d2 20.505620 ms/iterate
+2026-09-24T21:59:03+00:00 [r717b-rows32-followup]   P1 c7-SRV2 rc=0: d1 16.431913 ms/iterate
+2026-09-24T21:59:03+00:00 [r717b-rows32-followup]   c7d2 R32 round 2 vs round 1: IDENTICAL
+2026-09-24T21:59:37+00:00 [r717b-rows32-followup]   P1 c7-SRV3 rc=0: d1 16.642419 ms/iterate
+2026-09-24T22:00:12+00:00 [r717b-rows32-followup]   P1 c7-R323 rc=0: d2 20.492430 ms/iterate
+2026-09-24T22:00:47+00:00 [r717b-rows32-followup]   P1 c7-ON13 rc=0: d1 15.788510 ms/iterate
+2026-09-24T22:00:47+00:00 [r717b-rows32-followup]   c7d1 round 3 ON1 vs SRV: IDENTICAL
+2026-09-24T22:00:47+00:00 [r717b-rows32-followup]   c7d2 R32 round 3 vs round 1: IDENTICAL
+2026-09-24T22:01:22+00:00 [r717b-rows32-followup]   P1 c7-R324 rc=0: d2 19.870997 ms/iterate
+2026-09-24T22:01:56+00:00 [r717b-rows32-followup]   P1 c7-SRV4 rc=0: d1 16.498902 ms/iterate
+2026-09-24T22:01:56+00:00 [r717b-rows32-followup]   c7d2 R32 round 4 vs round 1: IDENTICAL
+  c7 step ms: SRV d1 [15.82, 16.43, 16.64, 16.5] median 16.47; R32 d2 [20.27, 20.51, 20.49, 19.87] median 20.38; d2/d1 1.238 (diagnostic)
+2026-09-24T22:01:56+00:00 [r717b-rows32-followup] C7 IDENTITY: PASS
+2026-09-24T22:02:10+00:00 [r717b-rows32-followup] [X0] booted tabbyapi:stack-r3; 41 EXL3 keys; cache 999424; policy '[[4, 3], [5, 2], [8, 1]]'; VRAM free MiB 1033/2421/
+2026-09-24T22:02:25+00:00 [r717b-rows32-followup] [X2] booted tabbyapi:stack-r3-rows32; 41 EXL3 keys; cache 999424; policy '[[4, 3], [5, 2], [8, 1]]'; VRAM free MiB 1033/2421/
+2026-09-24T22:02:40+00:00 [r717b-rows32-followup] [X1] booted tabbyapi:stack-r3-rows32; 44 EXL3 keys; cache 999424; policy '[[4, 3], [5, 2], [8, 1]]'; VRAM free MiB 985/2413/
+2026-09-24T22:02:55+00:00 [r717b-rows32-followup] [X3] booted tabbyapi:stack-r3-rows32; 44 EXL3 keys; cache 999424; policy '[[4, 3], [8, 2]]'; VRAM free MiB 985/2413/
+2026-09-24T22:03:10+00:00 [r717b-rows32-followup] [Q] booted tabbyapi:stack-r3; 41 EXL3 keys; cache 999424; policy '[[4, 3], [5, 2], [8, 1]]'; VRAM free MiB 1033/2421/
+2026-09-24T22:04:59+00:00 [r717b-rows32-followup] [Q] ramp 36/36 ok; gate leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; free after the sequence 183 1651 MiB
+2026-09-24T22:05:14+00:00 [r717b-rows32-followup] [P] booted tabbyapi:stack-r3-rows32; 44 EXL3 keys; cache 983040; policy '[[4, 3], [8, 2]]'; VRAM free MiB 1125/2513/
+2026-09-24T22:07:01+00:00 [r717b-rows32-followup] [P] ramp 36/36 ok; gate leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; free after the sequence 239 1711 MiB
+  [greedy] GREEDY P vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY Q vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=ref divergences=0
+  [gate Q]    A    4   4    3102    1024   209.3   193.5   0.40   3.63  17.40  {'length': 4}
+  [gate Q]    A    8   8    3101    1024   103.0    96.5   0.69   1.86  17.93  {'length': 8}
+  [gate Q]    B    4   4   19656    1024   147.2   135.6   0.60   2.52  17.14  {'length': 4}
+  [gate Q] 2026-09-24T22:04:59+00:00 [gate] === GATE DONE ===
+  [gate P]    A    4   4    3104    1024   210.9   197.1   0.35   3.64  17.32  {'length': 4}
+  [gate P]    A    8   8    3101    1024   103.9    97.9   0.58   2.26  21.91  {'length': 8}
+  [gate P]    B    4   4   19656    1024   150.0   138.0   0.59   2.57  17.13  {'length': 4}
+  [gate P] 2026-09-24T22:07:01+00:00 [gate] === GATE DONE ===
+2026-09-24T22:07:01+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-24T22:07:19+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T22:07:19+00:00 [r717b-rows32-followup] === r717b DONE ===

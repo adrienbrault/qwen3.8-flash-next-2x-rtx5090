@@ -1,0 +1,9 @@
+P1-HASH U vs OFF: 36 identical, 0 DIFFER, 0 missing (need 36)
+P1-HASH OFF across rounds: deterministic
+P1 U-OFF c1d3: excl -0.175 (-1.71 %) 5/6 flat | med -0.215 (-2.10 %) 5/6 flat | raw -0.223 (-2.17 %) 5/6 flat | dropped 1
+P1 U-OFF c1d3 d0(b1): excl +0.003 (+0.04 %) 2/6 flat | med +0.001 (+0.02 %) 3/6 flat | raw +0.003 (+0.04 %) 2/6 flat | dropped 0
+P1 U-OFF c4d3: excl +0.037 (+0.20 %) 2/6 flat | med -0.005 (-0.03 %) 4/6 flat | raw -0.030 (-0.16 %) 4/6 flat | dropped 8
+P1 U-OFF c4d3 d0(b4): excl -0.026 (-0.30 %) 2/6 flat | med -0.041 (-0.47 %) 3/6 flat | raw -0.334 (-3.64 %) 4/6 flat | dropped 3
+P1 U-OFF c8d1: excl -0.026 (-0.16 %) 4/6 flat | med -0.058 (-0.34 %) 5/6 flat | raw -0.204 (-1.20 %) 5/6 flat | dropped 1
+P1 U-OFF c8d1 d0(b8): excl +0.001 (+0.01 %) 3/6 flat | med +0.008 (+0.07 %) 3/6 flat | raw +0.001 (+0.01 %) 2/6 flat | dropped 0
+P1-VERDICT UNION: FAIL: FLAT (no shape GAINs on the stall-excluded read)

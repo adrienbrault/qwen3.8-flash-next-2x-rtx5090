@@ -1,0 +1,34 @@
+# rows32 r4: MTP verify at 17-32 rows on stack-r3. tabbyapi:stack-r3-rows32 = tabbyapi:stack-r3 (INCLUDE "mf3 dg2":
+# hcfast r2, latchain-r1b, moefast-r3, densegemm-r2 + lcguard) + rows32-r4.patch (rows32-r3 rebased on the stack-r3
+# series, plus the start_shared bound and the rows32-sized lcguard side region). Host-only: the install fails unless
+# every function of the base .so keeps its SASS and none is added. All flags default off:
+#   EXL3_DENSE_ROWS32          4a, already in the base (densegemm-r2's rows32 twins)
+#   EXL3_MOE_COOP_ROWS32       4b, this patch: the routed MoE coop in one launch at 17-32 rows
+#   EXL3_SHARED_EXPERT_ROWS32  4c, this patch: the shared expert's BC_GatedMLP graphs + statics to 32 rows
+#
+#   B=tabbyapi:stack-r3
+#   docker build -f Dockerfile.box --build-arg BASE=$B \
+#     --build-arg BASE_ID=$(docker image inspect $B --format '{{.Id}}') \
+#     --build-arg STACK_INCLUDE="$(docker image inspect $B --format '{{index .Config.Labels "local.stack.include"}}')" \
+#     --build-arg DGV2_NVCC_DEFS="$(docker image inspect $B --format '{{index .Config.Labels "local.stack.dgv2_defs"}}')" \
+#     --build-arg PATCH_SHA=$(sha256sum rows32-r4.patch | cut -c1-64) --build-arg MAX_JOBS=4 -t tabbyapi:stack-r3-rows32 .
+#
+# Build context = this directory (.dockerignore drops work/). No heredocs in RUN (legacy builder). CPU only.
+ARG BASE=tabbyapi:stack-r3
+FROM ${BASE}
+ARG BASE
+ARG BASE_ID=unset
+ARG STACK_INCLUDE="mf3 dg2"
+ARG DGV2_NVCC_DEFS=""
+ARG MAX_JOBS=4
+ARG PATCH_SHA=unset
+COPY rows32-r4.patch rebuild-native.py install-rows32.sh sass_hashes.py sass_identity.py landing_rows32.py \
+     test_rows32_cpu.py test_rows32_parity.py rows32_extra_parity.py greedy_conc.py /opt/rows32-r4/
+RUN STACK_INCLUDE="${STACK_INCLUDE}" DGV2_NVCC_DEFS="${DGV2_NVCC_DEFS}" MAX_JOBS=${MAX_JOBS} \
+      ROWS32_INSTALL_OUT=/opt/rows32-r4/install bash /opt/rows32-r4/install-rows32.sh && \
+    PYTHONPYCACHEPREFIX=/tmp/pyc python3 -m py_compile /opt/rows32-r4/test_rows32_parity.py \
+      /opt/rows32-r4/rows32_extra_parity.py /opt/rows32-r4/greedy_conc.py && \
+    python3 /opt/rows32-r4/landing_rows32.py --include "${STACK_INCLUDE}"
+LABEL local.rows32.round="r4" local.rows32.base="${BASE}" local.rows32.base_id="${BASE_ID}" \
+      local.rows32.patch_sha256="${PATCH_SHA}" local.rows32.dgv2_defs="${DGV2_NVCC_DEFS}" \
+      local.rows32.stack_include="${STACK_INCLUDE}"

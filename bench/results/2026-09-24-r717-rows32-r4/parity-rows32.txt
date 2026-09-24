@@ -1,0 +1,45 @@
+[parity] NVIDIA GeForce RTX 5090; served EXL3_MOE_COOP_V3=3 MAP=2-4:2; B MAP=2-4:2,17-32:2; moefast revision 3; densegemm yes
+[parity] 4b real:model.language_model.layers.20.mlp K2/2: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (real:model.language_model.layers.20.mlp)
+[parity] 4b real:model.language_model.layers.3.mlp K3/3: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (real:model.language_model.layers.3.mlp)
+[parity] 4b real:mtp.layers.0.mlp K4/4: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (real:mtp.layers.0.mlp)
+[parity] 4b synth:K2 K2/2: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (synth:K2)
+[parity] 4b synth:K3 K3/3: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (synth:K3)
+[parity] 4b synth:K4 K4/4: 1344/1344 equal (rows 17-32, arms ['V2', 'V3=1', 'V3=2', 'V3=3', 'A-env(3|2-4:2)', 'B-env(3|2-4:2,17-32:2)'], vs two served 16-row calls)
+[parity] <=16 rows, flag on + 32-row scratch vs served: 64/64 equal (synth:K4)
+[parity] dispatch rows 24 flag on A-env(3|2-4:2): ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, true, false>(MoeCoopParams)']
+[parity] dispatch rows 24 flag off A-env(3|2-4:2): ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_ns::exl3_moe_coop_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_ns::exl3_moe_coop_b_kernel<2, 2, true>(MoeCoopParams)']
+[parity] dispatch rows 16 flag on A-env(3|2-4:2): ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch rows 16 flag off A-env(3|2-4:2): ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch rows 24 flag on B-env(3|2-4:2,17-32:2): ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, true, false>(MoeCoopParams)']
+[parity] dispatch rows 16 flag on B-env(3|2-4:2,17-32:2): ['void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_a_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)', 'void exl3_moe_coop_r2_ns::exl3_moe_coop_r2_b_kernel<2, 2, true>(MoeCoopParams, exl3_moe_coop_r2_ns::MoeCoopR2Args)']
+[parity] dispatch rows 18 flag on B-env(3|2-4:2,17-32:2): ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, true, false>(MoeCoopParams)']
+[parity] dispatch rows 32 flag on B-env(3|2-4:2,17-32:2): ['exl3_moe_coop_ns::exl3_moe_coop_rot_kernel(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_a_kernel<2, 2, true>(MoeCoopParams)', 'void exl3_moe_coop_v3_ns::exl3_moe_coop_v3_b_kernel<2, 2, true, false>(MoeCoopParams)']
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 18 D83: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 24 D110: 200/200 launches equal
+[parity] stress real:model.language_model.layers.20.mlp K2 rows 32 D138: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 18 D83: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 24 D110: 200/200 launches equal
+[parity] stress real:model.language_model.layers.3.mlp K3 rows 32 D138: 200/200 launches equal
+[parity] shared experts: ['model.language_model.layers.3.mlp K4', 'model.language_model.layers.20.mlp K4', 'mtp.layers.0.mlp K6'], I=640
+[parity] 4c model.language_model.layers.3.mlp dense_rows32=0: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c model.language_model.layers.3.mlp dense_rows32=1: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c model.language_model.layers.3.mlp: EXL3_DENSE_ROWS32 on == off at 16/16 row counts
+[parity] 4c model.language_model.layers.3.mlp: refuse 17 rows on 16-row statics True; <=16 rows 32- == 16-row statics at 16/16
+[parity] 4c model.language_model.layers.20.mlp dense_rows32=0: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c model.language_model.layers.20.mlp dense_rows32=1: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c model.language_model.layers.20.mlp: EXL3_DENSE_ROWS32 on == off at 16/16 row counts
+[parity] 4c model.language_model.layers.20.mlp: refuse 17 rows on 16-row statics True; <=16 rows 32- == 16-row statics at 16/16
+[parity] 4c mtp.layers.0.mlp dense_rows32=0: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c mtp.layers.0.mlp dense_rows32=1: eager == graph (capture + 3 replays, fresh inputs) at 16/16 row counts 17-32
+[parity] 4c mtp.layers.0.mlp: EXL3_DENSE_ROWS32 on == off at 16/16 row counts
+[parity] 4c mtp.layers.0.mlp: refuse 17 rows on 16-row statics True; <=16 rows 32- == 16-row statics at 16/16
+[parity] join rows 18 (wait before B, exl3_moe_coop_ev): 100/100 equal to serial
+[parity] join rows 24 (wait before B, exl3_moe_coop_ev): 100/100 equal to serial
+[parity] join rows 32 (wait before B, exl3_moe_coop_ev): 100/100 equal to serial
+[parity] 8473/8473 checks equal; fails 0
+PARITY PASS

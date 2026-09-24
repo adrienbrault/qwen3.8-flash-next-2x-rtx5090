@@ -1,0 +1,18 @@
+[cpu] index model: 960 launches at 2..32 rows (MAX_BSZN 16 and 32) OK; geometry at 17..32 rows = 16 rows = wide A, wide B, no merge; 17/24/32 rows refused on 16-row scratch
+[cpu] VRAM delta per device, flags on (estimate: allocation formulas of block_sparse_mlp.py / mlp.py):
+[cpu]   moe1_temp_hidden (half)                +  0.78 MiB
+[cpu]   moe1_temp_interm (half; x2 if fp32)    +  0.39 MiB
+[cpu]   moe1_temp_activa (half)                +  0.20 MiB
+[cpu]   moe1_temp_output (fp32)                +  1.56 MiB
+[cpu]   moe1_temp_hidden_u (half)              +  0.78 MiB
+[cpu]   moe1_coop_ctr (int32)                  +  0.01 MiB
+[cpu]   moe1_out_bszn (fp32)                   +  0.16 MiB
+[cpu]   sh_exp_t per MoE layer                 +  0.16 MiB x 24-25 layers per card = +3.9 MiB
+[cpu]   BC_GatedMLP >16-row buffers: views of the shared (2, 32, w) statics, +(2*16*(H + I_sh))*2 B once
+[cpu]   total excl. densegemm's own workspace (+4 MiB slots and, with EXL3_LC_QSA_FORK, +2 MiB side slots with EXL3_DENSE_ROWS32) and activations: ~7.8 MiB per card
+[cpu] patch hygiene: 9 files as expected, 96 added lines, no device code; r4 additions present
+[cpu] flags: 7 env combinations as expected (module constants, C++ cap, strict parsing, 4b-requires-4c)
+[cpu] source model, MoE mode: R2_MAX_ROWS 16, R2_MAX_SLOTS 192; 64 (cap, rows) cells: A env (V3=3 MAP 2-4:2) == B env (MAP 2-4:2,17-32:2) everywhere; 17-32 rows -> mode 2 under both (flag on), generic (flag off); served <= 16: 1:0, 2:2, 3:2, 4:2, 5:3, 6:3, 7:3, 8:3, 9:3, 10:3, 11:3, 12:3, 13:3, 14:3, 15:3, 16:3
+[cpu] source model, lcguard: index_qk tag 2 (tk 32, tn 128), 400 tiles, grid <= 170: 17-32 rows need <= 2.66 MiB (side region 4 MiB with rows32; stack-r3's 2 MiB holds 128 CTAs), 9-16 rows <= 1.33 MiB
+[cpu] greedy_conc verdict: 5 synthetic cases as pre-registered (rate vs the worse A half, early, errors, prompt sets)
+CPU TESTS PASS

@@ -1,0 +1,17 @@
+[rows32-extra] latchain: latchain/test_latchain_parity.py with GDN_SHAPES = [(1, 4), (4, 4), (8, 2), (6, 3), (7, 3), (8, 3), (6, 1), (7, 1), (8, 1)]; QSA_SHAPES = [(1, 4), (4, 4), (8, 2), (6, 3), (7, 3), (8, 3)]; VARIANTS = [(2, 1, False), (2, 1, True)]
+[A] GDN recurrent: 72 case checks over 9 shapes x 2 dtypes x history on/off (12 eager steps + 6 graph replays each)
+[B] bsz=1 q_len=4 ctx=4096: programs=8 splits=17 split_len=128, 1 variants compared
+[B] bsz=1 q_len=4 ctx=32768: programs=8 splits=17 split_len=128, 1 variants compared
+[B] bsz=4 q_len=4 ctx=4096: programs=32 splits=10 split_len=224, 1 variants compared
+[B] bsz=4 q_len=4 ctx=32768: programs=32 splits=10 split_len=224, 1 variants compared
+[B] bsz=8 q_len=2 ctx=4096: programs=32 splits=10 split_len=224, 1 variants compared
+[B] bsz=8 q_len=2 ctx=32768: programs=32 splits=10 split_len=224, 1 variants compared
+[B] bsz=6 q_len=3 ctx=4096: programs=36 splits=9 split_len=256, 1 variants compared
+[B] bsz=6 q_len=3 ctx=32768: programs=36 splits=9 split_len=256, 1 variants compared
+[B] bsz=7 q_len=3 ctx=4096: programs=42 splits=8 split_len=288, 1 variants compared
+[B] bsz=7 q_len=3 ctx=32768: programs=42 splits=8 split_len=288, 1 variants compared
+[B] bsz=8 q_len=3 ctx=4096: programs=48 splits=7 split_len=320, 1 variants compared
+[B] bsz=8 q_len=3 ctx=32768: programs=48 splits=7 split_len=320, 1 variants compared
+[B] QSA split/combine: 36 checks
+comparisons equal: 112/112 (1 s)
+PARITY PASS

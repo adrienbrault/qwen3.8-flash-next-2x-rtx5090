@@ -1,0 +1,6 @@
+GREEDYC A_P: A2-c8-P vs A1-c1-P set P: identical 4/32 divergent 28 early 6 errors 0 first-diff [10, 19, 30, 35, 48, 59, 72, 74, 81, 149, 186, 188, 189, 197, 215, 220, 234, 269, 273, 279, 384, 449, 665, 712, 752, 831, 1339, 1610]
+GREEDYC A_Q: A1-c8-Q vs A2-c1-Q set Q: identical 1/32 divergent 31 early 6 errors 0 first-diff [0, 12, 12, 12, 17, 40, 88, 100, 118, 122, 213, 236, 243, 247, 312, 317, 340, 378, 406, 418, 522, 528, 628, 654, 732, 865, 913, 978, 1102, 1353, 1468]
+GREEDYC B_P: B1-c8-P vs A1-c1-P set P: identical 4/32 divergent 28 early 9 errors 0 first-diff [12, 18, 20, 30, 35, 35, 50, 51, 60, 92, 111, 181, 186, 188, 197, 220, 270, 351, 384, 397, 449, 634, 641, 752, 782, 968, 1063, 1372]
+GREEDYC B_Q: B2-c8-Q vs A2-c1-Q set Q: identical 3/32 divergent 29 early 10 errors 0 first-diff [0, 0, 12, 12, 12, 17, 19, 21, 40, 51, 88, 117, 154, 247, 255, 282, 301, 312, 327, 359, 368, 418, 458, 500, 588, 622, 712, 876, 1154]
+GREEDYC-AA A halves: A_P 28/32, A_Q 31/32 (spread 3 prompts)
+GREEDYC-VERDICT FAIL: B early divergences 19 > worst A half 6 x 2 | A 59/64 (92.2 %), worst half 31; B 57/64 (89.1 %); early A max 6, B 19

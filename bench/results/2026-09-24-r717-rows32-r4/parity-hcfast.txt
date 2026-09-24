@@ -1,0 +1,33 @@
+[rows32-extra] hcfast: hcfast/test_hcfast_parity.py with ROWS = (1, 4, 8, 16, 17, 18, 21, 24, 32)
+exllamav3 /opt/venv/lib/python3.12/site-packages/exllamav3/__init__.py
+torch 2.9.0+cu128 CUDA 12.8 NVIDIA GeForce RTX 5090
+H=4 D=2560 LR=320; V3 kernels apply to this shape: True
+weights: REAL, 5 sites from /models/qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+
+[1] kernel parity: rows x sites x mixed dtype x 49 configurations
+  4410/4410 identical
+
+[2] GatedResidual._mix, L1 / L2-default / L2-table vs off
+  135/135 identical
+
+[3] fuzz, 200 seeds
+  200/200 identical
+
+[4] graph capture + 20 replays: producer kernel, mixer A, mixer B (shared dots)
+  320/320 identical
+
+[4b] auto tile captured cold, fresh process
+  AUTO-CAPTURE 10/10
+
+[5] misaligned dots workspace -> V3 / r2 up declines, outputs exact
+  9/9 identical
+
+[6] PDL configurations (mode bit 16), fresh process: sections 1-5 on every PDL configuration
+  1120/1120 identical
+  80/80 identical
+  100/100 identical
+  400/400 identical
+  6/6 identical
+  PDL 1706/1706
+
+PARITY PASS

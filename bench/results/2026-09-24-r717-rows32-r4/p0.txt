@@ -1,0 +1,15 @@
+[parity] NVIDIA GeForce RTX 5090; served EXL3_MOE_COOP_V3=3 MAP=2-4:2; B MAP=2-4:2,17-32:2; moefast revision 3; densegemm yes
+[bench] us per call (median of 50 after 10 warm-up; routing sets rotate over the 512 experts)
+[bench] expert   R    D   16-row   split   single   single/split
+[bench] uage_model.layers.20.mlp 16   95    140.0
+[bench] uage_model.layers.20.mlp 18   98    140.0   195.4    153.3   0.78
+[bench] uage_model.layers.20.mlp 21  111    140.0   235.1    174.6   0.74
+[bench] uage_model.layers.20.mlp 24  119    140.0   282.4    183.1   0.65
+[bench] uage_model.layers.20.mlp 28  129    140.0   367.6    213.2   0.58
+[bench] uage_model.layers.20.mlp 32  138    140.0   395.1    224.3   0.57
+[bench] guage_model.layers.3.mlp 16   95    165.5
+[bench] guage_model.layers.3.mlp 18   98    165.5   218.8    178.0   0.81
+[bench] guage_model.layers.3.mlp 21  111    165.5   271.9    195.3   0.72
+[bench] guage_model.layers.3.mlp 24  119    165.5   324.2    207.3   0.64
+[bench] guage_model.layers.3.mlp 28  129    165.5   425.8    236.8   0.56
+[bench] guage_model.layers.3.mlp 32  138    165.5   453.7    254.4   0.56

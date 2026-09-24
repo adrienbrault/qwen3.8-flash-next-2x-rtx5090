@@ -1,0 +1,39 @@
+P1-S16: c4d3 excl +0.037 ms (+0.20 %) flat, med flat; c8d1 excl -0.026 ms (-0.16 %) flat, med flat; c1d3 excl -0.175 ms (-1.71 %) flat, med flat
+P1 rows32 c6: per-stream tok/s R32(d2)/SRV(d1) 1.086 1.091 1.074 1.082 median 1.084; step ms d2/d1 1.279 1.273 1.294 1.284 median 1.282 (diagnostic: harness prompt, not production acceptance)
+P1 rows32 c7: per-stream tok/s R32(d2)/SRV(d1) ; step ms d2/d1  (diagnostic: harness prompt, not production acceptance)
+P1 rows32 c8: per-stream tok/s R32(d2)/SRV(d1) 1.083 1.094 1.015 1.091 median 1.087; step ms d2/d1 1.269 1.256 1.354 1.259 median 1.264 (diagnostic: harness prompt, not production acceptance)
+P1 rows32 c8d2 A/A round 1 R32noQF vs R32: IDENTICAL (QF off (the lcguard side path at 24 rows))
+P1 rows32 c8d2 A/A round 1 R32noDR vs R32: IDENTICAL (EXL3_DENSE_ROWS32 off (the dense rows32 twins at model level))
+P1 rows32 c8d2 A/A round 1 R32noMAP vs R32: IDENTICAL (MAP without 17-32:2 (mode 3 falls back to 2 by itself))
+P1 rows32 c8d2 mechanism: flags off (generic > 16-row path) 42.88 ms/iterate vs on 21.18 (0.494)
+SERVED c1 code : A  300.6  301.1  B  299.9  301.6  B/A pairs 0.998 1.002  mean 1.000
+SERVED c2 code : A  208.9  208.4  B  209.0  207.9  B/A pairs 1.000 0.998  mean 0.999
+SERVED c3 code : A  178.7  177.5  B  176.5  178.2  B/A pairs 0.988 1.004  mean 0.996
+SERVED c4 code : A  153.1  154.4  B  152.6  153.5  B/A pairs 0.997 0.994  mean 0.995
+SERVED c5 code : A  135.0  134.3  B  135.3  134.8  B/A pairs 1.002 1.004  mean 1.003
+SERVED c6 code : A  113.7  113.7  B  117.7  116.7  B/A pairs 1.035 1.026  mean 1.031
+SERVED c7 code : A  108.0  107.2  B  110.9  110.6  B/A pairs 1.027 1.032  mean 1.029
+SERVED c8 code : A   99.0   99.3  B  103.0  103.7  B/A pairs 1.041 1.044  mean 1.043
+SERVED c1 prose: A  283.0  282.5  B  282.0  281.9  B/A pairs 0.996 0.998  mean 0.997
+SERVED c2 prose: A  206.6  206.0  B  206.4  206.1  B/A pairs 0.999 1.000  mean 1.000
+SERVED c3 prose: A  178.7  177.8  B  178.7  178.7  B/A pairs 1.000 1.005  mean 1.002
+SERVED c4 prose: A  155.0  154.8  B  155.3  155.3  B/A pairs 1.002 1.004  mean 1.003
+SERVED c5 prose: A  138.0  136.3  B  137.2  137.2  B/A pairs 0.994 1.007  mean 1.000
+SERVED c6 prose: A  113.6  114.8  B  120.9  119.4  B/A pairs 1.064 1.040  mean 1.052
+SERVED c7 prose: A  105.9  106.3  B  111.7  111.7  B/A pairs 1.055 1.051  mean 1.053
+SERVED c8 prose: A   99.5  100.1  B  104.2  104.8  B/A pairs 1.048 1.047  mean 1.047
+HEADROOM card 0: UP-line free min A 1033 MiB, min B 985 MiB, B - A -48 MiB (bar: >= -32)
+HEADROOM card 1: UP-line free min A 2421 MiB, min B 2413 MiB, B - A -8 MiB (bar: >= -32)
+POSTRAMP free MiB (report): A1 [169, 1645], A2 [169, 1645], B1 [163, 1617], B2 [611, 2015]
+CONTAINER A1: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard lines 2, side-slot refusals 0
+CONTAINER A2: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard lines 2, side-slot refusals 0
+CONTAINER B1: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard lines 2, side-slot refusals 0
+CONTAINER B2: OOM 0, TORCH_CHECK 0, tracebacks 0, lcguard lines 2, side-slot refusals 0
+FN_GREEDY: A2 0 divergent, B1 0 divergent
+GREEDYC A_P: A2-c8-P vs A1-c1-P set P: identical 4/32 divergent 28 early 6 errors 0 first-diff [10, 19, 30, 35, 48, 59, 72, 74, 81, 149, 186, 188, 189, 197, 215, 220, 234, 269, 273, 279, 384, 449, 665, 712, 752, 831, 1339, 1610]
+GREEDYC A_Q: A1-c8-Q vs A2-c1-Q set Q: identical 1/32 divergent 31 early 6 errors 0 first-diff [0, 12, 12, 12, 17, 40, 88, 100, 118, 122, 213, 236, 243, 247, 312, 317, 340, 378, 406, 418, 522, 528, 628, 654, 732, 865, 913, 978, 1102, 1353, 1468]
+GREEDYC B_P: B1-c8-P vs A1-c1-P set P: identical 4/32 divergent 28 early 9 errors 0 first-diff [12, 18, 20, 30, 35, 35, 50, 51, 60, 92, 111, 181, 186, 188, 197, 220, 270, 351, 384, 397, 449, 634, 641, 752, 782, 968, 1063, 1372]
+GREEDYC B_Q: B2-c8-Q vs A2-c1-Q set Q: identical 3/32 divergent 29 early 10 errors 0 first-diff [0, 0, 12, 12, 12, 17, 19, 21, 40, 51, 88, 117, 154, 247, 255, 282, 301, 312, 327, 359, 368, 418, 458, 500, 588, 622, 712, 876, 1154]
+GREEDYC-AA A halves: A_P 28/32, A_Q 31/32 (spread 3 prompts)
+GREEDYC-VERDICT FAIL: B early divergences 19 > worst A half 6 x 2 | A 59/64 (92.2 %), worst half 31; B 57/64 (89.1 %); early A max 6, B 19
+DECISION rows32 r4: REJECT: parity-cpuflags.log: no PARITY PASS; c7d2 R32 round 1: no hashes; c7d2 R32 round 2: no hashes; c7d2 R32 round 3: no hashes; c7d2 R32 round 4: no hashes; headroom card 0: B 985 < A 1033 - 32 MiB; condition 2 (greedy_conc c8-vs-c1): FAIL: B early divergences 19 > worst A half 6 x 2 | A 59/64 (92.2 %), worst half 31; B 57/64 (89.1 %); early A max 6, B 19
