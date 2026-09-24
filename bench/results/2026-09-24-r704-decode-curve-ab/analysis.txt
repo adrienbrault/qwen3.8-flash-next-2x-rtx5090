@@ -1,0 +1,16 @@
+code c1: decode/stream OLD 214.7 NEW 236.7 (1.103x) | decode aggregate OLD 214 NEW 237 | round-wall aggregate OLD 208 NEW 230 (1.103x) | TTFT OLD 0.14s NEW 0.13s
+code c2: decode/stream OLD 176.5 NEW 199.2 (1.129x) | decode aggregate OLD 353 NEW 398 | round-wall aggregate OLD 339 NEW 381 (1.123x) | TTFT OLD 0.24s NEW 0.23s
+code c3: decode/stream OLD 143.9 NEW 164.4 (1.143x) | decode aggregate OLD 434 NEW 495 | round-wall aggregate OLD 412 NEW 467 (1.133x) | TTFT OLD 0.34s NEW 0.34s
+code c4: decode/stream OLD 139.4 NEW 147.9 (1.061x) | decode aggregate OLD 559 NEW 592 | round-wall aggregate OLD 526 NEW 556 (1.057x) | TTFT OLD 0.45s NEW 0.44s
+code c5: decode/stream OLD 127.8 NEW 139.1 (1.088x) | decode aggregate OLD 641 NEW 688 | round-wall aggregate OLD 590 NEW 632 (1.072x) | TTFT OLD 0.55s NEW 0.54s
+code c6: decode/stream OLD 95.4 NEW 109.7 (1.150x) | decode aggregate OLD 573 NEW 659 | round-wall aggregate OLD 541 NEW 617 (1.141x) | TTFT OLD 0.61s NEW 0.60s
+code c7: decode/stream OLD 99.5 NEW 105.8 (1.063x) | decode aggregate OLD 696 NEW 749 | round-wall aggregate OLD 644 NEW 690 (1.071x) | TTFT OLD 0.67s NEW 0.72s
+code c8: decode/stream OLD 91.2 NEW 95.9 (1.051x) | decode aggregate OLD 726 NEW 764 | round-wall aggregate OLD 680 NEW 714 (1.050x) | TTFT OLD 0.73s NEW 0.72s
+prose c1: decode/stream OLD 205.8 NEW 227.0 (1.103x) | decode aggregate OLD 205 NEW 226 | round-wall aggregate OLD 200 NEW 220 (1.101x) | TTFT OLD 0.13s NEW 0.13s
+prose c2: decode/stream OLD 184.5 NEW 209.4 (1.134x) | decode aggregate OLD 370 NEW 419 | round-wall aggregate OLD 355 NEW 401 (1.128x) | TTFT OLD 0.23s NEW 0.22s
+prose c3: decode/stream OLD 140.5 NEW 160.5 (1.143x) | decode aggregate OLD 420 NEW 482 | round-wall aggregate OLD 402 NEW 459 (1.140x) | TTFT OLD 0.32s NEW 0.31s
+prose c4: decode/stream OLD 132.9 NEW 141.1 (1.061x) | decode aggregate OLD 534 NEW 569 | round-wall aggregate OLD 503 NEW 534 (1.062x) | TTFT OLD 0.42s NEW 0.42s
+prose c5: decode/stream OLD 122.2 NEW 130.3 (1.067x) | decode aggregate OLD 606 NEW 648 | round-wall aggregate OLD 566 NEW 604 (1.067x) | TTFT OLD 0.52s NEW 0.51s
+prose c6: decode/stream OLD 93.6 NEW 107.2 (1.146x) | decode aggregate OLD 561 NEW 644 | round-wall aggregate OLD 533 NEW 609 (1.142x) | TTFT OLD 0.57s NEW 0.57s
+prose c7: decode/stream OLD 97.2 NEW 103.1 (1.061x) | decode aggregate OLD 680 NEW 720 | round-wall aggregate OLD 640 NEW 675 (1.056x) | TTFT OLD 0.61s NEW 0.62s
+prose c8: decode/stream OLD 90.1 NEW 95.3 (1.058x) | decode aggregate OLD 719 NEW 761 | round-wall aggregate OLD 676 NEW 714 (1.056x) | TTFT OLD 0.68s NEW 0.67s

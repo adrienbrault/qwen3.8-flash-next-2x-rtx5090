@@ -148,6 +148,10 @@ def one(idx, url, model, prompt, ntok, chat, sink, timeout, distinct=False, no_f
         "wall_s": round(wall, 3),
         "ttft_s": round(t_first - t0, 3) if t_first else None,
         "decode_window_s": round(t_last - t_first, 3) if (t_first and t_last) else None,
+        # absolute epoch times (R704): lets an analysis measure how far concurrent streams' decode windows overlap
+        "t_start_abs": round(t0, 3),
+        "t_first_abs": round(t_first, 3) if t_first else None,
+        "t_last_abs": round(t_last, 3) if t_last else None,
         "completion_tokens": n,
         "server_completion_tokens": n_server,
         "client_frames": frames,

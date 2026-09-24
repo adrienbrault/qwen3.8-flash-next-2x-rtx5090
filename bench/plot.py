@@ -59,80 +59,92 @@ def annotate(ax, xs, ys, color, fmt="{:.0f}", dy=7):
                     ha="center", fontsize=8.5, color=color)
 
 
-def fn_bench_rates(path, arm):
-    """Per '<conc>-<kind>': mean aggregate t/s per round, and mean per-stream t/s.
+def decode_rates(path, arm):
+    """Per '<conc>-<kind>' for one arm of R704 (tags '<ARM><boot>-c<conc>-<kind>', both boots pooled):
 
-    Rounds are keyed by the full tag, so two boots of the same arm stay separate rounds.
+    per_stream   median over requests of decode_tps = (tokens - 1) / (t_last - t_first), the streaming rate after
+                 the first token;
+    decode_agg   mean over rounds of the sum of the round's decode_tps (TTFT and straggler tails excluded);
+    wall_agg     mean over rounds of all streams' tokens over the round's wall time (the end-to-end burst figure,
+                 which was the README's headline until R704);
+    ttft         median over requests of the time to the first token;
+    overlap      mean over rounds of (min t_last - max t_first) / mean decode window: the share of the mean decode
+                 window during which every stream of the round is decoding. It bounds how far decode_agg overstates
+                 the rate the streams sustain together.
+
+    These are the definitions of the R704 driver's analysis step, so the printed values reproduce its curve.tsv.
     """
-    tok, wall, per = collections.defaultdict(int), {}, collections.defaultdict(list)
+    reqs, rounds = collections.defaultdict(list), collections.defaultdict(list)
     for line in open(path):
         r = json.loads(line)
-        if not r.get("ok") or not r["tag"].startswith(arm):
+        if not r.get("ok") or not r["tag"][: len(arm)] == arm or not r["tag"][len(arm)].isdigit():
             continue
-        tok[(r["tag"], r["run"])] += r["completion_tokens"] or 0
-        wall[(r["tag"], r["run"])] = r["round_wall_s"]
-        per[r["tag"].split("-", 1)[1]].append(r["wall_tps"])
-    agg = collections.defaultdict(list)
-    for (tag, run), v in tok.items():
-        agg[tag.split("-", 1)[1]].append(v / wall[(tag, run)])
-    return {k: st.mean(v) for k, v in agg.items()}, {k: st.mean(v) for k, v in per.items()}
+        shape = r["tag"].split("-", 1)[1]
+        reqs[shape].append(r)
+        rounds[(shape, r["tag"], r["run"])].append(r)
+    out = {}
+    for shape, rs in reqs.items():
+        rr = [v for (s, _, _), v in rounds.items() if s == shape]
+        overlap = [(min(r["t_last_abs"] for r in v) - max(r["t_first_abs"] for r in v))
+                   / st.mean(r["t_last_abs"] - r["t_first_abs"] for r in v) for v in rr]
+        out[shape] = {
+            "per_stream": st.median(r["decode_tps"] for r in rs),
+            "decode_agg": st.mean(sum(r["decode_tps"] for r in v) for v in rr),
+            "wall_agg": st.mean(sum(r["completion_tokens"] for r in v) / v[0]["round_wall_s"] for v in rr),
+            "ttft": st.median(r["ttft_s"] for r in rs),
+            "overlap": st.mean(overlap),
+        }
+    return out
 
 
-def merged(dicts, key):
-    vals = [d[key] for d in dicts if key in d]
-    return st.mean(vals) if vals else None
-
-
-R570 = RESULTS / "2026-09-19-r570-promote-c5-policy" / "records.jsonl"
-R571 = RESULTS / "2026-09-19-r571-promote-c5-policy-2" / "records.jsonl"
+R704 = RESULTS / "2026-09-24-r704-decode-curve-ab" / "records.jsonl"
 R580 = RESULTS / "2026-09-20-r580-decode-curve-try2" / "records.jsonl"
 R580_PREFILL = R580.parent / "prefill.jsonl"
-CONC = [4, 5, 6, 7, 8]
 
 
 def figure_decode_scaling():
-    """R580 read 1 to 8 streams on one boot; before it existed the curve was stitched from R570 and R571,
-    which only ran 4 to 8, so the fallback below draws the shorter x range from those two rounds."""
-    if R580.exists():
-        a, p = fn_bench_rates(R580, "S")
-        conc = [c for c in range(1, 9) if f"c{c}-code" in a]
-        agg = {k: [a[f"c{c}-{k}"] for c in conc] for k in ("code", "prose")}
-        per = {k: [p[f"c{c}-{k}"] for c in conc] for k in ("code", "prose")}
-        src = "R580"
-    else:
-        # The B arm is the policy served since R576, so it is the one that describes the daily.
-        conc = CONC
-        a570, p570 = fn_bench_rates(R570, "B")
-        a571, p571 = fn_bench_rates(R571, "B")
-        agg = {k: [merged([a570, a571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
-        per = {k: [merged([p570, p571], f"c{c}-{k}") for c in conc] for k in ("code", "prose")}
-        src = "R570+R571"
+    """The served configuration's decode curve: R704's NEW arm (stack-r2, two boots, 1 to 8 streams). The chart draws
+    the decode metrics only; the OLD arm, the round-wall aggregate and TTFT are printed for the write-up's table."""
+    new, old = decode_rates(R704, "NEW"), decode_rates(R704, "OLD")
+    conc = [c for c in range(1, 9) if f"c{c}-code" in new]
+    agg = {k: [new[f"c{c}-{k}"]["decode_agg"] for c in conc] for k in ("code", "prose")}
+    per = {k: [new[f"c{c}-{k}"]["per_stream"] for c in conc] for k in ("code", "prose")}
 
-    fig, ax = plt.subplots(figsize=(8.4, 4.4))
-    ax2 = ax.twinx()
-    ax2.spines["right"].set_visible(True)
-    ax2.spines["right"].set_color("#d8dee4")
-    handles = []
-    for kind, color, dy in (("code", CODE, 7), ("prose", PROSE, -14)):
-        handles += ax.plot(conc, agg[kind], marker="o", color=color, linewidth=2, label=f"{kind}, all streams")
-        handles += ax2.plot(conc, per[kind], marker="s", markersize=4, linestyle="--", color=color,
-                            linewidth=1.6, label=f"{kind}, one stream")
-        annotate(ax, conc, agg[kind], color, dy=dy)
-        annotate(ax2, conc, per[kind], color, dy=dy)
-    ax.set_title("Decode rate against concurrency")
-    ax.set_xlabel("concurrent streams")
-    ax.set_ylabel("tokens per second, all streams")
-    ax2.set_ylabel("tokens per second, one stream")
-    ax.set_ylim(0, max(max(v) for v in agg.values()) * 1.25)
-    ax2.set_ylim(0, max(max(v) for v in per.values()) * 1.25)
-    ax.set_xticks(conc)
-    ax.grid(axis="y", color="#eaeef2")
-    ax.set_axisbelow(True)
-    ax.legend(handles, [h.get_label() for h in handles], frameon=False, fontsize=9, ncol=2, loc="lower center")
-    print(f"decode scaling ({src}) at {conc}")
-    print("  aggregate:", {k: [round(v) for v in v2] for k, v2 in agg.items()})
-    print("  per stream:", {k: [round(v) for v in v2] for k, v2 in per.items()})
-    save(fig, "decode-scaling.svg", "Decode rate against concurrency, aggregate and per stream")
+    # Two panels rather than a twin axis: the aggregate rises while the per-stream rate falls, and on one plot the
+    # two pairs of lines cross between 2 and 4 streams, where their labels land on top of each other.
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.2))
+    for a, series, title, ylabel in (
+            (ax, agg, "Decode aggregate", "decode tokens per second, sum over streams"),
+            (ax2, per, "Decode rate per stream", "decode tokens per second, one stream (median)")):
+        for kind, color in (("code", CODE), ("prose", PROSE)):
+            a.plot(conc, series[kind], marker="o", markersize=5, color=color, linewidth=2, label=kind)
+        # At each x the higher of the two values is labelled above its marker and the lower one below.
+        for i, x in enumerate(conc):
+            hi = "code" if series["code"][i] >= series["prose"][i] else "prose"
+            for kind, color in (("code", CODE), ("prose", PROSE)):
+                annotate(a, [x], [series[kind][i]], color, dy=7 if kind == hi else -14)
+        a.set_title(title)
+        a.set_xlabel("concurrent streams")
+        a.set_ylabel(ylabel)
+        a.set_ylim(0, max(max(v) for v in series.values()) * 1.2)
+        a.set_xticks(conc)
+        a.grid(axis="y", color="#eaeef2")
+        a.set_axisbelow(True)
+        a.legend(frameon=False, fontsize=9, loc="lower right" if a is ax else "upper right")
+    fig.suptitle("Decode rate after the first token against concurrency, served configuration", fontsize=11,
+                 fontweight="bold")
+    print(f"decode scaling (R704 NEW, 2 boots x 3 rounds) at {conc}")
+    print("  shape      per-stream OLD -> NEW   decode agg OLD -> NEW   round-wall agg OLD -> NEW   TTFT OLD / NEW"
+          "   overlap OLD / NEW")
+    for kind in ("code", "prose"):
+        for c in conc:
+            o, n = old[f"c{c}-{kind}"], new[f"c{c}-{kind}"]
+            print(f"  {kind:5} c{c}   {o['per_stream']:6.1f} -> {n['per_stream']:6.1f} ({n['per_stream'] / o['per_stream']:.3f}x)"
+                  f"   {o['decode_agg']:4.0f} -> {n['decode_agg']:4.0f}   {o['wall_agg']:4.0f} -> {n['wall_agg']:4.0f}"
+                  f"   {o['ttft']:.2f} / {n['ttft']:.2f} s   {o['overlap']:.3f} / {n['overlap']:.3f}")
+    ov = [d[f"c{c}-{k}"]["overlap"] for d in (old, new) for c in conc if c > 1 for k in ("code", "prose")]
+    print(f"  overlap at 2-8 streams, per shape and arm: {min(ov):.3f} to {max(ov):.3f}")
+    save(fig, "decode-scaling.svg", "Decode rate after the first token against concurrency, sum over streams and per stream")
 
 
 def depth_decode():

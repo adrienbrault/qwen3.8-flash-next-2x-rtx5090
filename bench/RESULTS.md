@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-24
 
+- [R704: the decode curve of the served configuration, measured after the first token: 1.05 to 1.15 times the previous configuration's per-stream rate at 1 to 8 streams; the README headline moves from the round-wall aggregate to the decode rate](results/r704-decode-curve.md)
 - [R701: stack-r2 (hcfast r1 + moefast r1), promoted](results/r701-stack-r2.md)
 - [R700b: moefast r1 is bitwise-identical; mode 2 is 5 % faster at 4 streams and 3 % at 8](results/r700b-moefast.md)
 - [R698, R699: hcfast r1 is bitwise-identical; the DOTS_B=2 tile is accepted, the 8/8 default regresses at 8 streams](results/r698-hcfast.md)
