@@ -8,18 +8,11 @@ Every number here was measured on one machine on the date given, and each links 
 
 Decode on the served configuration, 2026-09-24 ([R704][r704]): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
-| streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose |
-| ---: | ---: | ---: | ---: |
-| 1 | 237 / 227 | 237 / 226 | 0.13 / 0.13 |
-| 2 | 199 / 209 | 398 / 419 | 0.23 / 0.22 |
-| 4 | 148 / 141 | 592 / 569 | 0.44 / 0.42 |
-| 6 | 110 / 107 | 659 / 644 | 0.60 / 0.57 |
-| 8 | 96 / 95 | 764 / 761 | 0.72 / 0.67 |
-
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
 - The per-stream rate is 1.05 to 1.15 times the configuration served before R701, at every shape from 1 to 8 streams, code and prose ([R704][r704]).
-- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy drops from two draft tokens to one ([Conditions](#conditions)). All eight stream counts are in [How the numbers are measured](#how-the-numbers-are-measured).
+- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy drops from two draft tokens to one ([Conditions](#conditions)).
+- Time to the first token is 0.13 s at 1 stream and 0.67 to 0.72 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
