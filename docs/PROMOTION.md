@@ -2,6 +2,26 @@
 
 A candidate is a launcher: image, environment flags, pool, slots and checkpoint. The promotion unit boots it on the serving port with no environment overrides, runs the gates below, and only then replaces `launch-flashnext.sh`, keeping the previous launcher for rollback. Examples: [`scripts/r514-promote-r4i.sh`](../scripts/r514-promote-r4i.sh), [`scripts/r517-promote-stack.sh`](../scripts/r517-promote-stack.sh), [`scripts/r518-slots6.sh`](../scripts/r518-slots6.sh).
 
+## The stack track since 2026-09-24
+
+A change that cannot alter output is judged on identity and on regression, not on effect size, and changes of this kind are promoted in batches. The track applies to a change that is flag-gated and off by default, safe under CUDA-graph capture and within the free-VRAM headroom, and bitwise-identical. A change that alters numerics keeps the gates in the next section and is promoted on its own.
+
+**Instrument.** Speed on this track is measured in process, not by booting the server. A harness loads the served model and environment in one container, decodes at 4,096 tokens of context for a fixed batch and draft depth, times 32 captured iterates with CUDA events and no tracer, and records ms per iterate and a hash of the generated sequences. The shapes are the served ones: 1 stream at depth 3 (4 verify rows), 4 streams at depth 3 and 8 streams at depth 1 (16 verify rows each). The harness separates about 0.5 % at 8 streams (R698: OFF 19.53 and 19.59 ms per iterate against ON 19.70 and 19.69); a served 1-stream rate on the canonical gate moves more than that between pairs of one session, whose prompts differ by salt: the unchanged configuration read 297.4, 301.2 and 195.1 tokens/s on leg A at 1 stream across R701's three pairs (2026-09-24, results `2026-09-24-r701-stack-gate`).
+
+**Acceptance of one change.**
+
+- Identity: the generated-sequence hashes are identical in every OFF/ON pair, and greedy output on the served launcher (6 prompts, one of about 100,000 tokens) shows 0 divergences from the reference with the flag on and with it off.
+- Speed: at least 5 interleaved OFF/ON pairs per shape. All pairs of one sign is a gain or a regression; mixed signs is flat. A same-sign regression at 4 or 8 streams rejects the change. At 1 stream a same-sign regression of at most 2 % of the in-process mean is accepted when the ms saved at 4 or 8 streams exceed the ms added at 1 stream; that 1-stream cost is recorded as an open item for the next kernel round.
+- A kernel-level microbenchmark explains the mechanism and chooses tile settings. It does not gate.
+
+**Promotion of the batch.** The accepted changes are built into one image and promoted together, every two or three changes or at the next image bump:
+
+1. A headroom boot: the greedy set, a 1-to-8-stream decode ramp, and GPU 0 free VRAM no more than 32 MiB below the served configuration's.
+2. The canonical gate ([`bench/fn_gate.sh`](../bench/fn_gate.sh), 3 recorded rounds) on alternating boots of the served launcher and the candidate, which checks that the per-change deltas compose.
+3. Promotion when no leg-A or leg-B cell has a mean ON/OFF below 0.99 (0.98 for leg A at 1 stream) and the mean over the cells is above 1.
+
+This replaces the two-boots-per-arm speed rule below for changes on the track. The first promotion on it is [R701](../bench/results/r701-stack-r2.md).
+
 ## The gates since 2026-09-18
 
 | gate | what it checks | pass |

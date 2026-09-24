@@ -1,0 +1,122 @@
+2026-09-24T07:56:34+00:00 [r701] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; IMG tabbyapi:stack-r2; STACK_FLAGS EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 EXL3_MOE_COOP_V3=2
+2026-09-24T07:56:34+00:00 [r701] building tabbyapi:stack-r2 = tabbyapi:hcfast-r1 + moefast-r1
+2026-09-24T08:04:00+00:00 [r701] image tabbyapi:stack-r2: W0924 08:04:00.116000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+hcfast r1 moefast 1
+2026-09-24T08:04:37+00:00 [r701]   P1 c4d3-OFF1 rc=0: events: 677.196384 ms capture, 21.162387 ms/iterate
+2026-09-24T08:05:07+00:00 [r701]   P1 c4d3-HC1 rc=0: events: 632.958101 ms capture, 19.779941 ms/iterate
+2026-09-24T08:05:38+00:00 [r701]   P1 c4d3-ST1 rc=0: events: 616.768534 ms capture, 19.274017 ms/iterate
+2026-09-24T08:05:38+00:00 [r701]   c4d3 round 1 HC: hashes IDENTICAL
+2026-09-24T08:05:38+00:00 [r701]   c4d3 round 1 ST: hashes IDENTICAL
+2026-09-24T08:06:08+00:00 [r701]   P1 c4d3-HC2 rc=0: events: 636.772676 ms capture, 19.899146 ms/iterate
+2026-09-24T08:06:38+00:00 [r701]   P1 c4d3-ST2 rc=0: events: 681.478300 ms capture, 21.296197 ms/iterate
+2026-09-24T08:07:08+00:00 [r701]   P1 c4d3-OFF2 rc=0: events: 708.504091 ms capture, 22.140753 ms/iterate
+2026-09-24T08:07:08+00:00 [r701]   c4d3 round 2 HC: hashes IDENTICAL
+2026-09-24T08:07:08+00:00 [r701]   c4d3 round 2 ST: hashes IDENTICAL
+2026-09-24T08:07:38+00:00 [r701]   P1 c4d3-ST3 rc=0: events: 671.713187 ms capture, 20.991037 ms/iterate
+2026-09-24T08:08:09+00:00 [r701]   P1 c4d3-OFF3 rc=0: events: 713.267752 ms capture, 22.289617 ms/iterate
+2026-09-24T08:08:39+00:00 [r701]   P1 c4d3-HC3 rc=0: events: 668.005459 ms capture, 20.875171 ms/iterate
+2026-09-24T08:08:39+00:00 [r701]   c4d3 round 3 HC: hashes IDENTICAL
+2026-09-24T08:08:39+00:00 [r701]   c4d3 round 3 ST: hashes IDENTICAL
+2026-09-24T08:09:09+00:00 [r701]   P1 c4d3-OFF4 rc=0: events: 707.231644 ms capture, 22.100989 ms/iterate
+2026-09-24T08:09:39+00:00 [r701]   P1 c4d3-HC4 rc=0: events: 700.466389 ms capture, 21.889575 ms/iterate
+2026-09-24T08:10:09+00:00 [r701]   P1 c4d3-ST4 rc=0: events: 650.709371 ms capture, 20.334668 ms/iterate
+2026-09-24T08:10:09+00:00 [r701]   c4d3 round 4 HC: hashes IDENTICAL
+2026-09-24T08:10:09+00:00 [r701]   c4d3 round 4 ST: hashes IDENTICAL
+2026-09-24T08:10:39+00:00 [r701]   P1 c4d3-HC5 rc=0: events: 684.094394 ms capture, 21.377950 ms/iterate
+2026-09-24T08:11:09+00:00 [r701]   P1 c4d3-ST5 rc=0: events: 653.800344 ms capture, 20.431261 ms/iterate
+2026-09-24T08:11:40+00:00 [r701]   P1 c4d3-OFF5 rc=0: events: 696.775020 ms capture, 21.774219 ms/iterate
+2026-09-24T08:11:40+00:00 [r701]   c4d3 round 5 HC: hashes IDENTICAL
+2026-09-24T08:11:40+00:00 [r701]   c4d3 round 5 ST: hashes IDENTICAL
+2026-09-24T08:12:17+00:00 [r701]   P1 c8d1-OFF1 rc=0: events: 645.308905 ms capture, 20.165903 ms/iterate
+2026-09-24T08:12:54+00:00 [r701]   P1 c8d1-HC1 rc=0: events: 641.590075 ms capture, 20.049690 ms/iterate
+2026-09-24T08:13:31+00:00 [r701]   P1 c8d1-ST1 rc=0: events: 623.013745 ms capture, 19.469180 ms/iterate
+2026-09-24T08:13:31+00:00 [r701]   c8d1 round 1 HC: hashes IDENTICAL
+2026-09-24T08:13:31+00:00 [r701]   c8d1 round 1 ST: hashes IDENTICAL
+2026-09-24T08:14:07+00:00 [r701]   P1 c8d1-HC2 rc=0: events: 606.784063 ms capture, 18.962002 ms/iterate
+2026-09-24T08:14:44+00:00 [r701]   P1 c8d1-ST2 rc=0: events: 625.895328 ms capture, 19.559229 ms/iterate
+2026-09-24T08:15:21+00:00 [r701]   P1 c8d1-OFF2 rc=0: events: 620.306813 ms capture, 19.384588 ms/iterate
+2026-09-24T08:15:21+00:00 [r701]   c8d1 round 2 HC: hashes IDENTICAL
+2026-09-24T08:15:21+00:00 [r701]   c8d1 round 2 ST: hashes IDENTICAL
+2026-09-24T08:15:58+00:00 [r701]   P1 c8d1-ST3 rc=0: events: 590.313591 ms capture, 18.447300 ms/iterate
+2026-09-24T08:16:34+00:00 [r701]   P1 c8d1-OFF3 rc=0: events: 628.078276 ms capture, 19.627446 ms/iterate
+2026-09-24T08:17:12+00:00 [r701]   P1 c8d1-HC3 rc=0: events: 609.533813 ms capture, 19.047932 ms/iterate
+2026-09-24T08:17:12+00:00 [r701]   c8d1 round 3 HC: hashes IDENTICAL
+2026-09-24T08:17:12+00:00 [r701]   c8d1 round 3 ST: hashes IDENTICAL
+2026-09-24T08:17:49+00:00 [r701]   P1 c8d1-OFF4 rc=0: events: 621.497845 ms capture, 19.421808 ms/iterate
+2026-09-24T08:18:26+00:00 [r701]   P1 c8d1-HC4 rc=0: events: 624.246494 ms capture, 19.507703 ms/iterate
+2026-09-24T08:19:04+00:00 [r701]   P1 c8d1-ST4 rc=0: events: 595.235467 ms capture, 18.601108 ms/iterate
+2026-09-24T08:19:04+00:00 [r701]   c8d1 round 4 HC: hashes IDENTICAL
+2026-09-24T08:19:04+00:00 [r701]   c8d1 round 4 ST: hashes IDENTICAL
+2026-09-24T08:19:42+00:00 [r701]   P1 c8d1-HC5 rc=0: events: 607.586651 ms capture, 18.987083 ms/iterate
+2026-09-24T08:20:19+00:00 [r701]   P1 c8d1-ST5 rc=0: events: 584.969659 ms capture, 18.280302 ms/iterate
+2026-09-24T08:20:56+00:00 [r701]   P1 c8d1-OFF5 rc=0: events: 628.301638 ms capture, 19.634426 ms/iterate
+2026-09-24T08:20:56+00:00 [r701]   c8d1 round 5 HC: hashes IDENTICAL
+2026-09-24T08:20:56+00:00 [r701]   c8d1 round 5 ST: hashes IDENTICAL
+2026-09-24T08:21:22+00:00 [r701]   P1 c1d3-OFF1 rc=0: events: 430.245592 ms capture, 13.445175 ms/iterate
+2026-09-24T08:21:47+00:00 [r701]   P1 c1d3-HC1 rc=0: events: 407.923280 ms capture, 12.747603 ms/iterate
+2026-09-24T08:22:11+00:00 [r701]   P1 c1d3-ST1 rc=0: events: 376.977453 ms capture, 11.780545 ms/iterate
+2026-09-24T08:22:11+00:00 [r701]   c1d3 round 1 HC: hashes IDENTICAL
+2026-09-24T08:22:11+00:00 [r701]   c1d3 round 1 ST: hashes IDENTICAL
+2026-09-24T08:22:36+00:00 [r701]   P1 c1d3-HC2 rc=0: events: 399.876181 ms capture, 12.496131 ms/iterate
+2026-09-24T08:23:01+00:00 [r701]   P1 c1d3-ST2 rc=0: events: 372.943062 ms capture, 11.654471 ms/iterate
+2026-09-24T08:23:27+00:00 [r701]   P1 c1d3-OFF2 rc=0: events: 420.417006 ms capture, 13.138031 ms/iterate
+2026-09-24T08:23:27+00:00 [r701]   c1d3 round 2 HC: hashes IDENTICAL
+2026-09-24T08:23:27+00:00 [r701]   c1d3 round 2 ST: hashes IDENTICAL
+2026-09-24T08:23:52+00:00 [r701]   P1 c1d3-ST3 rc=0: events: 398.354140 ms capture, 12.448567 ms/iterate
+2026-09-24T08:24:17+00:00 [r701]   P1 c1d3-OFF3 rc=0: events: 444.006361 ms capture, 13.875199 ms/iterate
+2026-09-24T08:24:41+00:00 [r701]   P1 c1d3-HC3 rc=0: events: 396.739575 ms capture, 12.398112 ms/iterate
+2026-09-24T08:24:41+00:00 [r701]   c1d3 round 3 HC: hashes IDENTICAL
+2026-09-24T08:24:41+00:00 [r701]   c1d3 round 3 ST: hashes IDENTICAL
+2026-09-24T08:25:06+00:00 [r701]   P1 c1d3-OFF4 rc=0: events: 444.020449 ms capture, 13.875639 ms/iterate
+2026-09-24T08:25:31+00:00 [r701]   P1 c1d3-HC4 rc=0: events: 452.674671 ms capture, 14.146083 ms/iterate
+2026-09-24T08:25:55+00:00 [r701]   P1 c1d3-ST4 rc=0: events: 379.575168 ms capture, 11.861724 ms/iterate
+2026-09-24T08:25:55+00:00 [r701]   c1d3 round 4 HC: hashes IDENTICAL
+2026-09-24T08:25:55+00:00 [r701]   c1d3 round 4 ST: hashes IDENTICAL
+2026-09-24T08:26:20+00:00 [r701]   P1 c1d3-HC5 rc=0: events: 408.201078 ms capture, 12.756284 ms/iterate
+2026-09-24T08:26:45+00:00 [r701]   P1 c1d3-ST5 rc=0: events: 371.726401 ms capture, 11.616450 ms/iterate
+2026-09-24T08:27:10+00:00 [r701]   P1 c1d3-OFF5 rc=0: events: 410.839870 ms capture, 12.838746 ms/iterate
+2026-09-24T08:27:10+00:00 [r701]   c1d3 round 5 HC: hashes IDENTICAL
+2026-09-24T08:27:10+00:00 [r701]   c1d3 round 5 ST: hashes IDENTICAL
+P1 c4d3 HC-OFF ms: -1.38 -2.24 -1.41 -0.21 -0.40  mean -1.129 (-5.16 %) GAIN
+P1 c4d3 ST-OFF ms: -1.89 -0.84 -1.30 -1.77 -1.34  mean -1.428 (-6.52 %) GAIN
+P1 c8d1 HC-OFF ms: -0.12 -0.42 -0.58 +0.09 -0.65  mean -0.336 (-1.71 %) mixed
+P1 c8d1 ST-OFF ms: -0.70 +0.17 -1.18 -0.82 -1.35  mean -0.775 (-3.95 %) mixed
+P1 c1d3 HC-OFF ms: -0.70 -0.64 -1.48 +0.27 -0.08  mean -0.526 (-3.91 %) mixed
+P1 c1d3 ST-OFF ms: -1.66 -1.48 -1.43 -2.01 -1.22  mean -1.562 (-11.63 %) GAIN
+2026-09-24T08:27:25+00:00 [r701] [A1] booted tabbyapi:slotfix-r1; stack flags in env: 0; free 1041 2429 
+2026-09-24T08:30:08+00:00 [r701] [A1] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 125 1603 
+2026-09-24T08:30:27+00:00 [r701] [B1] booted tabbyapi:stack-r2; stack flags in env: 2; free 1041 2431 
+  [B1] GREEDY B1 vs ref: 6 identical, IDENTICAL
+2026-09-24T08:32:58+00:00 [r701] [B1] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 195 1671 
+2026-09-24T08:33:15+00:00 [r701] [A2] booted tabbyapi:slotfix-r1; stack flags in env: 0; free 1041 2429 
+  [A2] GREEDY A2 vs ref: 6 identical, IDENTICAL
+2026-09-24T08:35:57+00:00 [r701] [A2] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 121 1637 
+2026-09-24T08:36:12+00:00 [r701] [B2] booted tabbyapi:stack-r2; stack flags in env: 2; free 1041 2431 
+  [B2] GREEDY B2 vs ref: 6 identical, IDENTICAL
+2026-09-24T08:38:44+00:00 [r701] [B2] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 193 1707 
+2026-09-24T08:39:01+00:00 [r701] [A3] booted tabbyapi:slotfix-r1; stack flags in env: 0; free 1041 2429 
+  [A3] GREEDY A3 vs ref: 6 identical, IDENTICAL
+2026-09-24T08:41:47+00:00 [r701] [A3] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 131 1645 
+2026-09-24T08:42:04+00:00 [r701] [B3] booted tabbyapi:stack-r2; stack flags in env: 2; free 1041 2431 
+  [B3] GREEDY B3 vs ref: 6 identical, IDENTICAL
+2026-09-24T08:44:40+00:00 [r701] [B3] gate done; rows A 39 B 12/12; OOM 0; tracebacks 0; free after 199 1713 
+RATIO leg A pair 1 c1: OFF 297.4 ON 324.9 ON/OFF 1.092
+RATIO leg A pair 1 c4: OFF 159.9 ON 169.1 ON/OFF 1.057
+RATIO leg A pair 1 c8: OFF 92.4 ON 98.4 ON/OFF 1.065
+RATIO leg A pair 2 c1: OFF 301.2 ON 328.3 ON/OFF 1.090
+RATIO leg A pair 2 c4: OFF 157.4 ON 168.8 ON/OFF 1.072
+RATIO leg A pair 2 c8: OFF 88.2 ON 93.4 ON/OFF 1.059
+RATIO leg A pair 3 c1: OFF 195.1 ON 213.9 ON/OFF 1.097
+RATIO leg A pair 3 c4: OFF 162.7 ON 169.6 ON/OFF 1.042
+RATIO leg A pair 3 c8: OFF 101.8 ON 104.7 ON/OFF 1.028
+MEAN leg A c1: 1.093
+MEAN leg A c4: 1.057
+MEAN leg A c8: 1.051
+RATIO leg B pair 1 c4: OFF 126.3 ON 134.3 ON/OFF 1.064
+RATIO leg B pair 2 c4: OFF 128.5 ON 136.7 ON/OFF 1.064
+RATIO leg B pair 3 c4: OFF 125.8 ON 133.9 ON/OFF 1.064
+MEAN leg B c4: 1.064
+AGGREGATE mean ON/OFF over cells: 1.0662
+2026-09-24T08:44:40+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-24T08:44:56+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-24T08:44:56+00:00 [r701] === R701 DONE ===

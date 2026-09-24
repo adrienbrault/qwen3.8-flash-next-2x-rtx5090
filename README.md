@@ -6,7 +6,7 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Served since 2026-09-23 22:25 CEST ([R676][r676]): image `tabbyapi:slotfix-r1` (`stack-r1` from [R653][r653], which is `bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching, with the recurrent-state slot pool made exception-safe; greedy output byte-identical to `stack-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]` with the MTP draft component on the second GPU ([R694][r694]), MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table after the figures lists the measurements they do not show.
+Served since 2026-09-24 10:46 CEST ([R701][r701]): image `tabbyapi:stack-r2` (`slotfix-r1` from [R676][r676] plus two bitwise-identical decode-kernel overlays, one for the hyper-connection mixer and one for the routed-expert MoE kernels; `slotfix-r1` is `stack-r1` from [R653][r653], which is `bverify-r1` — the batched draft verifier, [R646][r646] — plus the MTP input-norm fusion, the fused int8 state-in-up mixer kernel and grouped accept-prefill batching, with the recurrent-state slot pool made exception-safe; greedy output identical to `slotfix-r1`), 8 slots, 999,424-token page pool at 8-bit KV, a windowed MTP draft cache (`EXL3_MTP_KV_WINDOW=16384`), layer split `[30, 30]` with the MTP draft component on the second GPU ([R694][r694]), MTP depth 3 up to 4 jobs, 2 at 5 jobs and 1 above, launcher [`scripts/launch-flashnext.sh`][launcher]. Both figures come from one boot of the served launcher ([R580][r580]): decode is `fn_bench` ([`bench/probe.py`][probe]), greedy, 1,024 forced tokens, a warm-up round plus three recorded rounds per shape, aggregate = all streams' tokens over the round's wall time; prefill is three salted cold prompts per depth, counted by the server, with the NVMe tier off; the decode-at-depth points are [R554][r554]. The table after the figures lists the measurements they do not show. The figures predate R701: on the canonical gate the R701 image decoded prose at 1.093, 1.057 and 1.051 times the previous configuration's per-stream rate at 1, 4 and 8 streams at about 4k tokens of context, and at 1.064 times at 26k tokens and 4 streams (1,024 forced tokens, greedy, mean over three alternating pairs of the per-request median, 2026-09-24, [R701][r701]).
 
 ![Decode rate against concurrency, aggregate and per stream](docs/img/decode-scaling.svg)
 
@@ -66,6 +66,7 @@ Conditions behind the figures and the table:
   - the MTP input-norm fusion, a fused int8 state-in-up mixer kernel and grouped MTP accept-prefill batching, +4.4 % decode at 8 streams, byte-identical output ([R653][r653]).
   - a slot returned to the recurrent-state pool when state construction fails; before, each failure lost one of the 8 slots until restart ([R676][r676]).
   - the MTP draft component loaded on the second GPU (`draft_gpu_split: [0, 32]`), +2.0 to +2.9 % prose decode at 1 to 8 streams and +2.2 % at 26k context, mean of three alternating pairs, greedy output identical ([R694][r694]).
+  - the hyper-connection mixer's int8 kernels with each weight converted once per iteration, the loads batched and the reduction as a reduce-scatter ([R698, R699][r698]), and the routed-expert MoE decode kernels with a cp.async weight ring, an activation prefetch and one counter arrival per item ([R700b][r700b]); both bitwise-identical, admitted on the stack-track rule in [`docs/PROMOTION.md`][promotion] and promoted together: 1.051 to 1.093 times the per-stream prose decode rate at 1 to 8 streams and 1.064 times at 26k context, mean of three alternating pairs, greedy output identical ([R701][r701]).
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs, depth 2 at 5 and depth 1 above (`[[4, 3], [5, 2], [8, 1]]`, since [R576][r576]). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
@@ -84,12 +85,12 @@ Read from the box on 2026-09-19; every number in this README was measured in thi
 
 - Upstream's tiled hyper-connection prefill mix ([`825db5b`][exl3-825db5b]) ported onto this stack behind one flag: worth +14.0 % at 60k and +11.4 % at 120k where it was measured upstream ([R568][r568]), at 302 MiB per card there and a claimed 2.1 MiB here.
 - One fused kernel per layer for the GDN linear-attention decode block, claimed bit-exact; GDN is 0.80 ms of a 13.9 ms 1-stream step ([R519][r519]).
-- Mixed draft depth per job inside one verify batch, so 6 and 7 streams can fill the 16-row budget the way 5 streams would.
 
 ## Measured and not served
 
 Each entry names the change and the number that kept it out of the served configuration. c1, c4 and c6 mean 1, 4 and 6 concurrent streams.
 
+- Mixed draft depth per job inside one verify batch, so 5 to 7 streams fill the 16 verify rows: 0.79× at 5 streams and 0.84× at 7, code, 256 forced tokens, greedy. The verify window grows to the deepest job in the batch, which adds a sequential draft level to every step ([R678b][r678b]).
 - 17 to 32 verify rows on the cooperative MoE kernels, as two calls of at most 16 rows: bit-identical, −14.5 % at 8 streams against drafting one token ([R566][r566]).
 - Draft depth 2 above 4 jobs: −32 to −39 % at 6 and 8 streams, because 18 and 24 verify rows fall off the cooperative MoE decode kernels (2026-09-19, [R560][r560], [R562][r562]).
 - Draft depth 4 at 1 stream, with or without a controller: costs 32,768 page-pool tokens and returns at most about +2 % ([R567][r567]).
@@ -315,4 +316,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r653]: bench/results/r653-stack.md
 [r676]: bench/results/r676-slotfix.md
 [r694]: bench/results/r694-mtp-card1.md
+[r678b]: bench/results/r678b-fill16.md
+[r698]: bench/results/r698-hcfast.md
+[r700b]: bench/results/r700b-moefast.md
+[r701]: bench/results/r701-stack-r2.md
 [r586]: bench/results/r586-swebench-500.md

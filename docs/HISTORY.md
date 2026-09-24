@@ -105,6 +105,14 @@ The same overlay one pool step higher, 1,015,808, passed its A/B and four gates 
 | --- | --- | --- | --- | --- |
 | 08:34 | launcher `DRAFT_GPU_SPLIT="0, 32"` → `draft_gpu_split: [0, 32]`: the MTP draft component loads on the second GPU; image unchanged (`tabbyapi:slotfix-r1`) | 3 alternating pairs, canonical gate: prose leg A +2.9 / +2.2 / +2.0 % at 1 / 4 / 8 streams, leg B (26k, 4 streams) +2.2 %, means of per-request medians; greedy identical in all 6 boots; 0 OOM; GPU 0 free after the gate 125-139 MiB against 19-33 | 999,424 | [R694](../bench/results/r694-mtp-card1.md) |
 
+## 2026-09-24: the first batch on the stack track
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 10:46 | image `tabbyapi:stack-r2` = `slotfix-r1` + hcfast-r1 (HC boundary mixer: each int8 weight converted once per iteration, batched loads, 35-shuffle reduce-scatter; `EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8`) + moefast-r1 (routed-expert MoE decode: cp.async weight ring, activation prefetch, one counter arrival per item, merged narrow down stage; `EXL3_MOE_COOP_V3=2`); 27 environment keys | in-process harness, 5 rounds per shape, stack against OFF: −11.6 % ms per iterate at 1 stream depth 3, −6.5 % at 4 streams depth 3, −4.0 % at 8 streams depth 1, sequence hashes identical in all rounds; canonical gate, 3 alternating pairs, mean ON/OFF of per-request medians: prose leg A 1.093 / 1.057 / 1.051 at 1 / 4 / 8 streams, leg B (26k, 4 streams) 1.064; greedy identical in all 6 boots; 0 OOM; GPU 0 free after the gate 193-199 MiB against 121-131 | 999,424 | [R701](../bench/results/r701-stack-r2.md) |
+
+Measured and not promoted the same day: hcfast r1 with the default 8/8 tile, a same-sign regression at 8 streams ([R698](../bench/results/r698-hcfast.md)), and mixed draft depth per job to fill 16 verify rows at 5 to 7 streams, 0.79× at 5 streams and 0.84× at 7 ([R678b](../bench/results/r678b-fill16.md)).
+
 ## 2026-09-23: the recurrent-state slot pool stops losing slots
 
 | promoted (CEST) | change | gate evidence | page pool | results |

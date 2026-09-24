@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-24
 
+- [R701: stack-r2 (hcfast r1 + moefast r1), promoted](results/r701-stack-r2.md)
 - [R700b: moefast r1 is bitwise-identical; mode 2 is 5 % faster at 4 streams and 3 % at 8](results/r700b-moefast.md)
 - [R698, R699: hcfast r1 is bitwise-identical; the DOTS_B=2 tile is accepted, the 8/8 default regresses at 8 streams](results/r698-hcfast.md)
 - [R697: the hyper-connection mixer chain is latency-bound on serial per-row activation loads (dots) and on the state prelude's reads of the previous kernel's output (up)](results/r697-hc-source-ncu.md)
