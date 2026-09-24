@@ -1,0 +1,37 @@
+# prefbatch-r1: batched MTP accept-prefill (generator.py, iterate_gen).
+#
+# R648 round-A survey + round-F implementation (2026-09-22): the accept path called
+# draft_model.prefill once per job with accepted_length > 1 (~6-8 calls/step at c8/d1,
+# ~24 launches each). The patch batches them: rows keep their own block table and start
+# position (paged attention supports both per row), so the only shared dimension is the
+# sequence width.
+#   * non-windowed draft cache: ONE call padded to the widest accepted length — padding
+#     columns carry the row's own rejected draft tokens and land in dead slots (the same
+#     lifecycle as verify's rejected-position K/V);
+#   * EXL3_MTP_KV_WINDOW (served): the window's slot row is a ring, so padding past a
+#     committed end could evict a still-readable row — rows are grouped by accepted_length
+#     and each group runs at exact width. Worst case = today's call count, never worse.
+#
+# Python-only (generator/generator.py). Numerics: written positions identical in windowed
+# mode; non-windowed adds provably-dead writes. Gate: canonical gate + acceptance parity.
+#
+#   docker build -f docker/Dockerfile.tabbyapi-prefbatch --build-arg BASE=tabbyapi:mtpnorm-r1 -t tabbyapi:prefbatch-r1 docker     # R652, measured alone
+#   docker build -f docker/Dockerfile.tabbyapi-prefbatch --build-arg BASE=tabbyapi:mixstate-r1 -t tabbyapi:stack-r1 docker   # R653, served
+#
+# Build context = docker/. stack-r1 is this patch on mixstate-r1.
+ARG BASE=tabbyapi:mtpnorm-r1
+FROM ${BASE}
+USER root
+COPY prefbatch-r1.patch /tmp/pb/prefbatch-r1.patch
+RUN set -eu; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    patch --batch --forward --fuzz=0 --dry-run -p2 -d "$site/exllamav3" < /tmp/pb/prefbatch-r1.patch; \
+    patch --batch --forward --fuzz=0 -p2 -d "$site/exllamav3" < /tmp/pb/prefbatch-r1.patch; \
+    python3 -c "import py_compile; \
+py_compile.compile('$site/exllamav3/generator/generator.py', doraise=True); \
+c=open('$site/exllamav3/generator/generator.py').read(); \
+assert 'accept_groups' in c, 'grouping did not land'; \
+assert 'draft_window is None' in c, 'windowed branch missing'; \
+print('prefbatch-r1 verify OK')"; \
+    rm -rf /tmp/pb
+LABEL local.prefbatch.base="tabbyapi:mtpnorm-r1"

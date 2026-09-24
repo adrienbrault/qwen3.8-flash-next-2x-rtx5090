@@ -1,0 +1,45 @@
+# verifybatch-r1: make the opt-in batched MTP verification path reachable.
+#
+# R645 (2026-09-22): py-spy on the serving generator shows 43% of c4 wall time as a leaf inside
+# Job.receive_sample's `next_token.cpu()` -- the serial per-token D2H accept chain. The round-4
+# batched verifier (EXL3_BATCH_VERIFY=1, already in the daily env) was never observed to run:
+# no `ready.synchronize()` samples appear in 27k profile samples, and `receive_logits` enters
+# only via the serial else-branch (generator.py:1692).
+#
+# Cause 1: CustomSampler.__init__ OR-ed reqs_past_ids/reqs_torch_seed over the INPUT steps,
+# before alt() simplification. TabbyAPI appends SS_RepP + SS_PresFreqP unconditionally
+# (sampler.py:169-173); a neutral penalty step's alt() returns SS_NoOp, but its
+# reqs_past_ids() == True had already poisoned the flag -> verification_batch_mode() vetoed
+# every request the frontend ever built.
+#
+# Cause 2: verification_batch_mode() vetoed on job.device_logit_mask. The mask is built once
+# per iterate from stateless-per-iterate sources (min_new_tokens EOS block, checkpoint explored
+# tokens, healing allow-list), so any min_tokens request -- i.e. every forced-length benchmark
+# -- carried a live mask on every token and was vetoed. The mask is now forwarded into the
+# batched sampler call, which applies it exactly as the serial path does (broadcast over the
+# verify window). job.filters stays vetoed: filter masks are stateful per accepted position.
+#
+# Both changes are inert unless EXL3_BATCH_VERIFY=1 (already the daily default). The serial
+# receive_sample loop remains the authority for EOS, stop strings, requeueing, cache rollback
+# and recurrent rewinds; round-4 only precomputes the accepted tokens on-device.
+#
+#   docker build -f docker/Dockerfile.tabbyapi-bverify --build-arg BASE=tabbyapi:mtpwin-r2-metrics1 -t tabbyapi:bverify-r1 docker
+#
+# Build context = docker/ (the patch sits next to this file). Served since R646; admitted by R645/R646.
+ARG BASE=tabbyapi:mtpwin-r2-metrics1
+FROM ${BASE}
+
+COPY verifybatch-r1.patch /tmp/vb/verifybatch-r1.patch
+
+RUN cd /opt/venv/lib/python3.12/site-packages/exllamav3 \
+    && patch -p2 --fuzz=0 --no-backup-if-mismatch --batch < /tmp/vb/verifybatch-r1.patch \
+    && python3 -c "import py_compile; \
+[py_compile.compile('/opt/venv/lib/python3.12/site-packages/exllamav3/'+f, doraise=True) for f in ['generator/sampler/custom.py','generator/draft_overlap.py','generator/generator.py']]; \
+c=open('/opt/venv/lib/python3.12/site-packages/exllamav3/generator/sampler/custom.py').read(); \
+d=open('/opt/venv/lib/python3.12/site-packages/exllamav3/generator/draft_overlap.py').read(); \
+g=open('/opt/venv/lib/python3.12/site-packages/exllamav3/generator/generator.py').read(); \
+assert 'any(s.reqs_past_ids() for s in self.steps)' in c, 'flag aggregation fix did not land'; \
+assert 'device_logit_mask is admissible' in d, 'mask veto relax did not land'; \
+assert 'logit_mask = job.device_logit_mask' in g, 'mask pass-through did not land'; \
+print('verifybatch-r1 verify OK')" \
+    && rm -rf /tmp/vb

@@ -1,0 +1,33 @@
+# mtpnorm-r1: fuse the MTP input layer's grouped-RMS chain into ext.rms_norm.
+#
+# R648 glue-launch survey (2026-09-22, subagent round A): Qwen4ExpMTPInputLayer.forward runs
+# ~8-9x per decode step (1 draft forward + ~7 per-job accept-prefills at R=1) and spends ~11
+# at::native launches each on float()/pow(2)/mean/add/rsqrt/mul/mul/half() plus the fp32
+# broadcast add. This replaces that chain with one ext.rms_norm call (w_groups=hc_mult, the
+# same binding GatedResidual._mix uses at hyperconnections.py:441) and merges the emb cast
+# into a widening add_. ~-55..65 launches/step, all in the sub-2us glue band.
+#
+# Numerics: NOT bit-exact vs the torch chain — the kernel accumulates sum-of-squares in fp32
+# with a different reduction order and the +1.0 bias is baked into an fp16 weight. Sub-ulp on
+# the draft-side normed hidden only; the trunk verify forward remains the sole authority on
+# served tokens. Gate: acceptance-rate A/B within ~1% absolute + identical greedy outputs.
+# The stream_tap=False branch is untouched.
+#
+#   docker build -f docker/Dockerfile.tabbyapi-mtpnorm --build-arg BASE=tabbyapi:bverify-r1 -t tabbyapi:mtpnorm-r1 docker
+#
+# Build context = docker/. Measured alone in R649; served as part of stack-r1 since R653.
+ARG BASE=tabbyapi:bverify-r1
+FROM ${BASE}
+
+COPY mtpnorm-r1.patch /tmp/mn/mtpnorm-r1.patch
+
+RUN cd /opt/venv/lib/python3.12/site-packages/exllamav3 \
+    && patch -p2 --fuzz=0 --no-backup-if-mismatch --batch < /tmp/mn/mtpnorm-r1.patch \
+    && python3 -c "import py_compile; \
+py_compile.compile('/opt/venv/lib/python3.12/site-packages/exllamav3/modules/arch_specific/qwen4_exp_mtp.py', doraise=True); \
+c=open('/opt/venv/lib/python3.12/site-packages/exllamav3/modules/arch_specific/qwen4_exp_mtp.py').read(); \
+assert 'norm_hidden_w_h' in c, 'flat fp16 weight did not land'; \
+assert 'ext.rms_norm(y.view(R * H, D)' in c, 'fused norm call did not land'; \
+assert 'h.float().add_(emb.unsqueeze(-2))' in c, 'widening add did not land'; \
+print('mtpnorm-r1 verify OK')" \
+    && rm -rf /tmp/mn

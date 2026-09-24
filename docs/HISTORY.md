@@ -99,6 +99,12 @@ The same overlay one pool step higher, 1,015,808, passed its A/B and four gates 
 | 12:10 | image `tabbyapi:bverify-r1` = `mtpwin-r2-metrics1` + verifybatch-r1.patch: the round-4 batched MTP verifier was unreachable — `reqs_past_ids` was aggregated over pre-simplification sampler steps (the frontend appends neutral penalty steps to every stack), and `device_logit_mask` vetoed every `min_tokens` request | canonical gate vs `mtpwin-r2-metrics1`, same salt/shapes: c1 +3.4 %, c4/4k +0.8 %, c8 +3.9 %, c4/26k +3.5 % decode t/s; acceptance per verify unchanged; py-spy leaf `job.py:622` 43.3 % → ~0 | 999,424 | [R646](../bench/results/r646-verifybatch.md) |
 | 20:00 | image `tabbyapi:stack-r1` = `bverify-r1` + mtpnorm (MTP input-norm chain → fused `rms_norm`) + mixstate (state row folded into the int8 up kernel, `EXL3_GR_STATE_IN_UP=1`) + prefbatch (accept-path draft prefills grouped by accepted length) | greedy byte-identical on all 6 prompts vs `bverify-r1`; canonical gate: c1 +1.2 %, c4/4k +3.8 %, c8 +4.4 %, c4/26k −0.1 %; acceptance parity; the c8 figure reproduces the prefbatch-only gate exactly | 999,424 | [R653](../bench/results/r653-stack.md) |
 
+## 2026-09-23: the recurrent-state slot pool stops losing slots
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 22:25 | image `tabbyapi:slotfix-r1` = `stack-r1` + slotfix-r1.patch: the three state-allocation paths return the slot handle when the state constructor raises; `release_state` refuses a double release; `reap_failed_job` and `cancel()` release the draft window and the pages under separate handlers | 6 injected constructor faults → 6 slots returned, 0 `no available slots`; greedy byte-identical on all 6 prompts vs `stack-r1`; 18 min churn (12 workers, ~25 % mid-stream cancels): 1,497 requests, 0 errors, 0 restarts; c8 8 of 8 after | 999,424 | [R676](../bench/results/r676-slotfix.md) |
+
 ## 2026-09-24: the MTP draft component moves to the second GPU
 
 | promoted (CEST) | change | gate evidence | page pool | results |
@@ -114,9 +120,3 @@ The same overlay one pool step higher, 1,015,808, passed its A/B and four gates 
 Measured after the promotion the same day: the decode curve of the served configuration against the one served before R701, two alternating boots each, `fn_bench`, greedy, 1,024 forced tokens, 1 to 8 streams: the decode rate per stream after the first token is 1.05 to 1.15 times higher for code and prose, the end-to-end burst aggregate for prose at 8 streams is 714 against 676 tokens/s, and the time to the first token is unchanged ([R704](../bench/results/r704-decode-curve.md)). The README's decode figure has drawn the decode rate per stream and the decode aggregate from R704 since then, in place of R580's round-wall aggregate.
 
 Measured and not promoted the same day: hcfast r1 with the default 8/8 tile, a same-sign regression at 8 streams ([R698](../bench/results/r698-hcfast.md)), and mixed draft depth per job to fill 16 verify rows at 5 to 7 streams, 0.79× at 5 streams and 0.84× at 7 ([R678b](../bench/results/r678b-fill16.md)).
-
-## 2026-09-23: the recurrent-state slot pool stops losing slots
-
-| promoted (CEST) | change | gate evidence | page pool | results |
-| --- | --- | --- | --- | --- |
-| 22:25 | image `tabbyapi:slotfix-r1` = `stack-r1` + slotfix-r1.patch: the three state-allocation paths return the slot handle when the state constructor raises; `release_state` refuses a double release; `reap_failed_job` and `cancel()` release the draft window and the pages under separate handlers | 6 injected constructor faults → 6 slots returned, 0 `no available slots`; greedy byte-identical on all 6 prompts vs `stack-r1`; 18 min churn (12 workers, ~25 % mid-stream cancels): 1,497 requests, 0 errors, 0 restarts; c8 8 of 8 after | 999,424 | [R676](../bench/results/r676-slotfix.md) |

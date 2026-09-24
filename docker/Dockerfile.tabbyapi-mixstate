@@ -1,0 +1,39 @@
+# mixstate-r1: EXL3_GR_STATE_IN_UP — derive the GatedResidual state row inside the up kernel.
+#
+# R648 round-C survey + round-E implementation (2026-09-22): every mixer site runs 3
+# launches (gr_v2_dots_i8 -> gr_v2_state_regrid -> gr_v2_up_i8). The new
+# gr_v2_up_i8_state_kernel recomputes the (LR+H) state row in-CTA from `dots` — the same
+# per-CTA rmr idiom the regrid kernel itself uses — so the middle launch is dropped:
+# 3 -> 2 launches x ~107 sites = ~107 fewer launches/step, ~0.2-0.35 ms/step.
+#
+# Numerics: bitwise-identical BY CONSTRUCTION — same rsqrtf/sigmoidf_/fmaf intrinsics,
+# same H-ordered accumulation, identical input bits; only the executing CTA differs. The
+# blockIdx.x==0 CTA writes state/post so workspace contents stay observationally identical.
+# Flag-off path is untouched (dispatch behind EXL3_GR_STATE_IN_UP, default off).
+#
+# Apply-in-dots (candidate B) deliberately NOT included: the apply_ deferral has real
+# stale-read consumers (transformer.py export tap, MTP tap) needing a pending protocol —
+# round E documented it DESIGN-ONLY.
+#
+#   docker build -f docker/Dockerfile.tabbyapi-mixstate --build-arg BASE=tabbyapi:mtpnorm-r1 -t tabbyapi:mixstate-r1 docker
+#
+# Build context = docker/ (the patch and rebuild-native.py sit next to this file). Measured alone in R651; served as
+# part of stack-r1 since R653 with EXL3_GR_STATE_IN_UP=1.
+ARG BASE=tabbyapi:mtpnorm-r1
+FROM ${BASE}
+USER root
+ARG MAX_JOBS=6
+COPY mixstate-r1.patch /tmp/ms/mixstate-r1.patch
+COPY rebuild-native.py /tmp/rebuild-native.py
+ENV TORCH_CUDA_ARCH_LIST=12.0
+RUN set -eu; command -v nvcc; \
+    site="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"; \
+    patch --batch --forward --fuzz=0 --dry-run -p2 -d "$site/exllamav3" < /tmp/ms/mixstate-r1.patch; \
+    patch --batch --forward --fuzz=0 -p2 -d "$site/exllamav3" < /tmp/ms/mixstate-r1.patch; \
+    grep -n "gr_v2_up_i8_state_kernel" "$site/exllamav3/exllamav3_ext/hc_mix.cu" > /dev/null; \
+    grep -n "gr_mix_v2_int8_statein" "$site/exllamav3/exllamav3_ext/bindings.cpp" > /dev/null; \
+    grep -n "STATE_IN_UP" "$site/exllamav3/modules/hyperconnections.py" > /dev/null; \
+    cd /tmp; MAX_JOBS=${MAX_JOBS} nice -n 19 python3 /tmp/rebuild-native.py build_ext --force --build-lib "$site"; \
+    python3 -c 'import importlib.util; s = importlib.util.find_spec("exllamav3_ext"); assert s and s.origin; print("ext:", s.origin)'; \
+    rm -rf /tmp/ms /tmp/rebuild-native.py
+LABEL local.mixstate.base="tabbyapi:mtpnorm-r1"
