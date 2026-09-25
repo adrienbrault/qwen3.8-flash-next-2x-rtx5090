@@ -19,6 +19,12 @@
 #
 # Build context = docker/ (the patch and rebuild-native.py sit next to this file). Measured alone in R651; served as
 # part of stack-r1 since R653 with EXL3_GR_STATE_IN_UP=1.
+#
+# /tmp/build is removed before the rebuild: the -qsa-cid and -bszn layers leave their ninja objects there, and the
+# layers between them and this one install engine sources with `cp -a` or COPY, which keep the build context's
+# mtimes. From a git checkout those mtimes are older than the objects, so ninja reused stale objects
+# (libtorch/blocksparse_mlp.cpp from before decode-kernels-r2) and the extension failed to import with an undefined
+# exl3_moe_coop_run symbol (issue #1). The import check below fails the build instead.
 ARG BASE=tabbyapi:mtpnorm-r1
 FROM ${BASE}
 USER root
@@ -33,7 +39,8 @@ RUN set -eu; command -v nvcc; \
     grep -n "gr_v2_up_i8_state_kernel" "$site/exllamav3/exllamav3_ext/hc_mix.cu" > /dev/null; \
     grep -n "gr_mix_v2_int8_statein" "$site/exllamav3/exllamav3_ext/bindings.cpp" > /dev/null; \
     grep -n "STATE_IN_UP" "$site/exllamav3/modules/hyperconnections.py" > /dev/null; \
-    cd /tmp; MAX_JOBS=${MAX_JOBS} nice -n 19 python3 /tmp/rebuild-native.py build_ext --force --build-lib "$site"; \
+    rm -rf /tmp/build; cd /tmp; MAX_JOBS=${MAX_JOBS} nice -n 19 python3 /tmp/rebuild-native.py build_ext --force --build-lib "$site"; \
     python3 -c 'import importlib.util; s = importlib.util.find_spec("exllamav3_ext"); assert s and s.origin; print("ext:", s.origin)'; \
+    python3 -c 'import torch, exllamav3_ext'; \
     rm -rf /tmp/ms /tmp/rebuild-native.py
 LABEL local.mixstate.base="tabbyapi:mtpnorm-r1"

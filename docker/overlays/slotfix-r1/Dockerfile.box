@@ -1,4 +1,5 @@
-FROM tabbyapi:stack-r1
+ARG BASE=tabbyapi:stack-r1
+FROM ${BASE}
 COPY slotfix-r1.patch /opt/slotfix-r1/slotfix-r1.patch
 RUN set -e; P=$(python3 -c "import exllamav3,os;print(os.path.dirname(exllamav3.__file__))"); \
     patch -p1 --fuzz=0 --dry-run -d "$P" < /opt/slotfix-r1/slotfix-r1.patch && \

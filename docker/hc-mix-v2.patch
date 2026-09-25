@@ -1,0 +1,402 @@
+--- a/exllamav3/exllamav3_ext/hc_mix.cu
++++ b/exllamav3/exllamav3_ext/hc_mix.cu
+@@ -826,3 +826,327 @@
+     #undef ARGS
+     cuda_check(cudaPeekAtLastError());
+ }
++
++// V2 preserves V1's virtual 128-thread dot/sumsq reduction and 32-lane up
++// reduction. Only independent j/h/row work is remapped; no tensor-core arithmetic.
++// sm_120 tuning (170 SMs): J=2 gives ceil(324/2)=162 CTAs per row tile,
++// nearly one CTA/SM at R=1. H*J warps = 256 threads. Four virtual warps
++// per dot lane preserve V1's 128 lanes without a 1024-thread H*J*128 CTA.
++// B=4 shares each half-weight load across four rows and needs 4*4=16
++// dot accumulators per lane. B=1/2 specializations avoid padding small R.
++constexpr int GR_V2_H = 4;
++constexpr int GR_V2_WARP = 32;
++constexpr int GR_V2_VWARPS = GR_THREADS_A / GR_V2_WARP;
++constexpr int GR_V2_J = 2;
++constexpr int GR_V2_ROWS = 4;
++// Exactly one 128-thread float4 norm iteration; see the staging loop.
++constexpr int GR_V2_COLS = GR_THREADS_A * 4;
++constexpr int GR_V2_DOT_THREADS = GR_V2_H * GR_V2_J * GR_V2_WARP;
++// One column quad per CTA, four stream warps: D/4=640 CTAs instead of
++// V1's 80 at R=1. Each lane has only B*4 up accumulators, versus V1's H*4.
++constexpr int GR_V2_QUAD = 4;
++constexpr int GR_V2_UP_THREADS = GR_V2_H * GR_V2_WARP;
++
++// Append after the V1 kernels/launcher so their source stays byte-identical.
++template <int B>
++__global__ __launch_bounds__(GR_V2_DOT_THREADS)
++void gr_v2_prepare_kernel
++(
++    const float* __restrict__ streams,
++    const half* __restrict__ fn,
++    float* __restrict__ state,          // (R, LR + H): [silu activations, rmr]
++    float* __restrict__ post,
++    const int R, const int D, const int LR, const float rms_eps
++)
++{
++    constexpr int H = GR_V2_H;
++    const int lane = threadIdx.x % GR_V2_WARP;
++    const int warp = threadIdx.x / GR_V2_WARP;
++    const int h = warp % H;
++    const int jj = warp / H;
++    const int j = blockIdx.x * GR_V2_J + jj;
++    const int r0 = blockIdx.y * B;
++    const int M = LR + (post ? H : 0);
++    __shared__ float rmr[B][H];
++    __shared__ float dots[B][GR_V2_J][H];
++
++    // 512 columns = one V1 sumsq iteration (128 float4s) and half of
++    // a V1 dot iteration (128 eight-half packs). Stage streams once for
++    // both rank rows AND the RMS, reducing stream LDGs threefold versus
++    // separate dot/RMS loads. B=4 uses 4*4*512*4=32768 bytes.
++    __shared__ float4 xs[B][H][GR_V2_COLS / 4];
++    float a[B][GR_V2_VWARPS] = {};
++    float q[B][GR_V2_VWARPS] = {};
++    for (int col = 0; col < D; col += GR_V2_COLS)
++    {
++        for (int k = threadIdx.x; k < B * H * (GR_V2_COLS / 4); k += GR_V2_DOT_THREADS)
++        {
++            const int b = k / (H * (GR_V2_COLS / 4));
++            const int hh = (k / (GR_V2_COLS / 4)) % H;
++            const int c = k % (GR_V2_COLS / 4);
++            if (r0 + b < R && col + 4 * c < D)
++                xs[b][hh][c] = ((const float4*) streams)
++                    [((size_t) (r0 + b) * H + hh) * (D / 4) + col / 4 + c];
++        }
++        __syncthreads();
++        #pragma unroll
++        for (int v = 0; v < GR_V2_VWARPS; ++v)
++        {
++            const int tid = v * GR_V2_WARP + lane;
++            // Dot pack c belongs to original virtual thread c % 128.
++            const int c = ((col / 8) / GR_THREADS_A) * GR_THREADS_A + tid;
++            if (j < M && c >= col / 8 && c < (col + GR_V2_COLS) / 8 && c < D / 8)
++            {
++                int4 pk = ((const int4*) (fn + ((size_t) j * H + h) * D))[c];
++                half4 w0 = *(half4*) &pk.x;
++                half4 w1 = *(half4*) &pk.z;
++                #pragma unroll
++                for (int b = 0; b < B; ++b)
++                    if (r0 + b < R)
++                    {
++                        float4 s0 = xs[b][h][2 * c - col / 4];
++                        float4 s1 = xs[b][h][2 * c - col / 4 + 1];
++                        a[b][v] = fmaf(s0.x, LOW_TO_FLOAT(w0.x), a[b][v]);
++                        a[b][v] = fmaf(s0.y, HIGH_TO_FLOAT(w0.x), a[b][v]);
++                        a[b][v] = fmaf(s0.z, LOW_TO_FLOAT(w0.y), a[b][v]);
++                        a[b][v] = fmaf(s0.w, HIGH_TO_FLOAT(w0.y), a[b][v]);
++                        a[b][v] = fmaf(s1.x, LOW_TO_FLOAT(w1.x), a[b][v]);
++                        a[b][v] = fmaf(s1.y, HIGH_TO_FLOAT(w1.x), a[b][v]);
++                        a[b][v] = fmaf(s1.z, LOW_TO_FLOAT(w1.y), a[b][v]);
++                        a[b][v] = fmaf(s1.w, HIGH_TO_FLOAT(w1.y), a[b][v]);
++                    }
++            }
++            if (jj == 0 && col / 4 + tid < D / 4)
++            {
++                #pragma unroll
++                for (int b = 0; b < B; ++b)
++                    if (r0 + b < R)
++                    {
++                        float4 s = xs[b][h][tid];
++                        // V1 sumsq: w,z,y,x (nested FMAs), not x,y,z,w.
++                        q[b][v] = fmaf(s.x, s.x, fmaf(s.y, s.y,
++                                  fmaf(s.z, s.z, fmaf(s.w, s.w, q[b][v]))));
++                    }
++            }
++        }
++        __syncthreads();          // all readers finish before overwriting xs
++    }
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++    {
++        if (jj == 0)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < GR_V2_VWARPS; ++v)
++            {
++                float d = q[b][v];
++                for (int offset = 16; offset > 0; offset >>= 1)
++                    d += __shfl_down_sync(0xffffffffu, d, offset);
++                if (lane == 0) sum += d;  // +0, warp0, warp1, warp2, warp3
++            }
++            if (lane == 0 && r0 + b < R)
++            {
++                float rm = rsqrtf(sum / (float) D + rms_eps);
++                rmr[b][h] = rm;
++                if (blockIdx.x == 0)
++                    state[(size_t) (r0 + b) * (LR + H) + LR + h] = rm;
++            }
++        }
++        if (j < M)
++        {
++            float sum = 0.0f;
++            #pragma unroll
++            for (int v = 0; v < GR_V2_VWARPS; ++v)
++            {
++                float d = a[b][v];
++                for (int offset = 16; offset > 0; offset >>= 1)
++                    d += __shfl_down_sync(0xffffffffu, d, offset);
++                if (lane == 0) sum += d;
++            }
++            if (lane == 0) dots[b][jj][h] = sum;
++        }
++    }
++    __syncthreads();
++    if (threadIdx.x < B * GR_V2_J)
++    {
++        const int b = threadIdx.x / GR_V2_J;
++        const int k = threadIdx.x % GR_V2_J;
++        const int i = blockIdx.x * GR_V2_J + k;
++        if (r0 + b < R && i < M)
++        {
++            float v = 0.0f;
++            #pragma unroll
++            for (int h = 0; h < H; ++h)
++                v = fmaf(rmr[b][h], dots[b][k][h], v);
++            v *= 1.0f / (float) H;
++            if (i < LR)
++                state[(size_t) (r0 + b) * (LR + H) + i] = v * sigmoidf_(v);
++            else
++                post[(size_t) (r0 + b) * H + i - LR] = 2.0f * sigmoidf_(v);
++        }
++    }
++}
++
++template <int B, bool HALF_OUT>
++__global__ __launch_bounds__(GR_V2_UP_THREADS)
++void gr_v2_up_kernel
++(
++    const float* __restrict__ streams,
++    const float* __restrict__ state,
++    const half* __restrict__ upt,
++    const half* __restrict__ w,
++    void* __restrict__ mixed,
++    const int R, const int D, const int LR
++)
++{
++    constexpr int H = GR_V2_H;
++    const int lane = threadIdx.x % GR_V2_WARP;
++    const int h = threadIdx.x / GR_V2_WARP;
++    const int c = blockIdx.x;
++    const int r0 = blockIdx.y * B;
++    // B*(LR+H)*4 = 5184 bytes at B=4, LR=320; 256 bytes for gates.
++    extern __shared__ float head[];
++    __shared__ float gates[B][H][GR_V2_QUAD];
++    for (int k = threadIdx.x; k < B * (LR + H); k += GR_V2_UP_THREADS)
++    {
++        int b = k / (LR + H);
++        head[k] = r0 + b < R ? state[(size_t) r0 * (LR + H) + k] : 0.0f;
++    }
++    __syncthreads();
++    float4 g[B];
++    #pragma unroll
++    for (int b = 0; b < B; ++b) g[b] = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
++    for (int i = lane; i < LR; i += GR_V2_WARP)
++    {
++        half4 u = *(const half4*) (upt + ((((size_t) h * (D / 4) + c) * LR + i) * 4));
++        #pragma unroll
++        for (int b = 0; b < B; ++b)
++        {
++            float ti = head[b * (LR + H) + i];
++            g[b].x = fmaf(ti, LOW_TO_FLOAT(u.x), g[b].x);
++            g[b].y = fmaf(ti, HIGH_TO_FLOAT(u.x), g[b].y);
++            g[b].z = fmaf(ti, LOW_TO_FLOAT(u.y), g[b].z);
++            g[b].w = fmaf(ti, HIGH_TO_FLOAT(u.y), g[b].w);
++        }
++    }
++    #pragma unroll
++    for (int b = 0; b < B; ++b)
++    {
++        for (int offset = 16; offset > 0; offset >>= 1)
++        {
++            g[b].x += __shfl_xor_sync(0xffffffffu, g[b].x, offset);
++            g[b].y += __shfl_xor_sync(0xffffffffu, g[b].y, offset);
++            g[b].z += __shfl_xor_sync(0xffffffffu, g[b].z, offset);
++            g[b].w += __shfl_xor_sync(0xffffffffu, g[b].w, offset);
++        }
++        if (lane == 0)
++        {
++            gates[b][h][0] = g[b].x;
++            gates[b][h][1] = g[b].y;
++            gates[b][h][2] = g[b].z;
++            gates[b][h][3] = g[b].w;
++        }
++    }
++    __syncthreads();
++    if (threadIdx.x < B * GR_V2_QUAD)
++    {
++        const int b = threadIdx.x / GR_V2_QUAD;
++        const int q = threadIdx.x % GR_V2_QUAD;
++        const int d = GR_V2_QUAD * c + q;
++        if (r0 + b < R)
++        {
++            float o = 0.0f;
++            #pragma unroll
++            for (int h = 0; h < H; ++h)
++            {
++                float s = streams[((size_t) (r0 + b) * H + h) * D + d];
++                float coef = head[b * (LR + H) + LR + h] * (1.0f / (float) H);
++                o = fmaf(sigmoidf_(gates[b][h][q]) * coef * __half2float(w[h * D + d]), s, o);
++            }
++            if (HALF_OUT)
++                ((half*) mixed)[(size_t) (r0 + b) * D + d] = __float2half_rn(o);
++            else
++                ((float*) mixed)[(size_t) (r0 + b) * D + d] = o;
++        }
++    }
++}
++
++template <int B>
++static void gr_v2_launch
++(
++    const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
++    const at::Tensor& w, float rms_eps, at::Tensor& state,
++    float* post, at::Tensor& mixed, int R, int D, int LR, cudaStream_t stream
++)
++{
++    const int M = LR + (post ? GR_V2_H : 0);
++    dim3 grid_a((M + GR_V2_J - 1) / GR_V2_J, (R + B - 1) / B);
++    gr_v2_prepare_kernel<B><<<grid_a, GR_V2_DOT_THREADS, 0, stream>>>
++    (
++        (const float*) streams.data_ptr(), (const half*) fn.data_ptr(),
++        (float*) state.data_ptr(), post, R, D, LR, rms_eps
++    );
++    cuda_check(cudaPeekAtLastError());
++    dim3 grid_b(D / GR_V2_QUAD, (R + B - 1) / B);
++    const int smem = B * (LR + GR_V2_H) * sizeof(float);
++    #define GR_V2_ARGS \
++        (const float*) streams.data_ptr(), (const float*) state.data_ptr(), \
++        (const half*) upt.data_ptr(), (const half*) w.data_ptr(), mixed.data_ptr(), R, D, LR
++    if (mixed.dtype() == at::kHalf)
++        gr_v2_up_kernel<B, true><<<grid_b, GR_V2_UP_THREADS, smem, stream>>>(GR_V2_ARGS);
++    else
++        gr_v2_up_kernel<B, false><<<grid_b, GR_V2_UP_THREADS, smem, stream>>>(GR_V2_ARGS);
++    #undef GR_V2_ARGS
++    cuda_check(cudaPeekAtLastError());
++}
++
++void gr_mix_v2
++(
++    const at::Tensor& streams, const at::Tensor& fn, const at::Tensor& upt,
++    const at::Tensor& w, double rms_eps, at::Tensor state,
++    c10::optional<at::Tensor> post, at::Tensor mixed
++)
++{
++    const at::cuda::OptionalCUDAGuard device_guard(streams.device());
++    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
++    TORCH_CHECK_DTYPE(streams, kFloat);
++    TORCH_CHECK_DTYPE(fn, kHalf);
++    TORCH_CHECK_DTYPE(upt, kHalf);
++    TORCH_CHECK_DTYPE(w, kHalf);
++    TORCH_CHECK_DTYPE(state, kFloat);
++    TORCH_CHECK(streams.dim() == 3 && fn.dim() == 2 && state.dim() == 2,
++                "gr_mix_v2: input/workspace rank");
++    TORCH_CHECK(streams.is_contiguous() && fn.is_contiguous() && upt.is_contiguous() &&
++                w.is_contiguous() && state.is_contiguous(), "gr_mix_v2: contiguous inputs required");
++    const int R = streams.size(0), H = streams.size(1), D = streams.size(2), M = fn.size(0);
++    TORCH_CHECK(R >= 1 && R <= 32 && H == GR_V2_H && D > 0 && D % 8 == 0, "gr_mix_v2: dims");
++    TORCH_CHECK(upt.dim() == 4 && upt.size(0) == H && upt.size(1) == D / 4 && upt.size(3) == 4,
++                "gr_mix_v2: upt must be the (H, D / 4, LR, 4) repacked layout");
++    const int LR = upt.size(2);
++    TORCH_CHECK(LR > 0 && M == LR + (post ? H : 0), "gr_mix_v2: fn rows must be LR (+ H with post)");
++    TORCH_CHECK(fn.size(1) == H * D && w.numel() == H * D, "gr_mix_v2: dims");
++    TORCH_CHECK(state.size(0) == R && state.size(1) == LR + H, "gr_mix_v2: state shape");
++    TORCH_CHECK(mixed.is_contiguous() && mixed.dim() == 2 && mixed.size(0) == R && mixed.size(1) == D &&
++                (mixed.dtype() == at::kHalf || mixed.dtype() == at::kFloat), "gr_mix_v2: mixed shape/dtype");
++    TORCH_CHECK(streams.is_cuda() && fn.device() == streams.device() && upt.device() == streams.device() &&
++                w.device() == streams.device() && state.device() == streams.device() && mixed.device() == streams.device(),
++                "gr_mix_v2: tensors must share a CUDA device");
++    float* post_p = nullptr;
++    if (post)
++    {
++        const auto& p = post.value();
++        TORCH_CHECK_DTYPE(p, kFloat);
++        TORCH_CHECK(p.is_contiguous() && p.dim() == 2 && p.size(0) == R && p.size(1) == H &&
++                    p.device() == streams.device(), "gr_mix_v2: post shape/device");
++        post_p = (float*) p.data_ptr();
++    }
++    // Stay inside the default 48 KiB CTA allocation, no device-wide attribute mutation.
++    TORCH_CHECK(GR_V2_ROWS * (LR + H) * sizeof(float) + GR_V2_ROWS * H * GR_V2_QUAD * sizeof(float)
++                <= 48 * 1024, "gr_mix_v2: rank exceeds shared-memory limit");
++    #define GR_V2_LAUNCH(B) gr_v2_launch<B>(streams, fn, upt, w, (float) rms_eps, state, post_p, mixed, R, D, LR, stream)
++    if (R == 1) GR_V2_LAUNCH(1);
++    else if (R == 2) GR_V2_LAUNCH(2);
++    else GR_V2_LAUNCH(GR_V2_ROWS);
++    #undef GR_V2_LAUNCH
++}
+--- a/exllamav3/exllamav3_ext/hc_mix.cuh
++++ b/exllamav3/exllamav3_ext/hc_mix.cuh
+@@ -54,3 +54,16 @@
+     c10::optional<at::Tensor> post,
+     at::Tensor mixed
+ );
++
++// Opt-in exact-order decode mixer, state is (R, LR + H) fp32.
++void gr_mix_v2
++(
++    const at::Tensor& streams,
++    const at::Tensor& fn,
++    const at::Tensor& upt,
++    const at::Tensor& w,
++    double rms_eps,
++    at::Tensor state,
++    c10::optional<at::Tensor> post,
++    at::Tensor mixed
++);
+--- a/exllamav3/exllamav3_ext/bindings.cpp
++++ b/exllamav3/exllamav3_ext/bindings.cpp
+@@ -118,6 +118,7 @@
+     m.def("hc_mix_num_chunks", &hc_mix_num_chunks, "hc_mix_num_chunks");
+     m.def("hc_apply", &hc_apply, "hc_apply");
+     m.def("gr_mix", &gr_mix, "gr_mix");
++    m.def("gr_mix_v2", &gr_mix_v2, "gr_mix_v2");
+     m.def("routing_std", &routing_std, "routing_std");
+     m.def("routing_std_logits", &routing_std_logits, "routing_std_logits");
+ 
+--- a/exllamav3/modules/hyperconnections.py
++++ b/exllamav3/modules/hyperconnections.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ from typing_extensions import override
+ import torch
++import os
+ import torch.nn.functional as F
+ from .module import Module
+ from .rmsnorm import RMSNorm
+@@ -239,6 +240,8 @@
+     """
+ 
+     FUSED_MAX_R = 32
++    # Read once, before graph capture. Only the literal value "1" opts in.
++    MIX_V2 = os.environ.get("EXL3_HC_MIX_V2", "0") == "1"
+ 
+     def __init__(
+         self,
+@@ -371,11 +374,18 @@
+                 if cached:
+                     return g_tensor_cache.get_bucketed(dev, numel, dtype, tag)
+                 return torch.empty((numel,), dtype = dtype, device = dev)
+-            M = self.fn_h.shape[0] + 1
+-            dots = ws(R * M * H, torch.float, "gr_mix_dots").view(R, M, H)
+-            post = ws(R * H, torch.float, "gr_mix_post").view(R, H) if self.use_combine else None
+-            mixed = ws(R * Dh, torch.half, "gr_mix_mixed").view(R, Dh)
+-            ext.gr_mix(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps, dots, post, mixed)
++            if self.MIX_V2:
++                # K1 writes t and rmr once; K2 consumes this 324-float row.
++                state = ws(R * (self.rank + H), torch.float, "gr_mix_v2_state").view(R, self.rank + H)
++                post = ws(R * H, torch.float, "gr_mix_post").view(R, H) if self.use_combine else None
++                mixed = ws(R * Dh, torch.half, "gr_mix_mixed").view(R, Dh)
++                ext.gr_mix_v2(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps, state, post, mixed)
++            else:
++                M = self.fn_h.shape[0] + 1
++                dots = ws(R * M * H, torch.float, "gr_mix_dots").view(R, M, H)
++                post = ws(R * H, torch.float, "gr_mix_post").view(R, H) if self.use_combine else None
++                mixed = ws(R * Dh, torch.half, "gr_mix_mixed").view(R, Dh)
++                ext.gr_mix(s3, self.fn_h, self.upx_h, self.w_h, self.rms_eps, dots, post, mixed)
+         else:
+             post = torch.empty((R, H), dtype = torch.float, device = dev) \
+                 if self.use_combine else None
