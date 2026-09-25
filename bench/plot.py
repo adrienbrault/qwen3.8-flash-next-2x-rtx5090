@@ -60,7 +60,8 @@ def annotate(ax, xs, ys, color, fmt="{:.0f}", dy=7):
 
 
 def decode_rates(path, arm):
-    """Per '<conc>-<kind>' for one arm of R704 (tags '<ARM><boot>-c<conc>-<kind>', both boots pooled):
+    """Per '<conc>-<kind>' for one arm of a decode-curve round (tags '<ARM><boot>-c<conc>-<kind>', both boots pooled;
+    R704 has the arms OLD and NEW, R719 the arm NEW only):
 
     per_stream   median over requests of decode_tps = (tokens - 1) / (t_last - t_first), the streaming rate after
                  the first token;
@@ -72,7 +73,8 @@ def decode_rates(path, arm):
                  window during which every stream of the round is decoding. It bounds how far decode_agg overstates
                  the rate the streams sustain together.
 
-    These are the definitions of the R704 driver's analysis step, so the printed values reproduce its curve.tsv.
+    These are the definitions of the R704 and R719 drivers' analysis step, so the printed values reproduce their
+    curve.tsv.
     """
     reqs, rounds = collections.defaultdict(list), collections.defaultdict(list)
     for line in open(path):
@@ -98,14 +100,16 @@ def decode_rates(path, arm):
 
 
 R704 = RESULTS / "2026-09-24-r704-decode-curve-ab" / "records.jsonl"
+R719 = RESULTS / "2026-09-24-r719-decode-curve" / "records.jsonl"
 R580 = RESULTS / "2026-09-20-r580-decode-curve-try2" / "records.jsonl"
 R580_PREFILL = R580.parent / "prefill.jsonl"
 
 
 def figure_decode_scaling():
-    """The served configuration's decode curve: R704's NEW arm (stack-r2, two boots, 1 to 8 streams). The chart draws
-    the decode metrics only; the OLD arm, the round-wall aggregate and TTFT are printed for the write-up's table."""
-    new, old = decode_rates(R704, "NEW"), decode_rates(R704, "OLD")
+    """The served configuration's decode curve: R719 (stack-r3-rows32, two boots, 1 to 8 streams, each stream on its
+    own prompt). The chart draws the decode metrics only; the round-wall aggregate, TTFT and the overlap are printed
+    for the write-up's table."""
+    new = decode_rates(R719, "NEW")
     conc = [c for c in range(1, 9) if f"c{c}-code" in new]
     agg = {k: [new[f"c{c}-{k}"]["decode_agg"] for c in conc] for k in ("code", "prose")}
     per = {k: [new[f"c{c}-{k}"]["per_stream"] for c in conc] for k in ("code", "prose")}
@@ -133,7 +137,24 @@ def figure_decode_scaling():
         a.legend(frameon=False, fontsize=9, loc="lower right" if a is ax else "upper right")
     fig.suptitle("Decode rate after the first token against concurrency, served configuration", fontsize=11,
                  fontweight="bold")
-    print(f"decode scaling (R704 NEW, 2 boots x 3 rounds) at {conc}")
+    print(f"decode scaling (R719, 2 boots x 3 rounds) at {conc}")
+    print("  shape      per-stream   decode agg   round-wall agg   TTFT     overlap")
+    for kind in ("code", "prose"):
+        for c in conc:
+            n = new[f"c{c}-{kind}"]
+            print(f"  {kind:5} c{c}   {n['per_stream']:6.1f}       {n['decode_agg']:4.0f}         {n['wall_agg']:4.0f}"
+                  f"             {n['ttft']:.2f} s   {n['overlap']:.3f}")
+    ov = [new[f"c{c}-{k}"]["overlap"] for c in conc if c > 1 for k in ("code", "prose")]
+    print(f"  overlap at 2-8 streams, per shape: {min(ov):.3f} to {max(ov):.3f}")
+    save(fig, "decode-scaling.svg", "Decode rate after the first token against concurrency, sum over streams and per stream")
+
+
+def print_r704():
+    """R704's two arms (stack-r2 against the configuration before R701), printed for its write-up's tables. R704
+    sent one prompt to every stream of a round, R719 one prompt per stream, so the two rounds are not drawn together."""
+    new, old = decode_rates(R704, "NEW"), decode_rates(R704, "OLD")
+    conc = [c for c in range(1, 9) if f"c{c}-code" in new]
+    print(f"R704 (2 boots x 3 rounds per arm) at {conc}")
     print("  shape      per-stream OLD -> NEW   decode agg OLD -> NEW   round-wall agg OLD -> NEW   TTFT OLD / NEW"
           "   overlap OLD / NEW")
     for kind in ("code", "prose"):
@@ -144,7 +165,6 @@ def figure_decode_scaling():
                   f"   {o['ttft']:.2f} / {n['ttft']:.2f} s   {o['overlap']:.3f} / {n['overlap']:.3f}")
     ov = [d[f"c{c}-{k}"]["overlap"] for d in (old, new) for c in conc if c > 1 for k in ("code", "prose")]
     print(f"  overlap at 2-8 streams, per shape and arm: {min(ov):.3f} to {max(ov):.3f}")
-    save(fig, "decode-scaling.svg", "Decode rate after the first token against concurrency, sum over streams and per stream")
 
 
 def depth_decode():
@@ -209,5 +229,6 @@ def figure_prefill():
 
 if __name__ == "__main__":
     figure_decode_scaling()
+    print_r704()
     figure_prefill()
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.svg"))))

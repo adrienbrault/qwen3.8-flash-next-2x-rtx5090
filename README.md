@@ -6,12 +6,13 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on `tabbyapi:stack-r2`, the configuration served from 2026-09-24 10:46 to 22:10 CEST, measured 2026-09-24 ([R704][r704], results `2026-09-24-r704-decode-curve-ab`): greedy, 1,024 forced tokens per request, short prompts, all streams starting together. The configurations served since, `tabbyapi:stack-r3` (from 22:10 CEST) and `tabbyapi:stack-r3-rows32` (from 2026-09-25 01:05 CEST), have no decode curve of their own yet; their ratios against the configuration before each are under [What the stack is](#what-the-stack-is). Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on `tabbyapi:stack-r3-rows32`, the served configuration, measured 2026-09-25 00:27 to 00:44 UTC ([R719][r719], results `2026-09-24-r719-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
 
-- The aggregate dips from 5 to 6 streams (code 688 to 659 t/s, prose 648 to 644), where the draft policy of that configuration drops from two draft tokens to one; the policy served since 2026-09-25 keeps two draft tokens up to 8 streams ([Conditions](#conditions)).
-- Time to the first token is 0.13 s at 1 stream and 0.67 to 0.72 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
+- The aggregate rises at every step from 1 to 8 streams, from 5 to 6 streams as well (code 671 to 708 t/s, prose 679 to 716); the draft policy keeps two draft tokens from 5 to 8 streams ([Conditions](#conditions)).
+- The rates depend on how often the MTP draft is accepted, which depends on the text being generated: these ~110-token prompts average 2.3 drafted tokens per step at 5 to 8 streams ([R719][r719]).
+- Time to the first token is 0.13 to 0.14 s at 1 stream and 0.71 to 0.76 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
@@ -38,8 +39,8 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 ### Conditions
 
 - **Agent traffic.** On the same server, one 3,000-token generation at ~10k context decodes at 236 t/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). The three-agent figure is generated tokens over generation time in the server's own request log ([R583][r583]). A 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode; context depth and generation length do not account for the loss ([R583][r583]).
-- **Draft depth.** In the configuration of the decode curve the draft policy drops to one draft token at 6 streams, because a deeper draft exceeded the 16 verify rows the cooperative MoE decode kernels took ([R560][r560], [R562][r562]); two draft tokens at 5 streams put the dip at 6 rather than 5 ([R576][r576]). Since 2026-09-25 the decode paths take up to 32 rows and the policy keeps two draft tokens at 6 to 8 streams (18 to 24 verify rows, [R717, R717c][r717]).
-- **Code and prose.** Code decodes 4 % faster than prose at 1 stream and within 1 % at 8 streams ([R704][r704]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]), and above 5 streams the draft in that measurement is one token deep, which caps what acceptance can add.
+- **Draft depth.** The served policy drafts three tokens up to 4 streams and two at 5 to 8 streams; at 6 to 8 streams that is 18 to 24 verify rows, which the decode paths take since 2026-09-25 ([R717, R717c][r717]). Before then the cooperative MoE decode kernels took 16 verify rows, and the policy dropped to one draft token at 6 streams ([R560][r560], [R562][r562], [R576][r576]).
+- **Code and prose.** Code decodes 6 % faster than prose at 1 stream and within 0.3 % at 8 streams ([R719][r719]). On this benchmark's code prompt the draft is accepted about as often as on prose (1.57 against 1.55 drafts per verify, [R572][r572]).
 - **Slots.** 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
 - **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
@@ -123,24 +124,24 @@ Each entry names the change and the number that kept it out of the served config
 
 ## How the numbers are measured
 
-**Decode** ([R704][r704], 2026-09-24, results `2026-09-24-r704-decode-curve-ab`, driver [`scripts/r704-decode-curve-ab.sh`](scripts/r704-decode-curve-ab.sh)): `fn_bench` ([`bench/probe.py`][probe]) against the launcher of `tabbyapi:stack-r2` on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off.
+**Decode** ([R719][r719], 2026-09-25 00:27 to 00:44 UTC, results `2026-09-24-r719-decode-curve`, driver [`scripts/r719-decode-curve.sh`](scripts/r719-decode-curve.sh)): `fn_bench` ([`bench/probe.py`][probe]) against the launcher of `tabbyapi:stack-r3-rows32` on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off. `--distinct` appends a per-stream suffix to each request's prompt, so no two streams of a round share a prompt; prompts are 118 tokens (code) and 106 tokens (prose). The two boots agree within 2.6 % on the per-stream rate and within 3.6 % on the decode aggregate in every cell.
 
 - **Decode rate per stream**: the median over requests of (tokens − 1) / (time of the last token − time of the first token).
-- **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 96.3 to 100 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 4 %.
+- **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 92.2 to 99.9 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 8 %.
 - **End-to-end burst aggregate**: all streams' tokens over the round's wall time, including time to the first token and the tail after the first stream finishes.
 
 | streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose | end-to-end burst aggregate, t/s, code / prose |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 236.7 / 227.0 | 237 / 226 | 0.13 / 0.13 | 230 / 220 |
-| 2 | 199.2 / 209.4 | 398 / 419 | 0.23 / 0.22 | 381 / 401 |
-| 3 | 164.4 / 160.5 | 495 / 482 | 0.34 / 0.31 | 467 / 459 |
-| 4 | 147.9 / 141.1 | 592 / 569 | 0.44 / 0.42 | 556 / 534 |
-| 5 | 139.1 / 130.3 | 688 / 648 | 0.54 / 0.51 | 632 / 604 |
-| 6 | 109.7 / 107.2 | 659 / 644 | 0.60 / 0.57 | 617 / 609 |
-| 7 | 105.8 / 103.1 | 749 / 720 | 0.72 / 0.62 | 690 / 675 |
-| 8 | 95.9 / 95.3 | 764 / 761 | 0.72 / 0.67 | 714 / 714 |
+| 1 | 291.1 / 273.5 | 292 / 272 | 0.14 / 0.13 | 281 / 263 |
+| 2 | 203.1 / 201.0 | 405 / 402 | 0.24 / 0.23 | 386 / 373 |
+| 3 | 180.2 / 177.4 | 538 / 530 | 0.35 / 0.34 | 494 / 500 |
+| 4 | 153.2 / 156.8 | 615 / 627 | 0.46 / 0.45 | 566 / 575 |
+| 5 | 134.1 / 135.7 | 671 / 679 | 0.57 / 0.55 | 618 / 625 |
+| 6 | 118.4 / 119.9 | 708 / 716 | 0.64 / 0.63 | 656 / 662 |
+| 7 | 110.8 / 112.6 | 771 / 783 | 0.76 / 0.66 | 710 / 722 |
+| 8 | 103.4 / 103.6 | 822 / 831 | 0.76 / 0.71 | 752 / 759 |
 
-**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only; time to the first token on short prompts was unchanged through `stack-r2` ([R704][r704]) and was not measured on `stack-r3` or `stack-r3-rows32`.
+**Prefill** ([R580][r580], 2026-09-20): three salted cold prompts per depth, counted by the server, NVMe tier off; the decode-at-depth points are [R554][r554]. The kernels changed since then are decode-only; time to the first token on short prompts is 0.13 to 0.14 s at 1 stream on `stack-r3-rows32` ([R719][r719]).
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
@@ -329,6 +330,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r579]: bench/results/r579-promote-mtp-kv-window.md
 [r580]: bench/results/r580-decode-curve.md
 [r704]: bench/results/r704-decode-curve.md
+[r719]: bench/results/r719-decode-curve.md
 [r587]: bench/results/r587-tabby-metrics.md
 [r583]: bench/results/r583-long-generation.md
 [r585]: bench/results/r585-prefill-interference.md

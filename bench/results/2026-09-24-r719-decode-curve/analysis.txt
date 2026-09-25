@@ -1,0 +1,16 @@
+code c1: decode/stream 291.1 | decode aggregate 292 (boots 291 / 293) | round-wall aggregate 281 | TTFT 0.14s
+code c2: decode/stream 203.1 | decode aggregate 405 (boots 407 / 404) | round-wall aggregate 386 | TTFT 0.24s
+code c3: decode/stream 180.2 | decode aggregate 538 (boots 529 / 548) | round-wall aggregate 494 | TTFT 0.35s
+code c4: decode/stream 153.2 | decode aggregate 615 (boots 613 / 617) | round-wall aggregate 566 | TTFT 0.46s
+code c5: decode/stream 134.1 | decode aggregate 671 (boots 671 / 671) | round-wall aggregate 618 | TTFT 0.57s
+code c6: decode/stream 118.4 | decode aggregate 708 (boots 709 / 706) | round-wall aggregate 656 | TTFT 0.64s
+code c7: decode/stream 110.8 | decode aggregate 771 (boots 770 / 772) | round-wall aggregate 710 | TTFT 0.76s
+code c8: decode/stream 103.4 | decode aggregate 822 (boots 824 / 821) | round-wall aggregate 752 | TTFT 0.76s
+prose c1: decode/stream 273.5 | decode aggregate 272 (boots 271 / 274) | round-wall aggregate 263 | TTFT 0.13s
+prose c2: decode/stream 201.0 | decode aggregate 402 (boots 402 / 402) | round-wall aggregate 373 | TTFT 0.23s
+prose c3: decode/stream 177.4 | decode aggregate 530 (boots 531 / 529) | round-wall aggregate 500 | TTFT 0.34s
+prose c4: decode/stream 156.8 | decode aggregate 627 (boots 630 / 624) | round-wall aggregate 575 | TTFT 0.45s
+prose c5: decode/stream 135.7 | decode aggregate 679 (boots 684 / 675) | round-wall aggregate 625 | TTFT 0.55s
+prose c6: decode/stream 119.9 | decode aggregate 716 (boots 715 / 718) | round-wall aggregate 662 | TTFT 0.63s
+prose c7: decode/stream 112.6 | decode aggregate 783 (boots 779 / 787) | round-wall aggregate 722 | TTFT 0.66s
+prose c8: decode/stream 103.6 | decode aggregate 831 (boots 834 / 829) | round-wall aggregate 759 | TTFT 0.71s

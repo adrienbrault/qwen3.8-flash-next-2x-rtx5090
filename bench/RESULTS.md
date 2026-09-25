@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-25
+
+- [R719: the decode curve of the served configuration (stack-r3-rows32), each stream on its own prompt: decode aggregate 292 / 272 at 1 stream and 822 / 831 at 8 streams (code / prose), rising at every step](results/r719-decode-curve.md)
+
 ## 2026-09-24
 
 - [R716b, R716c: stack-r3 (hcfast r2, latchain, densegemm r2, moefast r3), promoted; bitwise-identical to stack-r2 at every served decode shape](results/r716b-stack-r3.md)
