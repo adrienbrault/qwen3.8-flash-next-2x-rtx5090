@@ -14,6 +14,7 @@ Decode on `tabbyapi:stack-r3-rows32`, the served configuration (draft-KV window 
 - The rates depend on how often the MTP draft is accepted, which depends on the text being generated: on these ~110-token prompts a decode step yields 2.25 to 2.31 tokens at 5 to 8 streams ([R719b][r719b]).
 - Time to the first token is 0.13 to 0.14 s at 1 stream and 0.70 to 0.75 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
+- vLLM's serving benchmark on ShareGPT V3 and Spec-Bench, a wall-clock measure that includes prefill and request turnover, is in [Standard benchmark](#standard-benchmark-vllm-bench-serve).
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
 
@@ -145,6 +146,39 @@ Each entry names the change and the number that kept it out of the served config
 
 Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](bench/plot.py) (`uv run bench/plot.py`).
 
+## Standard benchmark (`vllm bench serve`)
+
+[vLLM][vllm]'s serving benchmark v0.30.0 on [ShareGPT V3][sharegpt] and [Spec-Bench][spec-bench], a harness and datasets that third-party serving results also use, run against the served configuration through [`bench/vllm_bench_tabby.py`][vllm-bench-tabby] ([R731b][r731b], 2026-09-25 21:25 to 22:54 UTC, results `2026-09-25-r731b-std-bench-stock`, driver [`scripts/r731-std-bench.sh`](scripts/r731-std-bench.sh)). Output tok/s is a wall-clock figure: all completion tokens over the time from the first request's start to the last completion, closed loop at `c` concurrent requests, including prefill, time to the first token and the turnover between requests. It is therefore lower than the decode aggregate in [Numbers](#numbers), which sums steady-state decode rates with no prefill in the window. The headline metrics of this repository are the per-stream decode rate and the decode aggregate; output tok/s is a secondary metric, and a per-stream rate multiplied by the stream count is not called an aggregate.
+
+Conditions: `tabbyapi:stack-r3-rows32` on the served launcher, power limits at the stock 600 / 575 W, core clock offset 0, memory offset +4500, NVMe tier off. Every cell ran on a fresh boot (0 cached prompt tokens over 7,040 requests), and the matrix ran twice, passes A and B; cells are the mean of the two, and the p99 columns give both passes as a range where they differ. Every concurrency sends the same sample: ShareGPT 400 conversations drawn with seed 7310, Spec-Bench all 480 questions of its 13 categories. Inputs are short: mean 272 / 322 tokens, maximum 1,070 / 1,540 (ShareGPT / Spec-Bench). Requests are greedy with thinking on, and `min_tokens` forces each output to the ShareGPT reference reply's length (mean 210 tokens) or to 256 tokens, so the outputs are truncated reasoning, not answers.
+
+**ShareGPT V3**
+
+| streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 221.3 | 0.11 % | 1.05 | 139 / 338–346 | 3.42 / 4.64–4.71 | 292 | 0.64 | 2.64 |
+| 2 | 304.7 | 0.18 % | 1.45 | 197 / 479–500 | 4.82 / 8.83–8.86 | 208 | 0.90 | 2.63 |
+| 4 | 398.5 | 0.06 % | 1.90 | 284 / 684–714 | 7.53 / 20.4–22.8 | 133 | 1.35 | 2.65 |
+| 8 | 471.2 | 0.01 % | 2.25 | 389 / 1,333–1,368 | 14.03 / 23.4–25.4 | 71 | 2.24 | 2.30 |
+
+**Spec-Bench**
+
+| streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 244.2 | 0.16 % | 0.95 | 133 / 412–417 | 3.37 / 4.30 | 296 | 1.04 | 2.87 |
+| 2 | 341.9 | 0.09 % | 1.34 | 186 / 594–622 | 4.80 / 6.54–6.57 | 208 | 1.48 | 2.87 |
+| 4 | 446.3 | 0.12 % | 1.74 | 266 / 676–719 | 7.58 / 10.55–10.59 | 132 | 2.27 | 2.87 |
+| 8 | 525.4 | 0.10 % | 2.05 | 380 / 983–1,017 | 13.45 / 16.96–17.05 | 74 | 3.86 | 2.43 |
+
+At 8 streams the wall-clock figure and the `fn_bench` decode aggregate differ mainly by prefill interleaved with decode (R731, 2026-09-25, results `2026-09-25-r731-std-bench`: the same samples with both cards limited to 400 W, and R731b at stock differs from it by −0.72 to +0.87 % per cell). ShareGPT / Spec-Bench: 471 / 529 tok/s wall clock; 541 / 596 counting only each request's time after its first token; 786 / 803 after also removing the frames longer than twice the median inter-token latency, which are the steps that run other requests' prefill chunks and hold 35 / 31 % of decode time. That is 98.2 / 100.4 tok/s per stream, against `fn_bench`'s 105.8 / 106.9 per stream and 845 / 853 decode aggregate (code / prose, [R719b][r719b]); the remainder is a longer decode step, not τ ([R731b][r731b]).
+
+- TTFT is the client-side time to the first streamed token, which with thinking on is the first reasoning token.
+- TPOT is (E2E − TTFT) / (output tokens − 1) per request and includes the time a request waits while other requests' prefills run. Per-stream tok/s is 1000 / TPOT p50, derived from it, and is not comparable to the `fn_bench` per-stream decode rate.
+- τ is tokens per verify step from the server log, Σ generated / (Σ generated − Σ accepted drafts); it counts the prefill step, which puts it about 1 % low. It falls at 8 streams because the draft policy drafts two tokens above 4 streams. Spec-Bench τ is not comparable to acceptance figures published with Spec-Bench.
+- The A/B spread is replication within one session. The same samples in another session (R731) differed by up to 0.9 % per cell, so each cell reads as ±1 %. ShareGPT's TPOT p99 at 4 streams moves between sessions (13.6 to 19.4 ms in R731).
+- In ShareGPT, exllamav3's loop detector ended one request per cell before its forced length, removing at most 0.36 % of the tokens.
+- vLLM's `max_concurrent_requests` and `max_output_tokens_per_s` result fields are not used: the first counts requests that touch a one-second bucket, the second counts streamed frames per second.
+
 ## Reproducing a boot
 
 ```sh
@@ -170,6 +204,7 @@ Rebuilding the image chain, running the measurements and handing the box back ar
 | [`bench/needle.py`][needle], [`bench/capabilities.py`][capabilities] | long-context retrieval at five planted positions; JSON schema, tool parsing, vision and reasoning checks |
 | [`bench/nostop_proxy.py`][nostop] | drops the request's `stop` field so lm-eval's stop strings cannot cut reasoning |
 | [`bench/agent_replay.py`][agent-replay], [`bench/revisit.py`][revisit] | recorded agent conversations replayed at concurrency; revisits of evicted long sessions |
+| [`bench/vllm_bench_tabby.py`][vllm-bench-tabby], [`bench/std_bench_summary.py`][std-bench-summary] | `vllm bench serve` v0.30.0 adapted to TabbyAPI (usage frame, CRLF events, `min_tokens`, Spec-Bench templated once); the tables and checks of a standard-benchmark run |
 | [`docs/CONFIG.md`][config] | every setting and flag, and why it has that value |
 | [`docs/HISTORY.md`][history] | how the served configuration changed, with the result behind each step |
 | [`docs/PROMOTION.md`][promotion] | the gates a candidate passes before it is served |
@@ -192,7 +227,7 @@ Upstream pull requests measured here: [exllamav3#246][pr246] · [#284][pr284] ·
 
 Other setups of this model: [vcruz305 DGX Spark recipe][vcruz-recipe] · [vcruz305/vllm-exl3][vllm-exl3] · [DominikBucko, 2× RTX 3090][bucko] · [HaberstrohSystems, 24 GB SGLang][haberstroh]
 
-Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-swe] · [SWE-bench][swebench] · [lm-evaluation-harness][lm-eval] · [halogen][halogen]
+Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-swe] · [SWE-bench][swebench] · [lm-evaluation-harness][lm-eval] · [halogen][halogen] · [vLLM][vllm] (`vllm bench serve`) · [ShareGPT V3][sharegpt] · [Spec-Bench][spec-bench]
 
 [qwen-hf]: https://huggingface.co/Qwen/Qwen3.8-Flash-Next
 [ckpt-250]: https://huggingface.co/r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw
@@ -211,6 +246,9 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [mini-swe]: https://github.com/SWE-agent/mini-swe-agent
 [swebench]: https://github.com/SWE-bench/SWE-bench
 [lm-eval]: https://github.com/EleutherAI/lm-evaluation-harness
+[vllm]: https://github.com/vllm-project/vllm
+[sharegpt]: https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered
+[spec-bench]: https://github.com/hemingkx/Spec-Bench
 [pr246]: https://github.com/turboderp-org/exllamav3/pull/246
 [pr284]: https://github.com/turboderp-org/exllamav3/pull/284
 [pr290]: https://github.com/turboderp-org/exllamav3/pull/290
@@ -236,6 +274,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [nostop]: bench/nostop_proxy.py
 [agent-replay]: bench/agent_replay.py
 [revisit]: bench/revisit.py
+[vllm-bench-tabby]: bench/vllm_bench_tabby.py
+[std-bench-summary]: bench/std_bench_summary.py
 [config]: docs/CONFIG.md
 [config-memory]: docs/CONFIG.md#memory
 [history]: docs/HISTORY.md
@@ -332,6 +372,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r704]: bench/results/r704-decode-curve.md
 [r719]: bench/results/r719-decode-curve.md
 [r719b]: bench/results/r719b-decode-curve.md
+[r731b]: bench/results/r731b-std-bench.md
 [r726]: bench/results/r726-memoc.md
 [r728]: bench/results/r728-promote-window-off.md
 [r587]: bench/results/r587-tabby-metrics.md
