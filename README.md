@@ -152,6 +152,10 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 
 Conditions: `tabbyapi:stack-r3-rows32` on the served launcher, power limits at the stock 600 / 575 W, core clock offset 0, memory offset +4500, NVMe tier off. Every cell ran on a fresh boot (0 cached prompt tokens over 7,040 requests), and the matrix ran twice, passes A and B; cells are the mean of the two, and the p99 columns give both passes as a range where they differ. Every concurrency sends the same sample: ShareGPT 400 conversations drawn with seed 7310, Spec-Bench all 480 questions of its 13 categories. Inputs are short: mean 272 / 322 tokens, maximum 1,070 / 1,540 (ShareGPT / Spec-Bench). Requests are greedy with thinking on, and `min_tokens` forces each output to the ShareGPT reference reply's length (mean 210 tokens) or to 256 tokens, so the outputs are truncated reasoning, not answers.
 
+![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
+
+Per stream, the standard benchmark matches decode alone at 1 and 2 streams (ShareGPT / Spec-Bench 292 / 296 and 208 / 208 t/s against code 298 and 208) and falls below it from 4 streams (133 / 132 against 158; 71 / 74 against 106 at 8), where requests arrive while others decode and their prefill chunks take steps from the running streams. The aggregate gap also includes each request's time to the first token and the turnover between requests, which weigh more here than in the decode curve because outputs are ~210-256 tokens instead of 1,024. Both panels come from `bench/plot.py`, which reads the published raw records of [R719b][r719b] and [R731b][r731b].
+
 **ShareGPT V3**
 
 | streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |

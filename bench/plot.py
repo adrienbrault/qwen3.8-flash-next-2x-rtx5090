@@ -243,8 +243,70 @@ def figure_prefill():
     save(fig, "prefill.svg", "Cold prefill rate and decode rate at depth against prompt length")
 
 
+R731B = RESULTS / "2026-09-25-r731b-std-bench-stock" / "results"
+SHAREGPT, SPECBENCH = "#1a7f37", "#9a6700"
+
+
+def std_bench():
+    """R731b's cells, per (dataset, conc), as the mean of passes A and B: output tok/s is `vllm bench serve`'s
+    output_throughput (all completion tokens over the run's wall time, prefill and request turnover included);
+    per-stream is 1000 / TPOT p50, TPOT = (latency - TTFT) / (output tokens - 1) per request, which includes the time
+    a request waits while other requests' prefill chunks run. Both as in bench/std_bench_summary.py."""
+    cells = collections.defaultdict(list)
+    for f in sorted(R731B.glob("[AB]-*-c*.json")):
+        d = json.load(open(f))
+        tpot = [(lat - ttft) / (n - 1) for lat, ttft, n in zip(d["latencies"], d["ttfts"], d["output_lens"]) if n > 1]
+        cells[(d["dataset"], int(d["conc"]))].append((d["output_throughput"], 1.0 / st.median(tpot)))
+    return {k: (st.mean(o for o, _ in v), st.mean(p for _, p in v)) for k, v in cells.items()}
+
+
+def figure_std_bench():
+    """The decode curve (R719b: steady-state decode after the first token, all streams starting together, no prefill
+    in the window) against the standard benchmark (R731b: closed loop, requests arriving as others finish, so their
+    prefill chunks interleave with the running streams' decode). The two also differ in output length (1,024 forced
+    tokens against ~210-256), which puts more of each request's life in TTFT and turnover in the standard benchmark."""
+    fn = decode_rates(R719B, "NEW")
+    fn_conc = [c for c in range(1, 9) if f"c{c}-code" in fn]
+    sb = std_bench()
+    datasets = (("sharegpt", "ShareGPT V3", SHAREGPT), ("specbench", "Spec-Bench", SPECBENCH))
+    sb_conc = sorted({c for (_, c) in sb})
+
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.4))
+    for a, idx, fn_key, title in ((ax, 0, "decode_agg", "Aggregate over streams"), (ax2, 1, "per_stream", "Per stream")):
+        for kind, color in (("code", CODE), ("prose", PROSE)):
+            ys = [fn[f"c{c}-{kind}"][fn_key] for c in fn_conc]
+            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (R719b)")
+            if kind == "code":
+                annotate(a, fn_conc, ys, color, dy=7)
+        for key, name, color in datasets:
+            ys = [sb[(key, c)][idx] for c in sb_conc]
+            a.plot(sb_conc, ys, marker="s", markersize=4, color=color, linewidth=2, linestyle="--",
+                   label=f"{name}, prefill interleaved (R731b)")
+            # Labels only where the dashed lines have left the solid ones (the values are in the README tables):
+            # at 1 stream on the aggregate and up to 2 streams per stream, the four series print on top of each other.
+            first = 2 if a is ax else 4
+            annotate(a, sb_conc, [y if c >= first else None for c, y in zip(sb_conc, ys)], color,
+                     dy=-14 if key == "sharegpt" else 7)
+        a.set_title(title)
+        a.set_xlabel("concurrent streams")
+        a.set_ylim(0, max(fn[f"c{c}-{k}"][fn_key] for c in fn_conc for k in ("code", "prose")) * 1.2)
+        a.set_xticks(fn_conc)
+        a.grid(axis="y", color="#eaeef2")
+        a.set_axisbelow(True)
+        a.legend(frameon=False, fontsize=8, loc="lower right" if a is ax else "upper right")
+    ax.set_ylabel("tokens per second, sum over streams\n(standard benchmark: output tok/s, wall clock)")
+    ax2.set_ylabel("tokens per second, one stream\n(standard benchmark: 1000 / TPOT p50)")
+    fig.suptitle("Decode alone against the standard benchmark, served configuration", fontsize=11, fontweight="bold")
+    print(f"standard benchmark (R731b, passes A/B mean) at {sb_conc}")
+    for key, name, _ in datasets:
+        print(f"  {name:11}  output tok/s {[round(sb[(key, c)][0], 1) for c in sb_conc]}"
+              f"   per-stream {[round(sb[(key, c)][1]) for c in sb_conc]}")
+    save(fig, "std-bench.svg", "Decode alone against the standard benchmark, sum over streams and per stream")
+
+
 if __name__ == "__main__":
     figure_decode_scaling()
+    figure_std_bench()
     print_r719()
     print_r704()
     figure_prefill()
