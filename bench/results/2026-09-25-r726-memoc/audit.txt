@@ -1,0 +1,30 @@
+2026-09-25T01:43:07+00:00 [r726-memoc] queued behind: (unit not published)
+r722-window-agent-replay(pid 484467)
+r723-window-off-fit(pid 999902)
+2026-09-25T02:22:31+00:00 [r726-memoc] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; offsets at entry: [0, 0]; image tabbyapi:stack-r3-rows32; ladder 0 4500 5000 5500 6000
+2026-09-25T02:22:45+00:00 [r726-memoc] rung +0: cuda:0 1531.5 GB/s, cuda:1 1528.0 GB/s, exact copies 2/2, new Xid 0 | host_memclk_max=14001 host_memclk_max=14001
+2026-09-25T02:22:57+00:00 [r726-memoc] rung +4500: cuda:0 1750.8 GB/s, cuda:1 1752.4 GB/s, exact copies 2/2, new Xid 0 | host_memclk_max=16251 host_memclk_max=16251
+2026-09-25T02:23:09+00:00 [r726-memoc] rung +5000: cuda:0 1744.4 GB/s, cuda:1 1775.8 GB/s, exact copies 2/2, new Xid 0 | host_memclk_max=16501 host_memclk_max=16501
+2026-09-25T02:23:09+00:00 [r726-memoc] STOP: bandwidth stopped rising at +5000 (knee)
+2026-09-25T02:23:09+00:00 [r726-memoc] LADDER BEST +4500
+2026-09-25T02:23:26+00:00 [r726-memoc] booted: cache 983040; VRAM free MiB 1125/2513/
+2026-09-25T02:24:54+00:00 [r726-memoc] [O0] offset +0 done; memclk now 13801 13801; new Xid 0; engine qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T02:26:09+00:00 [r726-memoc] [O45] offset +4500 done; memclk now 16051 16051; new Xid 0; engine qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T02:27:25+00:00 [r726-memoc] [O0b] offset +0 done; memclk now 13801 13801; new Xid 0; engine qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T02:28:39+00:00 [r726-memoc] [O45b] offset +4500 done; memclk now 16051 16051; new Xid 0; engine qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+  [greedy] GREEDY O0b vs O0: 6 identical, IDENTICAL
+  [greedy] GREEDY O45 vs O0: 6 identical, IDENTICAL
+  [greedy] GREEDY O45b vs O0: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=O0 divergences=0
+code c1: per-stream O0 272.3 O45 277.7 O0b 272.4 O45b 276.6 -> +4500 gain 1.018
+code c4: per-stream O0 161.5 O45 162.2 O0b 163.7 O45b 167.6 -> +4500 gain 1.014
+code c8: per-stream O0 102.9 O45 107.1 O0b 106.6 O45b 107.2 -> +4500 gain 1.023
+prose c1: per-stream O0 272.2 O45 276.8 O0b 271.9 O45b 276.5 -> +4500 gain 1.017
+prose c4: per-stream O0 155.2 O45 158.2 O0b 157.7 O45b 158.8 -> +4500 gain 1.013
+prose c8: per-stream O0 105.3 O45 106.9 O0b 103.3 O45b 107.0 -> +4500 gain 1.025
+greedy divergences vs O0: {'O0b': 0, 'O45': 0, 'O45b': 0}; new Xid 0
+DECISION: KEEP-4500 (worst +4500 gain 1.013)
+2026-09-25T02:28:39+00:00 [r726-memoc] leaving +4500: readback 4500 4500
+2026-09-25T02:28:39+00:00 [sctl] GPU queue continues ((unit not published)
+(unit not published)); leaving the GPUs to the next unit
+2026-09-25T02:28:39+00:00 [r726-memoc] === r726 DONE ===

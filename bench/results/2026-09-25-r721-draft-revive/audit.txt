@@ -1,0 +1,20 @@
+2026-09-25T00:53:57+00:00 [r721-draft-revive] W env 42 keys; N env 41 keys; salt 424242 fresh 515151; N pools 950272 917504 884736; order W1 N1 N2 W2
+2026-09-25T00:53:57+00:00 [r721-draft-revive] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T00:54:12+00:00 [r721-draft-revive] [W1] booted; 44 EXL3 keys; window 1; cache 983040; VRAM free MiB 1125/2513/
+2026-09-25T00:56:12+00:00 [r721-draft-revive] [W1] done; OOM 0; tracebacks 0; free after 371 1735 MiB; 104 request lines
+2026-09-25T00:56:28+00:00 [r721-draft-revive] [N1] booted; 43 EXL3 keys; window 0; cache 950272; VRAM free MiB 1305/1813/
+2026-09-25T00:56:28+00:00 [r721-draft-revive] [N1] pool 950272
+2026-09-25T00:58:23+00:00 [r721-draft-revive] [N1] done; OOM 0; tracebacks 0; free after 553 1075 MiB; 104 request lines
+2026-09-25T00:58:38+00:00 [r721-draft-revive] [N2] booted; 43 EXL3 keys; window 0; cache 950272; VRAM free MiB 1305/1813/
+2026-09-25T00:58:38+00:00 [r721-draft-revive] [N2] pool 950272
+2026-09-25T01:00:33+00:00 [r721-draft-revive] [N2] done; OOM 0; tracebacks 0; free after 551 1033 MiB; 104 request lines
+2026-09-25T01:00:49+00:00 [r721-draft-revive] [W2] booted; 44 EXL3 keys; window 1; cache 983040; VRAM free MiB 1125/2513/
+2026-09-25T01:02:49+00:00 [r721-draft-revive] [W2] done; OOM 0; tracebacks 0; free after 371 1735 MiB; 104 request lines
+BOOT W1: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.719 (n=16) c8fresh 0.911 (n=16) gap 0.790 | per-stream T/s c4 184.8 c6 135.5 c8 111.4 c8fresh 128.9
+BOOT N1: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.878 (n=16) c8fresh 0.909 (n=16) gap 0.965 | per-stream T/s c4 186.3 c6 144.2 c8 124.9 c8fresh 130.3
+BOOT N2: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.877 (n=16) c8fresh 0.910 (n=16) gap 0.964 | per-stream T/s c4 190.0 c6 142.6 c8 125.4 c8fresh 131.5
+BOOT W2: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.717 (n=16) c8fresh 0.911 (n=16) gap 0.787 | per-stream T/s c4 186.8 c6 136.5 c8 111.0 c8fresh 129.2
+DECISION: WINDOW (W gaps [0.7898394537618345, 0.7874049810885824], N gaps [0.9653744310006369, 0.9639885659822812]): the draft window's revive path loses acceptance
+2026-09-25T01:02:49+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-25T01:03:06+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T01:03:06+00:00 [r721-draft-revive] === r721 DONE ===

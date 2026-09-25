@@ -32,7 +32,7 @@ Both boots pooled (6 rounds per shape):
 | 7 | 110.8 | 771 | 710 | 0.76 s | 112.6 | 783 | 722 | 0.66 s |
 | 8 | 103.4 | 822 | 752 | 0.76 s | 103.6 | 831 | 759 | 0.71 s |
 
-All rates are tokens per second. The README's decode figure ([`docs/img/decode-scaling.svg`](../../docs/img/decode-scaling.svg)) draws the two decode columns of this table.
+All rates are tokens per second. The README's decode figure ([`docs/img/decode-scaling.svg`](../../docs/img/decode-scaling.svg)) drew the two decode columns of this table from 2026-09-25 until [R719b](r719b-decode-curve.md) replaced it the same day, after the draft-KV window was turned off ([R728](r728-promote-window-off.md)). Both cards ran at the stock memory clock during this round; the +4500 offset had reset to 0 ([R726](r726-memoc.md)).
 
 The decode aggregate rises at every step from 1 to 8 streams, 2.82 times on code and 3.05 times on prose. From 5 to 6 streams it rises by 5.4 % on code (671 to 708) and 5.5 % on prose (679 to 716); the draft policy keeps two draft tokens from 5 to 8 streams. The per-stream rate falls by 12.5 % (code) and 13.4 % (prose) from 4 to 5 streams, where the policy drops from three draft tokens to two, by 11.7 % on both kinds from 5 to 6 streams, and by a further 12.7 % and 13.6 % from 6 to 8 streams. Code decodes 6.4 % faster than prose at 1 stream and within 0.3 % of it at 8 streams.
 

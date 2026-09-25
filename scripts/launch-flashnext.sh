@@ -184,6 +184,15 @@ DRAFT=${DRAFT:-3}
 #   +2.3 / +5.6 %, 32k +4.0 / +0.4 %; c1-c5 unchanged (R717). Free at boot 1125 / 2513 MiB (stack-r3 at 999,424: 1033 / 2421).
 #   ROLLBACK: IMG=tabbyapi:stack-r3 CACHE=999424 DRAFT_POLICY='[[4, 3], [5, 2], [8, 1]]' and EXTRA_ENV = stack-r3's 39 keys
 #   (MAP 2-4:2, without the three ROWS32 keys).
+# R728 (2026-09-25): the MTP draft-KV window is OFF (EXL3_MTP_KV_WINDOW=16384 dropped from EXTRA_ENV below); image,
+#   the other keys, policy and pool 983,040 unchanged. The draft K/V returns to the page-indexed draft cache, which revives
+#   with the prefix. R721: under the window a prompt revived from the prompt cache in a later request group drafts 0.655
+#   accepted/proposed vs 0.868 without it (fresh 0.911 in both); c8 4k code per-stream +12.5 %. R722 (agent-shaped replay,
+#   2 pairs): +2.0 % per-stream decode. R723 (fit at 983,040): cuda:0 identical (1,125 MiB free at boot, 229 after the heavy
+#   sequence), layout byte-identical, fn_greedy 6/6 identical, 0 errors; ramp c7/c8 per-stream +16-19 %. Cost: cuda:1
+#   -940 MiB (the draft cache grows from 133,120 to 983,040 tokens, ~1.13 KiB/token; free 1,573 at boot, 763 after).
+#   Promotion gates: scripts/r728-promote-window-off.sh.
+#   ROLLBACK: add EXL3_MTP_KV_WINDOW=16384 back to EXTRA_ENV (rows32 with the window, 983,040).
 DAILY_IMG=tabbyapi:stack-r3-rows32
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
@@ -288,7 +297,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_MTP_KV_WINDOW=16384 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
@@ -508,6 +517,14 @@ if [ "${busy:-1}" != 0 ]; then
   used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | tr '\n' '/')
   [ "${ALLOW_BUSY:-0}" = 1 ] && log "ALLOW_BUSY=1: booting over occupied GPUs (${used} MiB used)" \
     || { log "ABORT: GPUs still busy after 120s (${used} MiB used) — refusing to boot over another unit. ALLOW_BUSY=1 overrides."; exit 3; }
+fi
+# R726 (2026-09-25): the +4500 memory offset that gpu-tune.service applies once at host boot had silently reset to 0
+# (between 2026-09-03 and 09-19, no reboot, cause not determined), so every Flash-Next number from then to R726 ran at
+# stock memory clock. Re-apply it on every daily boot and log the readback. MEMOC= skips it.
+MEMOC=${MEMOC-4500}
+if [ -n "$MEMOC" ]; then
+  moc=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetMemClkVfOffset(h, $MEMOC) for h in hs]; print(*[N.nvmlDeviceGetMemClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
+  log "memory clock offset: set +$MEMOC on every GPU, readback $moc"
 fi
 log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], draft_mode $DRAFT_MODE, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
 # Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are

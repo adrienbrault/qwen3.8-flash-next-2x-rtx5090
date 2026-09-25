@@ -1,0 +1,24 @@
+2026-09-25T07:59:38+00:00 [r719] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T07:59:56+00:00 [r719] [NEW1] booted tabbyapi:stack-r3-rows32; stack flags 2; free 1125 1573 
+2026-09-25T08:08:02+00:00 [r719] [NEW1] done; OOM 0; free after 1019 1465 
+2026-09-25T08:08:18+00:00 [r719] [NEW2] booted tabbyapi:stack-r3-rows32; stack flags 2; free 1125 1573 
+2026-09-25T08:16:23+00:00 [r719] [NEW2] done; OOM 0; free after 1019 1465 
+code c1: decode/stream 298.4 | decode aggregate 298 (boots 299 / 297) | round-wall aggregate 287 | TTFT 0.14s
+code c2: decode/stream 207.6 | decode aggregate 415 (boots 418 / 412) | round-wall aggregate 396 | TTFT 0.24s
+code c3: decode/stream 182.2 | decode aggregate 541 (boots 542 / 539) | round-wall aggregate 495 | TTFT 0.35s
+code c4: decode/stream 157.8 | decode aggregate 632 (boots 633 / 631) | round-wall aggregate 583 | TTFT 0.46s
+code c5: decode/stream 137.7 | decode aggregate 691 (boots 691 / 692) | round-wall aggregate 635 | TTFT 0.56s
+code c6: decode/stream 121.2 | decode aggregate 727 (boots 730 / 724) | round-wall aggregate 671 | TTFT 0.62s
+code c7: decode/stream 112.7 | decode aggregate 784 (boots 787 / 781) | round-wall aggregate 724 | TTFT 0.69s
+code c8: decode/stream 105.8 | decode aggregate 845 (boots 845 / 844) | round-wall aggregate 772 | TTFT 0.75s
+prose c1: decode/stream 278.6 | decode aggregate 279 (boots 279 / 278) | round-wall aggregate 269 | TTFT 0.13s
+prose c2: decode/stream 204.7 | decode aggregate 412 (boots 411 / 412) | round-wall aggregate 384 | TTFT 0.23s
+prose c3: decode/stream 181.0 | decode aggregate 542 (boots 539 / 544) | round-wall aggregate 509 | TTFT 0.33s
+prose c4: decode/stream 159.9 | decode aggregate 643 (boots 638 / 648) | round-wall aggregate 591 | TTFT 0.43s
+prose c5: decode/stream 138.8 | decode aggregate 694 (boots 691 / 698) | round-wall aggregate 641 | TTFT 0.54s
+prose c6: decode/stream 122.6 | decode aggregate 735 (boots 735 / 736) | round-wall aggregate 679 | TTFT 0.62s
+prose c7: decode/stream 113.3 | decode aggregate 792 (boots 795 / 789) | round-wall aggregate 732 | TTFT 0.66s
+prose c8: decode/stream 106.9 | decode aggregate 853 (boots 856 / 851) | round-wall aggregate 777 | TTFT 0.70s
+2026-09-25T08:16:23+00:00 [sctl] restoring the daily via /srv/qwen5090/launch-flashnext.sh
+2026-09-25T08:16:39+00:00 [sctl] daily: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T08:16:39+00:00 [r719] === R719 DONE ===

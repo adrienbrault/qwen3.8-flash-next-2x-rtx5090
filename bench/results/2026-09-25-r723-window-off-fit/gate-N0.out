@@ -1,0 +1,14 @@
+2026-09-25T02:18:05+00:00 [gate] serving: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab | image: tabbyapi:stack-r3-rows32 | tokens 1024 x1 salt 6801
+env keys (41)
+2026-09-25T02:18:05+00:00 [gate] leg A: fn_bench --kind prose --ctx 4000 --conc 1 4 8 --runs 1
+2026-09-25T02:18:51+00:00 [gate] leg A: 13 rows
+2026-09-25T02:18:51+00:00 [gate] leg B: fn_bench --kind prose --ctx 26000 --conc 4 --runs 1
+2026-09-25T02:19:16+00:00 [gate] leg B: 4 rows
+
+=== GATE TABLE (medians over per-request rows; steady-state decode) ===
+ leg conc   n  prompt  tokens  decode    wall   ttft    acc  it_ms  finishes
+   A    1   1    3155    1024   398.9   379.9   0.13   3.86   9.71  {'length': 1}
+   A    4   4    3155    1024   154.6   146.4   0.36   2.60  16.84  {'length': 4}
+   A    8   8    3155    1024   105.2    99.9   0.48   2.28  21.76  {'length': 8}
+   B    4   4   19700    1024   151.9   139.1   0.63   2.66  17.56  {'length': 4}
+2026-09-25T02:19:16+00:00 [gate] === GATE DONE ===

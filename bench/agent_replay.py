@@ -144,6 +144,8 @@ def session(sid, a, rng, sink, lock, stop, inst=0):
                "sse_frames": frames, "prompt_chars": len(convo)}
         with lock:
             sink.write(json.dumps(rec) + "\n"); sink.flush()
+            if ok:
+                a.done_steps[sid] = a.done_steps.get(sid, 0) + 1
         if not ok:
             print(f"[s{sid}#{inst} step{step}] {text[:120]}", flush=True)
             return
@@ -194,6 +196,16 @@ def main():
                         "--spread and makes the prompt distribution identical in every arm. The default in "
                         "LADDER_PROD matches production's median and p90 to better than 0.1 %%.")
     p.add_argument("--prod-ladder", action="store_true", help="use the solved production ladder")
+    p.add_argument("--max-fail-streak", type=int, default=3,
+                   help="consecutive no-progress sessions on one slot before the whole run aborts. Guards "
+                        "against respawning into a dead server, which cost R600 an arm and 14,245 requests.")
+    p.add_argument("--drain", action="store_true",
+                   help="at --max-seconds, stop STARTING sessions and let in-flight ones finish, instead of "
+                        "cutting them. Without it the last instance of every slot is truncated by definition, "
+                        "which removes exactly the deep-session tail the ladder was solved for: R599 lost 10 of "
+                        "32 instances that way and its realized p90 landed 7 %% under the designed 64,560.")
+    p.add_argument("--drain-grace", type=float, default=420,
+                   help="hard cap on the drain, so a stuck session cannot hold the GPU past the round")
     p.add_argument("--respawn", action="store_true",
                    help="restart a session slot when it finishes, so concurrency does not decay as "
                         "the shallow ladder entries retire")
@@ -221,7 +233,9 @@ def main():
             f"{a.sessions} sessions x {a.steps} steps, base {a.base}, {a.dist} spread {a.spread}"
     print(f"agent_replay: {shape}, gen ~{a.gen}, tool {a.tool}, think ~{a.think}s, stagger {a.stagger}s, "
           f"temp {a.temp}, seed {seed}, content nonce {nonce}", flush=True)
-    sink = open(a.out, "a"); lock = threading.Lock(); stop = threading.Event()
+    sink = open(a.out, "a"); lock = threading.Lock(); stop = threading.Event(); abort = threading.Event()
+    done_steps = {}
+    a.done_steps = done_steps   # session() books completed steps here so worker() can tell progress from failure
     t0 = time.time(); deadline = t0 + a.max_seconds
 
     # A worker owns one ladder slot and RESTARTS it when it finishes. Without this the round decays: the solved
@@ -229,13 +243,38 @@ def main():
     # and the expensive tail prompts -- the whole object of study -- would arrive beside two streams instead of
     # production's four. Restarting keeps mean concurrency flat AND keeps the distribution exactly the ladder's,
     # because a restart replays the same slot.
+    # A FAILED SESSION MUST NOT BE RESPAWNED INSTANTLY. R600 learned this the expensive way: the server OOM'd
+    # in CUDA graph capture 15 minutes into an arm, every subsequent request returned "connection reset", each
+    # session therefore returned immediately, and this loop started a new instance each time -- 14,245 instances
+    # and 14,216 errors against 398 real steps, hammering a dead server for eight minutes while the round
+    # believed it was measuring. The GPU is the scarcest resource here; a harness that cannot tell "finished"
+    # from "the server is gone" wastes it at full speed.
+    fail_streak = {}
     def worker(sid):
         for inst in itertools.count():
             if stop.is_set() or time.time() > deadline:
                 return
+            t_inst = time.time()
+            before = done_steps.get(sid, 0)
             session(sid, a, random.Random(seed + sid * 7919 + inst * 104729 + nonce), sink, lock, stop, inst)
             if not a.respawn:
                 return
+            # "Completed no step at all" is the signature of a dead server, not of a short session: every ladder
+            # entry has at least three steps.
+            progressed = done_steps.get(sid, 0) > before
+            fail_streak[sid] = 0 if progressed else fail_streak.get(sid, 0) + 1
+            if fail_streak[sid] >= a.max_fail_streak:
+                print(f"[s{sid}] {fail_streak[sid]} consecutive sessions made no progress -- stopping the run",
+                      flush=True)
+                abort.set(); stop.set()
+                return
+            if not progressed:
+                # back off rather than spin, so a transient blip costs seconds instead of thousands of requests
+                if stop.wait(min(30.0, 2.0 * fail_streak[sid])):
+                    return
+            elif time.time() - t_inst < 1.0:
+                if stop.wait(1.0):
+                    return
 
     threads = []
     for s in range(a.sessions):
@@ -245,15 +284,34 @@ def main():
             break
     while any(t.is_alive() for t in threads):
         if time.time() > deadline:
-            print("max-seconds reached, stopping sessions", flush=True)
-            stop.set(); break
+            if a.drain:
+                # The deadline stops NEW sessions -- the worker loop already checks it before starting the next
+                # instance -- and the in-flight ones are left to finish. Cutting them is what truncated a third
+                # of R599's instances and pulled the realized p90 below the ladder's designed value, and the
+                # loss is not random: it is always the deep slots, which are the only source of the tail.
+                print(f"max-seconds reached, draining in-flight sessions (grace {a.drain_grace:.0f}s)", flush=True)
+                hard = time.time() + a.drain_grace
+                while any(t.is_alive() for t in threads) and time.time() < hard:
+                    time.sleep(1)
+                if any(t.is_alive() for t in threads):
+                    print("drain grace expired, cutting what is left", flush=True)
+                    stop.set()
+            else:
+                print("max-seconds reached, stopping sessions", flush=True)
+                stop.set()
+            break
         time.sleep(1)
     for t in threads:
         t.join(timeout=120)
     stop.set()
     print(f"agent_replay: {time.time()-t0:.0f} s wall. Score this with probes/tabby_log_agg.py over the "
           f"container log for this window -- not from this file.", flush=True)
+    if abort.is_set():
+        print("agent_replay: ABORTED -- the server stopped answering; this arm did not measure anything",
+              flush=True)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

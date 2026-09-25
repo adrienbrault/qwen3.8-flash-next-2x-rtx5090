@@ -1,0 +1,76 @@
+2026-09-25T03:04:15+00:00 [r728-promote-window-off] start: live md5 1c20145fc19ca8c9267ce66369d62c80 (42 keys), candidate md5 36e2da97; nonce 5455; replay bar 120.3
+2026-09-25T03:04:15+00:00 [r728-promote-window-off] queued behind: (unit not published)
+(unit not published)
+(unit not published)
+2026-09-25T03:28:41+00:00 [r728-promote-window-off] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T03:29:01+00:00 [r728-promote-window-off] [REF] UP: image tabbyapi:stack-r3-rows32; env keys (42); window 1; tier 0; cache 983040; policy '[[4, 3], [8, 2]]'; memory clock offset: set +4500 on every GPU, readback 4500 4500; VRAM free MiB 1125/2513
+2026-09-25T03:29:14+00:00 [r728-promote-window-off] [ref] greedy: 6 records, 0 errors
+2026-09-25T03:29:38+00:00 [r728-promote-window-off] [REF] ramp c1..c8: 36/36 ok, alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 301 1735 
+2026-09-25T03:29:51+00:00 [r728-promote-window-off] [REF] stress c4 @26k: 4/4 ok (want 4), alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 261 1733 
+2026-09-25T03:30:14+00:00 [r728-promote-window-off] [REF] stress c8 @26k: 8/8 ok (want 8), alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 261 1729 
+  [REF gate]    A    1   2    3100    1024   392.7   382.6   0.07   3.74   9.54  {'length': 2}
+  [REF gate]    A    4   8    3100    1024   223.2   208.1   0.33   3.74  16.77  {'length': 8}
+  [REF gate]    A    8  16    3099    1024   112.5   106.6   0.50   2.27  20.74  {'length': 16}
+  [REF gate]    B    4   8   19638    1024   163.8   150.7   0.56   2.79  17.00  {'length': 8}
+2026-09-25T03:31:43+00:00 [r728-promote-window-off] [REF] sequence done: FREE-AFTER 245 1677 MiB; gate rows A 26 26 B 8 8 (ok total); OOM 0; TORCH_CHECK 0; tracebacks 0; alive yes
+2026-09-25T03:31:59+00:00 [r728-promote-window-off] [CAND] UP: image tabbyapi:stack-r3-rows32; env keys (41); window 0; tier 0; cache 983040; policy '[[4, 3], [8, 2]]'; memory clock offset: set +4500 on every GPU, readback 4500 4500; VRAM free MiB 1125/1573
+2026-09-25T03:32:12+00:00 [r728-promote-window-off] [CAND] greedy: 6 records, 0 errors
+2026-09-25T03:32:35+00:00 [r728-promote-window-off] [CAND] ramp c1..c8: 36/36 ok, alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 303 817 
+2026-09-25T03:32:47+00:00 [r728-promote-window-off] [CAND] stress c4 @26k: 4/4 ok (want 4), alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 263 815 
+2026-09-25T03:33:11+00:00 [r728-promote-window-off] [CAND] stress c8 @26k: 8/8 ok (want 8), alive, OOM 0; TORCH_CHECK 0; tracebacks 0, free 263 813 
+  [CAND gate]    A    1   2    3100    1024   383.2   372.6   0.08   3.74   9.78  {'length': 2}
+  [CAND gate]    A    4   8    3106    1024   223.9   209.4   0.32   3.73  16.61  {'length': 8}
+  [CAND gate]    A    8  16    3086    1024   136.9   128.8   0.46   2.91  21.18  {'length': 15, 'stop': 1}
+  [CAND gate]    B    4   8   19638    1024   198.1   178.9   0.56   3.32  16.73  {'length': 8}
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] [CAND] sequence done: FREE-AFTER 249 779 MiB; gate rows A 26 26 B 8 8 (ok total); OOM 0; TORCH_CHECK 0; tracebacks 0; alive yes
+  [greedy] GREEDY CAND vs ref: 6 identical, IDENTICAL
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G1 greedy PASS: 6/6 identical to REF
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G2 ramp PASS: 36/36 ok, 0 errors
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G3 stress c4 @26k PASS: 4/4 ok, 0 OOM
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G3 stress c8 @26k PASS: 8/8 ok, 0 OOM
+  c1/4k: REF 392.7 CAND 383.2 -> 0.976x  (acc 3.74 -> 3.74, it_ms 9.54 -> 9.78)  [not gated]
+  c4/4k: REF 223.2 CAND 223.9 -> 1.003x  (acc 3.74 -> 3.73, it_ms 16.77 -> 16.61)
+  c8/4k: REF 112.5 CAND 136.9 -> 1.217x  (acc 2.27 -> 2.91, it_ms 20.74 -> 21.18)
+  c4/26k: REF 163.8 CAND 198.1 -> 1.209x  (acc 2.79 -> 3.32, it_ms 17.00 -> 16.73)
+GATE OK
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G4 gate PASS (>= 0.97x REF in c4/4k, c8/4k, c4/26k)
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G5 headroom: REF up 1125/2513 after 245/1677 (cuda:1 draw 836); CAND up 1125/1573 after 249/779 (cuda:1 draw 794) MiB
+2026-09-25T03:34:34+00:00 [r728-promote-window-off] G5 headroom PASS
+  [replay] window         : 0.28 h, 413 completed requests
+  [replay] decode-busy    : 0.19 h (70% of the window)
+  [replay] AGGREGATE      : 419.8 t/s   tokens / wall seconds with >=1 stream decoding
+  [replay] PER STREAM     : 128.6 t/s   tokens / summed per-request decode seconds
+  [replay] mean streams   : 3.26 decoding while anything decodes
+  [replay] prompt tokens/request    : median 28,535  p90 65,623  max 91,255
+  [replay] prefix cached            : median 91%
+  [replay] MTP acceptance           : 201,802/235,482 = 86%
+2026-09-25T03:51:15+00:00 [r728-promote-window-off] G7 replay: rc 0; per-stream 128.6 tok/s (bar 120.3 = 0.98 x R722 W 122.75); OOM 0; TORCH_CHECK 0; tracebacks 0; loop-detected stops 62
+2026-09-25T03:51:15+00:00 [r728-promote-window-off] G7 replay PASS
+2026-09-25T03:51:33+00:00 [r728-promote-window-off] [CANDT] UP: image tabbyapi:stack-r3-rows32; env keys (41); window 0; tier 1; cache 983040; policy '[[4, 3], [8, 2]]'; memory clock offset: set +4500 on every GPU, readback 4500 4500; VRAM free MiB 1125/1573
+2026-09-25T03:51:46+00:00 [r728-promote-window-off] [CANDT] greedy: 6 records, 0 errors
+2026-09-25T03:52:33+00:00 [r728-promote-window-off] [CANDT] greedy vs REF (reported, not gated): GREEDY CANDT vs ref: 6 identical, IDENTICAL
+2026-09-25T03:52:33+00:00 [r728-promote-window-off] G6 tier: greedy 6 records / 0 errors; ramp 36/36 ok; leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; alive; free 189 737 
+2026-09-25T03:52:33+00:00 [r728-promote-window-off] G6 tier PASS
+2026-09-25T03:52:33+00:00 [r728-promote-window-off] PROMOTED (provisional): live md5 36e2da97 = candidate, rollback /srv/qwen5090/launch-flashnext.sh.pre-r728 (md5 1c20145f); post-promotion gates follow
+2026-09-25T03:52:33+00:00 [r728-promote-window-off] === P1: agentic-edit ===
+[r728] agentic-edit greedy c1: 6/6 ok, 18297 tokens, per-request decode median 312.2 t/s (min 271.8, max 385.5), aggregate 293.0 t/s
+[r728] agentic-edit greedy c1 first full wave: aggregate 328.8 t/s, per stream 328.8 t/s
+[r728] agentic-edit greedy c4: 6/6 ok, 18251 tokens, per-request decode median 204.9 t/s (min 163.4, max 249.3), aggregate 569.4 t/s
+[r728] agentic-edit greedy c4 first full wave: aggregate 626.9 t/s, per stream 181.2 t/s
+[r728] agentic-edit sampled c1: 6/6 ok, 18432 tokens, per-request decode median 290.0 t/s (min 248.2, max 371.8), aggregate 293.6 t/s
+[r728] agentic-edit sampled c1 first full wave: aggregate 365.0 t/s, per stream 365.0 t/s
+[r728] agentic-edit sampled c4: 6/6 ok, 18432 tokens, per-request decode median 190.3 t/s (min 167.5, max 230.8), aggregate 545.4 t/s
+[r728] agentic-edit sampled c4 first full wave: aggregate 652.6 t/s, per stream 174.8 t/s
+2026-09-25T03:55:44+00:00 [r728-promote-window-off] P1 agentic-edit PASS (4 x 6/6)
+2026-09-25T03:55:44+00:00 [r728-promote-window-off] === P2: needles 131k / 240k ===
+  needle ctx~131072: 5/5 retrieved
+  needle ctx~240000: 5/5 retrieved
+2026-09-25T03:57:41+00:00 [r728-promote-window-off] P2 needles PASS (5/5 at 131k and 240k)
+2026-09-25T03:57:41+00:00 [r728-promote-window-off] === P3: tool-eval 69 x 4, parallel 8 ===
+r728 tool-eval 69x4: 87.8 +- 1.7 CI [86.5, 89.2] points [119, 124, 120, 121] ['G:5/6', 'I:15/20', 'J:4/6', 'K:20/26', 'N:5/6', 'O:10/12']
+2026-09-25T04:04:54+00:00 [r728-promote-window-off] P3 tool-eval PASS (87.8 >= 82.0)
+2026-09-25T04:04:54+00:00 [r728-promote-window-off] === P4: GSM8K n=500, c4 (nostop proxy) ===
+2026-09-25T04:11:53+00:00 [r728-promote-window-off] P4 GSM8K PASS (0.974 >= 0.970)
+2026-09-25T04:11:53+00:00 [r728-promote-window-off] promoted daily over the whole run (reported): OOM 0; TORCH_CHECK 0; tracebacks 0; free 45 591 
+2026-09-25T04:11:53+00:00 [r728-promote-window-off] DECISION: PROMOTED
+2026-09-25T04:11:53+00:00 [r728-promote-window-off] === r728 PROMOTED ===

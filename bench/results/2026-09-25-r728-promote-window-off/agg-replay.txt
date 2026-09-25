@@ -1,0 +1,21 @@
+window         : 0.28 h, 413 completed requests
+generated      : 294,022 tokens
+decode-busy    : 0.19 h (70% of the window)
+
+AGGREGATE      : 419.8 t/s   tokens / wall seconds with >=1 stream decoding
+PER STREAM     : 128.6 t/s   tokens / summed per-request decode seconds
+mean streams   : 3.26 decoding while anything decodes
+
+generated tokens/request : median 763  p90 1103  p99 1437  max 1627
+prompt tokens/request    : median 28,535  p90 65,623  max 91,255
+prefix cached            : median 91%
+per-request T/s          : p10 78  median 132  p90 300
+MTP acceptance           : 201,802/235,482 = 86%
+
+slowest 1% by decode seconds (4 requests): 3% of decode time, 1% of tokens, median 802 tokens at 55 T/s
+
+slowest 5% by decode seconds (20 requests): 12% of decode time, 7% of tokens, median 1090 tokens at 88 T/s
+
+slowest 10% by decode seconds (41 requests): 21% of decode time, 14% of tokens, median 996 tokens at 89 T/s
+
+requests under 50 T/s: 9 (2.2%), 3% of decode time, 1% of tokens

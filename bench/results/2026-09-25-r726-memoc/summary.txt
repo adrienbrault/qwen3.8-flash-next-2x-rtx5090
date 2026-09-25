@@ -1,0 +1,8 @@
+code c1: per-stream O0 272.3 O45 277.7 O0b 272.4 O45b 276.6 -> +4500 gain 1.018
+code c4: per-stream O0 161.5 O45 162.2 O0b 163.7 O45b 167.6 -> +4500 gain 1.014
+code c8: per-stream O0 102.9 O45 107.1 O0b 106.6 O45b 107.2 -> +4500 gain 1.023
+prose c1: per-stream O0 272.2 O45 276.8 O0b 271.9 O45b 276.5 -> +4500 gain 1.017
+prose c4: per-stream O0 155.2 O45 158.2 O0b 157.7 O45b 158.8 -> +4500 gain 1.013
+prose c8: per-stream O0 105.3 O45 106.9 O0b 103.3 O45b 107.0 -> +4500 gain 1.025
+greedy divergences vs O0: {'O0b': 0, 'O45': 0, 'O45b': 0}; new Xid 0
+DECISION: KEEP-4500 (worst +4500 gain 1.013)

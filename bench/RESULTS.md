@@ -4,6 +4,9 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-25
 
+- [R719b: the decode curve after the draft-KV window was turned off and the memory clock offset re-applied: decode aggregate 298 / 279 at 1 stream and 845 / 853 at 8 streams (code / prose), rising at every step; 1.007 to 1.032 times R719's per-stream rate](results/r719b-decode-curve.md)
+- [R721, R722, R723, R728: the windowed MTP draft cache is turned off, promoted at 983,040; revived prompts draft 0.655 accepted per proposed token with the window and 0.868 without it; +2.0 % per stream on an agent-shaped replay; cuda:1 pays 940 MiB](results/r728-promote-window-off.md)
+- [R726: the +4500 memory clock offset had reset to 0 between 2026-09-03 and 2026-09-19; restored: +14.3 % DRAM bandwidth, +1.7 to +1.8 % decode at 1 stream; the launcher re-applies it at every boot](results/r726-memoc.md)
 - [R719: the decode curve of the served configuration (stack-r3-rows32), each stream on its own prompt: decode aggregate 292 / 272 at 1 stream and 822 / 831 at 8 streams (code / prose), rising at every step](results/r719-decode-curve.md)
 
 ## 2026-09-24

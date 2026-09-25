@@ -1,0 +1,5 @@
+BOOT W1: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.719 (n=16) c8fresh 0.911 (n=16) gap 0.790 | per-stream T/s c4 184.8 c6 135.5 c8 111.4 c8fresh 128.9
+BOOT N1: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.878 (n=16) c8fresh 0.909 (n=16) gap 0.965 | per-stream T/s c4 186.3 c6 144.2 c8 124.9 c8fresh 130.3
+BOOT N2: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.877 (n=16) c8fresh 0.910 (n=16) gap 0.964 | per-stream T/s c4 190.0 c6 142.6 c8 125.4 c8fresh 131.5
+BOOT W2: c8 warm-up cache hits 6/8 (expect 6); acc c8 0.717 (n=16) c8fresh 0.911 (n=16) gap 0.787 | per-stream T/s c4 186.8 c6 136.5 c8 111.0 c8fresh 129.2
+DECISION: WINDOW (W gaps [0.7898394537618345, 0.7874049810885824], N gaps [0.9653744310006369, 0.9639885659822812]): the draft window's revive path loses acceptance

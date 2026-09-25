@@ -247,3 +247,8 @@ Ladder each candidate pool with a full 1-to-8-stream ramp, one request per batch
 **What it is:** the eligibility veto compared `reqs_past_ids` aggregated over the sampler's *input* step stack — before `alt()` turned the frontend's unconditionally-appended neutral penalty steps into no-ops. Every request reported `reqs_past_ids=True` and took the serial per-token `.cpu()` accept loop (43 % of c4 wall time in a py-spy profile). A second veto on `device_logit_mask` covered every `min_tokens` request. The fix is `verifybatch-r1` ([R646](../bench/results/r646-verifybatch.md)).
 
 **The fix for the measurement habit:** verify the path itself, not the flag — a profiler sample under its sync point (`ready.synchronize()` was absent from 27,498 samples), or a counter it increments.
+
+## 24. A clock offset applied once at host boot does not stay applied (2026-09-25)
+
+**What it looks like:** the memory clock offset is +4500 because the host's boot-time service applies it and the host has not rebooted.
+**What it is:** the offset read 0 on both cards on 2026-09-25 after the service had applied it on 2026-09-02, with no reboot in between; it was recorded intact on 2026-09-03 and absent in this model's logs from 2026-09-19 on, and the cause is not determined. Every number measured in that span ran at the stock memory clock, about 1.7 % below +4500 in decode at 1 stream ([R726](../bench/results/r726-memoc.md)). The launcher now sets the offset before every engine boot and logs the readback, so every results directory records the state it was measured in.

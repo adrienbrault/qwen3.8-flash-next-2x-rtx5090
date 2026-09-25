@@ -1,0 +1,31 @@
+2026-09-25T01:14:42+00:00 [r723-window-off-fit] W env 42 keys; N env 41 keys; order D N0 N1; nonce 98882
+2026-09-25T01:14:42+00:00 [r723-window-off-fit] queued behind: r722-window-agent-replay(pid 484467)
+2026-09-25T02:15:03+00:00 [r723-window-off-fit] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T02:15:20+00:00 [r723-window-off-fit] [D] UP: window 1; cache 983040; policy '[[4, 3], [8, 2]]'; VRAM free MiB 1125/2513/
+2026-09-25T02:17:10+00:00 [r723-window-off-fit] [D] ramp 36/36 ok; leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; FREE-AFTER 229 1701 MiB
+  [gate D]    A    4   4    3155    1024   153.2   144.4   0.41   2.59  16.92  {'length': 4}
+  [gate D]    A    8   8    3087    1024   103.2    98.5   0.50   2.27  22.08  {'length': 8}
+  [gate D]    B    4   4   19587    1024   144.8   132.9   0.63   2.53  17.47  {'length': 4}
+  [gate D] 2026-09-25T02:17:10+00:00 [gate] === GATE DONE ===
+2026-09-25T02:17:28+00:00 [r723-window-off-fit] [N0] UP: window 0; cache 983040; policy '[[4, 3], [8, 2]]'; VRAM free MiB 1125/1573/
+2026-09-25T02:19:16+00:00 [r723-window-off-fit] [N0] ramp 36/36 ok; leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; FREE-AFTER 229 763 MiB
+  [gate N0]    A    4   4    3155    1024   154.6   146.4   0.36   2.60  16.84  {'length': 4}
+  [gate N0]    A    8   8    3155    1024   105.2    99.9   0.48   2.28  21.76  {'length': 8}
+  [gate N0]    B    4   4   19700    1024   151.9   139.1   0.63   2.66  17.56  {'length': 4}
+  [gate N0] 2026-09-25T02:19:16+00:00 [gate] === GATE DONE ===
+2026-09-25T02:19:35+00:00 [r723-window-off-fit] [N1] UP: window 0; cache 999424; policy '[[4, 3], [8, 2]]'; VRAM free MiB 985/1433/
+2026-09-25T02:21:22+00:00 [r723-window-off-fit] [N1] ramp 36/36 ok; leg B 4/4 ok; OOM 0; TORCH_CHECK 0; tracebacks 0; FREE-AFTER 107 623 MiB
+  [gate N1]    A    4   4    3155    1024   161.3   152.7   0.35   2.68  16.65  {'length': 4}
+  [gate N1]    A    8   8    3155    1024   107.9   102.6   0.48   2.35  21.92  {'length': 8}
+  [gate N1]    B    4   4   19587    1024   154.2   139.8   0.69   2.68  17.40  {'length': 4}
+  [gate N1] 2026-09-25T02:21:22+00:00 [gate] === GATE DONE ===
+  [greedy] GREEDY D vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY N0 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY N1 vs ref: 6 identical, IDENTICAL
+  [greedy] GREEDY-SUMMARY reference=ref divergences=0
+HEADROOM D up (1125, 2513) after (229, 1701) | N0 up (1125, 1573) after (229, 763) | N1 up (985, 1433) after (107, 623)
+DECISION: TIGHT (a headroom bar misses; the user decides)
+2026-09-25T02:21:22+00:00 [sctl] GPU queue continues ((unit not published)
+(unit not published)
+r726-memoc(pid 2776990)); leaving the GPUs to the next unit
+2026-09-25T02:21:22+00:00 [r723-window-off-fit] === r723 DONE ===

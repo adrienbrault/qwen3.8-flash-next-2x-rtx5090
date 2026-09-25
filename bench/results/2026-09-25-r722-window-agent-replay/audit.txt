@@ -1,0 +1,52 @@
+2026-09-25T01:06:33+00:00 [r722-window-agent-replay] W env 42 keys; N env 41 keys; N pools 950272 917504; order W1 N1 W2 N2; 600 s per arm
+2026-09-25T01:06:33+00:00 [r722-window-agent-replay] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-25T01:06:48+00:00 [r722-window-agent-replay] [W1] booted; window 1; cache 983040; VRAM free MiB 1125/2513/
+2026-09-25T01:23:49+00:00 [r722-window-agent-replay] [W1] replay rc=0; OOM 0; tracebacks 0
+  [W1] window         : 0.28 h, 412 completed requests
+  [W1] decode-busy    : 0.20 h (71% of the window)
+  [W1] AGGREGATE      : 414.5 t/s   tokens / wall seconds with >=1 stream decoding
+  [W1] PER STREAM     : 123.3 t/s   tokens / summed per-request decode seconds
+  [W1] mean streams   : 3.36 decoding while anything decodes
+  [W1] prompt tokens/request    : median 28,866  p90 65,793  max 92,832
+  [W1] prefix cached            : median 91%
+  [W1] MTP acceptance           : 203,727/232,857 = 87%
+2026-09-25T01:24:04+00:00 [r722-window-agent-replay] [N1] booted; window 0; cache 950272; VRAM free MiB 1305/1813/
+2026-09-25T01:24:04+00:00 [r722-window-agent-replay] [N1] pool 950272
+2026-09-25T01:40:46+00:00 [r722-window-agent-replay] [N1] replay rc=0; OOM 0; tracebacks 0
+  [N1] window         : 0.28 h, 412 completed requests
+  [N1] decode-busy    : 0.19 h (71% of the window)
+  [N1] AGGREGATE      : 413.5 t/s   tokens / wall seconds with >=1 stream decoding
+  [N1] PER STREAM     : 125.8 t/s   tokens / summed per-request decode seconds
+  [N1] mean streams   : 3.29 decoding while anything decodes
+  [N1] prompt tokens/request    : median 28,851  p90 65,940  max 90,483
+  [N1] prefix cached            : median 90%
+  [N1] MTP acceptance           : 200,038/229,850 = 87%
+2026-09-25T01:41:06+00:00 [r722-window-agent-replay] [W2] booted; window 1; cache 983040; VRAM free MiB 1125/2513/
+2026-09-25T01:57:51+00:00 [r722-window-agent-replay] [W2] replay rc=0; OOM 0; tracebacks 0
+  [W2] window         : 0.28 h, 412 completed requests
+  [W2] decode-busy    : 0.19 h (70% of the window)
+  [W2] AGGREGATE      : 415.3 t/s   tokens / wall seconds with >=1 stream decoding
+  [W2] PER STREAM     : 122.2 t/s   tokens / summed per-request decode seconds
+  [W2] mean streams   : 3.40 decoding while anything decodes
+  [W2] prompt tokens/request    : median 28,766  p90 66,311  max 92,830
+  [W2] prefix cached            : median 91%
+  [W2] MTP acceptance           : 199,090/232,583 = 86%
+2026-09-25T01:58:11+00:00 [r722-window-agent-replay] [N2] booted; window 0; cache 950272; VRAM free MiB 1305/1813/
+2026-09-25T01:58:11+00:00 [r722-window-agent-replay] [N2] pool 950272
+2026-09-25T02:15:03+00:00 [r722-window-agent-replay] [N2] replay rc=0; OOM 0; tracebacks 0
+  [N2] window         : 0.28 h, 412 completed requests
+  [N2] decode-busy    : 0.19 h (70% of the window)
+  [N2] AGGREGATE      : 428.7 t/s   tokens / wall seconds with >=1 stream decoding
+  [N2] PER STREAM     : 124.7 t/s   tokens / summed per-request decode seconds
+  [N2] mean streams   : 3.44 decoding while anything decodes
+  [N2] prompt tokens/request    : median 28,974  p90 66,566  max 92,123
+  [N2] prefix cached            : median 91%
+  [N2] MTP acceptance           : 207,742/232,889 = 89%
+per-stream decode t/s: {'W1': 123.3, 'N1': 125.8, 'W2': 122.2, 'N2': 124.7}
+N/W pairs 1.020 1.020 mean 1.020
+DECISION: NONE (N/W 1.020)
+2026-09-25T02:15:03+00:00 [sctl] GPU queue continues ((unit not published)
+r723-window-off-fit(pid 999902)
+(unit not published)
+r726-memoc(pid 2776990)); leaving the GPUs to the next unit
+2026-09-25T02:15:03+00:00 [r722-window-agent-replay] === r722 DONE ===
