@@ -8,7 +8,9 @@ Every number here was measured on one machine on the date given, and each links 
 
 Decode on `tabbyapi:stack-r3-rows32`, the served configuration (draft-KV window off since [R728][r728], memory clock offset +4500), measured 2026-09-25 07:59 to 08:16 UTC ([R719b][r719b], results `2026-09-25-r719-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
-![Decode rate after the first token against concurrency, sum over streams and per stream](docs/img/decode-scaling.svg)
+![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
+
+Solid lines: decode alone, the curve described above. Dashed lines: `vllm bench serve` on ShareGPT V3 and Spec-Bench ([R731b][r731b], 2026-09-25, results `2026-09-25-r731b-std-bench-stock`), where requests arrive as others finish, so their prefill interleaves with the running streams' decode; its aggregate is wall-clock output tok/s and its per-stream rate is 1000 / TPOT p50 ([Standard benchmark](#standard-benchmark-vllm-bench-serve)).
 
 - The aggregate rises at every step from 1 to 8 streams, from 5 to 6 streams as well (code 691 to 727 t/s, prose 694 to 735); the draft policy keeps two draft tokens from 5 to 8 streams ([Conditions](#conditions)).
 - The rates depend on how often the MTP draft is accepted, which depends on the text being generated: on these ~110-token prompts a decode step yields 2.25 to 2.31 tokens at 5 to 8 streams ([R719b][r719b]).
@@ -152,9 +154,7 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 
 Conditions: `tabbyapi:stack-r3-rows32` on the served launcher, power limits at the stock 600 / 575 W, core clock offset 0, memory offset +4500, NVMe tier off. Every cell ran on a fresh boot (0 cached prompt tokens over 7,040 requests), and the matrix ran twice, passes A and B; cells are the mean of the two, and the p99 columns give both passes as a range where they differ. Every concurrency sends the same sample: ShareGPT 400 conversations drawn with seed 7310, Spec-Bench all 480 questions of its 13 categories. Inputs are short: mean 272 / 322 tokens, maximum 1,070 / 1,540 (ShareGPT / Spec-Bench). Requests are greedy with thinking on, and `min_tokens` forces each output to the ShareGPT reference reply's length (mean 210 tokens) or to 256 tokens, so the outputs are truncated reasoning, not answers.
 
-![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
-
-Per stream, the standard benchmark matches decode alone at 1 and 2 streams (ShareGPT / Spec-Bench 292 / 296 and 208 / 208 t/s against code 298 and 208) and falls below it from 4 streams (133 / 132 against 158; 71 / 74 against 106 at 8), where requests arrive while others decode and their prefill chunks take steps from the running streams. The aggregate gap also includes each request's time to the first token and the turnover between requests, which weigh more here than in the decode curve because outputs are ~210-256 tokens instead of 1,024. Both panels come from `bench/plot.py`, which reads the published raw records of [R719b][r719b] and [R731b][r731b].
+In the figure at the top, per stream, the standard benchmark matches decode alone at 1 and 2 streams (ShareGPT / Spec-Bench 292 / 296 and 208 / 208 t/s against code 298 and 208) and falls below it from 4 streams (133 / 132 against 158; 71 / 74 against 106 at 8), where requests arrive while others decode and their prefill chunks take steps from the running streams. The aggregate gap also includes each request's time to the first token and the turnover between requests, which weigh more here than in the decode curve because outputs are ~210-256 tokens instead of 1,024. Both panels come from `bench/plot.py`, which reads the published raw records of [R719b][r719b] and [R731b][r731b].
 
 **ShareGPT V3**
 
