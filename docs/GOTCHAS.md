@@ -43,6 +43,12 @@ true length. It affects `usage.completion_tokens` and the logged T/s; token *lim
 18,739 reported for a generation whose reasoning tokenizes to 18,630. Only generations past ~2045 tokens were
 ever affected, which is why the 128/256/512-token probes of R329–R336 are clean.
 
+**Lost, 2026-09-16 to 2026-09-26:** the fix lived in `Dockerfile.tabbyapi` only. `Dockerfile.tabbyapi-qsa-cid`
+installs TabbyAPI and ExLlamaV3 afresh, so every image served from `qsa-cid-pr337` to `stack-r3-rows32` counted
+generations longer than ~4,096 tokens short (9,000 / 13,000 / 20,000 forced tokens reported as 2,969 / 2,888 / 3,714).
+Restored as the `tokcount-r1` layer and served since R747 ([bench/results/r747-tokcount.md](../bench/results/r747-tokcount.md)).
+Any figure taken from the server's per-request log in that window is suspect; the client-timed decode figures are not.
+
 ## 5. Every client that sends no sampler was served at temperature 1.0, untruncated (2026-09-16, fixed)
 
 **Looks like:** a reasoning model that breaks off mid-thought and then thinks in the output channel; multilingual

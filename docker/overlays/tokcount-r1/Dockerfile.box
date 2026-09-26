@@ -1,0 +1,19 @@
+# tokcount r1: the requeue token-count fix on the daily image, nothing else. Python only, one line of
+# exllamav3/generator/job.py (prepare_for_requeue carries rq_new_tokens cumulatively). No flag: accounting only
+# (ANALYSIS.md lists every consumer). Same fix as R338's sed in docker/Dockerfile.tabbyapi, which every image since
+# tabbyapi:qsa-cid (2026-09-16) lost because those builds start from a fresh TabbyAPI/exllamav3 install.
+#   B=tabbyapi:stack-r3-rows32
+#   docker build -f Dockerfile.box --build-arg BASE=$B \
+#     --label local.tokcount.base_id=$(docker image inspect $B --format '{{.Id}}') \
+#     --label local.tokcount.patch_sha256=$(sha256sum fix.patch | cut -c1-64) -t tabbyapi:stack-r3-rows32-tokcount .
+# Build context = this directory (fix.patch, landing_tokcount.py). CPU only, ~30 s. --forward makes a second apply
+# fail instead of reversing the patch; the landing check runs with EXL3_* stripped and imports the module.
+ARG BASE=tabbyapi:stack-r3-rows32
+FROM ${BASE}
+COPY fix.patch landing_tokcount.py /opt/tokcount-r1/
+RUN set -e; P=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    patch -p1 --fuzz=0 --forward --dry-run -d "$P" < /opt/tokcount-r1/fix.patch; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d "$P" < /opt/tokcount-r1/fix.patch; \
+    find "$P" -name __pycache__ -type d -exec rm -rf {} + ; \
+    python3 /opt/tokcount-r1/landing_tokcount.py
+LABEL local.tokcount.round="r1" local.tokcount.patch_sha256="5e4b6577e6e04b0c4e4a63d2dfb92d8debb14630f7fbaf529cc68ad2bb860367"

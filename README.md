@@ -15,7 +15,7 @@ Solid lines: decode alone, the curve described above. Dashed lines: `vllm bench 
 - The aggregate rises at every step from 1 to 8 streams, from 5 to 6 streams as well (code 691 to 727 t/s, prose 694 to 735); the draft policy keeps two draft tokens from 5 to 8 streams ([Conditions](#conditions)).
 - The rates depend on how often the MTP draft is accepted, which depends on the text being generated: on these ~110-token prompts a decode step yields 2.25 to 2.31 tokens at 5 to 8 streams ([R719b][r719b]).
 - Time to the first token is 0.13 to 0.14 s at 1 stream and 0.70 to 0.75 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
-- These are batches on an otherwise idle server. A three-agent session delivered 65.6 t/s per stream, because incoming prompts' prefill chunks stall the running streams ([R583][r583]; [Conditions](#conditions)).
+- These are batches on an otherwise idle server. A three-agent session measured from the server's per-request log on 2026-09-20 read 65.6 t/s per stream ([R583][r583]); that log under-counted every generation longer than about 4,096 tokens until 2026-09-26 ([R747][r747]), so the figure is too low and is withdrawn until re-measured.
 - vLLM's serving benchmark on ShareGPT V3 and Spec-Bench, a wall-clock measure that includes prefill and request turnover, is in [Standard benchmark](#standard-benchmark-vllm-bench-serve).
 
 ![Cold prefill rate and decode rate at depth against prompt length](docs/img/prefill.svg)
@@ -50,7 +50,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 ## Served configuration
 
-- Since 2026-09-25 05:52 CEST ([R728][r728]): image `tabbyapi:stack-r3-rows32` (since 01:05 CEST, [R717c][r717]), launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- Since 2026-09-26 13:37 CEST ([R747][r747]): image `tabbyapi:stack-r3-rows32-tokcount` = `stack-r3-rows32` ([R717c][r717]) plus the requeue token-count fix, which changes reported token counts and nothing else; draft-KV window off since 2026-09-25 05:52 CEST ([R728][r728]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
 - 8 slots, 983,040-token page pool, 8-bit KV.
 - MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); the draft cache is page-indexed over the whole pool on the second GPU, without the 16,384-token window served from [R579][r579] to [R728][r728].
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
@@ -379,6 +379,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r731b]: bench/results/r731b-std-bench.md
 [r726]: bench/results/r726-memoc.md
 [r728]: bench/results/r728-promote-window-off.md
+[r747]: bench/results/r747-tokcount.md
 [r587]: bench/results/r587-tabby-metrics.md
 [r583]: bench/results/r583-long-generation.md
 [r585]: bench/results/r585-prefill-interference.md

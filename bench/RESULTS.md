@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-26
 
+- [R737 and R747: the requeue token-count fix, lost from every image since 2026-09-16, restored and promoted as `stack-r3-rows32-tokcount`; the served image reported 2,969 / 2,888 / 3,714 tokens for 9,000 / 13,000 / 20,000-token generations, the fixed one the true counts; greedy output identical; R583's 65.6 tokens/s per stream withdrawn](results/r747-tokcount.md)
 - [R739 and R745: a no-cache rebuild of the chain at 07141f3 reproduces the served image's 714 source files, the SASS of all 1,633 kernel functions and the image environment; 8 unpinned TabbyAPI dependencies drifted and are now pinned by a constraints file frozen from the served image (57 min with MAX_JOBS=12 and the CUDA base local, 59 GB of disk)](results/r739-build-verify.md)
 
 ## 2026-09-25

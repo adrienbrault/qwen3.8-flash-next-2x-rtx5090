@@ -9,7 +9,7 @@ is the command that produced a results directory named beside it.
 | --- | --- |
 | the box | `ssh flan` (BatchMode works; `sudo docker` over that ssh) |
 | checkpoint | `/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw` |
-| images | `tabbyapi:53da7919-rqcount` (served), `-rqcount-cid`, `qsa-devel`, `qsa-devel-control`, `qsa-cid` |
+| images | `tabbyapi:stack-r3-rows32-tokcount` (served since 2026-09-26, built by `docker/build-chain.sh`); `tabbyapi:53da7919-rqcount`, `-rqcount-cid`, `qsa-devel`, `qsa-devel-control`, `qsa-cid` are the 2026-09-16 images |
 | probes | flashed from `bench/*.py` to `/srv/qwen5090/probes/` |
 | runners | flashed from `bench/*.sh` to `/srv/qwen5090/` |
 | GPU lock | `/srv/qwen5090/lib/gpu-queue.sh` + `/srv/qwen5090/gpu-exclusive.lock`; every runner takes it |
@@ -66,7 +66,8 @@ The Dockerfiles live in the sibling `kubernetes-home` repository (`flan/docker/`
 runner scripts live.
 
 ```sh
-# the served image: TabbyAPI 53da7919 + exllamav3 v1.5.0 + the requeue token-count fix
+# the 2026-09-16 image (TabbyAPI 53da7919 + exllamav3 v1.5.0 + the requeue token-count fix); the served image today is
+# the last tag of docker/build-chain.sh
 scp kubernetes-home/flan/docker/Dockerfile.tabbyapi flan:/srv/qwen5090/docker/ && ssh flan \
   'cd /srv/qwen5090/docker && sudo docker build -f Dockerfile.tabbyapi -t tabbyapi:53da7919-rqcount .'
 

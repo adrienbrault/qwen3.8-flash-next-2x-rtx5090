@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 35 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 36 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -11,7 +11,8 @@
 #   …-nosync, …-mtpfix2, …-moecoopv2          overlays/prefill-nosync-overlay, prefill-pipeline-mtp-overlay, moe-coop-v2-overlay
 #   decode-kernels-r2 … mtpwin-r2-metrics1    one overlay each (overlays/<name>/)
 #   bverify-r1, mtpnorm-r1, mixstate-r1, stack-r1   Dockerfile.tabbyapi-bverify / -mtpnorm / -mixstate / -prefbatch
-#   slotfix-r1, hcfast-r1, stack-r2, stack-r3, stack-r3-rows32   overlays (stack-r2 = moefast-r1)   <- the served tag
+#   slotfix-r1, hcfast-r1, stack-r2, stack-r3, stack-r3-rows32   overlays (stack-r2 = moefast-r1)
+#   stack-r3-rows32-tokcount                  overlays/tokcount-r1 (the requeue token-count fix)   <- the served tag
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
 # its base, Dockerfile.tabbyapi-qsa-cid starts again from nvidia/cuda:12.8.1-devel-ubuntu24.04.
 #
@@ -162,9 +163,11 @@ else
   S3INC=$("${DOCKER_CMD[@]}" image inspect "$S3" --format '{{index .Config.Labels "local.stack.include"}}')
   S3DEF=$("${DOCKER_CMD[@]}" image inspect "$S3" --format '{{index .Config.Labels "local.stack.dgv2_defs"}}')
 fi
-FINAL=$R:stack-r3-rows32
-build "$FINAL"                         $O/rows32-r4/Dockerfile.box    $O/rows32-r4    --build-arg BASE="$S3" --build-arg BASE_ID="$S3ID" \
+R32=$R:stack-r3-rows32
+build "$R32"                           $O/rows32-r4/Dockerfile.box    $O/rows32-r4    --build-arg BASE="$S3" --build-arg BASE_ID="$S3ID" \
   --build-arg STACK_INCLUDE="$S3INC" --build-arg DGV2_NVCC_DEFS="$S3DEF" --build-arg PATCH_SHA="$(sha $O/rows32-r4/rows32-r4.patch)" ${JOBS[@]+"${JOBS[@]}"}
+FINAL=$R32-tokcount
+build "$FINAL"                         $O/tokcount-r1/Dockerfile.box  $O/tokcount-r1  --build-arg BASE="$R32"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

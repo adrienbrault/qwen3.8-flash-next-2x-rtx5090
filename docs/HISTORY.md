@@ -154,3 +154,12 @@ At 04:22 CEST both cards read a memory clock offset of 0. The host's boot-time s
 The promotion's decode gate (prose) read 1.217 at 8 streams on ~3,100-token prompts and 1.209 at 4 streams on ~19,600-token prompts; both cells revive prompts an earlier cell prefilled, so they bound the gain on revived prompts, and prompts never seen before read 1.01 to 1.02 in R721. The window had been served since [R579](../bench/results/r579-promote-mtp-kv-window.md), where it freed draft cache on cuda:0; since [R694](../bench/results/r694-mtp-card1.md) the draft component is on cuda:1, so turning it off leaves the page pool unchanged.
 
 Measured after the promotion: the decode curve of the served configuration, two boots, `fn_bench --distinct`, greedy, 1,024 forced tokens, 1 to 8 streams, 2026-09-25 07:59 to 08:16 UTC, the R719 driver unchanged. The decode aggregate is 298 / 279 tokens/s at 1 stream and 845 / 853 at 8 streams (code / prose) and rises at every step; the per-stream rate is 1.007 to 1.032 times R719's in all 16 cells. The memory clock offset and the draft cache both changed between the two rounds, and the round does not separate them ([R719b](../bench/results/r719b-decode-curve.md)). The README's decode figure draws R719b since then.
+
+## 2026-09-26: the requeue token-count fix restored
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 13:37 | image `tabbyapi:stack-r3-rows32-tokcount` = `stack-r3-rows32` + [`tokcount-r1/fix.patch`](../docker/overlays/tokcount-r1/fix.patch), one line of `generator/job.py`: `usage.completion_tokens` and the logged T/s count every requeued segment; launcher otherwise unchanged, 41 environment keys | R737: the served image reported 2,969 / 2,888 / 3,714 tokens for generations forced to 9,000 / 13,000 / 20,000, the patched image 9,000 / 13,000 / 20,000 in `usage` and in the log; greedy set identical, 6 of 6; promotion unit: 41 keys, free VRAM at boot 1,125 / 1,573 MiB (unchanged), greedy set identical to the served image's, a 9,000-token generation counted 9,000, 0 OOM, tracebacks or restarts | 983,040 | [R737, R747](../bench/results/r747-tokcount.md) |
+
+The fix was first applied on 2026-09-16 as a `sed` in `docker/Dockerfile.tabbyapi`; every image from `qsa-cid-pr337` on was built from `Dockerfile.tabbyapi-qsa-cid`, which does not carry it, while the documentation said it did. [R583](../bench/results/r583-long-generation.md)'s 65.6 tokens/s per stream for a real agent session came from the server's log in that window and is withdrawn.
+

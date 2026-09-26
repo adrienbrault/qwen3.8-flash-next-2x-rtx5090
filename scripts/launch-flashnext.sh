@@ -193,9 +193,14 @@ DRAFT=${DRAFT:-3}
 #   -940 MiB (the draft cache grows from 133,120 to 983,040 tokens, ~1.13 KiB/token; free 1,573 at boot, 763 after).
 #   Promotion gates: scripts/r728-promote-window-off.sh.
 #   ROLLBACK: add EXL3_MTP_KV_WINDOW=16384 back to EXTRA_ENV (rows32 with the window, 983,040).
-DAILY_IMG=tabbyapi:stack-r3-rows32
+# R747 (2026-09-26): image stack-r3-rows32-tokcount = stack-r3-rows32 + the requeue token-count fix (R737: one line
+#   of reporting in exllamav3 generator/job.py; server counts exact at 9,000/13,000/20,000 where the old image logged
+#   2,969/2,888/3,714; fn_greedy 6/6 identical). Engine behaviour unchanged; only per-request token counts and T/s in the
+#   log and in usage change. Gates: bench/results/r747-tokcount.md.
+#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32.
+DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount
 IMG=${IMG:-$DAILY_IMG}
-# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
+# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:

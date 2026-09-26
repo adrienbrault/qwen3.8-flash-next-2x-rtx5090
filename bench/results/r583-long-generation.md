@@ -1,5 +1,7 @@
 # R583: generation length costs nothing, and the draft-cache window is not the reason real sessions are slower
 
+> **2026-09-26 correction ([R747](r747-tokcount.md)).** The 65.6 tokens/s per stream and 134.4 aggregate below come from the server's per-request log, which on the images served from 2026-09-16 to 2026-09-26 under-counted every generation longer than about 4,096 tokens. They are too low, and the slow 2,700 to 4,000-token requests are most likely longer generations reported short. The forced-length arms of this round are timed on the client and are unaffected.
+
 Results directory on the serving host: `results/2026-09-20-r583-long-generation`. Raw records: [`2026-09-20-r583-long-generation/`](2026-09-20-r583-long-generation/). Driver: [`scripts/r583-long-generation.sh`](../../scripts/r583-long-generation.sh).
 
 ## Why this round exists
