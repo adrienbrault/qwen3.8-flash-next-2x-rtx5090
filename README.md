@@ -186,6 +186,11 @@ At 8 streams the wall-clock figure and the `fn_bench` decode aggregate differ ma
 ## Reproducing a boot
 
 ```sh
+# the served image, published 2026-09-26 (the served layers plus one label-only layer); tag it as the launcher expects
+docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f
+docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f tabbyapi:stack-r3-rows32-tokcount
+# the rollback image (DAILY_IMG=tabbyapi:stack-r3-rows32): ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:876be2dfeab9f8741c2c00c1d6ec252d661431c3ea5c9f8f2c5ff3d1d2f140f1
+
 ssh flan 'bash -s' < scripts/launch-flashnext.sh                  # serve on :8022
 PORT=8023 bash scripts/launch-flashnext.sh                        # a second instance
 IMG=tabbyapi:decode-kernels-r4 EXTRA_ENV= bash scripts/launch-flashnext.sh   # an older image, patches off
