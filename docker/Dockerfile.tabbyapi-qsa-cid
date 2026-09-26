@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN python3.12 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --upgrade pip
+RUN pip install "pip==26.2.1"
 
 WORKDIR /app
 ARG TABBY_SHA
@@ -29,7 +29,13 @@ RUN git clone --quiet https://github.com/theroyallab/tabbyAPI.git . \
  && git checkout --quiet --detach "${TABBY_SHA}" \
  && test "$(git rev-parse HEAD)" = "${TABBY_SHA}" \
  && git log --oneline -1 > /app/TABBY.txt
-RUN pip install ".[cu12]"
+# Constraints frozen from the served image (R739 found 8 unpinned dependencies drifting); the check fails the build when
+# any installed package that the file names resolved to another version.
+COPY constraints-stack-r3-rows32.txt /tmp/constraints.txt
+RUN pip install -c /tmp/constraints.txt ".[cu12]" \
+ && pip list --format=freeze | python3 -c "import sys; c = dict(l.split('#')[0].strip().lower().split('==') for l in open('/tmp/constraints.txt') if '==' in l.split('#')[0]); \
+    bad = [l.strip() for l in sys.stdin if '==' in l and c.get(l.split('==')[0].lower(), l.split('==')[1].strip()) != l.split('==')[1].strip()]; \
+    assert not bad, bad; print('constraints held:', len(c), 'pins')"
 
 RUN python -c "from importlib.metadata import version as v; import torch; \
     e = v('exllamav3'); print('exllamav3', e, '| torch', torch.__version__, '| cuda', torch.version.cuda); \
