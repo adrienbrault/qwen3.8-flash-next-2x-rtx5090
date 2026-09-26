@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-26
+
+- [R739 and R745: a no-cache rebuild of the chain at 07141f3 reproduces the served image's 714 source files, the SASS of all 1,633 kernel functions and the image environment; 8 unpinned TabbyAPI dependencies drifted and are now pinned by a constraints file frozen from the served image (57 min with MAX_JOBS=12 and the CUDA base local, 59 GB of disk)](results/r739-build-verify.md)
+
 ## 2026-09-25
 
 - [R731b: `vllm bench serve` v0.30.0 on ShareGPT V3 and Spec-Bench at stock power, c1 to c8, two passes with a fresh boot per cell: 221 / 244 output tok/s wall clock at 1 stream and 471 / 525 at 8 streams; R731's 400 W limit moved no cell by more than 0.9 %; at 8 streams prefill interleaved with decode holds 31 to 35 % of decode time](results/r731b-std-bench.md)

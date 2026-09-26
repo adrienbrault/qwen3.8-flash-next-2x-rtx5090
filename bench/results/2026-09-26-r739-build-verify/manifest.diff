@@ -1,0 +1,28 @@
+19c19
+< dist filelock 3.32.7
+---
+> dist filelock 4.0.3
+23c23
+< dist fsspec 2026.7.0
+---
+> dist fsspec 2026.9.0
+29,30c29,30
+< dist huggingface_hub 1.31.0
+< dist idna 3.19
+---
+> dist huggingface_hub 1.33.0
+> dist idna 3.20
+44,45c44,45
+< dist multidict 6.8.0
+< dist networkx 3.6.1
+---
+> dist multidict 6.9.1
+> dist networkx 3.7
+82c82
+< dist starlette 1.6.0
+---
+> dist starlette 1.7.0
+96c96
+< dist uvicorn 0.53.0
+---
+> dist uvicorn 0.54.0

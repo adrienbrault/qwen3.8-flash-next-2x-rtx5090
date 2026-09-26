@@ -20,6 +20,9 @@
 # with nvcc from the CUDA devel base. The native rebuilds (qsa-cid, the four -bszn layers, mixstate-r1, hcfast-r1, stack-r2,
 # stack-r3, stack-r3-rows32 and the JIT builds of the overlays) dominate the time; MAX_JOBS sets their parallelism.
 # Network: GitHub (TabbyAPI, the ExLlamaV3 wheel), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
+# Cost (R739, 2026-09-26, bench/results/r739-build-verify.md): 57 min on a Ryzen 7 9800X3D with MAX_JOBS=12 and the CUDA base
+# already pulled, niced beside a serving engine; 59 GB of disk beyond the base; the final image is 48 GB. TabbyAPI's Python
+# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745).
 #
 # Knobs:
 #   DRY_RUN=1   print every docker command and check the COPY sources of every Dockerfile; runs no docker command

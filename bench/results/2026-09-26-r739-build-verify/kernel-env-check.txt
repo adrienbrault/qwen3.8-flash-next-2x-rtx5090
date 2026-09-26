@@ -1,0 +1,10 @@
+# 2026-09-26, operator check after R739 (no GPU, --network none), served tabbyapi:stack-r3-rows32 vs rebuilt tabbyapi-verify:stack-r3-rows32
+# sha256 of /opt/rows32-r4/install/rebuilt-sass.txt (one hash per SASS function body of exllamav3_ext, 1,633 lines)
+served   b4d9a50754ee9c0a8a1a8f8253edec4588e9cdf65c5ba846b3ef4720c5ff8da6
+rebuilt  b4d9a50754ee9c0a8a1a8f8253edec4588e9cdf65c5ba846b3ef4720c5ff8da6
+# sha256 of `docker image inspect --format '{{json .Config.Env}}'`
+served   658a3d23d781fde49ebad66196e148747090a1ca69b315cdb6cfdd8964e89431
+rebuilt  658a3d23d781fde49ebad66196e148747090a1ca69b315cdb6cfdd8964e89431
+# sha256 of the exllamav3_ext .so file itself (differs: the SASS of every function is identical)
+served   738e343fe916a1a61ca241ab2ac9f1a88187e6d9ec673a5352be0f6068eab594
+rebuilt  c606440a6b9b590f7ee39e16e6bd06de941198c2b6bd370af461884fd7c0274a
