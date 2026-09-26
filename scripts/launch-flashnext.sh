@@ -572,12 +572,13 @@ SID=$(curl -s -m 8 "http://127.0.0.1:$PORT/v1/model" 2>/dev/null | python3 -c 'i
 if [ "$DRAFT_MODE" != disabled ]; then
   # The draft lines ("Using main model MTP component for drafting", the "Loading draft modules"
   # progress) are emitted during model load, which can land within a second of /health answering --
-  # and stdout under docker is block-buffered, so a line printed at T can reach `docker logs` well
-  # after T. A one-shot grep raced exactly that (false NO BOOT on a healthy boot, R643 2026-09-22).
-  # Poll instead: the evidence always appears when the draft really loaded.
+  # and stdout under docker may be block-buffered, so poll rather than grep once.
+  # Never `docker logs | grep -q` here: under `set -o pipefail`, grep -q exits on the first match, docker logs
+  # takes SIGPIPE on the rest of a long log and the pipeline returns 141, so a boot whose draft did load reads as
+  # NO BOOT on every poll (2026-09-26: 16.5 KB of autosplit report after the draft line). Grep a file instead.
   ok=0
   for i in $(seq 30); do
-    sudo docker logs "$NAME" 2>&1 | grep -aqiE "draft" && { ok=1; break; }
+    sudo docker logs "$NAME" > "$LOG.docker" 2>&1; grep -aqiE "draft" "$LOG.docker" && { ok=1; break; }
     sleep 2
   done
   [ "$ok" = 1 ] || { log "NO BOOT: draft_mode=$DRAFT_MODE but nothing about a draft in the engine log after 60s — serving undrafted"; exit 1; }
