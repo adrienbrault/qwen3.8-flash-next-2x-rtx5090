@@ -1,0 +1,76 @@
+# rebase-dev r3: the served ExLlamaV3 stack (tabbyapi:stack-r3-rows32) ported onto upstream dev 5783a93
+# (5783a9360b749a1d5bde6862dc35e7766e542ca1, exllamav3 1.5.2) + the tokcount-r1 requeue fix. = rebase-dev r2 (dev 73a6229)
+# + upstream 73a6229..5783a93 (sm_75 #325, per-device smem budget f4db698, v1.5.2, loader file streams 5783a93).
+# TabbyAPI is the base image's /app: the served one + loop-think r4 (endpoints/OAI/utils/chat_completion.py,
+# common/sampling.py), unchanged. dev 1.5.2 changes no signature TabbyAPI calls (tests/test_tabby_callsites.py, run here
+# against /app/backends/exllamav3 AND loop-think's two files).
+#
+#   B=tabbyapi:stack-r3-rows32-tokcount-loopthink4
+#   docker build -f Dockerfile.box --build-arg BASE=$B \
+#     --build-arg BASE_ID=$(docker image inspect $B --format '{{.Id}}') \
+#     --build-arg DGV2_NVCC_DEFS="$(docker image inspect $B --format '{{index .Config.Labels "local.stack.dgv2_defs"}}')" \
+#     --build-arg TREE_SHA=150497b44e6f49b06b8a13f2568e68fc41841bc28964928509e181b633285501 \
+#     --build-arg MAX_JOBS=4 -t tabbyapi:rebase-dev-r3 .
+#
+# Build context = this directory, after `bash prepare-tree.sh` has written out/rebase-dev-r3/{exllamav3,tests} (upstream
+# 5783a93 + ported-vs-dev.patch, and a copy of tests/). TREE_SHA = `find exllamav3 -type f | LC_ALL=C sort | xargs sha256sum
+# | sha256sum` in out/rebase-dev-r3 (impl-status.md; prepare-tree.sh checks it). The local.stack.dgv2_defs label is inherited from stack-r3-rows32
+# through the tokcount and loopthink4 layers (docker keeps base labels); pass it verbatim, whatever it holds (R741 did the
+# same from stack-r3-rows32).
+# The whole site-packages exllamav3 package is replaced by out/rebase-dev-r3/exllamav3 (this drops the base's tokcount-r1
+# job.py; r3 carries the same line), every prebuilt exllamav3_ext*.so at the site root is deleted, the torch extension
+# cache is emptied, and the extension is rebuilt ONCE, precompiled, with the served builder (rebuild-native.py,
+# byte-identical to r2's; upstream's setup.py did not change in 73a6229..5783a93). landing_r3.py then asserts where
+# everything comes from, runs the served image's own landing (rows32 r4 + stack-r3), the base's tokcount-r1 and
+# loop-think r4 landings against the ported tree, and imports the full 41-key served env with the real extension. The CPU
+# suite (tests/, extension stubbed) runs last, including the TabbyAPI call-site audit against /app.
+# The EXL3_* selectors are NOT set with ENV: unset = upstream default; the launcher supplies the served EXTRA_ENV.
+# Upstream's new EXL3_TRITON_SMEM_LIMIT / EXL3_TRITON_SMEM_DEBUG must stay unset (debug knobs; landing asserts the first).
+# No heredocs in RUN (legacy builder). CPU only; about r2's build time (r3 adds no TU).
+ARG BASE=tabbyapi:stack-r3-rows32-tokcount-loopthink4
+FROM ${BASE}
+ARG BASE
+ARG BASE_ID=unset
+ARG DGV2_NVCC_DEFS=""
+ARG MAX_JOBS=4
+ARG TREE_SHA=unset
+COPY out/rebase-dev-r3/exllamav3 /opt/rebase-dev-r3/exllamav3
+COPY rebuild-native.py /opt/rebase-dev-r3/
+RUN set -e; site=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])'); \
+    test -f /opt/loopthink-r4/landing_loopthink.py || { echo "rebase-dev-r3: base is not loop-think r4"; exit 1; }; \
+    test -f /opt/tokcount-r1/landing_tokcount.py || { echo "rebase-dev-r3: base is not tokcount r1"; exit 1; }; \
+    [ -z "${EXL3_TRITON_SMEM_LIMIT:-}" ] || { echo "rebase-dev-r3: base ENV sets EXL3_TRITON_SMEM_LIMIT"; exit 1; }; \
+    echo "rebase-dev-r3: site $site, DGV2_NVCC_DEFS='${DGV2_NVCC_DEFS}', MAX_JOBS=${MAX_JOBS}"; \
+    rm -rf "$site/exllamav3"; \
+    find "$site" -maxdepth 1 -name 'exllamav3_ext*.so' -print -delete; \
+    cp -R /opt/rebase-dev-r3/exllamav3 "$site/exllamav3"; \
+    find "$site/exllamav3" -name __pycache__ -type d -prune -exec rm -rf {} +; \
+    rm -rf "${TORCH_EXTENSIONS_DIR:-/root/.cache/torch_extensions}"/*; \
+    build=$(mktemp -d); \
+    ( cd "$build" && DGV2_NVCC_DEFS="${DGV2_NVCC_DEFS}" TORCH_CUDA_ARCH_LIST=12.0 MAX_JOBS=${MAX_JOBS} nice -n 19 \
+        python3 /opt/rebase-dev-r3/rebuild-native.py build_ext --force --build-lib "$site" ) > /opt/rebase-dev-r3/build-native.log 2>&1 \
+      || { tail -60 /opt/rebase-dev-r3/build-native.log; echo "rebase-dev-r3: EXTENSION BUILD FAILED"; exit 1; }; \
+    rm -rf "$build"; \
+    grep -c 'nvcc' /opt/rebase-dev-r3/build-native.log | sed 's/^/rebase-dev-r3: nvcc invocations: /'; \
+    ls -la "$site"/exllamav3_ext*.so
+# landing and tests COPYed after the extension build, so a landing edit reuses the cached build layer
+COPY landing_r3.py /opt/rebase-dev-r3/
+COPY out/rebase-dev-r3/tests /opt/rebase-dev-r3/tests
+# no `| tee`: /bin/sh has no pipefail, and R741 run 1 built green over a failed landing
+RUN python3 /opt/rebase-dev-r3/landing_r3.py --tree r3 > /opt/rebase-dev-r3/landing.txt 2>&1 \
+      || { cat /opt/rebase-dev-r3/landing.txt; echo "rebase-dev-r3: LANDING FAILED"; exit 1; }; cat /opt/rebase-dev-r3/landing.txt
+RUN set -e; site=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])'); \
+    cd /opt/rebase-dev-r3/tests; \
+    env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') bash run_cpu_tests.sh python3 > /opt/rebase-dev-r3/cpu-tests.txt 2>&1 \
+      || { tail -60 /opt/rebase-dev-r3/cpu-tests.txt; echo "rebase-dev-r3: CPU tests FAILED"; exit 1; }; \
+    tail -1 /opt/rebase-dev-r3/cpu-tests.txt; \
+    env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') EXL3_TREE="$site" TABBY_BACKENDS=/app/backends/exllamav3 \
+      TABBY_EXTRA=/app/endpoints/OAI/utils/chat_completion.py:/app/common/sampling.py \
+      python3 test_tabby_callsites.py > /opt/rebase-dev-r3/tabby-callsites-app.txt 2>&1 \
+      || { tail -30 /opt/rebase-dev-r3/tabby-callsites-app.txt; echo "rebase-dev-r3: TabbyAPI call-site audit FAILED on /app"; exit 1; }; \
+    tail -1 /opt/rebase-dev-r3/tabby-callsites-app.txt; \
+    find / -xdev -name __pycache__ -path '*rebase-dev-r3*' -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    tail -1 /opt/rebase-dev-r3/landing.txt
+LABEL local.rebase.round="rebase-dev-r3" local.rebase.upstream="5783a9360b749a1d5bde6862dc35e7766e542ca1" \
+      local.rebase.base="${BASE}" local.rebase.base_id="${BASE_ID}" local.rebase.tree_sha256="${TREE_SHA}" \
+      local.rebase.dgv2_defs="${DGV2_NVCC_DEFS}" local.rebase.tokcount="r1" local.rebase.loopthink="r4"

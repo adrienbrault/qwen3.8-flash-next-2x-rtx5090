@@ -1,0 +1,1652 @@
+import asyncio
+import gc
+import pathlib
+import re
+import time
+from asyncio import CancelledError
+
+import torch
+from itertools import zip_longest
+from inspect import signature
+from typing import (
+    Any,
+    AsyncIterator,
+    Dict,
+    List,
+    Optional,
+)
+from exllamav3 import (
+    AsyncGenerator,
+    AsyncJob,
+    Cache,
+    Config,
+    Generator,
+    Model,
+    Tokenizer,
+)
+from exllamav3.cache import CacheLayer_quant
+from backends.exllamav3.grammar import ExLlamaV3Grammar
+
+from backends.exllamav3.sampler import ExllamaV3SamplerBuilder
+from backends.exllamav3.utils import exllama_supports_nccl
+from backends.exllamav3.vision import clear_image_embedding_cache, image_embedding_cache
+from common.concurrency import iterate_in_threadpool
+from common.config_models import DraftModelConfig
+from common.gen_logging import (
+    format_settings,
+    log_generation_params,
+    log_metrics,
+    log_prompt,
+    log_request_start,
+)
+from common.hardware import hardware_supports_exllamav3
+from common.health import HealthManager
+from common.errors import ContextLengthExceededError, validate_context_requirements
+from common.logger import xlogger
+from common.model_meta import read_model_meta
+from common.multimodal import MultimodalEmbeddingWrapper
+from common.networking import DisconnectHandler
+from common.optional_dependencies import check_package_version
+from common.sampling import BaseSamplerRequest
+from common.status_display import status_display
+from common.tabby_config import config
+from common.templating import PromptTemplate, find_prompt_template
+from common.transformers_utils import HFModel
+from common.utils import unwrap
+from endpoints.OAI.types.chat_completion import ChatCompletionLogprob, ChatCompletionLogprobLeaf
+from endpoints.core.types.model import ModelCard, ModelCardParameters
+from endpoints.OAI.utils.tools import is_supported_format
+
+
+def _merge_stream_results(results: List[dict]) -> dict:
+    """
+    Merge consecutive streaming results from a job into a single result.
+
+    The last result provides all scalar fields (including EOS metrics when
+    present); text and per-token tensors are concatenated in order.
+    """
+
+    merged = dict(results[-1])
+    merged["text"] = "".join(unwrap(r.get("text"), "") for r in results)
+
+    # Concatenate per-token tensors along their token dimension
+    for key, dim in (
+        ("token_ids", -1),
+        ("token_probs", -1),
+        ("top_k_tokens", 1),
+        ("top_k_probs", 1),
+    ):
+        tensors = [r[key] for r in results if r.get(key) is not None]
+        if len(tensors) > 1 and isinstance(tensors[0], torch.Tensor):
+            merged[key] = torch.cat(tensors, dim=dim)
+        elif tensors:
+            merged[key] = tensors[0]
+
+    return merged
+
+
+class ExllamaV3Container:
+    """Model container for the ExLlamaV3 backend."""
+
+    # Exposed model information
+    model_dir: pathlib.Path = pathlib.Path("models")
+    draft_model_dir: Optional[pathlib.Path] = None
+    prompt_template: Optional[PromptTemplate] = None
+    tool_format: Optional[str] = None
+    harmony: bool = False
+    muse_glimmer: bool = False
+    reasoning_budget_tokens: Optional[int] = None
+    reasoning_budget_message: Optional[str] = None
+
+    # Optional features
+    use_draft_model: bool = False
+    use_vision: bool = False
+
+    # HF Model instance
+    hf_model: HFModel
+
+    # Load synchronization
+    # The bool is a master switch for accepting requests
+    # The lock keeps load tasks sequential
+    # The condition notifies any waiting tasks
+    active_job_ids: Dict[str, Any]
+    loaded: bool = False
+    load_lock: asyncio.Lock
+    load_condition: asyncio.Condition
+
+    # Exl3 vars
+    model: Optional[Model] = None
+    cache: Optional[Cache] = None
+    draft_model: Optional[Model] = None
+    draft_cache: Optional[Cache] = None
+    tokenizer: Optional[Tokenizer] = None
+    config: Optional[Config] = None
+    draft_config: Optional[Config] = None
+    generator: Optional[AsyncGenerator] = None
+    vision_model: Optional[Model] = None
+
+    # Class-specific vars
+    gpu_split: Optional[List[float]] = None
+    gpu_split_auto: bool = True
+    draft_gpu_split: Optional[List[float]] = None
+    autosplit_reserve: Optional[List[float]]
+    use_tp: bool = False
+    tp_backend: str = "native"
+    max_seq_len: int = 4096
+    cache_size: int = 4096
+    cache_mode: str = "FP16"
+    draft_cache_mode: str = "FP16"
+    chunk_size: int = 2048
+    max_rq_tokens: Optional[int] = 2048
+    max_batch_size: Optional[int] = None
+    draft_num_tokens: Optional[int] = None
+    draft_num_tokens_by_batch: Optional[List[tuple[int, int]]] = None
+    dynamic_draft: Optional[bool] = False
+    ngram_match_min: int = 0
+
+    def __init__(self):
+        # Mutable state must be created per instance. A class-level default
+        # would be a single object shared by every container.
+        self.active_job_ids = {}
+        self.load_lock = asyncio.Lock()
+        self.load_condition = asyncio.Condition()
+        self.autosplit_reserve = [96 / 1024]
+
+    # Required methods
+    @classmethod
+    async def create(cls, model_directory: pathlib.Path, hf_model: HFModel, **kwargs):
+        """
+        Asynchronously creates and initializes a model container instance.
+
+        Args:
+            model_directory: Path to the model files.
+            hf_model: HF config.json wrapper.
+            **kwargs: Backend-specific configuration options.
+
+        Returns:
+            An instance of the implementing class.
+        """
+
+        _hf = hf_model.hf_config
+        _tok = hf_model.tokenizer_config
+        _gen = hf_model.generation_config
+        xlogger.debug(
+            "Creating ExLlamaV3 model instance",
+            {
+                "kwargs": kwargs,
+                "hf_config": _hf.model_dump(mode="json") if _hf else {},
+                "tokenizer_config": _tok.model_dump(mode="json") if _tok else {},
+                "generation_config": _gen.model_dump(mode="json") if _gen else {},
+            },
+        )
+
+        self = cls()
+
+        # Make sure ExllamaV3 is up to date
+        check_package_version("exllamav3", "1.4.7")
+
+        self.model_dir = model_directory
+        self.hf_model = hf_model
+        self.config = Config.from_directory(str(model_directory.resolve()))
+        self.model = Model.from_config(self.config)
+        self.tokenizer = Tokenizer.from_config(self.config)
+
+        # Set CPU offload layers
+        self.config.infer_params.moe_cpu_offload = unwrap(kwargs.get("cpu_moe_offload_layers"), 0)
+
+        # Per-layer expert split: the tail N routed experts of every eligible
+        # MoE layer run on the CPU, with dynamic placement keeping hot experts
+        # in VRAM
+        cpu_moe_split_experts = unwrap(kwargs.get("cpu_moe_split_experts"), 0)
+        if cpu_moe_split_experts:
+            if self.config.infer_params.moe_cpu_offload:
+                raise ValueError(
+                    "cpu_moe_split_experts and cpu_moe_offload_layers are "
+                    "mutually exclusive: the split offloads part of every MoE "
+                    "layer instead of whole layers."
+                )
+            if unwrap(kwargs.get("tensor_parallel"), False):
+                raise ValueError("cpu_moe_split_experts is not supported with tensor parallelism.")
+            self.config.infer_params.moe_cpu_split = cpu_moe_split_experts
+
+        # Worker thread count for both CPU MoE modes; None defers to the
+        # EXL3_MOE_CPU_THREADS env variable, then half the CPU core count
+        cpu_moe_threads = kwargs.get("cpu_moe_threads")
+        if cpu_moe_threads is not None:
+            self.config.infer_params.moe_cpu_threads = cpu_moe_threads
+
+        # Load an n-gram embedding table (PLE models) fully into system RAM
+        # instead of streaming rows from disk per forward. Must be set before
+        # the model weights are loaded
+        if unwrap(kwargs.get("ngram_ram"), False):
+            self.config.infer_params.ngram_stream_from_disk = False
+            xlogger.info("Loading n-gram embeddings into system RAM (ngram_ram).")
+
+        # Prepare vision model if requested in config
+        self.vision_model = None
+        self.use_vision = kwargs.get("vision", False)
+        # Must be set before the vision component is loaded
+        self.config.infer_params.vision_pinned = unwrap(kwargs.get("vision_offload"), False)
+        if self.use_vision:
+            if "vision" in self.config.model_classes:
+                self.vision_model = Model.from_config(self.config, component="vision")
+                if self.config.infer_params.vision_pinned:
+                    xlogger.info("Keeping vision model weights in system RAM (vision_offload).")
+                image_embedding_cache.configure(config.memory.sysmem_multimodal_cache)
+            else:
+                xlogger.warning(
+                    "The provided model does not have vision capabilities that are "
+                    "supported by ExllamaV3. Vision input is disabled."
+                )
+                self.use_vision = False
+        else:
+            if "vision" in self.config.model_classes:
+                xlogger.info(
+                    "The provided model has vision capabilities, vision is disabled in config."
+                )
+
+        # Prepare the draft model config if necessary
+        draft_args = unwrap(kwargs.get("draft_model"), {})
+        draft_mode = unwrap(draft_args.get("draft_mode"), "model")
+        if draft_mode not in {"model", "disabled", "mtp", "ngram"}:
+            raise ValueError(f"Unknown exllamav3 draft mode: {draft_mode}")
+        draft_model_name = draft_args.get("draft_model_name")
+        self.use_draft_model = draft_mode == "mtp" or (
+            draft_mode == "model" and bool(draft_model_name)
+        )
+        self.ngram_match_min = (
+            unwrap(draft_args.get("ngram_match_min"), 2) if draft_mode == "ngram" else 0
+        )
+        if draft_mode == "ngram" and self.ngram_match_min <= 0:
+            raise ValueError("ngram_match_min must be greater than 0 for n-gram drafting")
+        self.draft_num_tokens = (
+            draft_args.get("draft_num_tokens")
+            if self.use_draft_model or self.ngram_match_min
+            else None
+        )
+        self.dynamic_draft = draft_args.get("dynamic_draft", False)
+        self.draft_num_tokens_by_batch = None
+        if draft_args.get("draft_num_tokens_by_batch") is not None:
+            # Inline/load overrides need the same validation as config.yml, before cache allocation
+            draft_policy = DraftModelConfig.model_validate(draft_args)
+            self.draft_num_tokens_by_batch = draft_policy.draft_num_tokens_by_batch
+            # Older Generator versions accept **kwargs and would silently ignore this capability
+            if "num_draft_tokens_by_batch" not in signature(Generator.__init__).parameters:
+                raise RuntimeError("Batch-indexed drafting requires the matching ExLlamaV3 patch")
+
+        # Always disable draft if params are incorrectly configured
+        if draft_mode == "model" and draft_args and draft_model_name is None:
+            xlogger.warning(
+                "Draft model is disabled because a model name "
+                "wasn't provided. Please check your config.yml!"
+            )
+
+        if self.use_draft_model:
+            self.draft_gpu_split = unwrap(draft_args.get("draft_gpu_split"), [])
+            if draft_mode == "mtp":
+                self.draft_model_dir = self.model_dir
+                self.draft_config = self.config
+                self.draft_model = Model.from_config(self.draft_config, component="mtp")
+                xlogger.info("Using main model MTP component for drafting")
+            else:
+                draft_model_path = pathlib.Path(unwrap(draft_args.get("draft_model_dir"), "models"))
+                draft_model_path = draft_model_path / draft_model_name
+                self.draft_model_dir = draft_model_path
+                self.draft_config = Config.from_directory(str(draft_model_path.resolve()))
+                self.draft_model = Model.from_config(self.draft_config)
+                xlogger.info(f"Using draft model: {str(draft_model_path.resolve())}")
+        else:
+            self.draft_model = None
+            self.draft_cache = None
+            if self.ngram_match_min:
+                xlogger.info(
+                    f"Using n-gram drafting with minimum match length {self.ngram_match_min}"
+                )
+
+        # Turn off GPU split if the user is using 1 GPU
+        gpu_count = torch.cuda.device_count()
+        gpu_split_auto = unwrap(kwargs.get("gpu_split_auto"), True)
+        gpu_split = unwrap(kwargs.get("gpu_split"), None)
+        gpu_device_list = list(range(0, gpu_count))
+        use_tp = unwrap(kwargs.get("tensor_parallel"), False)
+
+        # Set GPU split options
+        if gpu_count == 1:
+            self.gpu_split_auto = False
+            xlogger.info("Disabling GPU split because one GPU is in use.")
+        else:
+            # Set tensor parallel
+            if use_tp:
+                self.use_tp = True
+                tp_backend = unwrap(kwargs.get("tensor_parallel_backend"), "native")
+
+                if tp_backend == "nccl" and not exllama_supports_nccl():
+                    unsupported_message = "NCCL is not available. Falling back to native backend."
+                    xlogger.warning(unsupported_message)
+                    tp_backend = "native"
+
+                self.tp_backend = tp_backend
+
+                # TP has its own autosplit loader
+                self.gpu_split_auto = False
+
+            # Set GPU split options
+            # Enable manual GPU split if provided
+            if gpu_split:
+                self.gpu_split_auto = False
+                self.gpu_split = gpu_split
+
+                # Causes crash if set with GPU split
+                # TODO: Remove when fixed in exllama upstream
+                self.autosplit_reserve = None
+
+                gpu_device_list = [
+                    device_idx for device_idx, memory in enumerate(self.gpu_split) if memory > 0
+                ]
+            elif gpu_split_auto and not self.use_tp:
+                # Otherwise fallback to autosplit settings
+                self.gpu_split_auto = gpu_split_auto
+
+                autosplit_reserve_megabytes = unwrap(kwargs.get("autosplit_reserve"), [96])
+
+                # Reserve VRAM for each GPU
+                self.autosplit_reserve = [value / 1024 for value in autosplit_reserve_megabytes]
+
+        if not hardware_supports_exllamav3(gpu_device_list):
+            gpu_unsupported_message = (
+                "Unable to run ExllamaV3 because an unsupported GPU is "
+                "found in this configuration. \n"
+                "All GPUs must be ampere "
+                "(30 series) or newer. AMD GPUs are not supported."
+            )
+
+            xlogger.warning(gpu_unsupported_message)
+
+            raise RuntimeError(gpu_unsupported_message)
+
+        # Determine max_seq_len and cache_size
+        max_seq_len_user = kwargs.get("max_seq_len")
+        max_seq_len_model = self.hf_model.hf_config.get_max_position_embeddings(default=None)
+        max_seq_len_default = 8192
+
+        if max_seq_len_model and not max_seq_len_user:
+            max_seq_len_source = "model default"
+            max_seq_len = max_seq_len_model
+        elif max_seq_len_user:
+            max_seq_len_source = "configured"
+            max_seq_len = max_seq_len_user
+        else:
+            xlogger.warning(
+                f"max_seq_len is undefined. Defaulting to {max_seq_len_default} tokens."
+            )
+            max_seq_len = max_seq_len_default
+            max_seq_len_source = "fallback"
+
+        cache_size_user = kwargs.get("cache_size")
+        cache_size_default = max_seq_len
+
+        if cache_size_user:
+            cache_size = cache_size_user
+        else:
+            xlogger.warning(
+                f"cache_size is undefined. Defaulting to {cache_size_default} tokens. "
+                f"You should ideally configure cache_size explicitly."
+            )
+            cache_size = cache_size_default
+
+        if max_seq_len > cache_size:
+            xlogger.warning(
+                f"The given max_seq_len ({max_seq_len}) is larger than the cache size "
+                f"and will be limited to {cache_size} tokens."
+            )
+            max_seq_len = cache_size
+
+        self.max_seq_len = max_seq_len
+        self.cache_size = cache_size
+
+        xlogger.info(
+            f"Context: max_seq_len {max_seq_len:,} tokens ({max_seq_len_source}), "
+            f"cache_size {cache_size:,} tokens"
+        )
+
+        # Max batch size
+        default_mbs = 4 if self.model.caps.get("recurrent_states") else 128
+        self.max_batch_size = unwrap(kwargs.get("max_batch_size"), default_mbs)
+
+        # Create cache
+        cache_mode_default = "FP16"
+        self.cache_mode = unwrap(kwargs.get("cache_mode"), cache_mode_default)
+        self.cache = self.create_cache(self.cache_mode, self.model)
+
+        # Draft cache
+        if self.use_draft_model:
+            # Set draft cache mode
+            self.draft_cache_mode = unwrap(draft_args.get("draft_cache_mode"), "FP16")
+            self.draft_cache = self.create_cache(self.draft_cache_mode, self.draft_model)
+
+        # Make sure chunk size is >= 256, keep near or below max seq len
+        user_chunk_size = unwrap(kwargs.get("chunk_size"), 2048)
+        self.chunk_size = self.adjust_chunk_size(user_chunk_size)
+
+        # Output chunking
+        output_chunking = unwrap(kwargs.get("output_chunking"), True)
+        self.max_rq_tokens = self.chunk_size if output_chunking else None
+
+        # Template setup
+        self.prompt_template = await find_prompt_template(
+            kwargs.get("prompt_template"), model_directory
+        )
+
+        # Tool calling
+        self.tool_format = kwargs.get("tool_format")
+        if self.tool_format and not is_supported_format(self.tool_format):
+            xlogger.warning(f"Unrecognized tool_format in config: {self.tool_format}")
+            self.tool_format = None
+        if self.tool_format:
+            xlogger.info(f"Using tool format: {self.tool_format}")
+
+        # Catch all for template lookup errors
+        if self.prompt_template:
+            xlogger.info(
+                f'Using template "{self.prompt_template.name}" for chat completions.',
+                {"raw": self.prompt_template.raw_template},
+            )
+        else:
+            xlogger.warning(
+                "Chat completions are disabled because a prompt "
+                "template wasn't provided or auto-detected."
+            )
+
+        # Reasoning mode
+        self.reasoning = kwargs.get("reasoning", False)
+        self.reasoning_start_token = kwargs.get("reasoning_start_token", "<think>")
+        self.reasoning_end_token = kwargs.get("reasoning_end_token", "</think>")
+        self.tool_calls_in_reasoning = kwargs.get("tool_calls_in_reasoning", True)
+
+        # Reasoning budget defaults, overridable per request
+        self.reasoning_budget_tokens = kwargs.get("reasoning_budget_tokens")
+        self.reasoning_budget_message = kwargs.get("reasoning_budget_message")
+
+        # Default and forced chat template variables
+        self.template_vars_default = kwargs.get("template_vars_default") or {}
+        self.template_vars_force = kwargs.get("template_vars_force") or {}
+        if kwargs.get("force_enable_thinking"):
+            xlogger.warning(
+                "force_enable_thinking is deprecated; use "
+                "template_vars_force: {enable_thinking: true} instead."
+            )
+            self.template_vars_force = {
+                "enable_thinking": True,
+                **self.template_vars_force,
+            }
+
+        self.start_in_reasoning = kwargs.get("start_in_reasoning", "auto")
+        if self.start_in_reasoning not in {"auto", "always", "never"}:
+            xlogger.warning(
+                f"Invalid start_in_reasoning value '{self.start_in_reasoning}', using 'auto'."
+            )
+            self.start_in_reasoning = "auto"
+
+        # Harmony message format (gpt-oss). The channel structure is baked
+        # into the checkpoint's special tokens, so auto-detect from the
+        # tokenizer unless overridden in config. Supersedes the reasoning
+        # and tool format settings above.
+        harmony = kwargs.get("harmony")
+        if self.tool_format == "harmony":
+            # Harmony isn't a tag-based tool format; selecting it as one
+            # enables full Harmony parsing
+            if harmony is False:
+                xlogger.warning(
+                    "tool_format: harmony has no effect when harmony is set to "
+                    "false; tool calls will not be parsed."
+                )
+            else:
+                harmony = True
+        if harmony is None:
+            harmony = all(
+                self.tokenizer.single_id(token) is not None
+                for token in ("<|channel|>", "<|message|>", "<|call|>", "<|return|>")
+            )
+        self.harmony = bool(harmony)
+        if self.harmony:
+            xlogger.info("Using the Harmony format for reasoning and tool call parsing.")
+            if self.reasoning or (self.tool_format and self.tool_format != "harmony"):
+                xlogger.warning(
+                    "Harmony supersedes the reasoning and tool format settings "
+                    "in the model config; they will be ignored."
+                )
+
+        # Muse Glimmer message format. Like Harmony, the message structure is
+        # baked into the checkpoint's special tokens, so auto-detect from the
+        # tokenizer unless overridden in config. The token sets are disjoint
+        # (Glimmer has no <|channel|>, Harmony no <|eom|>/<|eot|>), so the
+        # two auto-detections cannot both trigger.
+        glimmer = kwargs.get("muse_glimmer")
+        if self.tool_format in ("muse_glimmer", "glimmer"):
+            # Glimmer isn't a tag-based tool format; selecting it as one
+            # enables full Glimmer parsing
+            if glimmer is False:
+                xlogger.warning(
+                    f"tool_format: {self.tool_format} has no effect when "
+                    "muse_glimmer is set to false; tool calls will not be parsed."
+                )
+            else:
+                glimmer = True
+        if glimmer is None:
+            glimmer = not self.harmony and all(
+                self.tokenizer.single_id(token) is not None
+                for token in ("<|start|>", "<|message|>", "<|eom|>", "<|eot|>")
+            )
+        if glimmer and self.harmony:
+            xlogger.warning(
+                "Both harmony and muse_glimmer are enabled; using Harmony "
+                "and ignoring muse_glimmer."
+            )
+            glimmer = False
+        self.muse_glimmer = bool(glimmer)
+        if self.muse_glimmer:
+            xlogger.info("Using the Muse Glimmer format for reasoning and tool call parsing.")
+            if self.reasoning or (
+                self.tool_format and self.tool_format not in ("muse_glimmer", "glimmer")
+            ):
+                xlogger.warning(
+                    "Muse Glimmer supersedes the reasoning and tool format "
+                    "settings in the model config; they will be ignored."
+                )
+
+        return self
+
+    # Enforce a multiple of 256 for cache size
+    # Overestimate to ensure that the cache isn't below max_seq_len
+    def adjust_cache_size(self, cache_size):
+        cache_remainder = cache_size % 256
+        if cache_remainder != 0:
+            rounded_cache_size = int(256 * ((cache_size - cache_remainder) / 256 + 1))
+            xlogger.warning(
+                f"The given cache size ({cache_size}) is "
+                "not a multiple of 256.\n"
+                "Overriding cache_size with an overestimated value of "
+                f"{rounded_cache_size} tokens."
+            )
+
+            cache_size = rounded_cache_size
+
+        return cache_size
+
+    def adjust_chunk_size(self, user_chunk_size: int):
+        chunk_size = max(256, user_chunk_size)
+        rounded_chunk_size = (chunk_size + 255) // 256 * 256
+        if chunk_size != rounded_chunk_size:
+            xlogger.warning(
+                f"The given chunk size ({chunk_size}) is "
+                "not a multiple of 256.\n"
+                "Overriding chunk_size with an overestimated value of "
+                f"{rounded_chunk_size} tokens."
+            )
+
+            chunk_size = rounded_chunk_size
+
+        return chunk_size
+
+    def job_max_rq_tokens(self, max_tokens: int) -> Optional[int]:
+        """
+        Output chunk size for a job, or None to allocate the whole completion up front.
+
+        ExLlamaV3 reserves cache pages for prompt + max_rq_tokens per round, aligned up
+        to a page (or recurrent checkpoint) boundary, regardless of max_new_tokens. A
+        completion that fits inside a single chunk never requeues, so chunking it would
+        only over-reserve pages and reduce concurrency. Reserve exactly what it needs.
+        """
+
+        if self.max_rq_tokens is None or max_tokens <= 0:
+            return self.max_rq_tokens
+
+        if max_tokens <= self.max_rq_tokens:
+            return None
+
+        return self.max_rq_tokens
+
+    def create_cache(self, raw_cache_mode: str, model: Model):
+        # Cast exl2 types to exl3
+        match raw_cache_mode:
+            case "Q4":
+                raw_cache_mode = "4,4"
+            case "Q6":
+                raw_cache_mode = "6,6"
+            case "Q8":
+                raw_cache_mode = "8,8"
+
+        split_cache_mode = re.search(r"^([2-8])\s*,\s*([2-8])$", raw_cache_mode)
+
+        if self.draft_model:
+            default_draft_tokens = self.draft_model.caps.get("default_draft_size", 4)
+        elif self.ngram_match_min:
+            default_draft_tokens = 4
+        else:
+            default_draft_tokens = 0
+        batch_draft_args = {
+            "max_batch_size": self.max_batch_size,
+            "max_history": (
+                self.draft_num_tokens if self.draft_num_tokens is not None else default_draft_tokens
+            ),
+        }
+
+        if self.draft_num_tokens_by_batch is not None:
+            # Recurrent rejection can rewind any policy depth, regardless of the first batch size
+            batch_draft_args["max_history"] = max(
+                batch_draft_args["max_history"],
+                *(depth for _, depth in self.draft_num_tokens_by_batch),
+            )
+
+        if split_cache_mode:
+            draft_k_bits = int(split_cache_mode.group(1))
+            draft_v_bits = int(split_cache_mode.group(2))
+            cache = Cache(
+                model,
+                max_num_tokens=self.cache_size,
+                layer_type=CacheLayer_quant,
+                k_bits=draft_k_bits,
+                v_bits=draft_v_bits,
+                **batch_draft_args,
+            )
+        else:
+            cache = Cache(
+                model,
+                max_num_tokens=self.cache_size,
+                **batch_draft_args,
+            )
+
+        return cache
+
+    def model_info(self) -> ModelCard:
+        """
+        Returns a dictionary of the current model's configuration parameters.
+
+        Returns:
+            Model parameters provided by the backend
+        """
+
+        model_params = ModelCardParameters(
+            max_seq_len=self.max_seq_len,
+            cache_size=self.cache_size,
+            max_batch_size=self.max_batch_size,
+            cache_mode=self.cache_mode,
+            chunk_size=self.chunk_size,
+            use_vision=self.use_vision,
+        )
+
+        if self.prompt_template:
+            model_params.prompt_template = self.prompt_template.name
+            model_params.prompt_template_content = self.prompt_template.raw_template
+
+        model_card = ModelCard(
+            id=self.model_dir.name,
+            parameters=model_params,
+            meta=read_model_meta(self.model_dir, n_ctx=self.max_seq_len, include_size=True),
+        )
+
+        return model_card
+
+    async def wait_for_jobs(self, skip_wait: bool = False):
+        """
+        Polling to wait for any active generation jobs to complete.
+
+        Args:
+            skip_wait: If True, cancel jobs immediately instead of waiting.
+        """
+
+        if not self.generator:
+            return
+
+        # Immediately abort all jobs if asked
+        if skip_wait:
+            xlogger.warning(
+                "Immediately terminating all jobs. Clients will have their requests cancelled.\n"
+            )
+
+            for job in self.active_job_ids.values():
+                if job:
+                    await job.cancel()
+
+        while len(self.active_job_ids) > 0:
+            await asyncio.sleep(0.01)
+
+    # TODO: Wire up exllamav3's LoRA support once the API surface for it is decided
+    async def load_loras(self, lora_directory: pathlib.Path, **kwargs) -> Dict[str, List[str]]:
+        """Stub. LoRAs aren't hooked up to the ExLlamaV3 backend yet."""
+
+        xlogger.error("LoRA loading is not hooked up to the ExLlamaV3 backend yet.")
+        return {
+            "success": [],
+            "failure": [lora.get("name", "unknown") for lora in kwargs.get("loras", [])],
+        }
+
+    def get_loras(self) -> List[Any]:
+        """Stub. LoRAs aren't hooked up to the ExLlamaV3 backend yet."""
+
+        return []
+
+    async def load_gen(self, progress_callback=None, **kwargs):
+        """
+        Loads the model into memory, yielding progress updates.
+
+        Args:
+            progress_callback: Optional callback for progress updates.
+            **kwargs: Additional loading options.
+
+        Yields:
+            Progress updates
+        """
+
+        try:
+            await self.load_lock.acquire()
+
+            # Wait for existing generation jobs to finish
+            await self.wait_for_jobs(kwargs.get("skip_wait"))
+
+            load_start = time.perf_counter()
+            generator = self.load_model_sync(progress_callback)
+            async for value in iterate_in_threadpool(generator):
+                yield value
+
+            # Create async generator
+            await self.create_generator()
+
+            # Clean up any extra vram usage from torch and cuda
+            # (Helps reduce VRAM bottlenecking on Windows)
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # Cleanup and update model load state
+            self.loaded = True
+            xlogger.info(f"Model loaded in {time.perf_counter() - load_start:.1f} s")
+        finally:
+            self.load_lock.release()
+
+            async with self.load_condition:
+                self.load_condition.notify_all()
+
+    @torch.inference_mode()
+    def load_model_sync(self, progress_callback=None):
+        if self.use_vision:
+            for value in self.vision_model.load_gen(
+                reserve_per_device=self.autosplit_reserve,
+                use_per_device=self.gpu_split or None,
+                callback=progress_callback,
+            ):
+                if value:
+                    yield value
+
+        if self.use_draft_model:
+            for value in self.draft_model.load_gen(
+                reserve_per_device=self.autosplit_reserve,
+                use_per_device=self.draft_gpu_split or None,
+                callback=progress_callback,
+            ):
+                if value:
+                    yield value
+
+        if self.use_tp:
+            split_mode = "tensor parallel"
+        elif self.gpu_split_auto:
+            split_mode = "autosplit"
+        else:
+            split_mode = "manual GPU split"
+
+        xlogger.info(f"Loading model {self.model_dir} ({split_mode})")
+
+        for value in self.model.load_gen(
+            tensor_p=self.use_tp,
+            tp_backend=self.tp_backend,
+            reserve_per_device=self.autosplit_reserve,
+            use_per_device=self.gpu_split,
+            callback=progress_callback,
+            max_chunk_size=self.chunk_size,
+            max_batch_size=self.max_batch_size,
+        ):
+            if value:
+                yield value
+
+    async def create_generator(self):
+        """Create and save a Exllama generator class."""
+
+        try:
+            # Don't acquire locks unless a model is loaded
+            if self.loaded:
+                await self.load_lock.acquire()
+
+                # Immediately cancel all jobs
+                await self.wait_for_jobs(skip_wait=True)
+
+                # Retire the previous generator before replacing it. Cancelling the
+                # jobs alone leaves its iteration task alive, parked on an emptied
+                # job condition that nothing will ever signal again, which keeps the
+                # old sync Generator reachable for the life of the process. close()
+                # stops the task and wakes any consumer still parked on a job queue.
+                # After a latch the task has already exited, so this is a no-op there.
+                if self.generator is not None:
+                    await self.generator.close()
+
+            # Create new generator
+            self.generator = AsyncGenerator(
+                model=self.model,
+                cache=self.cache,
+                draft_model=self.draft_model,
+                draft_cache=self.draft_cache,
+                tokenizer=self.tokenizer,
+                max_batch_size=self.max_batch_size,
+                max_chunk_size=self.chunk_size,
+                recurrent_cache_size=config.memory.sysmem_recurrent_cache * 1024**2,
+                cpu_cache_size=config.memory.sysmem_kv_cache * 1024**2,
+                num_draft_tokens=self.draft_num_tokens,
+                num_draft_tokens_by_batch=self.draft_num_tokens_by_batch,
+                dynamic_draft_tokens=self.dynamic_draft,
+                ngram_match_min=self.ngram_match_min,
+            )
+
+            # Update the state of the container var
+            if self.max_batch_size is None:
+                self.max_batch_size = self.generator.generator.max_batch_size
+        finally:
+            # This means the generator is being recreated
+            # The load lock is already released in the load function
+            if self.loaded:
+                self.load_lock.release()
+
+                async with self.load_condition:
+                    self.load_condition.notify_all()
+
+    async def unload(self, loras_only: bool = False, **kwargs):
+        """
+        Unloads the model and associated resources from memory.
+
+        Args:
+            loras_only: If True, only unload LoRAs.
+            **kwargs: Additional unloading options (e.g., shutdown).
+        """
+
+        # Nothing to do for LoRA-only unloads until LoRAs are hooked up
+        if loras_only:
+            xlogger.error("LoRA unloading is not hooked up to the ExLlamaV3 backend yet.")
+            return
+
+        # Used when shutting down the server
+        do_shutdown = kwargs.get("shutdown")
+
+        try:
+            if not do_shutdown:
+                await self.load_lock.acquire()
+
+                # Wait for other jobs to finish
+                await self.wait_for_jobs(kwargs.get("skip_wait"))
+
+            # Clear the image embedding cache
+            clear_image_embedding_cache()
+
+            self.model.unload()
+            self.model = None
+            self.config = None
+            self.cache = None
+            self.tokenizer = None
+
+            if self.use_draft_model:
+                self.draft_model.unload()
+                self.draft_model = None
+                self.draft_config = None
+                self.draft_cache = None
+
+            if self.use_vision:
+                self.vision_model.unload()
+                self.vision_model = None
+
+            # Cleanup the generator from any pending jobs
+            if self.generator is not None:
+                await self.generator.close()
+                self.generator = None
+
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            xlogger.info("Model unloaded.")
+        finally:
+            if not do_shutdown:
+                self.load_lock.release()
+
+                async with self.load_condition:
+                    self.load_condition.notify_all()
+
+    def encode_tokens(self, text: str, **kwargs) -> List[int]:
+        """
+        Encodes a string of text into a list of token IDs.
+
+        Args:
+            text: The input text string.
+            **kwargs: Backend-specific encoding options (e.g., add_bos_token).
+
+        Returns:
+            A list of integer token IDs.
+        """
+
+        mm_embeddings: MultimodalEmbeddingWrapper = kwargs.get("embeddings")
+        mm_embeddings_content = mm_embeddings.content if mm_embeddings else []
+
+        return (
+            self.tokenizer.encode(
+                text,
+                add_bos=unwrap(kwargs.get("add_bos_token"), self.hf_model.add_bos_token()),
+                encode_special_tokens=unwrap(kwargs.get("encode_special_tokens"), True),
+                embeddings=mm_embeddings_content,
+            )
+            .flatten()
+            .tolist()
+        )
+
+    def decode_tokens(self, ids: List[int], **kwargs) -> str:
+        """
+        Decodes a list of token IDs back into a string.
+
+        Args:
+            ids: A list of integer token IDs.
+            **kwargs: Backend-specific decoding options (e.g., decode_special_tokens).
+
+        Returns:
+            The decoded text string.
+        """
+
+        ids = torch.tensor([ids])
+        return self.tokenizer.decode(
+            ids,
+            decode_special_tokens=unwrap(kwargs.get("decode_special_tokens"), True),
+        )[0]
+
+    def get_special_tokens(self, add_bos_token: bool = True, ban_eos_token: bool = False):
+        """
+        Gets special tokens used by the model/tokenizer.
+
+        Args:
+            **kwargs: Options like add_bos_token, ban_eos_token.
+
+        Returns:
+            A dictionary mapping special token names (e.g., 'bos_token', 'eos_token')
+            to their string or ID representation.
+        """
+
+        return {
+            "bos_token": self.tokenizer.bos_token if add_bos_token else "",
+            "eos_token": self.tokenizer.eos_token if not ban_eos_token else "",
+            "pad_token": self.tokenizer.pad_token,
+            "unk_token": self.tokenizer.unk_token,
+        }
+
+    def validate_context_length(
+        self,
+        prompt: str,
+        params: BaseSamplerRequest,
+        mm_embeddings: Optional[MultimodalEmbeddingWrapper] = None,
+    ):
+        context_len = len(
+            self.encode_tokens(
+                prompt,
+                add_bos_token=unwrap(params.add_bos_token, self.hf_model.add_bos_token()),
+                embeddings=mm_embeddings,
+            )
+        )
+        max_tokens = unwrap(params.max_tokens, 0)
+        if max_tokens <= 0:
+            max_tokens = self.max_seq_len - context_len - 1
+
+        generator = self.generator.generator
+        allocation_boundary = (
+            generator.recurrent_checkpoint_interval
+            if generator.recurrent_cache is not None
+            else 256
+        )
+        validate_context_requirements(
+            context_len,
+            self.max_seq_len,
+            max_tokens,
+            self.cache.max_num_tokens,
+            self.job_max_rq_tokens(max_tokens),
+            allocation_boundary,
+        )
+
+    async def generate(
+        self,
+        request_id: str,
+        prompt: str,
+        params: BaseSamplerRequest,
+        abort_event: Optional[asyncio.Event] = None,
+        mm_embeddings: Optional[MultimodalEmbeddingWrapper] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generates a complete response for a given prompt and parameters.
+
+        Args:
+            request_id: Unique identifier for the generation request.
+            prompt: The input prompt string.
+            params: Sampling and generation parameters.
+            abort_event: An asyncio Event to signal cancellation.
+            mm_embeddings: Optional multimodal embeddings.
+
+        Returns:
+            A dictionary containing the generation info
+        """
+
+        generations = []
+        async for generation in self.stream_generate(
+            request_id,
+            prompt,
+            params,
+            abort_event,
+            mm_embeddings,
+        ):
+            if generation is None:
+                continue
+            generations.append(generation)
+
+        joined_generation = {
+            "text": "",
+            "prompt_tokens": 0,
+            "generation_tokens": 0,
+            "offset": [],
+            "token_probs": {},
+            "logprobs": [],
+        }
+
+        if generations:
+            # Get finish_reason first and then shift where -1 points to
+            if "finish_reason" in generations[-1]:
+                finish_chunk = generations.pop()
+                joined_generation = {**joined_generation, **finish_chunk}
+            else:
+                joined_generation["finish_reason"] = "stop"
+
+        if len(generations) > 0:
+            for generation in generations:
+                joined_generation["text"] += unwrap(generation.get("text"), "")
+                joined_generation["offset"].append(unwrap(generation.get("offset"), -1))
+                joined_generation["token_probs"].update(unwrap(generation.get("token_probs"), {}))
+
+                # Include empty logprob dicts for index preservation
+                joined_generation["logprobs"].append(unwrap(generation.get("logprobs"), {}))
+
+            joined_generation["prompt_tokens"] = unwrap(generations[-1].get("prompt_tokens"), 0)
+            joined_generation["generated_tokens"] = unwrap(
+                generations[-1].get("generated_tokens"), 0
+            )
+
+        return joined_generation
+
+    async def stream_generate(
+        self,
+        request_id: str,
+        prompt: str,
+        params: BaseSamplerRequest,
+        disconnect_handler: DisconnectHandler = None,
+        mm_embeddings: Optional[MultimodalEmbeddingWrapper] = None,
+        filter_trigger: str = None,
+        label: Optional[str] = None,
+    ) -> AsyncIterator[Dict[str, Any]]:
+        """
+        Generates a response iteratively (streaming) for a given prompt.
+
+        Args:
+            request_id: Unique identifier for the generation request.
+            prompt: The input prompt string.
+            params: Sampling and generation parameters.
+            disconnect_handler: Disconnect context
+            mm_embeddings: Optional multimodal embeddings.
+            filter_trigger: Delay filters (from params) until trigger text.
+                Must map to single token.
+            label: Short name for the request in console logs.
+
+        Yields:
+            Generation chunks
+        """
+
+        try:
+            # Wait for load lock to be freed before processing
+            # Mainly used for loras and other operations where the class is available
+            async with self.load_condition:
+                await self.load_condition.wait_for(lambda: not self.load_lock.locked())
+
+            # If the model is being unloaded, don't accept new requests
+            if not self.loaded:
+                raise RuntimeError(
+                    "Model is being unloaded. Cannot process new generation requests."
+                )
+
+            # Mark that the job is running
+            self.active_job_ids[request_id] = None
+
+            # Yield from the internal generator
+            async for generation_chunk in self.generate_gen(
+                request_id=request_id,
+                prompt=prompt,
+                params=params,
+                disconnect_handler=disconnect_handler,
+                mm_embeddings=mm_embeddings,
+                filter_trigger=filter_trigger,
+                label=label,
+            ):
+                yield generation_chunk
+        finally:
+            # Clean up and remove the job from active IDs
+            del self.active_job_ids[request_id]
+
+    def constrain_generation_output(self, request_id: str, text: str) -> bool:
+        """
+        Force `text` into the output stream of an active generation job: the
+        next sampled tokens are constrained to the given string, then sampling
+        resumes. Used to end the reasoning phase when a reasoning budget is
+        exhausted. Returns False if the job is not running or the installed
+        exllamav3 version does not support output constraints.
+        """
+
+        job = self.active_job_ids.get(request_id)
+        if job is None:
+            return False
+
+        # TODO: Call directly once the minimum exllamav3 version requirement
+        #       includes AsyncJob.constrain_output_now
+        if not hasattr(job, "constrain_output_now"):
+            xlogger.warning(
+                "The installed exllamav3 version does not support output "
+                "constraints; the reasoning budget is ignored."
+            )
+            return False
+
+        # Encode here rather than passing the string through: tokenizers with
+        # a BOS post-processor (Llama-3 style) prepend BOS regardless of
+        # add_bos, which would corrupt the injection
+        ids = self.tokenizer.encode(text, encode_special_tokens=True, add_bos=False)
+        if ids.shape[-1] > 0 and ids[0, 0].item() == self.tokenizer.bos_token_id:
+            ids = ids[:, 1:]
+        if ids.shape[-1] == 0:
+            return False
+
+        job.constrain_output_now(ids)
+        return True
+
+    def handle_logprobs(self, result: dict, generation: dict):
+        """
+        Translate EXL3 logprobs to OAI format
+
+        # TODO: Maybe handle token bytes
+        """
+
+        # Get ids and probs: [1, num]
+        token_probs = result.get("token_probs")
+        token_ids = result.get("token_ids")
+        if token_ids is None or token_ids.numel() == 0 or token_probs is None:
+            return
+        token_logprobs = token_probs.log()
+
+        # Optionally get top-k tokens and probs: [1, num, K]
+        top_tokens = result.get("top_k_tokens")
+        top_probs = result.get("top_k_probs")
+        if top_tokens is not None and top_probs is not None:
+            top_logprobs = top_probs.log()
+        else:
+            top_logprobs = None
+
+        # Iterate over sequence
+        vocab = self.tokenizer.get_id_to_piece_list(True)
+        content = []
+        for i in range(token_ids.shape[-1]):
+            # Prob for sampled token
+            _token_id = token_ids[0, i].item()
+            _token_str = vocab[_token_id]
+            _logprob = token_logprobs[0, i].item()
+            c = ChatCompletionLogprob(token=_token_str, token_id=_token_id, logprob=_logprob)
+
+            # Top-K choices for token position
+            if top_logprobs is not None:
+                _top_tokens = top_tokens[0, i].tolist()
+                _top_logprobs = top_logprobs[0, i].tolist()
+                c.top_logprobs = [
+                    ChatCompletionLogprobLeaf(
+                        token=vocab[t], token_id=t, logprob=-1000.0 if p == float("-inf") else p
+                    )
+                    for t, p in zip_longest(_top_tokens, _top_logprobs)
+                ]
+
+            content.append(c)
+
+        generation["logprobs_content"] = content
+
+    def handle_finish_chunk(
+        self, result: dict, request_id: str, full_text: str, label: Optional[str] = None
+    ):
+        eos_reason = result.get("eos_reason")
+        label = label or f"request {request_id}"
+
+        stop_str = None
+        if eos_reason == "max_new_tokens":
+            finish_reason = "length"
+        else:
+            finish_reason = "stop"
+            # Grab stop string if stop was the reason
+            if eos_reason == "stop_token":
+                stop_str = result.get("eos_triggering_token_str")
+            elif eos_reason == "stop_string":
+                stop_str = result.get("eos_triggering_string")
+            elif eos_reason == "loop_detected":
+                xlogger.warning(
+                    f"{label}: generation stopped because a token loop was detected",
+                    {
+                        "request_id": request_id,
+                        "eos_reason": eos_reason,
+                        "prompt_tokens": result.get("prompt_tokens"),
+                        "gen_tokens": result.get("new_tokens"),
+                        "result": result,
+                    },
+                )
+
+        # Prompt
+        prompt_tokens = result.get("prompt_tokens")
+        cached_tokens = round(result.get("cached_tokens"), 2)
+        prompt_time = round(result.get("time_prefill"), 2)
+        prompt_ts = (
+            "Indeterminate"
+            if prompt_time == 0
+            else round((prompt_tokens - cached_tokens) / prompt_time, 2)
+        )
+
+        # Generated
+        gen_tokens = result.get("new_tokens")
+        gen_time = result.get("time_generate")
+        gen_ts = "Indeterminate" if gen_time == 0 else round(gen_tokens / gen_time, 2)
+
+        # Queue + Total
+        queue_time = result.get("time_enqueued")
+        total_time = round(queue_time + prompt_time + gen_time, 2)
+
+        # Drafting
+        accepted_draft_tokens = result.get("accepted_draft_tokens")
+        rejected_draft_tokens = result.get("rejected_draft_tokens")
+
+        finish_chunk = {
+            "request_id": request_id,
+            "prompt_tokens": prompt_tokens,
+            "prompt_time": round(prompt_time, 2),
+            "prompt_tokens_per_sec": prompt_ts,
+            "gen_tokens": gen_tokens,
+            "gen_time": round(gen_time, 2),
+            "gen_tokens_per_sec": gen_ts,
+            "total_time": total_time,
+            "queue_time": round(queue_time, 2),
+            "cached_tokens": cached_tokens,
+            "finish_reason": finish_reason,
+            "eos_reason": eos_reason,
+            "stop_str": stop_str,
+            "full_text": full_text,
+        }
+
+        # TODO: Add extended draft stats in backend
+        if accepted_draft_tokens is not None:
+            finish_chunk.update(
+                {
+                    "draft_accept": accepted_draft_tokens,
+                    "draft_reject": rejected_draft_tokens,
+                }
+            )
+
+        return finish_chunk
+
+    def _generator_latched(self) -> bool:
+        """
+        Whether the async generator is unusable. exllamav3 sets AsyncGenerator.error when
+        an exception escapes Generator.iterate(), which kills the iteration task for every
+        job. Errors it contains per job (reap_failed_job) never set it. A wrapper without
+        the attribute can't be inspected, so it is treated as latched to keep the historical
+        always-recreate behaviour.
+        """
+
+        return (
+            self.generator is None
+            or not hasattr(self.generator, "error")
+            or self.generator.error is not None
+        )
+
+    async def _recover_from_generation_error(self, ex: Exception, job):
+        """
+        Handle an exception raised while consuming a job. Recreating the generator cancels
+        every other in-flight request (wait_for_jobs), whose clients then get partial or
+        empty completions with HTTP 200, so that only happens when the generator actually
+        latched. A contained error leaves the generator healthy; the failed job is cancelled
+        in case the error came from this consumer rather than the engine, so it doesn't keep
+        generating into a queue nobody drains (cancel is a no-op for a job the engine reaped).
+        """
+
+        if self._generator_latched():
+            xlogger.error(
+                "FATAL ERROR with generation. "
+                "Attempting to recreate the generator. "
+                "If this fails, please restart the server.\n",
+                {"exception": str(ex)},
+            )
+            asyncio.ensure_future(self.create_generator())
+
+            await HealthManager.add_unhealthy_event(ex)
+        else:
+            xlogger.warning(
+                "Generation failed; error was contained to this request and the "
+                "generator is still healthy.",
+                {"exception": str(ex)},
+            )
+            if not job.cancelled:
+                await job.cancel()
+
+    async def generate_gen(
+        self,
+        request_id: str,
+        prompt: str,
+        params: BaseSamplerRequest,
+        disconnect_handler: DisconnectHandler = None,
+        mm_embeddings: Optional[MultimodalEmbeddingWrapper] = None,
+        filter_trigger: str = None,
+        label: Optional[str] = None,
+    ):
+        """
+        Create generator function for prompt completion.
+
+        for kwargs, check common/sampling.py
+        """
+        chunk_tokens: torch.Tensor | tuple[torch.Tensor, torch.Tensor]
+        label = label or f"request {request_id}"
+
+        xlogger.debug(
+            f"Starting generation, ID: {request_id}",
+            {"request_id": request_id, "params": params.model_dump(mode="json")},
+        )
+
+        # Build the sampler stack. Greedy if temperature is 0
+        sampler_builder = ExllamaV3SamplerBuilder.from_params(
+            params, self.tokenizer, self.max_seq_len
+        )
+        sampler = sampler_builder.build(params.temperature == 0)
+        settings = list(sampler_builder.settings)
+
+        # Dynamically scale penalty range to output tokens
+        # Only do this if freq/pres pen is enabled
+        # and the repetition range is -1
+        # TODO: This currently does not work in exl3
+        # auto_scale_penalty_range = (
+        #     gen_settings.token_frequency_penalty != 0
+        #     or gen_settings.token_presence_penalty != 0
+        # ) and gen_settings.token_repetition_range == -1
+
+        prompts = [prompt]
+        stop_conditions = params.stop
+        add_bos_token = unwrap(params.add_bos_token, self.hf_model.add_bos_token())
+        grammar_handler = ExLlamaV3Grammar()
+
+        # Get multimodal embeddings if present
+        mm_embeddings_content = mm_embeddings.content if mm_embeddings else []
+
+        # Fetch EOS tokens from generation_config if they exist
+        eos_tokens = self.hf_model.eos_tokens() or [self.tokenizer.eos_token_id]
+
+        stop_conditions += eos_tokens
+
+        # Include stop conditions deduced by backend tokenizer
+        stop_conditions += self.config.eos_token_id_list
+        stop_conditions = list(set(stop_conditions))
+
+        input_ids = [
+            self.tokenizer.encode(
+                prompt,
+                add_bos=add_bos_token,
+                encode_special_tokens=True,
+                embeddings=mm_embeddings_content,
+            )
+            for prompt in prompts
+        ]
+
+        # The first index will always be the positive prompt
+        context_len = input_ids[0].size(dim=-1)
+
+        # Unless specified in the request, automatically set max_tokens to fill up
+        # the context
+        max_tokens = unwrap(params.max_tokens, 0)
+        if max_tokens <= 0:
+            max_tokens = self.max_seq_len - context_len - 1
+
+        # Validate the initial job before the generator's page-allocation assertion
+        max_rq_tokens = self.job_max_rq_tokens(max_tokens)
+        generator = self.generator.generator
+        allocation_boundary = (
+            generator.recurrent_checkpoint_interval
+            if generator.recurrent_cache is not None
+            else 256
+        )
+        validate_context_requirements(
+            context_len,
+            self.max_seq_len,
+            max_tokens,
+            self.cache.max_num_tokens,
+            max_rq_tokens,
+            allocation_boundary,
+        )
+
+        # Log prompt to console. Add the BOS token if specified
+        log_prompt(
+            f"{self.tokenizer.bos_token if add_bos_token else ''}{prompt}",
+            label,
+        )
+
+        if params.json_schema or params.regex_pattern or params.grammar_string:
+            if filter_trigger is not None:
+                trigger_token_id = self.tokenizer.single_id(filter_trigger)
+                if trigger_token_id is None:
+                    xlogger.warning(
+                        "Unable to set trigger token for filters: no token ID for "
+                        f"`{filter_trigger}`."
+                    )
+            else:
+                trigger_token_id = None
+
+            if params.json_schema:
+                grammar_handler.add_json_schema_filter(
+                    params.json_schema, self.tokenizer, trigger_token_id=trigger_token_id
+                )
+
+            if params.regex_pattern:
+                grammar_handler.add_regex_filter(
+                    params.regex_pattern, self.tokenizer, trigger_token_id=trigger_token_id
+                )
+
+            if params.grammar_string:
+                grammar_handler.add_grammar_filter(
+                    params.grammar_string, self.tokenizer, trigger_token_id=trigger_token_id
+                )
+
+        # Generation controls, listed after the sampler settings
+        if params.max_tokens:
+            settings.append(("max_tokens", max_tokens))
+        else:
+            settings.append(("max_tokens", (max_tokens, "auto")))
+        if params.min_tokens:
+            settings.append(("min_tokens", params.min_tokens))
+        # Templates add their own stop strings; only report the client's
+        if params.stop and params.param_source("stop") != "default":
+            settings.append(("stop", f"{len(params.stop)} sequences"))
+        if params.banned_strings:
+            settings.append(("banned_strings", f"{len(params.banned_strings)} strings"))
+        if params.json_schema:
+            settings.append(("json_schema", True))
+        if params.regex_pattern:
+            settings.append(("regex_pattern", True))
+        if params.grammar_string:
+            settings.append(("grammar_string", True))
+        if params.token_healing:
+            settings.append(("token_healing", True))
+        if params.logprobs or params.top_logprobs:
+            settings.append(("logprobs", max(params.logprobs or 0, params.top_logprobs or 0)))
+        if params.param_source("loop_detect_window") != "default":
+            settings.append(("loop_detect_window", params.loop_detect_window))
+
+        settings_text = format_settings(settings, params)
+        log_request_start(
+            label,
+            context_len,
+            settings_text,
+            {
+                "request_id": request_id,
+                "prompt_tokens": context_len,
+                "settings": {name: str(value) for name, value in settings},
+            },
+        )
+
+        generation = {}
+        job = AsyncJob(
+            self.generator,
+            sampler=sampler,
+            input_ids=input_ids,
+            max_new_tokens=max_tokens,
+            min_new_tokens=unwrap(params.min_tokens, 0),
+            token_healing=unwrap(params.token_healing, False),
+            decode_special_tokens=True,
+            stop_conditions=stop_conditions,
+            banned_strings=params.banned_strings,
+            embeddings=mm_embeddings_content,
+            return_top_tokens=params.top_logprobs,
+            return_probs=bool(params.logprobs) or bool(params.top_logprobs),
+            max_rq_tokens=max_rq_tokens,
+            stop_on_loop=params.get_stop_on_loop(),
+            filters=grammar_handler.filters,
+        )
+        self.active_job_ids[request_id] = job
+        await disconnect_handler.add_cleanup_task(id(job), job.cancel, ())
+        job_status = status_display.add_job(request_id, label, context_len)
+
+        generated_tokens = 0
+        full_response = ""
+        metrics_result = {}
+
+        # Get the generation status once it's ready
+        try:
+            async for result in job:
+                await disconnect_handler.poll()
+
+                stage = result.get("stage")
+                if stage == "started":
+                    job_status.started(result.get("cached_tokens", 0))
+                elif stage == "prefill":
+                    job_status.prefill(result.get("curr_progress", 0))
+
+                # The generator can produce several results per iteration
+                # (speculative decoding), while this consumer may only get one
+                # scheduling slot per iteration whenever an await above or
+                # downstream actually suspends. Merge everything already
+                # queued so streaming keeps pace with generation instead of
+                # backing up until the generator goes idle.
+                if result.get("stage") == "streaming" and not result.get("eos"):
+                    span = [result]
+                    while not job.queue.empty():
+                        nxt = job.queue.get_nowait()
+                        if isinstance(nxt, Exception):
+                            raise nxt
+                        if not isinstance(nxt, dict):
+                            # Cancellation sentinel: stop consuming
+                            raise CancelledError("Job cancelled while draining results")
+                        if nxt.get("stage") != "streaming":
+                            continue
+                        span.append(nxt)
+                        if nxt.get("eos"):
+                            break
+                    if len(span) > 1:
+                        result = _merge_stream_results(span)
+
+                chunk = unwrap(result.get("text"), "")
+                if chunk:
+                    chunk_tokens = result.get("token_ids")
+                    if chunk_tokens is None:
+                        chunk_tokens = self.tokenizer.encode(chunk)
+                    full_response += chunk
+
+                    # Extract token IDs as a plain list for downstream consumers
+                    if isinstance(chunk_tokens, torch.Tensor):
+                        token_id_list = chunk_tokens.flatten().tolist()
+                        generated_tokens += len(token_id_list)
+                    elif isinstance(chunk_tokens, tuple):
+                        first = chunk_tokens[0]
+                        if isinstance(first, torch.Tensor):
+                            token_id_list = first.flatten().tolist()
+                        else:
+                            token_id_list = list(first)
+                        generated_tokens += len(token_id_list)
+                    else:
+                        token_id_list = list(chunk_tokens)
+                        generated_tokens += len(token_id_list)
+
+                    # Increase penalty range to generated token amount
+                    # TODO:
+                    # if auto_scale_penalty_range:
+                    #     gen_settings.token_repetition_range = generated_tokens
+
+                    generation = {
+                        "request_id": request_id,
+                        "text": chunk,
+                        "token_ids": token_id_list,
+                        "prompt_tokens": context_len,
+                        "generated_tokens": generated_tokens,
+                        "offset": len(full_response),
+                    }
+
+                    if params.logprobs > 0:
+                        self.handle_logprobs(result, generation)
+
+                    job_status.generated(generated_tokens)
+                    yield generation
+
+                if result.get("eos"):
+                    xlogger.debug("EOS result received from generator", result)
+                    finish_chunk = self.handle_finish_chunk(
+                        result, request_id, full_response, label
+                    )
+                    await disconnect_handler.finish(id(job))
+
+                    # Save the final result for metrics logging
+                    metrics_result = finish_chunk
+
+                    yield finish_chunk
+                    break
+
+        except CancelledError:
+            if not job.cancelled:
+                await job.cancel()
+
+        except Exception as ex:
+            await self._recover_from_generation_error(ex, job)
+
+            if isinstance(ex, AssertionError) and "cannot be enqueued" in str(ex):
+                raise ContextLengthExceededError(
+                    f"{str(ex)}. The request exceeds the available context size."
+                ) from ex
+
+            raise ex
+        finally:
+            status_display.remove_job(request_id)
+
+            # Log generation options to console
+            # Some options are too large, so log the args instead
+            log_generation_params(
+                label,
+                request_id=request_id,
+                bos_token_id=self.tokenizer.bos_token_id,
+                eos_token_id=eos_tokens,
+                prompt=prompt,
+                **params.model_dump(exclude={"prompt"}),
+                # auto_scale_penalty_range=auto_scale_penalty_range,  # TODO
+            )
+
+            # Log the metrics if present
+            if metrics_result:
+                log_metrics(
+                    label,
+                    metrics_result,
+                    context_len,
+                    self.max_seq_len,
+                )

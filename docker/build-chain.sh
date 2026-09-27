@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 37 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 39 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -13,18 +13,24 @@
 #   bverify-r1, mtpnorm-r1, mixstate-r1, stack-r1   Dockerfile.tabbyapi-bverify / -mtpnorm / -mixstate / -prefbatch
 #   slotfix-r1, hcfast-r1, stack-r2, stack-r3, stack-r3-rows32   overlays (stack-r2 = moefast-r1)
 #   stack-r3-rows32-tokcount                  overlays/tokcount-r1 (the requeue token-count fix)
-#   stack-r3-rows32-tokcount-loopthink3       overlays/loop-think-r3 (TabbyAPI: a reasoning-phase loop ends the reasoning)   <- the served tag
+#   stack-r3-rows32-tokcount-loopthink3       overlays/loop-think-r3 (TabbyAPI: a reasoning-phase loop ends the reasoning; the rollback tag)
+#   stack-r3-rows32-tokcount-loopthink4       overlays/loop-think-r4 (loop-think-r3 plus a long-period detector), on …-tokcount
+#   rebase-dev-r3                             overlays/rebase-dev-r3 (the engine replaced by upstream ExLlamaV3 dev 5783a93 +
+#                                                                      ported-vs-dev.patch, native rebuild)   <- the served tag
+# rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
+# from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
 # its base, Dockerfile.tabbyapi-qsa-cid starts again from nvidia/cuda:12.8.1-devel-ubuntu24.04.
 #
 # Requirements: x86_64 Linux, Docker with BuildKit, and a builder that sees locally built tags (`docker buildx use default`,
 # the `docker` driver): every layer after the first is `FROM <previous tag>`. No GPU is used; CUDA code compiles for sm_120
 # with nvcc from the CUDA devel base. The native rebuilds (qsa-cid, the four -bszn layers, mixstate-r1, hcfast-r1, stack-r2,
-# stack-r3, stack-r3-rows32 and the JIT builds of the overlays) dominate the time; MAX_JOBS sets their parallelism.
-# Network: GitHub (TabbyAPI, the ExLlamaV3 wheel), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
+# stack-r3, stack-r3-rows32, rebase-dev-r3 and the JIT builds of the overlays) dominate the time; MAX_JOBS sets their parallelism.
+# Network: GitHub (TabbyAPI, the ExLlamaV3 wheel, the ExLlamaV3 source at 5783a93), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
 # Cost (R739, 2026-09-26, bench/results/r739-build-verify.md): 57 min on a Ryzen 7 9800X3D with MAX_JOBS=12 and the CUDA base
 # already pulled, niced beside a serving engine; 59 GB of disk beyond the base; the final image is 48 GB. TabbyAPI's Python
-# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745).
+# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the two
+# layers after it were not part of a verification build.
 #
 # Knobs:
 #   DRY_RUN=1   print every docker command and check the COPY sources of every Dockerfile; runs no docker command
@@ -169,9 +175,23 @@ build "$R32"                           $O/rows32-r4/Dockerfile.box    $O/rows32-
   --build-arg STACK_INCLUDE="$S3INC" --build-arg DGV2_NVCC_DEFS="$S3DEF" --build-arg PATCH_SHA="$(sha $O/rows32-r4/rows32-r4.patch)" ${JOBS[@]+"${JOBS[@]}"}
 TC=$R32-tokcount
 build "$TC"                            $O/tokcount-r1/Dockerfile.box  $O/tokcount-r1  --build-arg BASE="$R32"
-FINAL=$TC-loopthink3
-build "$FINAL"                         $O/loop-think-r3/Dockerfile.box $O/loop-think-r3 --build-arg BASE="$TC" \
+build "$TC-loopthink3"                 $O/loop-think-r3/Dockerfile.box $O/loop-think-r3 --build-arg BASE="$TC" \
   --label local.loopthink.patch_sha256="$(sha $O/loop-think-r3/fix.patch)"
+L4=$TC-loopthink4
+build "$L4"                            $O/loop-think-r4/Dockerfile.box $O/loop-think-r4 --build-arg BASE="$TC" \
+  --label local.loopthink.patch_sha256="$(sha $O/loop-think-r4/fix.patch)"
+# rebase-dev-r3 takes its base's image ID and the dgv2 label that loopthink4 inherits from stack-r3 (overlays/rebase-dev-r3/Dockerfile.box)
+bash $O/rebase-dev-r3/prepare-tree.sh
+if [ "$DRY_RUN" = 1 ]; then
+  L4ID="<docker image inspect $L4 --format {{.Id}}>"; L4DEF="<label local.stack.dgv2_defs of $L4>"
+else
+  L4ID=$("${DOCKER_CMD[@]}" image inspect "$L4" --format '{{.Id}}')
+  L4DEF=$("${DOCKER_CMD[@]}" image inspect "$L4" --format '{{index .Config.Labels "local.stack.dgv2_defs"}}')
+fi
+FINAL=$R:rebase-dev-r3
+build "$FINAL"                         $O/rebase-dev-r3/Dockerfile.box $O/rebase-dev-r3 --build-arg BASE="$L4" --build-arg BASE_ID="$L4ID" \
+  --build-arg DGV2_NVCC_DEFS="$L4DEF" --build-arg TREE_SHA="$(sed -nE 's/^TREE_SHA=([0-9a-f]{64})$/\1/p' $O/rebase-dev-r3/prepare-tree.sh)" \
+  ${JOBS[@]+"${JOBS[@]}"}
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

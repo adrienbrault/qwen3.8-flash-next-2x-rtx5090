@@ -45,6 +45,37 @@ The greedy set runs 1 stream, so it covers verify rows 1 and 4 only. The draft p
 
 A patch that changes numerics also passes GSM8K n=500 through [`bench/nostop_proxy.py`](../bench/nostop_proxy.py), paired per question against the served configuration ([R509](../bench/results/r509-gsm8k-nostop.md) explains why the proxy), before it reaches the promotion unit. Speed is judged on two boots per arm (OFF / ON / OFF2 / ON2) and on the multi-prompt probe when output changes ([R487](../bench/results/r487-pool-393k.md)).
 
+## A rebase onto a new upstream engine (2026-09-27)
+
+A port of the served stack onto a newer upstream ExLlamaV3 changes numerics by design, so neither identity track applies. It is judged on memory, speed against the served image in one session, and then on quality gates on the serving port. The first one is `tabbyapi:rebase-dev-r3` on upstream `dev` `5783a93` ([R784](../bench/results/r784-rebase-dev-r3.md), [R785](../bench/results/r785-promote-rebase-r3.md)).
+
+**Speed and memory, one ABBA block** ([`scripts/r784-rebase-dev-r3.sh`](../scripts/r784-rebase-dev-r3.sh); the rule is the code in [`r784_decide.py`](../docker/overlays/rebase-dev-r3/r784_decide.py), fixed before the run). Boots S1, P, P2, S2 on port 8029, tier off, power and clock offsets read back per boot.
+
+- Pool: the largest pool on the 16,384-token grid whose boot leaves each card's free VRAM at least S1's minus 32 MiB, with no out-of-memory line after a 12,000-token probe; floor 884,736.
+- Decode: `mp_decode`, 24 code and 24 prose prompts at 1, 4 and 8 streams, 512 forced greedy tokens each, paired by prompt. Code and prose at 4 and at 8 streams each need a geometric mean P / S of at least 0.99 and a bootstrap 95 % lower bound of at least 0.98; 1 stream is reported.
+- Cold prefill: median P / S of 3 salted prompts at least 0.95 at both settings (about 22,600 and 90,000 tokens).
+- Health: every measured boot answers sanely, 0 out-of-memory lines, tracebacks and restarts.
+- VOID: S2 against S1 at 4 streams outside the A/A band (the script's default is ±0.9 %; R784 ran ±2 %, set by the operator), S2's greedy output not identical to S1's, S1's free VRAM off its reference by more than 32 MiB, power or offsets not as intended, or missing rows.
+
+R784 read `NOT-A-CANDIDATE` on one clause, prose at 8 streams with a lower bound of −2.30 %. The review of the run found this decode clause underpowered for a change of numerics: with a candidate of equal speed, all four gated cells pass together 20 to 27 % of the time, and the width of the prose interval at 8 streams comes from per-prompt differences in MTP acceptance between the two engines, which more boots on the same prompts do not narrow ([R784](../bench/results/r784-rebase-dev-r3.md)). The decode cells also use short prompts only.
+
+**Quality gates on the serving port** ([`scripts/r785-promote-rebase-r3.sh`](../scripts/r785-promote-rebase-r3.sh)). The unit renders the launcher from a template with the pool and split found above, installs it keeping the previous one, boots it on port 8022 in the production configuration, and rolls back on the first failure.
+
+| gate | pass |
+| --- | --- |
+| G1 boot | image, environment keys, tier, pool and split as rendered; free VRAM per card at least the speed unit's S1 minus 32 MiB |
+| G2 greedy reference | `fn_greedy` and `chat_greedy` complete, with one chat row across the 2,048-token requeue; recorded as the new reference, no identity check |
+| G3 ramp and stress | 1 to 8 streams 36/36; 4 and 8 streams at 19,500-token prompts, 0 out-of-memory |
+| G4 headroom | 0 out-of-memory lines and 0 restarts over G3, a 90k prefill and G6 |
+| G5 loop detection | the loop-think cases of the image (forced loop, thinking-off loop, agent-turn replay) |
+| G6 needles | 5/5 at 131,072 and 240,000 prompt tokens |
+| G7 agent replay | 600 s of [`bench/agent_replay.py`](../bench/agent_replay.py) at R722's flags, per-stream decode at least 0.98 × R722's reference arms |
+| G8 agentic edit | 4 modes × 6/6 |
+| G9 tool-eval | 69 scenarios × 4, mean at least 82.0 |
+| G10 GSM8K | n = 500 documents, 8 concurrent, through the no-stop proxy, flexible-extract at least 0.970; 0.960 to 0.970 re-runs at 4 concurrent |
+
+`USER_ACCEPT_DECODE=1` lets the unit proceed on a `NOT-A-CANDIDATE` whose every failing clause is decode; any other failing clause aborts it. R785 ran with it. G7's bar is about 6.5 % below the previous image's own reading (128.6 in R728), so it does not detect a long-context decode loss of that size; a same-session ABBA of the replay against the previous launcher does.
+
 ## 2026-09-16: the first promotion of this stack
 
 The rest of this document records the gates the 3.05 bpw pack on TabbyAPI + ExLlamaV3 passed when it was first served, and where it stood on each.

@@ -1,0 +1,8 @@
+landing: stripping image EXL3_* keys and re-executing: ['EXL3_DECODE_FUSE', 'EXL3_DECODE_OVERLAP', 'EXL3_EMBED_GPU_PRUNED', 'EXL3_MOE_COOP_V2', 'EXL3_MOE_PREFILL_E3', 'EXL3_SHARED_EXPERT_OVERLAP']
+W0927 11:04:35.661000 1 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+ext: /opt/venv/lib/python3.12/site-packages/exllamav3_ext.cpython-312-x86_64-linux-gnu.so; exllamav3 1.5.2 from /opt/venv/lib/python3.12/site-packages/exllamav3
+torch 2.9.0+cu128 (CUDA 12.8): optin attr present
+loop-think r4 landing (on this exllamav3): W0927 11:04:36.530000 23 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+served landing: rows32 r4 landed: moe_rows32_revision 2 on stack-r3 (INCLUDE 'mf3 dg2'); flags default off (caps 16, dense (0, 0)); with the three flags MAX_BSZN 32/32, coop cap 32, dense (0, 1); 4b-without-4c and non-0/1 values refused
+tokcount r1 landing (on the ported job.py): W0927 11:04:45.433000 215 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+rebase-dev-r3 landed: exllamav3 1.5.2 (served stack-r3-rows32 on dev 5783a93), precompiled extension in site; served landing (rows32 r4 + stack-r3) PASS on the ported tree; the 41-key served env imports and resolves (V3 level 2, rows cap 32, dense (1, 1), E3-DET, LC 2/1/div16); tokcount-r1 present (base landing PASS); loop-think r4 landing and engine contract PASS; upstream tiled / det-routing / fractional-K / DFlash2 / smem-budget entry points present; optin attr present

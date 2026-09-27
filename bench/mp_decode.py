@@ -5,8 +5,12 @@ A single fixed prompt cannot rank two arms that decode different text: MTP accep
 moved c1 by -13 % .. +11 % between numerically different arms (R542, R545). This probe decodes many distinct prompts per arm
 and pairs them by prompt id, so the content effect averages out and the comparison is per prompt.
 
-  run      one boot: c1 over every prompt, then c4 in groups of four distinct prompts; one JSONL line per request
-  compare  pair two arms by (kind, conc, prompt id), mean over boots per arm, geometric-mean ratio B/A with a bootstrap CI
+  run      one boot: c1 over every prompt, then each --concs level N > 1 in groups of N distinct prompts (default
+           --concs 1 4, the R542 behaviour; R741 runs --concs 1 4 8 = 3 groups of 8 per kind at n 24); one JSONL line
+           per request
+  compare  pair two arms by (kind, conc, prompt id), mean over boots per arm, geometric-mean ratio B/A with a bootstrap CI,
+           for every concurrency present in the files, per kind and pooled ("both": code + prose prompts together);
+           --summary-json writes the same numbers for a decision script
 
 Requests reuse fn_bench.one (forced length via min_tokens, streaming, decode_tps = (n - 1) / decode window).
 """
@@ -89,23 +93,26 @@ def cmd_run(a):
     out = open(a.out, "a")
     for kind, prompts in (("code", CODE), ("prose", PROSE)):
         prompts = prompts[: a.n]
-        for i, p in enumerate(prompts):
+        for i, p in enumerate(prompts if 1 in a.concs else []):
             sink = []
             fb.one(i, a.url, a.model, p, a.tokens, True, sink, a.timeout)
             for r in sink:
                 out.write(json.dumps({"tag": a.tag, "kind": kind, "conc": 1, "pid": i, **r}) + "\n")
             out.flush()
-        for g in range(0, len(prompts) - len(prompts) % 4, 4):
-            sink = []
-            ths = [threading.Thread(target=fb.one, args=(g + j, a.url, a.model, prompts[g + j], a.tokens, True, sink, a.timeout))
-                   for j in range(4)]
-            for t in ths:
-                t.start()
-            for t in ths:
-                t.join()
-            for r in sink:
-                out.write(json.dumps({"tag": a.tag, "kind": kind, "conc": 4, "pid": r["i"], **r}) + "\n")
-            out.flush()
+        for conc in a.concs:
+            if conc == 1:
+                continue
+            for g in range(0, len(prompts) - len(prompts) % conc, conc):
+                sink = []
+                ths = [threading.Thread(target=fb.one, args=(g + j, a.url, a.model, prompts[g + j], a.tokens, True, sink, a.timeout))
+                       for j in range(conc)]
+                for t in ths:
+                    t.start()
+                for t in ths:
+                    t.join()
+                for r in sink:
+                    out.write(json.dumps({"tag": a.tag, "kind": kind, "conc": conc, "pid": r["i"], **r}) + "\n")
+                out.flush()
     out.close()
 
 
@@ -120,19 +127,29 @@ def cmd_compare(a):
         val[(arm, r["kind"], r["conc"], r["pid"])].append(r["decode_tps"])
         short[(arm, r["kind"], r["conc"])] += (r["completion_tokens"] or 0) < r["min_tokens"]
     rng = random.Random(7)
-    for kind in ("code", "prose"):
-        for conc in (1, 4):
-            pids = sorted({k[3] for k in val if k[1] == kind and k[2] == conc and (a.a, kind, conc, k[3]) in val and (a.b, kind, conc, k[3]) in val})
-            if not pids:
+    summary = []
+    concs = sorted({k[2] for k in val})
+    for conc in concs:
+        for kind in ("code", "prose", "both"):
+            kinds = ("code", "prose") if kind == "both" else (kind,)
+            keys = sorted({(k[1], k[3]) for k in val if k[1] in kinds and k[2] == conc
+                           and (a.a, k[1], conc, k[3]) in val and (a.b, k[1], conc, k[3]) in val})
+            if not keys:
                 continue
-            lr = [math.log(st.mean(val[(a.b, kind, conc, p)]) / st.mean(val[(a.a, kind, conc, p)])) for p in pids]
+            lr = [math.log(st.mean(val[(a.b, kd, conc, p)]) / st.mean(val[(a.a, kd, conc, p)])) for kd, p in keys]
             boots = sorted(st.mean(rng.choice(lr) for _ in lr) for _ in range(4000))
             g = math.exp(st.mean(lr)); lo, hi = math.exp(boots[100]), math.exp(boots[3899])
-            ma = st.mean(st.mean(val[(a.a, kind, conc, p)]) for p in pids); mb = st.mean(st.mean(val[(a.b, kind, conc, p)]) for p in pids)
-            print(f"{kind} c{conc}: {len(pids)} prompts, per-request decode_tps {a.a} {ma:.1f} / {a.b} {mb:.1f}; "
+            ma = st.mean(st.mean(val[(a.a, kd, conc, p)]) for kd, p in keys); mb = st.mean(st.mean(val[(a.b, kd, conc, p)]) for kd, p in keys)
+            sa = sum(short[(a.a, kd, conc)] for kd in kinds); sb = sum(short[(a.b, kd, conc)] for kd in kinds)
+            print(f"{kind} c{conc}: {len(keys)} prompts, per-request decode_tps {a.a} {ma:.1f} / {a.b} {mb:.1f}; "
                   f"paired geo-mean {a.b}/{a.a} {(g - 1) * 100:+.2f} %, 95 % CI [{(lo - 1) * 100:+.2f}, {(hi - 1) * 100:+.2f}] %; "
                   f"per-prompt range {(math.exp(min(lr)) - 1) * 100:+.1f} .. {(math.exp(max(lr)) - 1) * 100:+.1f} %; "
-                  f"short {a.a} {short[(a.a, kind, conc)]} / {a.b} {short[(a.b, kind, conc)]}")
+                  f"short {a.a} {sa} / {a.b} {sb}")
+            summary.append({"a": a.a, "b": a.b, "kind": kind, "conc": conc, "n": len(keys), "tps_a": ma, "tps_b": mb,
+                            "ratio": g, "ci_lo": lo, "ci_hi": hi, "short_a": sa, "short_b": sb})
+    if a.summary_json:
+        with open(a.summary_json, "w") as f:
+            json.dump(summary, f, indent = 1)
 
 
 def main():
@@ -144,12 +161,15 @@ def main():
     r.add_argument("--tag", required = True, help = "arm letter(s) + boot number, e.g. A1, B2")
     r.add_argument("--tokens", type = int, default = 512)
     r.add_argument("--n", type = int, default = 24)
+    r.add_argument("--concs", type = int, nargs = "+", default = [1, 4],
+                   help = "concurrency levels; 1 = every prompt alone, N > 1 = groups of N distinct prompts (default 1 4)")
     r.add_argument("--timeout", type = float, default = 900)
     r.add_argument("--fn-bench", default = str(Path(__file__).with_name("probe.py")))
     r.add_argument("--out", required = True)
     c = sub.add_parser("compare")
     c.add_argument("--a", default = "A")
     c.add_argument("--b", default = "B")
+    c.add_argument("--summary-json", default = None)
     c.add_argument("files", nargs = "+")
     a = ap.parse_args()
     cmd_run(a) if a.cmd == "run" else cmd_compare(a)

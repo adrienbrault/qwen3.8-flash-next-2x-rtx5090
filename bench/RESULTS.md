@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-27
 
+- [R785: `tabbyapi:rebase-dev-r3` (the served stack on ExLlamaV3 `dev` 5783a93, v1.5.2, with loop-think r4) promoted at a 901,120-token pool on the quality gates, passed twice: GSM8K 0.982 / 0.980 (n = 500), tool-eval 85.5 / 86.5, needles 5/5 at 131k and 240k, agentic edit 24/24; the agent replay reads 123.0 / 123.7 t/s per stream against 128.6 on the previous image two days earlier, a possible 4 to 6 % long-context decode regression not yet measured in one session; two of four runs rolled back on harness bugs](results/r785-promote-rebase-r3.md)
+- [R784: the served stack on ExLlamaV3 `dev` 5783a93 fits 901,120 pool tokens (−8.3 %), cold prefill 1.134× at 90k tokens, short-prompt decode within −1.3 to +1.6 % at 1 to 8 streams; greedy output changes by design (4 of 6 completion and 1 of 5 chat prompts identical); not a candidate on the pre-registered decode rule (prose at 8 streams, interval lower bound −2.30 %), which a review found underpowered](results/r784-rebase-dev-r3.md)
 - [R781 to R783: a loop in the thinking ends the thinking instead of the request; `stack-r3-rows32-tokcount-loopthink3` promoted: the chat collector detects a repeated period of up to 400 tokens in the reasoning and forces `</think>`, where the request used to end as `stop` with no content; greedy output identical on 6 completion and 5 chat prompts; a loop prefilled in the thinking answered 2 of 2, a thinking-off loop stopped at 800 tokens 2 of 2; periods above 400 tokens are not covered](results/r783-loopthink.md)
 
 ## 2026-09-26

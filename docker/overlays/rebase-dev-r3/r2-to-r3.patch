@@ -1,0 +1,2015 @@
+diff --git a/exllamav3/exllamav3_ext/arch.cuh b/exllamav3/exllamav3_ext/arch.cuh
+new file mode 100644
+index 0000000..981a228
+--- /dev/null
++++ b/exllamav3/exllamav3_ext/arch.cuh
+@@ -0,0 +1,32 @@
++#pragma once
++
++// Architecture feature gates.
++//
++// EXL3 was written against sm_80+. Turing (sm_75) is missing three things the EXL3 GEMM
++// relies on, and each one is handled in a different place:
++//
++//   1. cp.async         -> ptx.cuh falls back to plain synchronous 16 B smem stores. The
++//                          pipeline's existing __syncthreads() calls already provide the
++//                          ordering the async waits used to provide, so the fallback is
++//                          correct, just without global->shared overlap.
++//   2. mma.m16n8k16     -> ptx.cuh issues two mma.m16n8k8 instead. The k=16 fragment splits
++//                          exactly into the two k=8 fragments (A: {a0,a1} then {a2,a3},
++//                          B: b0 then b1), so this is bit-equivalent, not an approximation.
++//   3. 90 KB shared mem -> Turing caps dynamic shared memory at 64 KB per block. The limit is
++//                          a host-side launch parameter, so it is resolved per device at
++//                          runtime (DevCtx::get_smem_max) and shapes that do not fit are
++//                          filtered out of kernel selection rather than failing at launch.
++//
++// ldmatrix, __nanosleep, __dp4a and tanh.approx.f32 are all sm_75-capable and need no gate.
++
++#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 800)
++    #define EXL3_SM75 1
++#else
++    #define EXL3_SM75 0
++#endif
++
++// Dynamic shared memory per block. SMEM_MAX stays at the sm_86 value because it only bounds
++// the compile-time static_assert in exl3_gemm_inner.cuh, which must keep accepting every
++// template instantiation. What actually gets requested at launch is the per-device value.
++#define EXL3_SMEM_MAX_DEFAULT (90 * 1024)
++#define EXL3_SMEM_MAX_SM75    (64 * 1024)
+diff --git a/exllamav3/exllamav3_ext/bindings.cpp b/exllamav3/exllamav3_ext/bindings.cpp
+index 3a4dc08..1249249 100644
+--- a/exllamav3/exllamav3_ext/bindings.cpp
++++ b/exllamav3/exllamav3_ext/bindings.cpp
+@@ -186,9 +186,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
+     m.attr("dense_v2_lc_guard") = DENSE_V2_LC_GUARD;   // stack-r3: latchain side-branch dense calls use their own V2 scratch
+     m.def("dense_v2_lc_side_counts", &dense_v2_lc_side_counts, "dense_v2_lc_side_counts");
+     m.def("exl3_gemm_num_kernel_shapes", &exl3_gemm_num_kernel_shapes, "exl3_gemm_num_kernel_shapes");
+-    m.def("exl3_gemm_shape_compat", &exl3_gemm_shape_compat, "exl3_gemm_shape_compat");
++    m.def("exl3_gemm_shape_compat", &exl3_gemm_shape_compat, "exl3_gemm_shape_compat",
++          py::arg("shape_idx"), py::arg("size_m"), py::arg("size_k"), py::arg("size_n"), py::arg("bits"), py::arg("half_k") = false);
+     m.def("g_get_cc", &g_get_cc, "g_get_cc");
+     m.def("g_get_num_sms", &g_get_num_sms, "g_get_num_sms");
++    m.def("g_get_smem_max", &g_get_smem_max, "g_get_smem_max");
+     m.def("exl3_gemv_int8_max_k", &exl3_gemv_int8_max_k, "exl3_gemv_int8_max_k");
+     m.def("exl3_moe_cpu_make_layer", &exl3_moe_cpu_make_layer, "exl3_moe_cpu_make_layer");
+     m.def("exl3_moe_cpu_free_layer", &exl3_moe_cpu_free_layer, "exl3_moe_cpu_free_layer");
+diff --git a/exllamav3/exllamav3_ext/det_gemm.cuh b/exllamav3/exllamav3_ext/det_gemm.cuh
+index 87bd188..db102db 100644
+--- a/exllamav3/exllamav3_ext/det_gemm.cuh
++++ b/exllamav3/exllamav3_ext/det_gemm.cuh
+@@ -60,10 +60,14 @@ __device__ __forceinline__ void det_quant16(const float* v, float inv, int4& hi4
+ 
+ __device__ __forceinline__ void det_mma_s8(int* c, const unsigned* a, const unsigned* b)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+     asm volatile(
+         "mma.sync.aligned.m16n8k32.row.col.s32.s8.s8.s32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};\n"
+         : "+r"(c[0]), "+r"(c[1]), "+r"(c[2]), "+r"(c[3])
+         : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b[0]), "r"(b[1]));
++#else
++    (void) c; (void) a; (void) b;
++#endif
+ }
+ 
+ // One k32 step of the three-pass product for a 16 x 8 tile: hh += A_hi B_hi; x += A_hi B_lo + A_lo B_hi
+@@ -88,14 +92,34 @@ __device__ __forceinline__ float det_flush(int hh, int x, float scale, float acc
+ __device__ __forceinline__ unsigned det_smem_u32(const void* p) { return (unsigned) __cvta_generic_to_shared(p); }
+ __device__ __forceinline__ void det_cp_async16(unsigned dst, const void* src, int src_bytes)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+     asm volatile("cp.async.cg.shared.global [%0], [%1], 16, %2;\n" :: "r"(dst), "l"(src), "r"(src_bytes));
++#else
++    (void) dst; (void) src; (void) src_bytes;
++#endif
++}
++__device__ __forceinline__ void det_cp_async_commit()
++{
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
++    asm volatile("cp.async.commit_group;\n" ::);
++#endif
++}
++template <int N> __device__ __forceinline__ void det_cp_async_wait()
++{
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
++    asm volatile("cp.async.wait_group %0;\n" :: "n"(N));
++#else
++    (void) N;
++#endif
+ }
+-__device__ __forceinline__ void det_cp_async_commit() { asm volatile("cp.async.commit_group;\n" ::); }
+-template <int N> __device__ __forceinline__ void det_cp_async_wait() { asm volatile("cp.async.wait_group %0;\n" :: "n"(N)); }
+ __device__ __forceinline__ void det_ldmatrix_x4(unsigned* r, unsigned addr)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 750
+     asm volatile("ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%0,%1,%2,%3}, [%4];\n"
+                  : "=r"(r[0]), "=r"(r[1]), "=r"(r[2]), "=r"(r[3]) : "r"(addr));
++#else
++    (void) r; (void) addr;
++#endif
+ }
+ // Byte offset of 16-byte piece c (0..7) of row r in a dense 128-byte-row int8 tile, XOR-swizzled
+ // so that both 16-byte async stores and ldmatrix fragment loads are bank-conflict free
+diff --git a/exllamav3/exllamav3_ext/hgemm_f16acc.cu b/exllamav3/exllamav3_ext/hgemm_f16acc.cu
+index 83fc5a1..00adc77 100644
+--- a/exllamav3/exllamav3_ext/hgemm_f16acc.cu
++++ b/exllamav3/exllamav3_ext/hgemm_f16acc.cu
+@@ -71,32 +71,64 @@ __device__ __forceinline__ uint32_t smem_u32(const void* p)
+ }
+ __device__ __forceinline__ void cp_async16(void* smem, const void* gmem, bool pred)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+     int src_size = pred ? 16 : 0;    // 0 -> zero-fill, no global read
+     asm volatile("cp.async.cg.shared.global [%0], [%1], 16, %2;\n"
+                  :: "r"(smem_u32(smem)), "l"(gmem), "r"(src_size));
++#else
++    (void) smem; (void) gmem; (void) pred;
++#endif
++}
++__device__ __forceinline__ void cp_async_commit()
++{
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
++    asm volatile("cp.async.commit_group;\n" ::);
++#endif
++}
++template <int N> __device__ __forceinline__ void cp_async_wait()
++{
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
++    asm volatile("cp.async.wait_group %0;\n" :: "n"(N));
++#else
++    (void) N;
++#endif
+ }
+-__device__ __forceinline__ void cp_async_commit() { asm volatile("cp.async.commit_group;\n" ::); }
+-template <int N> __device__ __forceinline__ void cp_async_wait() { asm volatile("cp.async.wait_group %0;\n" :: "n"(N)); }
+ __device__ __forceinline__ void ldmatrix_x4(uint32_t* r, const void* p)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 750
+     asm volatile("ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%0,%1,%2,%3}, [%4];\n"
+                  : "=r"(r[0]), "=r"(r[1]), "=r"(r[2]), "=r"(r[3]) : "r"(smem_u32(p)));
++#else
++    (void) r; (void) p;
++#endif
+ }
+ __device__ __forceinline__ void ldmatrix_x4_trans(uint32_t* r, const void* p)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 750
+     asm volatile("ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%0,%1,%2,%3}, [%4];\n"
+                  : "=r"(r[0]), "=r"(r[1]), "=r"(r[2]), "=r"(r[3]) : "r"(smem_u32(p)));
++#else
++    (void) r; (void) p;
++#endif
+ }
+ __device__ __forceinline__ void mma_f16(uint32_t* c, const uint32_t* a, const uint32_t* b)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+     asm volatile("mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16 {%0,%1}, {%2,%3,%4,%5}, {%6,%7}, {%0,%1};\n"
+                  : "+r"(c[0]), "+r"(c[1]) : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b[0]), "r"(b[1]));
++#else
++    (void) c; (void) a; (void) b;
++#endif
+ }
+ __device__ __forceinline__ void mma_f32(float* c, const uint32_t* a, const uint32_t* b)
+ {
++#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 800
+     asm volatile("mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};\n"
+                  : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                  : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b[0]), "r"(b[1]));
++#else
++    (void) c; (void) a; (void) b;
++#endif
+ }
+ 
+ template <bool OUT_F32, int TILE_N = 128, bool TUNED = false>
+diff --git a/exllamav3/exllamav3_ext/ptx.cuh b/exllamav3/exllamav3_ext/ptx.cuh
+index be50a68..4ba4039 100644
+--- a/exllamav3/exllamav3_ext/ptx.cuh
++++ b/exllamav3/exllamav3_ext/ptx.cuh
+@@ -1,5 +1,6 @@
+ #pragma once
+ #include <cuda/atomic>
++#include "arch.cuh"
+ 
+ // Tensor core fragments
+ 
+@@ -49,6 +50,18 @@ __device__ inline void ptx_mma_m8n8k4
+ // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#matrix-fragments-for-mma-m16n8k16-with-floating-point-type
+ 
+ // FP16 @ FP16 + FP32 -> FP32
++//
++// Turing has no m16n8k16. The k=16 operation is the sum of two k=8 operations over disjoint
++// halves of the k dimension, and the register-to-element mapping of m16n8k8 is exactly the
++// low half of m16n8k16's: A {a0,a1} covers k=0..7 and {a2,a3} covers k=8..15, B b0 then b1,
++// C identical. Chaining two mmas through the same accumulator computes the same products over
++// the same operands.
++//
++// It is not guaranteed bit-identical: PTX does not specify the internal accumulation order of
++// a k=16 step, and the split forces a rounding of the partial sum at the k=8 boundary that the
++// fused form need not perform. The difference is at most one extra rounding per 16-element dot
++// product, far below the quantization noise EXL3 already carries. tests/test_sm75_gemm.py
++// bounds it against a dequantize-then-matmul reference.
+ __device__ inline void ptx_mma_m16n8k16
+ (
+     const FragA& frag_a,
+@@ -61,6 +74,28 @@ __device__ inline void ptx_mma_m16n8k16
+     float* c = reinterpret_cast<float*>(&frag_c);
+     const float* d = reinterpret_cast<const float*>(&frag_c);
+ 
++#if EXL3_SM75
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f32.f16.f16.f32 "
++        "{%0,%1,%2,%3}, {%4,%5}, {%6}, {%7,%8,%9,%10};\n"
++
++        : "=f"(c[0]), "=f"(c[1]), "=f"(c[2]), "=f"(c[3])
++        :  "r"(a[0]), "r"(a[1]),
++           "r"(b[0]),
++           "f"(d[0]), "f"(d[1]), "f"(d[2]), "f"(d[3])
++    );
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f32.f16.f16.f32 "
++        "{%0,%1,%2,%3}, {%4,%5}, {%6}, {%7,%8,%9,%10};\n"
++
++        : "=f"(c[0]), "=f"(c[1]), "=f"(c[2]), "=f"(c[3])
++        :  "r"(a[2]), "r"(a[3]),
++           "r"(b[1]),
++           "f"(d[0]), "f"(d[1]), "f"(d[2]), "f"(d[3])
++    );
++#else
+     asm
+     (
+         "mma.sync.aligned.m16n8k16.row.col.f32.f16.f16.f32 "
+@@ -71,6 +106,7 @@ __device__ inline void ptx_mma_m16n8k16
+            "r"(b[0]), "r"(b[1]),
+            "f"(d[0]), "f"(d[1]), "f"(d[2]), "f"(d[3])
+     );
++#endif
+ }
+ 
+ // FP16 @ FP16 + FP16 -> FP16
+@@ -86,6 +122,28 @@ __device__ inline void ptx_mma_m16n8k16
+     uint32_t* c = reinterpret_cast<uint32_t*>(&frag_c);
+     const uint32_t* d = reinterpret_cast<const uint32_t*>(&frag_c);
+ 
++#if EXL3_SM75
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16 "
++        "{%0,%1}, {%2,%3}, {%4}, {%5,%6};\n"
++
++        : "=r"(c[0]), "=r"(c[1])
++        :  "r"(a[0]), "r"(a[1]),
++           "r"(b[0]),
++           "r"(d[0]), "r"(d[1])
++    );
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16 "
++        "{%0,%1}, {%2,%3}, {%4}, {%5,%6};\n"
++
++        : "=r"(c[0]), "=r"(c[1])
++        :  "r"(a[2]), "r"(a[3]),
++           "r"(b[1]),
++           "r"(d[0]), "r"(d[1])
++    );
++#else
+     asm
+     (
+         "mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16 "
+@@ -96,6 +154,7 @@ __device__ inline void ptx_mma_m16n8k16
+            "r"(b[0]), "r"(b[1]),
+            "r"(d[0]), "r"(d[1])
+     );
++#endif
+ }
+ 
+ // Global barrier
+@@ -143,6 +202,13 @@ __device__ inline void barrier_release
+ 
+ __device__ inline void cp_async_pred(void* smem_ptr, const void* glob_ptr, bool pred = true)
+ {
++#if EXL3_SM75
++    if (pred)
++    {
++        uint4 v = *reinterpret_cast<const uint4*>(glob_ptr);
++        *reinterpret_cast<uint4*>(smem_ptr) = v;
++    }
++#else
+     const int bytes = 16;
+     uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+     asm volatile(
+@@ -152,12 +218,23 @@ __device__ inline void cp_async_pred(void* smem_ptr, const void* glob_ptr, bool
+         "   @p cp.async.cg.shared.global [%1], [%2], %3;\n"
+         "}\n" :: "r"((int) pred), "r"(smem), "l"(glob_ptr), "n"(bytes)
+     );
++#endif
+ }
+ 
+ // Load global to shared memory
++//
++// Turing (sm_75) has no cp.async, so the copy degrades to a synchronous 16 B load/store pair
++// routed through registers. Correctness is unaffected: cp_async_wait() below becomes a no-op,
++// but every consumer of a staged tile already passes a __syncthreads() (see wait_stage() in
++// exl3_gemm_inner.cuh) before reading it, and a synchronous store has completed by then. The
++// cost is the lost global->shared overlap, which is a throughput loss, not a hazard.
+ 
+ __device__ inline void cp_async(void* smem_ptr, const void* glob_ptr)
+ {
++#if EXL3_SM75
++    uint4 v = *reinterpret_cast<const uint4*>(glob_ptr);
++    *reinterpret_cast<uint4*>(smem_ptr) = v;
++#else
+     const int bytes = 16;
+     uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+     asm volatile(
+@@ -165,12 +242,18 @@ __device__ inline void cp_async(void* smem_ptr, const void* glob_ptr)
+         "   cp.async.cg.shared.global [%0], [%1], %2;\n"
+         "}\n" :: "r"(smem), "l"(glob_ptr), "n"(bytes)
+     );
++#endif
+ }
+ 
+ // Load global to shared memory with cache hint to evict data from L2 ASAP
+ 
+ __device__ inline void cp_async_stream(void* smem_ptr, const void* glob_ptr)
+ {
++#if EXL3_SM75
++    // No cp.async and no createpolicy on Turing; the L2 hint is only an optimization
++    uint4 v = *reinterpret_cast<const uint4*>(glob_ptr);
++    *reinterpret_cast<uint4*>(smem_ptr) = v;
++#else
+     uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
+     const int bytes = 16;
+     asm volatile
+@@ -181,13 +264,16 @@ __device__ inline void cp_async_stream(void* smem_ptr, const void* glob_ptr)
+         "   cp.async.cg.shared.global.L2::cache_hint [%0], [%1], %2, p;\n"
+         "}\n" :: "r"(smem), "l"(glob_ptr), "n"(bytes)
+     );
++#endif
+ }
+ 
+ // Async copy fence, commit all pending async copies
+ 
+ __device__ inline void cp_async_fence()
+ {
++#if !EXL3_SM75
+     asm volatile("cp.async.commit_group;\n" ::);
++#endif
+ }
+ 
+ // Wait until at most n async groups are still pending.
+@@ -195,7 +281,9 @@ __device__ inline void cp_async_fence()
+ template <int n>
+ __device__ inline void cp_async_wait()
+ {
++#if !EXL3_SM75
+     asm volatile("cp.async.wait_group %0;\n" :: "n"(n));
++#endif
+ }
+ 
+ // Load 16x16 matrix fragment from shared memory, directly in tensor core layout
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_devctx.cu b/exllamav3/exllamav3_ext/quant/exl3_devctx.cu
+index 06d9c43..5d3df97 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_devctx.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_devctx.cu
+@@ -45,6 +45,27 @@ int DevCtx::get_cc(int device)
+     return cc[device];
+ }
+ 
++int DevCtx::get_smem_max(int device)
++{
++    std::lock_guard<std::mutex> lock(mtx);
++    if (!smem_max[device])
++    {
++        // The driver value, unclamped: this is a device capability, and callers that only need
++        // "what may I request for an EXL3 kernel" clamp to SMEM_MAX themselves (see
++        // get_smem_request). Clamping here would have made an sm_86 device indistinguishable
++        // from a 90 KB one and dragged it onto the Turing code paths.
++        int optin = 0;
++        cuda_check(cudaDeviceGetAttribute(&optin, cudaDevAttrMaxSharedMemoryPerBlockOptin, device));
++        smem_max[device] = optin;
++    }
++    return smem_max[device];
++}
++
++int DevCtx::get_smem_request(int device)
++{
++    return MIN(get_smem_max(device), EXL3_SMEM_MAX_DEFAULT);
++}
++
+ void* DevCtx::get_ws(int device)
+ {
+     std::lock_guard<std::mutex> lock(mtx);
+@@ -82,9 +103,15 @@ int g_get_num_sms(int device)
+     return DevCtx::instance().get_num_sms(device);
+ }
+ 
++int g_get_smem_max(int device)
++{
++    return DevCtx::instance().get_smem_max(device);
++}
++
+ void prepare_ctx(int device)
+ {
+     DevCtx::instance().get_num_sms(device);
+     DevCtx::instance().get_cc(device);
++    DevCtx::instance().get_smem_max(device);
+     DevCtx::instance().get_locks(device);
+ }
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_devctx.cuh b/exllamav3/exllamav3_ext/quant/exl3_devctx.cuh
+index 80dc3ae..147dbc4 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_devctx.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_devctx.cuh
+@@ -2,6 +2,7 @@
+ 
+ #include <tuple>
+ #include <mutex>
++#include "../arch.cuh"
+ 
+ // Max allowable output size, in tiles. Used to allocate global lock buffer per device for sync across threadblocks
+ #define MAX_TILES_C (1024 * 1024)
+@@ -30,6 +31,7 @@ class DevCtx
+ private:
+     int num_sms[MAX_DEVICES] = {};
+     int cc[MAX_DEVICES] = {};
++    int smem_max[MAX_DEVICES] = {};
+     void* locks[MAX_DEVICES] = {};
+     void* ws[MAX_DEVICES] = {};
+     std::mutex mtx;
+@@ -38,6 +40,12 @@ public:
+     static DevCtx& instance();
+     int get_num_sms(int device);
+     int get_cc(int device);
++    // Device capability: dynamic shared memory per block the driver will grant, unclamped
++    // (sm_86 reports 99 KB, Turing 64 KB). Use this to decide what a device can do.
++    int get_smem_max(int device);
++    // What an EXL3 kernel may actually request: the above, capped at the SMEM_MAX the kernels
++    // are written against. Use this for cudaFuncSetAttribute and launch parameters.
++    int get_smem_request(int device);
+     void* get_ws(int device);
+     int* get_locks(int device);
+ 
+@@ -49,5 +57,6 @@ private:
+ 
+ int g_get_cc(int device);
+ int g_get_num_sms(int device);
++int g_get_smem_max(int device);
+ 
+ void prepare_ctx(int device);
+\ No newline at end of file
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_gemm.cu b/exllamav3/exllamav3_ext/quant/exl3_gemm.cu
+index e2f9b60..1d4603f 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_gemm.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_gemm.cu
+@@ -171,6 +171,9 @@ int exl3_gemm_gr
+     int num_sms = force_num_sms ? force_num_sms : DevCtx::instance().get_num_sms(device);
+     int cc = DevCtx::instance().get_cc(device);
+     int* locks = DevCtx::instance().get_locks(device) + lc_gemm_locks_offset;
++    // Turing allows only 64 KB of dynamic shared memory per block, so the fixed SMEM_MAX
++    // request would fail the launch there. Ask for what this device actually permits.
++    int smem_max = DevCtx::instance().get_smem_request(device);
+ 
+     // Dispatch. 16 * K uint16 per tile for integer K; half-integer bitrates (K + 0.5, mul1 only) carry 16 * K + 8
+     const int tile_u16 = B.size(2);
+@@ -276,7 +279,7 @@ int exl3_gemm_gr
+         }
+ 
+         CoopAutotuneLaunch tuned;
+-        if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, SMEM_MAX, stream, &tuned))
++        if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, smem_max, stream, &tuned))
+         {
+             add_graph_args((void*) tuned.kernel);
+             cuda_check(cudaPeekAtLastError());
+@@ -285,7 +288,7 @@ int exl3_gemm_gr
+         std::vector<CoopAutotuneCandidate> candidates;
+         for (int candidate_shape_idx = 1; candidate_shape_idx <= EXL3_GEMM_NUM_SHAPES; ++candidate_shape_idx)
+         {
+-            if (!exl3_gemm_shape_compat(candidate_shape_idx, size_m, size_k, size_n, K)) continue;
++            if (!exl3_gemm_shape_compat(candidate_shape_idx, size_m, size_k, size_n, K, half_k)) continue;
+ 
+             fp_exl3_gemm_kernel candidate_kernel = get_gemm_kernel_ptr(K, candidate_shape_idx, c_fp32, cb, half_k);
+             if (!candidate_kernel) continue;
+@@ -307,7 +310,7 @@ int exl3_gemm_gr
+         }
+         TORCH_CHECK(!candidates.empty(), "exl3_gemm autotune: no compatible kernel shapes");
+ 
+-        tuned = CoopKernelAutotuner::launch(autotune_key, candidates, kernelArgs, SMEM_MAX, stream, (size_t) size_k * size_n);
++        tuned = CoopKernelAutotuner::launch(autotune_key, candidates, kernelArgs, smem_max, stream, (size_t) size_k * size_n);
+         if (graph)
+         add_graph_args((void*) tuned.kernel);
+         cuda_check(cudaPeekAtLastError());
+@@ -325,7 +328,7 @@ int exl3_gemm_gr
+     // Launch
+     if (kernel_attr_set[device].find((void*) kernel) == kernel_attr_set[device].end())
+     {
+-        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, SMEM_MAX);
++        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_max);
+         kernel_attr_set[device].insert((void*) kernel);
+         cuda_check(cudaPeekAtLastError());
+     }
+@@ -335,7 +338,7 @@ int exl3_gemm_gr
+         num_sms,
+         block_dim,
+         kernelArgs,
+-        SMEM_MAX,
++        smem_max,
+         stream
+     );
+     add_graph_args((void*) kernel);
+@@ -547,6 +550,7 @@ int exl3_mgemm_gr
+     int device;
+     cudaGetDevice(&device);
+     int total_sms = DevCtx::instance().get_num_sms(device);
++    int smem_max = DevCtx::instance().get_smem_request(device);
+     int num_sms = force_num_sms ? force_num_sms : total_sms;
+     int cc = DevCtx::instance().get_cc(device);
+     int* locks = DevCtx::instance().get_locks(device);
+@@ -636,7 +640,7 @@ int exl3_mgemm_gr
+         }
+ 
+         CoopAutotuneLaunch tuned;
+-        if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, SMEM_MAX, stream, &tuned))
++        if (CoopKernelAutotuner::launch_locked(autotune_key, kernelArgs, smem_max, stream, &tuned))
+         {
+             add_graph_args((void*) tuned.kernel);
+             cuda_check(cudaPeekAtLastError());
+@@ -647,7 +651,7 @@ int exl3_mgemm_gr
+             std::vector<CoopAutotuneCandidate> candidates;
+             for (int candidate_shape_idx = 1; candidate_shape_idx <= EXL3_GEMM_NUM_SHAPES; ++candidate_shape_idx)
+             {
+-                if (!exl3_gemm_shape_compat(candidate_shape_idx, size_m, size_k, size_n, K)) continue;
++                if (!exl3_gemm_shape_compat(candidate_shape_idx, size_m, size_k, size_n, K, half_k)) continue;
+ 
+                 fp_exl3_mgemm_kernel candidate_kernel = get_mgemm_kernel_ptr(K, candidate_shape_idx, c_fp32, cb, half_k);
+                 if (!candidate_kernel) continue;
+@@ -669,7 +673,7 @@ int exl3_mgemm_gr
+             }
+             TORCH_CHECK(!candidates.empty(), "exl3_mgemm autotune: no compatible kernel shapes");
+ 
+-            tuned = CoopKernelAutotuner::launch(autotune_key, candidates, kernelArgs, SMEM_MAX, stream, (size_t) size_k * size_n * bszm);
++            tuned = CoopKernelAutotuner::launch(autotune_key, candidates, kernelArgs, smem_max, stream, (size_t) size_k * size_n * bszm);
+             add_graph_args((void*) tuned.kernel);
+ 
+             // DBGI10(size_m, size_k, size_n, K, bszm_in, bszm_out, tuned.tag, tuned.block_dim, tuned.num_sms, tuned.concurrency);
+@@ -701,7 +705,7 @@ int exl3_mgemm_gr
+     // Launch
+     if (kernel_attr_set[device].find((void*) kernel) == kernel_attr_set[device].end())
+     {
+-        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, SMEM_MAX);
++        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_max);
+         kernel_attr_set[device].insert((void*) kernel);
+     }
+ 
+@@ -711,7 +715,7 @@ int exl3_mgemm_gr
+         block_grid,
+         block_dim,
+         kernelArgs,
+-        SMEM_MAX,
++        smem_max,
+         stream
+     );
+     add_graph_args((void*) kernel);
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_gemm_inner.cuh b/exllamav3/exllamav3_ext/quant/exl3_gemm_inner.cuh
+index f27bd2b..d6ec656 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_gemm_inner.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_gemm_inner.cuh
+@@ -7,6 +7,8 @@
+ #define SMEM_MAX (90 * 1024)  // max shared memory on compute capability 8.6
+ 
+ #include "exl3_dq.cuh"
++// For exl3_gemm_smem_bytes(), the shared definition of this kernel's shared memory footprint
++#include "exl3_kernel_map.cuh"
+ 
+ // On GA10x, HMMA with fp32 accumulation runs at half rate and dominates the m=1 (decode-bound) case.
+ // Accumulate MMA results in fp16 instead and fold into the fp32 accumulators once per k-slice: ~14%
+@@ -74,6 +76,16 @@ void exl3_gemm_kernel_inner
+         SMEM_MAX >= SH_STAGES * (2 * sh_a_stage_size + 2 * sh_b_stage_size) + 4 * sh_c_size,
+         "Invalid kernel params (insufficient shared memory for shape)"
+     );
++    // The host filters shapes by asking exl3_gemm_smem_bytes() what this layout costs; if that
++    // function and the layout above ever diverge, the filter would vet a footprint the kernel
++    // does not actually have. Assert they agree, per instantiation, at compile time.
++    static_assert
++    (
++        exl3_gemm_smem_bytes(TILESIZE_M, TILESIZE_K, TILESIZE_N, SH_STAGES, FRAG_STAGES,
++                             bits, half_k, shmem_out_had)
++            == SH_STAGES * (2 * sh_a_stage_size + 2 * sh_b_stage_size) + 4 * sh_c_size,
++        "exl3_gemm_smem_bytes() disagrees with the kernel's shared memory layout"
++    );
+ 
+     // Shared memory
+     extern __shared__ half shared[];
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu b/exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu
+index 98502cb..37e0968 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_gemv_int8.cu
+@@ -262,6 +262,16 @@ bool exl3_gemv_int8
+     cudaGetDevice(&device);
+     // Half-integer rates take the gate of the integer rate above them
+     if (K < 1 || K + (half_k ? 1 : 0) > exl3_gemv_int8_max_k(device)) return false;
++
++    // Both int8 kernels below size their shared memory against a fixed ~80 KB budget baked into
++    // gemv_int8_sq_rows_max() and the coop path's 768-row bound, and - critically - the kernels
++    // recompute rows_per from those same constants on the device, so the host cannot simply ask
++    // for less without desyncing the two. On Turing (64 KB) the cudaFuncSetAttribute would fail
++    // and the following cuda_check would abort the process. This path is a decode-time
++    // optimization over the regular fp16 tensor-core kernel, which handles the same work, so
++    // declining is a performance loss and nothing more.
++    if (DevCtx::instance().get_smem_max(device) < 80 * 1024) return false;
++
+     int num_sms = DevCtx::instance().get_num_sms(device);
+     bool c_fp32 = C.dtype() == at::kFloat;
+     bool residual = exl3_gemv_int8_mode() == 1;
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_gemv_kernel.cuh b/exllamav3/exllamav3_ext/quant/exl3_gemv_kernel.cuh
+index d79fdde..0afbe7c 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_gemv_kernel.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_gemv_kernel.cuh
+@@ -31,13 +31,34 @@
+ 
+ namespace exl3_gemv_ns {
+ 
+-// mma.m16n8k16 with the A operand supplied as two FragB halves, fp16 accumulate
++// mma.m16n8k16 with the A operand supplied as two FragB halves, fp16 accumulate.
++// On Turing this splits into the two k=8 halves it is already expressed as (a01 pairs with
++// b[0], a23 with b[1]), accumulating through the same c. Same operands and products; one
++// extra rounding at the k=8 boundary. See the longer note in ptx.cuh.
+ __device__ __forceinline__ void mma_ab_h(const FragB& a01, const FragB& a23, const FragB& b, FragC_h& c)
+ {
+     const uint32_t* a0 = reinterpret_cast<const uint32_t*>(&a01);
+     const uint32_t* a1 = reinterpret_cast<const uint32_t*>(&a23);
+     const uint32_t* bb = reinterpret_cast<const uint32_t*>(&b);
+     uint32_t* cc = reinterpret_cast<uint32_t*>(&c);
++#if EXL3_SM75
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16 "
++        "{%0,%1}, {%2,%3}, {%4}, {%0,%1};\n"
++        : "+r"(cc[0]), "+r"(cc[1])
++        :  "r"(a0[0]), "r"(a0[1]),
++           "r"(bb[0])
++    );
++    asm
++    (
++        "mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16 "
++        "{%0,%1}, {%2,%3}, {%4}, {%0,%1};\n"
++        : "+r"(cc[0]), "+r"(cc[1])
++        :  "r"(a1[0]), "r"(a1[1]),
++           "r"(bb[1])
++    );
++#else
+     asm
+     (
+         "mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16 "
+@@ -46,6 +67,7 @@ __device__ __forceinline__ void mma_ab_h(const FragB& a01, const FragB& a23, con
+         :  "r"(a0[0]), "r"(a0[1]), "r"(a1[0]), "r"(a1[1]),
+            "r"(bb[0]), "r"(bb[1])
+     );
++#endif
+ }
+ 
+ // mul1 codebook pair decode via dp4a byte sum (bit-identical to the vabsdiff4 form)
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cu b/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cu
+index f25e4a7..1090082 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cu
+@@ -83,11 +83,44 @@ int exl3_gemm_tilesize_k[] = {EXL3_GEMM_TILESIZE_K};
+ int exl3_gemm_tilesize_n[] = {EXL3_GEMM_TILESIZE_N};
+ int exl3_gemm_blockdim[] = {EXL3_GEMM_BLOCKDIM};
+ 
+-bool exl3_gemm_shape_compat(int shape_idx, int size_m, int size_k, int size_n, int K)
++// Shared memory a shape/bitrate instantiation needs. Derived from the EXL3_GEMM_SHAPE_n
++// macros via exl3_gemm_smem_bytes(), which the kernel itself static_asserts against, so this
++// cannot drift from the actual layout. Used to reject shapes exceeding what a device will
++// give a block - 64 KB on Turing rather than 90.
++//
++// shmem_out_had = true: the GEMM path stages a full output tile for the fused output Hadamard,
++// which is the larger of the two sh_c variants, so this is the conservative bound for both it
++// and the MoE kernel (which passes false).
++int exl3_gemm_shape_smem(int shape_idx, int K, bool half_k)
++{
++    return exl3_gemm_smem_bytes_for_shape(shape_idx, K, half_k, true);
++}
++
++bool exl3_gemm_shape_compat(int shape_idx, int size_m, int size_k, int size_n, int K, bool half_k)
+ {
+     int tilesize_k = exl3_gemm_tilesize_k[shape_idx];
+     int tilesize_n = exl3_gemm_tilesize_n[shape_idx];
+-    return (size_k % tilesize_k == 0) && (size_n % tilesize_n == 0);
++    if (size_k % tilesize_k || size_n % tilesize_n) return false;
++
++    // Device-dependent: callers with tensors on a non-current device must set a device guard
++    // first (every in-tree caller runs under OptionalCUDAGuard). Only matters on a mixed-arch
++    // host, where a 90 KB-capable device would otherwise vouch for a 64 KB one.
++    int device;
++    cudaGetDevice(&device);
++    return exl3_gemm_shape_smem(shape_idx, K, half_k) <= DevCtx::instance().get_smem_request(device);
++}
++
++// Hard gate for explicitly forced shapes, which skip the autotuner's shape_compat filter.
++// Launching a shape whose static layout exceeds what the launch can request would read past
++// the end of the extern __shared__ block - silent corruption rather than a failed launch.
++void exl3_gemm_check_smem(int shape_idx, int K, bool half_k, const char* who)
++{
++    int device;
++    cudaGetDevice(&device);
++    int need = exl3_gemm_shape_smem(shape_idx, K, half_k);
++    int have = DevCtx::instance().get_smem_request(device);
++    TORCH_CHECK(need <= have, who, ": shape ", shape_idx, " at ", K, (half_k ? ".5" : ""),
++                " bpw needs ", need, " B of shared memory, device provides ", have);
+ }
+ 
+ // Instance tables, [K][cb] -> array indexed by shape_idx. Row 0 unused (no K = 0 instances)
+@@ -162,6 +195,7 @@ fp_exl3_gemm_kernel select_exl3_gemm_kernel
+     int shape_idx = force_shape_idx <= 0 ? select_gemm_shape(cc, size_m, size_k, size_n, K + (half_k ? 1 : 0), false, 1, 1) : force_shape_idx;
+ 
+     TORCH_CHECK(shape_idx > 0 && shape_idx <= EXL3_GEMM_NUM_SHAPES, "exl3_gemm: no compatible kernel (or invalid forced shape index)");
++    exl3_gemm_check_smem(shape_idx, K, half_k, "exl3_gemm");
+     if (out_shape_idx) *out_shape_idx = shape_idx;
+     if (out_block_dim) *out_block_dim = exl3_gemm_blockdim[shape_idx];
+ 
+@@ -197,6 +231,7 @@ fp_exl3_mgemm_kernel select_exl3_mgemm_kernel
+ {
+     int shape_idx = force_shape_idx <= 0 ? select_gemm_shape(cc, size_m, size_k, size_n, K + (half_k ? 1 : 0), true, bszm_in, bszm_out) : force_shape_idx;
+     TORCH_CHECK(shape_idx > 0, "exl3_mgemm: no compatible kernel");
++    exl3_gemm_check_smem(shape_idx, K, half_k, "exl3_mgemm");
+     if (out_shape_idx) *out_shape_idx = shape_idx;
+     if (out_block_dim) *out_block_dim = exl3_gemm_blockdim[shape_idx];
+ 
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cuh b/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cuh
+index 07a3176..fae3314 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_kernel_map.cuh
+@@ -2,7 +2,11 @@
+ 
+ int select_gemm_shape(int cc, int size_m, int size_k, int size_n, int bits, bool multi);
+ int exl3_gemm_num_kernel_shapes();
+-bool exl3_gemm_shape_compat(int shape_idx, int size_m, int size_k, int size_n, int bits);
++bool exl3_gemm_shape_compat(int shape_idx, int size_m, int size_k, int size_n, int bits, bool half_k = false);
++// Dynamic shared memory (bytes) a (shape, bitrate) instantiation requests at launch
++int exl3_gemm_shape_smem(int shape_idx, int bits, bool half_k);
++// Throws if the shape does not fit the current device; for paths that bypass shape_compat
++void exl3_gemm_check_smem(int shape_idx, int bits, bool half_k, const char* who);
+ 
+ // bits: integer part of the bitrate; half: bitrate is bits + 0.5 (mul1 codebook only, 16 * bits + 8 uint16 per tile)
+ #define EXL3_GEMM_T_ARGS \
+@@ -110,6 +114,56 @@ typedef void (*fp_exl3_mgemm_kernel) (EXL3_MGEMM_ARGS);
+ 
+ #define EXL3_GEMM_BASE_THREADS 256
+ 
++// Dynamic shared memory a (shape, bitrate) instantiation stages, as laid out by
++// exl3_gemm_kernel_inner: SH_STAGES deep double-buffered A and B tiles, then the fp32 sh_c
++// region. Single definition, used both by that kernel's static_assert and by the host-side
++// shape filter, so the two cannot disagree about what a shape costs.
++//
++// shmem_out_had is the GEMM's sh_c variant (it stages a full output tile for the fused output
++// Hadamard); the MoE kernel passes false and only needs the reduction scratch.
++// Parameters are ordered to match the EXL3_GEMM_SHAPE_n expansion (TILESIZE_M, TILESIZE_K,
++// TILESIZE_N, SH_STAGES, FRAG_STAGES) so the macro can be splatted in directly; frag_stages
++// is a register-pipelining depth and does not affect shared memory. half_k adds the extra
++// 8 uint16 per tile of a half-integer bitrate (mul1 codebook).
++__host__ __device__ constexpr int exl3_gemm_smem_bytes(
++    int tilesize_m, int tilesize_k, int tilesize_n, int sh_stages, int frag_stages,
++    int bits, bool half_k, bool shmem_out_had)
++{
++    (void) frag_stages;
++    int tileblocks_m = tilesize_m / 16;
++    int tileblocks_k = tilesize_k / 16;
++    int tileblocks_n = tilesize_n / 16;
++    int frags_n_per_warp = 2 * tileblocks_n / (EXL3_GEMM_BASE_THREADS / 32);
++    int tile_u16 = 16 * bits + (half_k ? 8 : 0);
++
++    int sh_a_stage_size = tilesize_m * tilesize_k;                             // halfs
++    int sh_b_stage_size = tileblocks_k * tileblocks_n * tile_u16;              // uint16s
++    int sh_c_size = 4 * EXL3_GEMM_BASE_THREADS * frags_n_per_warp * tileblocks_m;   // floats
++    int sh_c_had = shmem_out_had ? tilesize_n * tilesize_m : 0;
++    if (sh_c_had > sh_c_size) sh_c_size = sh_c_had;
++
++    return sh_stages * (2 * sh_a_stage_size + 2 * sh_b_stage_size) + 4 * sh_c_size;
++}
++
++// Same, addressed by shape index: expands the EXL3_GEMM_SHAPE_n macro so the tile dims and
++// stage count come from the one place they are declared, rather than a parallel table that
++// has to be updated by hand whenever a shape changes.
++#define EXL3_GEMM_SMEM_FOR_SHAPE(_shape, _bits, _half, _had) \
++    exl3_gemm_smem_bytes(_shape, _bits, _half, _had)
++
++__host__ __device__ constexpr int exl3_gemm_smem_bytes_for_shape(
++    int shape_idx, int bits, bool half_k, bool shmem_out_had)
++{
++    switch (shape_idx)
++    {
++        case 1: return EXL3_GEMM_SMEM_FOR_SHAPE(EXL3_GEMM_SHAPE_1, bits, half_k, shmem_out_had);
++        case 2: return EXL3_GEMM_SMEM_FOR_SHAPE(EXL3_GEMM_SHAPE_2, bits, half_k, shmem_out_had);
++        case 3: return EXL3_GEMM_SMEM_FOR_SHAPE(EXL3_GEMM_SHAPE_3, bits, half_k, shmem_out_had);
++        case 4: return EXL3_GEMM_SMEM_FOR_SHAPE(EXL3_GEMM_SHAPE_4, bits, half_k, shmem_out_had);
++        default: return 0;
++    }
++}
++
+ // Instance arrays are indexed by shape and defined per (K, cb) so each codebook compiles as a separate
+ // translation unit (see comp_units/exl3_comp_unit_K_cbX.cu)
+ 
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe.cu b/exllamav3/exllamav3_ext/quant/exl3_moe.cu
+index 718dfcd..f8923e9 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe.cu
+@@ -266,6 +266,10 @@ void exl3_moe
+     int num_sms = DevCtx::instance().get_num_sms(device);
+     int cc = DevCtx::instance().get_cc(device);
+     int* locks = DevCtx::instance().get_locks(device);
++    // Every MoE instantiation fits in 44 KB (TILESIZE_N caps at 256, unlike the GEMM's 512),
++    // so clamping the request to the device limit never excludes a shape here; it only stops
++    // Turing's 64 KB cap from rejecting the fixed 90 KB ask.
++    int smem_max = DevCtx::instance().get_smem_request(device);
+ 
+     // Launch. All blocks of the grid must be co-resident for the group barriers, so groups * width <= num_sms.
+     // With a known number of active experts, launch only as many groups as there are experts and widen them to
+@@ -301,7 +305,7 @@ void exl3_moe
+ 
+     if (moe_kernel_attr_set[device].find((void*) kernel) == moe_kernel_attr_set[device].end())
+     {
+-        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, SMEM_MAX);
++        cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_max);
+         moe_kernel_attr_set[device].insert((void*) kernel);
+         cuda_check(cudaPeekAtLastError());
+     }
+@@ -371,7 +375,7 @@ void exl3_moe
+         grid_dim,
+         block_dim,
+         kernelArgs,
+-        SMEM_MAX,
++        smem_max,
+         stream
+     );
+ 
+diff --git a/exllamav3/exllamav3_ext/routing.cu b/exllamav3/exllamav3_ext/routing.cu
+index c38a042..1eb0540 100644
+--- a/exllamav3/exllamav3_ext/routing.cu
++++ b/exllamav3/exllamav3_ext/routing.cu
+@@ -253,9 +253,10 @@ void routing_gemv
+ {
+     // Single rows take the fixed-order FMA GEMV (exact on every architecture, and the fastest);
+     // with the int8 gate available every other row count takes the deterministic int8
+-    // tensor-core projection (routing_gemm.cu), so tensor-parallel ranks of any architecture
+-    // routing on identical streams select identical experts. cuBLAS remains the fallback for
+-    // shapes neither covers
++    // tensor-core projection (routing_gemm.cu), so tensor-parallel ranks of any sm_80+
++    // architecture routing on identical streams select identical experts (the int8 kernels
++    // need cp.async and mma.m16n8k32, both sm_80+). Pre-Ampere devices fall back to cuBLAS,
++    // which is device-dependent — uniform per-arch fleets still agree with each other
+     int k = hidden.size(-1);
+     int E = scores.size(-1);
+     bool bsz1 = hidden.numel() == k;
+diff --git a/exllamav3/exllamav3_ext/routing_gemm.cu b/exllamav3/exllamav3_ext/routing_gemm.cu
+index 47232fe..1e6a6e5 100644
+--- a/exllamav3/exllamav3_ext/routing_gemm.cu
++++ b/exllamav3/exllamav3_ext/routing_gemm.cu
+@@ -10,8 +10,10 @@
+ /*
+ 
+ Deterministic router projection: scores (R, E) half = hidden (R, K) half @ gate^T with the int8
+-Ozaki-style scheme of det_gemm.cuh, so every tensor-parallel rank of ANY architecture that
+-routes on identical streams produces identical logits and top-k selections. cuBLAS picks
++Ozaki-style scheme of det_gemm.cuh, so every tensor-parallel rank of any sm_80+ architecture
++that routes on identical streams produces identical logits and top-k selections (the int8
++kernels need cp.async and mma.m16n8k32, both sm_80+; pre-Ampere devices take the cuBLAS
++path, which is device-dependent but uniform within a fleet of one arch). cuBLAS picks
+ split-K kernels for this skinny shape (E of 64..512, K of thousands) with a device-dependent
+ split factor, and fp16 tensor cores accumulate differently per architecture.
+ 
+@@ -246,6 +248,12 @@ bool routing_gemm_det_fits(const at::Tensor& hidden, const at::Tensor& gate_i8,
+     if (hidden.dtype() != at::kHalf || gate_i8.dtype() != at::kChar || gate_sb.dtype() != at::kFloat || scores.dtype() != at::kHalf) return false;
+     if (!hidden.is_contiguous() || !gate_i8.is_contiguous() || !gate_sb.is_contiguous() || !scores.is_contiguous()) return false;
+     const int K = hidden.size(-1);
++    // The deterministic int8 kernels need cp.async and mma.m16n8k32 s8 (both sm_80+) and
++    // 97 KB of dynamic smem, over the pre-Ampere ceiling; cuBLAS serves the other arches
++    int cc_major = 0;
++    cudaDeviceGetAttribute(&cc_major, cudaDevAttrComputeCapabilityMajor,
++                           hidden.get_device());
++    if (cc_major < 8) return false;
+     return K % 16 == 0 && gate_i8.dim() == 3 && gate_i8.size(0) == 2 && gate_i8.size(2) == K && gate_sb.numel() == gate_i8.size(1);
+ }
+ 
+diff --git a/exllamav3/exllamav3_ext/stloader.cpp b/exllamav3/exllamav3_ext/stloader.cpp
+index 7cb2d34..4690fcd 100644
+--- a/exllamav3/exllamav3_ext/stloader.cpp
++++ b/exllamav3/exllamav3_ext/stloader.cpp
+@@ -533,11 +533,25 @@ void stloader_read
+     TORCH_CHECK(!error.is_failed(), error.msg);
+ }
+ 
++// One stream per worker thread, since the workers seek and fread concurrently. On Linux the
++// reads are positional (pread on the descriptor, no stream state touched), so a single open
++// stream serves every worker and the vector repeats it: a checkpoint sharded into hundreds of
++// files would otherwise exhaust the default descriptor limit through the per-thread copies
+ std::vector<uintptr_t> stloader_open_file(const char* filename)
+ {
+     std::vector<uintptr_t> handles;
++    #ifdef __linux__
++        const int streams = 1;
++    #else
++        const int streams = STLOADER_THREADS;
++    #endif
+     for (int i = 0; i < STLOADER_THREADS; ++i)
+     {
++        if (i >= streams)
++        {
++            handles.push_back(handles[0]);
++            continue;
++        }
+         FILE* file = fopen(filename, "rb");
+         if (!file)
+         {
+@@ -556,6 +570,7 @@ void stloader_close_file(std::vector<uintptr_t> handles)
+ {
+     for (size_t i = 0; i < handles.size(); ++i)
+     {
++        if (i > 0 && handles[i] == handles[0]) continue;   // shared stream, closed once
+         FILE* file = reinterpret_cast<FILE*>(handles[i]);
+         fclose(file);
+     }
+diff --git a/exllamav3/modules/attention_fn/bc_attn.py b/exllamav3/modules/attention_fn/bc_attn.py
+index bf134ad..bc42fd1 100644
+--- a/exllamav3/modules/attention_fn/bc_attn.py
++++ b/exllamav3/modules/attention_fn/bc_attn.py
+@@ -5,6 +5,7 @@ import torch
+ from ...ext import exllamav3_ext as ext
+ from ...constants import PAGE_SIZE
+ from ...util.tensor import g_tensor_cache
++from .smem import smem_limit
+ 
+ """
+ Graph-captured decode attention (BC_Attention): the whole attention block for a decode step --
+@@ -94,6 +95,12 @@ def _is_pow2(n: int) -> bool:
+     return n > 0 and (n & (n - 1)) == 0
+ 
+ 
++class BCKernelTooLarge(RuntimeError):
++    """An AOT-compiled BC kernel needs more shared memory than the device grants. The BC kernels
++    bake their tiles in as constexprs sized for Ampere-class shared memory; the eager Triton path
++    walks a config ladder per device instead, so the builders decline and let it run."""
++
++
+ def _compile_kernel(device: torch.device, fn, signature: dict, constexprs: dict,
+                     num_warps: int, num_stages: int):
+     key = (device.index, fn.__name__, tuple(sorted(constexprs.items())), num_warps, num_stages,
+@@ -117,6 +124,12 @@ def _compile_kernel(device: torch.device, fn, signature: dict, constexprs: dict,
+         with torch.cuda.device(device):
+             src = ASTSource(fn = fn, signature = sig, constexprs = constexprs, attrs = attrs)
+             ck = triton.compile(src, options = {"num_warps": num_warps, "num_stages": num_stages})
++            limit = smem_limit(device)
++            if ck.metadata.shared > limit:
++                if os.environ.get("EXL3_TRITON_SMEM_DEBUG"):
++                    print(f" -- smem: BC {fn.__name__} {ck.metadata.shared} B over {limit} B, declining to eager", flush = True)
++                raise BCKernelTooLarge(
++                    f"{fn.__name__}: {ck.metadata.shared} B of shared memory exceeds the device's {limit} B")
+             k = ext.TritonKernel(ck.asm["cubin"], ck.metadata.name, ck.metadata.num_warps, ck.metadata.shared)
+         _kernel_cache[key] = k
+     return k
+@@ -665,7 +678,10 @@ class BCAttn:
+         # argument patched into the graph
+         skey = (tuple(inv_freq.shape) if inv_freq is not None else None, causal)
+         if self.slot_widths.get((bsz, q_len, regime), ...) != skey:
+-            self._configure(bsz, q_len, causal, regime)
++            try:
++                self._configure(bsz, q_len, causal, regime)
++            except BCKernelTooLarge:
++                return None   # eager path sizes its own tiles
+             self.slot_widths[(bsz, q_len, regime)] = skey
+             if self.qsa and _bc_trace:
+                 # A built module alone does not prove that a multi-job sparse slot is used.
+diff --git a/exllamav3/modules/attention_fn/bc_dsa.py b/exllamav3/modules/attention_fn/bc_dsa.py
+index 6f3fb87..c917378 100644
+--- a/exllamav3/modules/attention_fn/bc_dsa.py
++++ b/exllamav3/modules/attention_fn/bc_dsa.py
+@@ -5,7 +5,7 @@ import torch
+ from ...ext import exllamav3_ext as ext
+ from ...constants import PAGE_SIZE
+ from ...util.tensor import g_tensor_cache
+-from .bc_attn import _compile_kernel
++from .bc_attn import _compile_kernel, BCKernelTooLarge
+ from .dsa_triton import _dsa_attn_split_kernel, _dsa_attn_combine_kernel, _dsa_indexer_fewq_kernel
+ 
+ """
+@@ -322,7 +322,10 @@ class BCDsa:
+             return None
+ 
+         if self.bc.needs_configure(seq, regime):
+-            self._configure(seq, regime)
++            try:
++                self._configure(seq, regime)
++            except BCKernelTooLarge:
++                return None   # eager path sizes its own tiles
+ 
+         # Refresh the block-table static once per job step (any compressor layer may be the
+         # one to do it; sliding layers never touch it, so this is tracked separately from
+@@ -622,7 +625,10 @@ class BCDsaBatch:
+         """x (B, S, hidden) fp16 contiguous, bt (rows, npr) i32 device batch block table.
+         Returns y (B, S, hidden) fp32 (a static: consume before the next BC call)."""
+         if self.bc.needs_configure(B, S):
+-            self._configure(B, S)
++            try:
++                self._configure(B, S)
++            except BCKernelTooLarge:
++                return None
+ 
+         pin = self.pins[self.pin_i]
+         self.pin_i = (self.pin_i + 1) % len(self.pins)
+diff --git a/exllamav3/modules/attention_fn/bc_mla.py b/exllamav3/modules/attention_fn/bc_mla.py
+index 7a9357c..e2ea55e 100644
+--- a/exllamav3/modules/attention_fn/bc_mla.py
++++ b/exllamav3/modules/attention_fn/bc_mla.py
+@@ -4,7 +4,7 @@ from ...util.device_copy import to_device
+ from ...ext import exllamav3_ext as ext
+ from ...constants import PAGE_SIZE
+ from ...util.tensor import g_tensor_cache
+-from .bc_attn import bc_attn_enable, _trace_build, _compile_kernel, _get_sm_count, _is_pow2, \
++from .bc_attn import bc_attn_enable, _trace_build, _compile_kernel, _get_sm_count, _is_pow2, BCKernelTooLarge, \
+     MAX_BSZ, MAX_QLEN
+ 
+ """
+@@ -543,7 +543,10 @@ class BCMLA:
+                     ext_indices = to_device(ext_indices, x.device)
+ 
+         if (bsz, q_len, regime) not in self.configured:
+-            self._configure(bsz, q_len, regime)
++            try:
++                self._configure(bsz, q_len, regime)
++            except BCKernelTooLarge:
++                return None   # eager path sizes its own tiles
+             self.configured.add((bsz, q_len, regime))
+         y = torch.empty((bsz, q_len, self.hidden_size), dtype = self.o_dtype, device = x.device)
+         self.bc.run(bsz, q_len, x, y, cache_seqlens, block_table, position, positions,
+diff --git a/exllamav3/modules/attention_fn/dsa_triton.py b/exllamav3/modules/attention_fn/dsa_triton.py
+index 5f4bad5..1eb8c77 100644
+--- a/exllamav3/modules/attention_fn/dsa_triton.py
++++ b/exllamav3/modules/attention_fn/dsa_triton.py
+@@ -41,6 +41,7 @@ import triton
+ import triton.language as tl
+ 
+ from .triton_paged import _rot_h32, _qc_load_v, _get_h32
++from .smem import pick_config, shared_bytes, halving_ladder
+ 
+ @triton.jit(do_not_specialize = [
+     "k_len", "win_len", "pool_len", "num_pages_per_row", "q_pos0", "R",
+@@ -1035,15 +1036,18 @@ def dsa_attn(
+ 
+     if n_splits > 1:
+         block_h = min(block_h, 16)   # more head-blocks: the split path wants parallelism
++        # Head tile and kv tile, then pipeline depth, against the device's shared memory
++        # (smem.py); the workspace below follows the picked head tile
++        hb_ladder = [(bh, bn, ns) for ns in (2, 1) for bh in halving_ladder(block_h, 8) for bn in halving_ladder(block_n)]
+         # Flash-decoding split: the monolithic kernel at R = 1 is 2 blocks walking the key
+         # tiles serially (pure latency); the split phase spreads the keys over
+         # R * h_blocks * n_splits programs and the combine folds sinks/derot/store
+-        hb = triton.cdiv(H, block_h)
+         D_out = D_c if out_latent else D
+-        ws_ml = g_tensor_cache.get(q.device, (R * hb * n_splits * block_h * 2,),
+-                                   torch.float, "dsa_ws_ml")
+-        ws_acc = g_tensor_cache.get(q.device, (R * hb * n_splits * block_h * D_out,),
+-                                    torch.float, "dsa_ws_acc")
++        def workspace(bh):
++            hb = triton.cdiv(H, bh)
++            ws_ml = g_tensor_cache.get(q.device, (R * hb * n_splits * bh * 2,), torch.float, "dsa_ws_ml")
++            ws_acc = g_tensor_cache.get(q.device, (R * hb * n_splits * bh * D_out,), torch.float, "dsa_ws_acc")
++            return hb, ws_ml, ws_acc
+         if multirow is not None:
+             mr = multirow
+             a_klen, a_pool = mr["k_len"], mr["pool_len"]
+@@ -1054,21 +1058,35 @@ def dsa_attn(
+             a_klen, a_pool, a_qpos, a_floor, a_beg = k_len, pool_len, q_pos0, win_floor, ring_beg
+             # ring_stride carries R for the head-major q_lat load in split-q mode
+             a_slots, a_rstride, a_seq = 0, (R if q_split else 0), 1
+-        with torch.cuda.device(q.device):
+-            _dsa_attn_split_kernel[(R * hb, n_splits)](
++        def s_args(ws_ml, ws_acc):
++            return (
+                 q, ring, kv_chunk, pc_arg, (pool_r.reshape(-1, D_r) if D_r > 0 else pool_r.reshape(-1)),
+                 block_table, indices, ws_ml, ws_acc,
+                 a_klen, win_len, a_pool, npr, a_qpos, a_floor, a_beg,
+                 a_slots, a_rstride, pool_s, h32_t,
++            )
++        def s_consts(bh, bn):
++            return dict(
+                 H = H, page_size = page_size, D_c = D_c, D_c_pad = triton.next_power_of_2(D_c),
+                 D_r = D_r, K_pad = K_pad, compress_rate = compress_rate, scale = scale,
+                 HAS_WINDOW = has_window, DENSE_POOL = dense_pool,
+-                BLOCK_H = block_h, BLOCK_N = block_n, BLOCK_W = 16,
++                BLOCK_H = bh, BLOCK_N = bn, BLOCK_W = 16,
+                 SEQ = a_seq, MULTIROW = multirow is not None,
+                 DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
+                 Q_SPLIT = 1 if q_split else 0, OUT_LATENT = 1 if out_latent else 0,
+                 QC = qc_bits,
+-                num_warps = num_warps, num_stages = 2,
++            )
++        with torch.cuda.device(q.device):
++            pick_key = (H, D_c, D_r, K_pad, has_window, dense_pool, a_seq, multirow is not None,
++                        dbg, bool(q_split), bool(out_latent), qc_bits, num_warps, hb_ladder[0])
++            def probe(cfg):
++                bh, bn, ns = cfg
++                _, ws_ml, ws_acc = workspace(bh)
++                return shared_bytes(_dsa_attn_split_kernel, s_args(ws_ml, ws_acc), **s_consts(bh, bn), num_warps = num_warps, num_stages = ns)
++            block_h, block_n, s_stages = pick_config(q.device, "dsa_attn_split", pick_key, hb_ladder, probe)
++            hb, ws_ml, ws_acc = workspace(block_h)
++            _dsa_attn_split_kernel[(R * hb, n_splits)](
++                *s_args(ws_ml, ws_acc), **s_consts(block_h, block_n), num_warps = num_warps, num_stages = s_stages,
+             )
+             _dsa_attn_combine_kernel[(R * hb, triton.cdiv(D_out, 128))](
+                 ws_ml, ws_acc, sinks_t, derot_t, out,
+@@ -1083,12 +1101,14 @@ def dsa_attn(
+             )
+         return out
+ 
+-    grid = (R * triton.cdiv(H, block_h),)
+-    with torch.cuda.device(q.device):   # layer split: launch on the tensor's device
+-        _dsa_attn_kernel[grid](
+-            q, ring, kv_chunk, pc_arg, (pool_r.reshape(-1, D_r) if D_r > 0 else pool_r.reshape(-1)),
+-            block_table, indices, sinks_t, derot_t, out,
+-            k_len, win_len, pool_len, npr, q_pos0, R, win_floor, ring_beg, pool_s, h32_t,
++    m_args = (
++        q, ring, kv_chunk, pc_arg, (pool_r.reshape(-1, D_r) if D_r > 0 else pool_r.reshape(-1)),
++        block_table, indices, sinks_t, derot_t, out,
++        k_len, win_len, pool_len, npr, q_pos0, R, win_floor, ring_beg, pool_s, h32_t,
++    )
++    def m_consts(cfg):
++        bh, bn, _ = cfg
++        return dict(
+             H = H, page_size = page_size, D_c = D_c, D_c_pad = triton.next_power_of_2(D_c),
+             D_r = D_r, K_pad = K_pad, compress_rate = compress_rate,
+             scale = scale,
+@@ -1097,13 +1117,30 @@ def dsa_attn(
+             DENSE_POOL = dense_pool,
+             DEROTATE = derotate,
+             HPG = hpg,
+-            BLOCK_H = block_h, BLOCK_N = block_n, BLOCK_W = 16,
++            BLOCK_H = bh, BLOCK_N = bn, BLOCK_W = 16,
+             DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
+             NC_BLOCK = 1 if nc_block else 0,
+             NC_CHUNK = 1 if nc_chunk else 0, NC_HIST = nc_hist,
+             Q_SPLIT = 1 if q_split else 0, OUT_LATENT = 1 if out_latent else 0,
+             QC = qc_bits,
+-            num_warps = num_warps, num_stages = num_stages,
++        )
++    # Head tile, then kv tile, then pipeline depth (smem.py); the stock config leads
++    ladder = [(block_h, block_n, num_stages)]
++    for ns in range(num_stages, 0, -1):
++        for bh in halving_ladder(block_h, 8):
++            for bn in halving_ladder(block_n):
++                if (bh, bn, ns) not in ladder:
++                    ladder.append((bh, bn, ns))
++    with torch.cuda.device(q.device):   # layer split: launch on the tensor's device
++        pick_key = (H, D_c, D_r, K_pad, has_window, has_sinks, dense_pool, derotate, hpg, dbg,
++                    bool(nc_block), bool(nc_chunk), nc_hist, bool(q_split), bool(out_latent), qc_bits,
++                    num_warps, ladder[0])
++        block_h, block_n, num_stages = pick_config(
++            q.device, "dsa_attn", pick_key, ladder,
++            lambda cfg: shared_bytes(_dsa_attn_kernel, m_args, **m_consts(cfg), num_warps = num_warps, num_stages = cfg[2]))
++        grid = (R * triton.cdiv(H, block_h),)
++        _dsa_attn_kernel[grid](
++            *m_args, **m_consts((block_h, block_n, num_stages)), num_warps = num_warps, num_stages = num_stages,
+         )
+     return out
+ 
+@@ -1159,24 +1196,37 @@ def dsa_indexer_scores(
+         if R <= 4:
+             # Few-query (decode) shape: heads as the MMA M dim, one dot per key tile --
+             # the query-tiled kernel degenerates to a serial head loop over padding here
++            f_args = (q_idx, weights, k_idx, scores, T, R, q_pos0, bound_max, bt, 0)
++            def f_consts(bn):
++                return dict(
++                    H_i = H_i, H_pad = max(triton.next_power_of_2(H_i), 16), D_i = D_i,
++                    S_stride = S_stride, compress_rate = compress_rate,
++                    scale = scale,
++                    BLOCK_N = bn, EPP = epp,
++                    DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
++                )
++            # kv tile ladder (smem.py); the score stride stays the caller's, tiles only shrink
++            block_n = pick_config(
++                q_idx.device, "dsa_indexer_fewq", (H_i, D_i, S_stride, compress_rate, epp, dbg, num_warps, num_stages, block_n),
++                halving_ladder(block_n),
++                lambda bn: shared_bytes(_dsa_indexer_fewq_kernel, f_args, **f_consts(bn), num_warps = num_warps, num_stages = num_stages))
+             grid = (R, triton.cdiv(max(T, 1), block_n))
+-            _dsa_indexer_fewq_kernel[grid](
+-                q_idx, weights, k_idx, scores, T, R, q_pos0, bound_max, bt, 0,
+-                H_i = H_i, H_pad = max(triton.next_power_of_2(H_i), 16), D_i = D_i,
+-                S_stride = S_stride, compress_rate = compress_rate,
+-                scale = scale,
+-                BLOCK_N = block_n, EPP = epp,
+-                DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
+-                num_warps = num_warps, num_stages = num_stages,
+-            )
++            _dsa_indexer_fewq_kernel[grid](*f_args, **f_consts(block_n), num_warps = num_warps, num_stages = num_stages)
+         else:
++            t_args = (q_idx, weights, k_idx, scores, T, R, q_pos0, bound_max, bt)
++            def t_consts(cfg):
++                bm, bn = cfg
++                return dict(
++                    H_i = H_i, D_i = D_i, S_stride = S_stride, compress_rate = compress_rate,
++                    scale = scale,
++                    BLOCK_M = bm, BLOCK_N = bn, EPP = epp,
++                    DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
++                )
++            ladder = [(block_m, block_n)] + [(bm, bn) for bn in halving_ladder(block_n) for bm in halving_ladder(block_m) if (bm, bn) != (block_m, block_n)]
++            block_m, block_n = pick_config(
++                q_idx.device, "dsa_indexer", (H_i, D_i, S_stride, compress_rate, epp, dbg, num_warps, num_stages, ladder[0]),
++                ladder,
++                lambda cfg: shared_bytes(_dsa_indexer_kernel, t_args, **t_consts(cfg), num_warps = num_warps, num_stages = num_stages))
+             grid = (triton.cdiv(R, block_m), triton.cdiv(max(T, 1), block_n))
+-            _dsa_indexer_kernel[grid](
+-                q_idx, weights, k_idx, scores, T, R, q_pos0, bound_max, bt,
+-                H_i = H_i, D_i = D_i, S_stride = S_stride, compress_rate = compress_rate,
+-                scale = scale,
+-                BLOCK_M = block_m, BLOCK_N = block_n, EPP = epp,
+-                DEBUG_BOUNDS = dbg, DEBUG_PAGES = dbg_pages,
+-                num_warps = num_warps, num_stages = num_stages,
+-            )
++            _dsa_indexer_kernel[grid](*t_args, **t_consts((block_m, block_n)), num_warps = num_warps, num_stages = num_stages)
+     return scores[:, :T]
+diff --git a/exllamav3/modules/attention_fn/mla_triton.py b/exllamav3/modules/attention_fn/mla_triton.py
+index bf3c114..ccdcff8 100644
+--- a/exllamav3/modules/attention_fn/mla_triton.py
++++ b/exllamav3/modules/attention_fn/mla_triton.py
+@@ -45,6 +45,7 @@ import os
+ import torch
+ 
+ from ...util.tensor import g_tensor_cache
++from .smem import pick_config, shared_bytes, halving_ladder
+ 
+ # Debug aid: synchronize and error-check after every MLA kernel launch, so an async illegal
+ # memory access is attributed to the kernel that caused it instead of a later sync point
+@@ -926,63 +927,87 @@ def mla_attn_triton_decode(
+     if block_n is None:
+         # qc: one big expanded tile per iteration, no pipelining (the expansion is ALU work the
+         # scheduler overlaps anyway); swept best on Ampere/Ada/Blackwell at 512-wide latents.
+-        # fp16: smaller tiles, deeper pipeline
+-        block_n = (32 if D_c <= 512 else 16) if qc is None else (_qc_bn_override or 64)
++        # fp16: smaller tiles, deeper pipeline. Small-smem devices step down the ladder (smem.py)
++        bn0 = (32 if D_c <= 512 else 16) if qc is None else (_qc_bn_override or 64)
++    else:
++        bn0 = block_n
+     if num_stages is None:
+         num_stages = 3 if qc is None else 1
+     if num_warps is None:
+         num_warps = 4 if qc is None else 8
+-    h_blocks = triton.cdiv(n_q_heads, block_h)
++    # kv tile first, then head tile, then pipeline depth (smem.py); the stock config leads
++    if block_n is None:
++        candidates = [(bh, bn, ns) for ns in range(num_stages, 0, -1)
++                      for bh in halving_ladder(block_h, 1) for bn in halving_ladder(bn0)]
++    else:
++        candidates = [(block_h, block_n, num_stages)]
+     num_pages_per_seq = block_table.shape[1]
+ 
+     max_k_len = num_pages_per_seq * page_size
+     if max_kv_len is not None:
+         max_k_len = min(max_k_len, max_kv_len)
+ 
+-    programs = bsz * h_blocks
+     # Workspace is sized to the device cap, NOT the live split count: num_splits tracks
+     # max_k_len (context), and sizing the buffers to it would keep a new tensor-cache entry
+     # for every 4*block_n tokens of context growth (hundreds of MB of dead workspace over a
+     # long session). The kernels only touch the first programs * num_splits * block_rows
+     # rows of the cap-sized buffers
+     target = 2 * _get_sm_count(q_lat.device)
+-    splits_cap = max(1, min(target // programs, 128))
+-    if num_splits is None:
+-        num_splits = max(1, min(splits_cap, triton.cdiv(max_k_len, 4 * block_n)))
+-    else:
+-        splits_cap = max(splits_cap, num_splits)
+-    split_len = triton.cdiv(triton.cdiv(max_k_len, num_splits), block_n) * block_n
+ 
+-    if num_splits > 1:
+-        n_o = programs * splits_cap * block_rows * D_c
+-        n_ml = programs * splits_cap * block_rows * 2
+-        if scratch is not None:
+-            buf = scratch.get(n_o)
+-            if buf is None:
+-                buf = scratch[n_o] = (
+-                    torch.empty(n_o, dtype = torch.float32, device = q_lat.device),
+-                    torch.empty(n_ml, dtype = torch.float32, device = q_lat.device),
+-                )
+-            partial_o, partial_ml = buf
++    def prepare(cfg):
++        """Head-block count, split count, workspace and the split kernel's argument list for
++        one (head tile, kv tile, stages) config."""
++        block_h, block_n, _ = cfg
++        block_rows = block_m * block_h
++        h_blocks = triton.cdiv(n_q_heads, block_h)
++        programs = bsz * h_blocks
++        splits_cap = max(1, min(target // programs, 128))
++        splits = num_splits
++        if splits is None:
++            splits = max(1, min(splits_cap, triton.cdiv(max_k_len, 4 * block_n)))
+         else:
+-            # Shared across layers on the device (sequential use on one stream)
+-            partial_o = g_tensor_cache.get(q_lat.device, (n_o,), torch.float, "mla_dec_po")
+-            partial_ml = g_tensor_cache.get(q_lat.device, (n_ml,), torch.float, "mla_dec_ml")
+-    else:
+-        partial_o = partial_ml = q_lat
++            splits_cap = max(splits_cap, splits)
++        split_len = triton.cdiv(triton.cdiv(max_k_len, splits), block_n) * block_n
++        if splits > 1:
++            n_o = programs * splits_cap * block_rows * D_c
++            n_ml = programs * splits_cap * block_rows * 2
++            if scratch is not None:
++                buf = scratch.get(n_o)
++                if buf is None:
++                    buf = scratch[n_o] = (
++                        torch.empty(n_o, dtype = torch.float32, device = q_lat.device),
++                        torch.empty(n_ml, dtype = torch.float32, device = q_lat.device),
++                    )
++                partial_o, partial_ml = buf
++            else:
++                # Shared across layers on the device (sequential use on one stream)
++                partial_o = g_tensor_cache.get(q_lat.device, (n_o,), torch.float, "mla_dec_po")
++                partial_ml = g_tensor_cache.get(q_lat.device, (n_ml,), torch.float, "mla_dec_ml")
++        else:
++            partial_o = partial_ml = q_lat
++        args = (
++            q_lat, q_pe, ckv_cache, kpe_cache, ckv_scales, h32, block_table, cache_seqlens, out,
++            partial_o, partial_ml,
++            split_len, num_pages_per_seq, splits,
++            qc_bits, bool(qc_trans), False, bsz, q_len, pre_appended_len, n_q_heads, page_size, D_c, D_r, float(softmax_scale),
++            bool(causal), splits == 1,
++            block_m, block_h, block_rows, block_n,
++        )
++        return args, splits, split_len, partial_o, partial_ml, programs, block_rows
++
++    with torch.cuda.device(q_lat.device):
++        pick_key = (D_c, D_r, qc_bits, bool(qc_trans), q_len, bool(causal), num_warps, candidates[0])
++        block_h, block_n, num_stages = pick_config(
++            q_lat.device, "mla_attn_decode", pick_key, candidates,
++            lambda cfg: shared_bytes(_mla_decode_split_kernel, prepare(cfg)[0], num_warps = num_warps, num_stages = cfg[2]))
++    args, num_splits, split_len, partial_o, partial_ml, programs, block_rows = prepare((block_h, block_n, num_stages))
+ 
+     if _debug_sync:
+         _dbg_sync("upstream-of-decode (not an MLA kernel)", q_lat.device)
+         _dbg_snap = (cache_seqlens.cpu().tolist(), block_table.cpu())
+     with torch.cuda.device(q_lat.device):
+         _mla_decode_split_kernel[(programs, num_splits)](
+-            q_lat, q_pe, ckv_cache, kpe_cache, ckv_scales, h32, block_table, cache_seqlens, out,
+-            partial_o, partial_ml,
+-            split_len, num_pages_per_seq, num_splits,
+-            qc_bits, bool(qc_trans), False, bsz, q_len, pre_appended_len, n_q_heads, page_size, D_c, D_r, float(softmax_scale),
+-            bool(causal), num_splits == 1,
+-            block_m, block_h, block_rows, block_n,
+-            num_warps = num_warps, num_stages = num_stages,
++            *args, num_warps = num_warps, num_stages = num_stages,
+         )
+         try:
+             _dbg_sync("mla_decode_split", q_lat.device)
+@@ -1195,25 +1220,40 @@ def mla_attn_triton_prefill(
+     else:
+         ckv_scales, qc_bits, h32 = q_lat, 0, q_lat
+ 
+-    if block_m is None:
+-        block_m = 32 if qc is None else 16
+     if block_n is None:
+         block_n = 32 if qc is None else 64
+     if num_stages is None:
+         num_stages = 2 if qc is None else 1
++    # q tile, then kv tile, stepped down on small-smem devices (smem.py)
++    if block_m is None:
++        bm0 = 32 if qc is None else 16
++        candidates = [(bm0, block_n, num_stages)] + [
++            (bm, bn, ns) for ns in range(num_stages, 0, -1) for bn in halving_ladder(block_n)
++            for bm in halving_ladder(bm0) if (bm, bn, ns) != (bm0, block_n, num_stages)]
++    else:
++        candidates = [(block_m, block_n, num_stages)]
+ 
+     if out is None:
+         out = torch.empty_like(q_lat)
+     if softmax_scale is None:
+         softmax_scale = 1.0 / math.sqrt(D_c + D_r)
+ 
+-    with torch.cuda.device(q_lat.device):
+-        _mla_prefill_kernel[(triton.cdiv(q_len, block_m), bsz * n_q_heads)](
++    def args_for(cfg):
++        bm, bn, _ = cfg
++        return (
+             q_lat, q_pe, ckv_cache, kpe_cache, ckv_scales, h32, block_table, cache_seqlens, out,
+             block_table.shape[1], q_len, n_rows,
+             qc_bits, bool(qc_trans), pre_appended_len, n_q_heads, page_size, D_c, D_r, float(softmax_scale),
+-            bool(causal), block_m, block_n,
+-            num_warps = num_warps, num_stages = num_stages,
++            bool(causal), bm, bn,
++        )
++
++    with torch.cuda.device(q_lat.device):
++        pick_key = (D_c, D_r, qc_bits, bool(qc_trans), bool(causal), num_warps, candidates[0])
++        block_m, block_n, num_stages = pick_config(
++            q_lat.device, "mla_attn_prefill", pick_key, candidates,
++            lambda cfg: shared_bytes(_mla_prefill_kernel, args_for(cfg), num_warps = num_warps, num_stages = cfg[2]))
++        _mla_prefill_kernel[(triton.cdiv(q_len, block_m), bsz * n_q_heads)](
++            *args_for((block_m, block_n, num_stages)), num_warps = num_warps, num_stages = num_stages,
+         )
+     _dbg_sync("mla_prefill", q_lat.device)
+     return out
+diff --git a/exllamav3/modules/attention_fn/smem.py b/exllamav3/modules/attention_fn/smem.py
+new file mode 100644
+index 0000000..c3500e7
+--- /dev/null
++++ b/exllamav3/modules/attention_fn/smem.py
+@@ -0,0 +1,116 @@
++"""
++Shared-memory budget for the Triton attention kernels.
++
++The tile configs in this package are sized for the ~100 KB of dynamic shared memory that Ampere
++and later grant a block. Older parts grant less (Turing: 64 KB), and Triton does not shrink a
++tile on its own: a kernel whose compiled footprint exceeds the limit fails at launch with
++OutOfResources. Guessing per-architecture tiles is unreliable because the footprint of the same
++config differs between architectures (no cp.async pipelining below sm_80, for one), so each
++launch site lists a ladder of configs instead -- the stock config first, then progressively
++smaller tiles -- and pick_config() walks it with compile-only warmups, taking the first whose
++measured footprint fits the device. Picks are cached per launch key, so the walk is paid once
++per kernel family, and on a full-budget device the first candidate always fits, which is exactly
++the compile the launch would have done anyway.
++"""
++
++import os
++import torch
++
++_limit = {}
++# Test override: pretend the device grants at most this many bytes, to exercise the ladders on
++# any GPU (the picks then reflect this device's footprints, not the smaller device's)
++_env_limit = int(os.environ.get("EXL3_TRITON_SMEM_LIMIT", "0") or "0")
++# EXL3_TRITON_SMEM_DEBUG=1 prints every pick with its measured footprint
++_debug = bool(os.environ.get("EXL3_TRITON_SMEM_DEBUG"))
++_picks = {}
++
++
++class NoFittingConfig(RuntimeError):
++    """No candidate in a ladder fits the device's shared memory. Callers with an alternative
++    formulation of the same computation catch this and take it; the miss is cached, so the
++    probe cost is paid once per launch key."""
++
++
++def _dev_index(device) -> int:
++    idx = device.index if hasattr(device, "index") else device
++    return torch.cuda.current_device() if idx is None else idx
++
++
++def smem_limit(device) -> int:
++    """Dynamic shared memory per block the device grants (the opt-in maximum), in bytes."""
++    idx = _dev_index(device)
++    lim = _limit.get(idx)
++    if lim is None:
++        props = torch.cuda.get_device_properties(idx)
++        lim = getattr(props, "shared_memory_per_block_optin", 0)
++        if not lim:
++            lim = 64 * 1024 if props.major < 8 else 96 * 1024
++        if _env_limit:
++            lim = min(lim, _env_limit)
++        _limit[idx] = lim
++    return lim
++
++
++def pick_config(device, name: str, key, candidates, probe):
++    """First config in `candidates` whose compiled kernel fits the device's shared memory.
++
++    probe(cfg) compiles the kernel for that config without launching it and returns the
++    footprint in bytes (see shared_bytes). `key` must cover every launch constant the footprint
++    depends on; the pick is cached per (device architecture, limit, name, key). Raises
++    NoFittingConfig when no candidate fits (also cached).
++    """
++    idx = _dev_index(device)
++    limit = smem_limit(idx)
++    full_key = (torch.cuda.get_device_capability(idx), limit, name, key)
++    cfg = _picks.get(full_key, ...)
++    if cfg is None:
++        raise NoFittingConfig(f"{name}: no tile configuration fits the device's {limit} B of dynamic shared memory")
++    if cfg is not ...:
++        return cfg
++    need = None
++    for cand in candidates:
++        need = probe(cand)
++        if _debug:
++            print(f" -- smem: {name} {key} config {cand}: {need} B ({'fits' if need <= limit else 'over'} {limit} B)", flush = True)
++        if need <= limit:
++            _picks[full_key] = cand
++            return cand
++    _picks[full_key] = None
++    raise NoFittingConfig(
++        f"{name}: no tile configuration fits the device's {limit} B of dynamic shared memory "
++        f"(the smallest candidate needs {need} B)"
++    )
++
++
++def shared_bytes(kernel, args, **kwargs) -> int:
++    """Compile-only warmup of a JIT kernel with the launch's real arguments; the launch grid does
++    not affect the footprint. The compile is cached by Triton, so the eventual launch reuses it."""
++    return kernel.run(*args, grid = (1,), warmup = True, **kwargs).metadata.shared
++
++
++def tile_ladder(block_m: int, block_n: int, num_warps: int, num_stages: int,
++                min_m: int = 16, min_n: int = 16):
++    """Stock (block_m, block_n, num_warps, num_stages) first, then halving q tiles at the same
++    kv tile, then the same at a halved kv tile. Warps follow the q tile so each warp keeps whole
++    16-row MMA tiles."""
++    cands = [(block_m, block_n, num_warps, num_stages)]
++    bn = block_n
++    while bn >= min_n:
++        bm = block_m
++        while bm >= min_m:
++            c = (bm, bn, max(1, min(num_warps, bm // 16)), num_stages)
++            if c not in cands:
++                cands.append(c)
++            bm //= 2
++        bn //= 2
++    return cands
++
++
++def halving_ladder(value: int, minimum: int = 16):
++    """value, value / 2, ... down to `minimum` (single-parameter ladders such as a kv tile). The
++    stock value always leads, even when it is already below the minimum."""
++    cands = [value]
++    while value // 2 >= minimum:
++        value //= 2
++        cands.append(value)
++    return cands
+diff --git a/exllamav3/modules/attention_fn/triton_paged.py b/exllamav3/modules/attention_fn/triton_paged.py
+index 33f9fbc..5e993eb 100644
+--- a/exllamav3/modules/attention_fn/triton_paged.py
++++ b/exllamav3/modules/attention_fn/triton_paged.py
+@@ -7,6 +7,7 @@ import triton
+ import triton.language as tl
+ 
+ from .common import AttnArgs, get_non_causal_span_arglist
++from .smem import pick_config, shared_bytes, tile_ladder, halving_ladder
+ 
+ 
+ def _is_power_of_2(x: int) -> bool:
+@@ -1182,8 +1183,8 @@ def paged_attn_triton_decode(
+         k_scales, v_scales, qck, qcv = q, q, 0, 0
+         h32 = q
+ 
+-    if block_n is None:
+-        block_n = max(16, 8192 // hd_pad)   # K + V tiles in smem across num_stages
++    # K + V tiles in smem across num_stages; on small-smem devices the ladder halves the kv tile
++    candidates = halving_ladder(max(16, 8192 // hd_pad)) if block_n is None else [block_n]
+ 
+     group_size = n_q_heads // n_kv_heads
+     block_m = triton.next_power_of_2(q_len)
+@@ -1200,22 +1201,43 @@ def paged_attn_triton_decode(
+         max_k_len = min(max_k_len, max_kv_len + kv_append_len)
+ 
+     programs = bsz * n_kv_heads * h_blocks
+-    if num_splits is None:
+-        dev = q.device.index
+-        if dev not in _decode_sm_count:
+-            _decode_sm_count[dev] = torch.cuda.get_device_properties(q.device).multi_processor_count
+-        target = 2 * _decode_sm_count[dev]
+-        num_splits = max(1, min(target // programs, triton.cdiv(max_k_len, 1 * block_n), 128))
+-    split_len = triton.cdiv(triton.cdiv(max_k_len, num_splits), block_n) * block_n
+-
+-    if num_splits > 1:
+-        partial_o = torch.empty(programs * num_splits * block_rows * hd_pad, dtype = torch.float32, device = q.device)
+-        partial_ml = torch.empty(programs * num_splits * block_rows * 2, dtype = torch.float32, device = q.device)
+-    else:
+-        partial_o = q   # unused
+-        partial_ml = q  # unused
++    dev = q.device.index
++    if dev not in _decode_sm_count:
++        _decode_sm_count[dev] = torch.cuda.get_device_properties(q.device).multi_processor_count
++    target = 2 * _decode_sm_count[dev]
++
++    def prepare(block_n):
++        """Split count, partial buffers and the split kernel's argument list for one kv tile."""
++        splits = num_splits
++        if splits is None:
++            splits = max(1, min(target // programs, triton.cdiv(max_k_len, 1 * block_n), 128))
++        split_len = triton.cdiv(triton.cdiv(max_k_len, splits), block_n) * block_n
++        if splits > 1:
++            partial_o = torch.empty(programs * splits * block_rows * hd_pad, dtype = torch.float32, device = q.device)
++            partial_ml = torch.empty(programs * splits * block_rows * 2, dtype = torch.float32, device = q.device)
++        else:
++            partial_o = q   # unused
++            partial_ml = q  # unused
++        args = (
++            q, k_cache, v_cache, block_table, cache_seqlens, out, partial_o, partial_ml,
++            k_scales, v_scales, h32,
++            split_len, num_pages_per_seq, splits, sinks,
++            qck, qcv, q_len, kv_append_len, n_q_heads, n_kv_heads,
++            page_size, head_dim, hd_pad, float(softmax_scale),
++            bool(causal), int(window_left), int(window_right), float(softcap or 0.0),
++            splits == 1, has_sinks, block_m, block_h, block_rows, block_n,
++        )
++        return args, splits, partial_o, partial_ml
+ 
+     with torch.cuda.device(q.device):
++        pick_key = (head_dim, hd_pad, qck, qcv, q_len, block_h, bool(causal), window_left >= 0,
++                    window_right >= 0, has_sinks, num_warps, num_stages, candidates[0])
++        block_n = pick_config(
++            q.device, "paged_attn_decode", pick_key, candidates,
++            lambda bn: shared_bytes(_paged_attn_decode_split_kernel, prepare(bn)[0],
++                                    num_warps = num_warps, num_stages = num_stages))
++        args, num_splits, partial_o, partial_ml = prepare(block_n)
++
+         if k is not None and kv_append_len:
+             update_block_d = triton.next_power_of_2(head_dim)
+             _paged_kv_update_kernel[(bsz * kv_append_len, n_kv_heads, triton.cdiv(head_dim, update_block_d))](
+@@ -1225,14 +1247,7 @@ def paged_attn_triton_decode(
+             )
+ 
+         _paged_attn_decode_split_kernel[(programs, num_splits)](
+-            q, k_cache, v_cache, block_table, cache_seqlens, out, partial_o, partial_ml,
+-            k_scales, v_scales, h32,
+-            split_len, num_pages_per_seq, num_splits, sinks,
+-            qck, qcv, q_len, kv_append_len, n_q_heads, n_kv_heads,
+-            page_size, head_dim, hd_pad, float(softmax_scale),
+-            bool(causal), int(window_left), int(window_right), float(softcap or 0.0),
+-            num_splits == 1, has_sinks, block_m, block_h, block_rows, block_n,
+-            num_warps=num_warps, num_stages=num_stages,
++            *args, num_warps = num_warps, num_stages = num_stages,
+         )
+ 
+         if num_splits > 1:
+@@ -1863,59 +1878,96 @@ def paged_attn_triton_prefill(
+         cfg = (64, 32, 4, 2)
+     else:
+         cfg = (32, 16, 4, 2)
+-    num_stages_forced = num_stages is not None
+-    block_m = block_m or cfg[0]
+-    block_n = block_n or cfg[1]
+-    num_warps = num_warps or cfg[2]
+-    num_stages = num_stages or cfg[3]
+-    if qc is not None:
++    forced = (block_m, block_n, num_warps, num_stages)
++    if qc is not None and block_n is None:
+         # compact plane tiles stage fewer smem bytes than fp16: wider kv tiles pay off. Wide
+         # bit widths at large head_dim overstep the ~99 KB smem budget with the non-causal loop
+         # structure (measured boundary: head_dim >= 256 with k_bits + v_bits >= 13), so halve
+         # the kv tile there. num_stages is picked per family below
+-        block_n = max(16, min(128, 16384 // hd_pad))
+-        if hd_pad >= 256 and qck + qcv >= 13 and block_n > 16:
+-            block_n //= 2
++        bn = max(16, min(128, 16384 // hd_pad))
++        if hd_pad >= 256 and qck + qcv >= 13 and bn > 16:
++            bn //= 2
++        cfg = (cfg[0], bn, cfg[2], cfg[3])
++    stock = tuple(f if f is not None else c for f, c in zip(forced, cfg))
++    # Caller-forced values pin the config; otherwise the ladder is walked against the device's
++    # shared memory budget (smem.py), which only steps below the stock tiles on small devices
++    candidates = [stock] if any(f is not None for f in forced) else tile_ladder(*stock)
++    num_stages_forced = forced[3] is not None
+ 
+     num_pages_per_seq = block_table.shape[1]
+-    q_blocks = triton.cdiv(q_len, block_m)
+-    programs = q_blocks * bsz * n_q_heads
+-
+-    # Split the kv range when the grid would quantize badly against the SM count (uniform
+-    # full-length programs at 1 block/SM leave a mostly idle trailing wave). Pick the split
+-    # count minimizing ceil-waves per unit of work, with a small penalty per extra split
+-    if num_splits is None:
+-        bound_kv = num_pages_per_seq * page_size + kv_append_len
+-        if max_kv_len is not None:
+-            bound_kv = min(bound_kv, max_kv_len + kv_append_len)
+-        dev = q.device.index
+-        if dev not in _decode_sm_count:
+-            _decode_sm_count[dev] = torch.cuda.get_device_properties(q.device).multi_processor_count
+-        sms = _decode_sm_count[dev]
+-        num_splits = 1
+-        if bound_kv >= 8192 and programs:
+-            best = None
+-            for cand in (1, 2, 3, 4, 5, 6, 8):
+-                cost = math.ceil(programs * cand / sms) / cand + 0.03 * (cand - 1)
+-                if best is None or cost < best[0]:
+-                    best = (cost, cand)
+-            num_splits = best[1]
+-            # Splitting fixes grid quantization when programs are few; at large program counts
+-            # the ceil-noise in the cost model can still pick a high split count whose fp32
+-            # partial buffer is enormous (64k q_len x 32 heads: ~2 GB per split). The gain there
+-            # is negligible by construction, so bound the buffer rather than trust the penalty
+-            max_partial_bytes = 128 * 1024 * 1024
+-            max_splits = max(1, max_partial_bytes // (programs * block_m * hd_pad * 4))
+-            num_splits = min(num_splits, max_splits)
+-
+-    if num_splits > 1:
+-        partial_o = torch.empty(programs * num_splits * block_m * hd_pad, dtype = torch.float32, device = q.device)
+-        partial_ml = torch.empty(programs * num_splits * block_m * 2, dtype = torch.float32, device = q.device)
+-    else:
+-        partial_o = q   # unused
+-        partial_ml = q  # unused
++    dev = q.device.index
++    if dev not in _decode_sm_count:
++        _decode_sm_count[dev] = torch.cuda.get_device_properties(q.device).multi_processor_count
++    sms = _decode_sm_count[dev]
++
++    def prepare(cfg):
++        """Launch geometry for one tile config: grid, kv split count, partial buffers and the
++        kernel argument list (the probe compiles with exactly the launch's arguments)."""
++        block_m, block_n, num_warps, num_stages = cfg
++        q_blocks = triton.cdiv(q_len, block_m)
++        programs = q_blocks * bsz * n_q_heads
++
++        # Split the kv range when the grid would quantize badly against the SM count (uniform
++        # full-length programs at 1 block/SM leave a mostly idle trailing wave). Pick the split
++        # count minimizing ceil-waves per unit of work, with a small penalty per extra split
++        splits = num_splits
++        if splits is None:
++            bound_kv = num_pages_per_seq * page_size + kv_append_len
++            if max_kv_len is not None:
++                bound_kv = min(bound_kv, max_kv_len + kv_append_len)
++            splits = 1
++            if bound_kv >= 8192 and programs:
++                best = None
++                for cand in (1, 2, 3, 4, 5, 6, 8):
++                    cost = math.ceil(programs * cand / sms) / cand + 0.03 * (cand - 1)
++                    if best is None or cost < best[0]:
++                        best = (cost, cand)
++                splits = best[1]
++                # Splitting fixes grid quantization when programs are few; at large program counts
++                # the ceil-noise in the cost model can still pick a high split count whose fp32
++                # partial buffer is enormous (64k q_len x 32 heads: ~2 GB per split). The gain there
++                # is negligible by construction, so bound the buffer rather than trust the penalty
++                max_partial_bytes = 128 * 1024 * 1024
++                max_splits = max(1, max_partial_bytes // (programs * block_m * hd_pad * 4))
++                splits = min(splits, max_splits)
++
++        if splits > 1:
++            partial_o = torch.empty(programs * splits * block_m * hd_pad, dtype = torch.float32, device = q.device)
++            partial_ml = torch.empty(programs * splits * block_m * 2, dtype = torch.float32, device = q.device)
++        else:
++            partial_o = q   # unused
++            partial_ml = q  # unused
++
++        grid = (q_blocks, bsz * n_q_heads, splits)
++        # int64 index math only when an element offset can actually cross 2^31 (q/out, or the
++        # fp32 partial buffer); common geometries keep pure int32 codegen
++        wide_index = max(
++            bsz * q_len * n_q_heads * head_dim,
++            q_blocks * bsz * n_q_heads * splits * block_m * hd_pad,
++        ) >= 1 << 31
++        args = (
++            q, k_cache, v_cache, block_table, cache_seqlens, out,
++            partial_o, partial_ml, k_scales, v_scales, h32,
++            k_new if new_kv_mode else q, v_new if new_kv_mode else q, sinks,
++            splits, splits > 1, new_kv_mode, qck, qcv,
++            q_len, kv_append_len, n_q_heads, n_kv_heads,
++            num_pages_per_seq, page_size, head_dim, hd_pad, float(softmax_scale),
++            bool(causal), int(window_left), int(window_right),
++            window_left >= 0, window_right >= 0, float(softcap or 0.0),
++            has_sinks, wide_index, block_m, block_n,
++        )
++        return grid, args, num_warps, num_stages, q_blocks, splits, partial_o, partial_ml, block_m, wide_index
+ 
+     with torch.cuda.device(q.device):
++        pick_key = (head_dim, hd_pad, qck, qcv, new_kv_mode, bool(causal), window_left >= 0,
++                    window_right >= 0, has_sinks, stock)
++        def probe(cfg):
++            _, args, nw, ns, *_ = prepare(cfg)
++            return shared_bytes(_paged_attn_prefill_kernel, args, num_warps = nw, num_stages = ns)
++        cfg = pick_config(q.device, "paged_attn_prefill", pick_key, candidates, probe)
++        grid, args, num_warps, num_stages, q_blocks, num_splits, partial_o, partial_ml, block_m, wide_index = prepare(cfg)
++        block_n = cfg[1]
++
+         if k is not None and kv_append_len:
+             update_block_d = triton.next_power_of_2(head_dim)
+             _paged_kv_update_kernel[(bsz * kv_append_len, n_kv_heads, triton.cdiv(head_dim, update_block_d))](
+@@ -1924,26 +1976,8 @@ def paged_attn_triton_prefill(
+                 num_warps=2, num_stages=3,
+             )
+ 
+-        grid = (q_blocks, bsz * n_q_heads, num_splits)
+-        # int64 index math only when an element offset can actually cross 2^31 (q/out, or the
+-        # fp32 partial buffer); common geometries keep pure int32 codegen
+-        wide_index = max(
+-            bsz * q_len * n_q_heads * head_dim,
+-            q_blocks * bsz * n_q_heads * num_splits * block_m * hd_pad,
+-        ) >= 1 << 31
+         def launch(ns):
+-            _paged_attn_prefill_kernel[grid](
+-                q, k_cache, v_cache, block_table, cache_seqlens, out,
+-                partial_o, partial_ml, k_scales, v_scales, h32,
+-                k_new if new_kv_mode else q, v_new if new_kv_mode else q, sinks,
+-                num_splits, num_splits > 1, new_kv_mode, qck, qcv,
+-                q_len, kv_append_len, n_q_heads, n_kv_heads,
+-                num_pages_per_seq, page_size, head_dim, hd_pad, float(softmax_scale),
+-                bool(causal), int(window_left), int(window_right),
+-                window_left >= 0, window_right >= 0, float(softcap or 0.0),
+-                has_sinks, wide_index, block_m, block_n,
+-                num_warps=num_warps, num_stages=ns,
+-            )
++            _paged_attn_prefill_kernel[grid](*args, num_warps = num_warps, num_stages = ns)
+ 
+         if qc is not None and not num_stages_forced:
+             if _qc_prefill_ns_env:
+@@ -2215,13 +2249,25 @@ def varlen_attn_triton(
+         if num_warps > 4:
+             num_warps //= 2
+ 
+-    with torch.cuda.device(q.device):
+-        grid = (triton.cdiv(max_seqlen, block_m), num_segs, n_q_heads)
+-        _varlen_attn_kernel[grid](
++    def args_for(cfg):
++        block_m, block_n, num_warps, num_stages = cfg
++        return (
+             q, k, v, cu_seqlens, out, sinks,
+             n_q_heads, n_kv_heads, head_dim, hd_p2, float(softmax_scale),
+             bool(causal), int(window_left), int(window_right), float(softcap or 0.0),
+             has_sinks and not sink_key0, has_sinks and sink_key0, block_m, block_n,
++        )
++
++    with torch.cuda.device(q.device):
++        stock = (block_m, block_n, num_warps, num_stages)
++        pick_key = (head_dim, hd_p2, bool(causal), window_left >= 0, window_right >= 0,
++                    has_sinks, sink_key0, stock)
++        block_m, block_n, num_warps, num_stages = pick_config(
++            q.device, "varlen_attn", pick_key, tile_ladder(*stock),
++            lambda cfg: shared_bytes(_varlen_attn_kernel, args_for(cfg), num_warps = cfg[2], num_stages = cfg[3]))
++        grid = (triton.cdiv(max_seqlen, block_m), num_segs, n_q_heads)
++        _varlen_attn_kernel[grid](
++            *args_for((block_m, block_n, num_warps, num_stages)),
+             num_warps=num_warps, num_stages=num_stages,
+         )
+     return out.unsqueeze(0) if squeeze else out
+diff --git a/exllamav3/modules/dsv4.py b/exllamav3/modules/dsv4.py
+index 77b02e4..443ea0d 100644
+--- a/exllamav3/modules/dsv4.py
++++ b/exllamav3/modules/dsv4.py
+@@ -1317,7 +1317,9 @@ class DSV4Attention(Module):
+                 bcd = build_bc_dsa_batch(self, rsl, kl)
+                 self._bc_dsa_batch[id(rsl)] = bcd if bcd is not None else False
+             if bcd:
+-                return bcd.run(x, B, S, pos_l, floor_l, beg_l, ec_l, slot_l, bt)
++                y = bcd.run(x, B, S, pos_l, floor_l, beg_l, ec_l, slot_l, bt)
++                if y is not None:   # None: the graph kernels do not fit this device's shared memory
++                    return y
+ 
+         # Eager batched body (capture reference / fallback): per-job state in a device
+         # array, same kernels as the graphs
+@@ -1400,20 +1402,29 @@ class DSV4Attention(Module):
+                     int(RopeStyle.GPTJ), 1.0, None, None, 1e-6, 0.0, 0.0, 0, 1, 0)
+                 wts = g_tensor_cache.get(device, (R, Hi), torch.half, "dsv4_b_wts")
+                 self.idx_weights.inner.bc.run(x.view(R, -1), wts)
+-                s_max = -(-kl.capacity // 128) * 128
+-                scores = g_tensor_cache.get(device, (R, s_max), torch.half, "dsv4_b_scores")
+-                with torch.cuda.device(device):
+-                    _dsa_indexer_fewq_kernel[(R, triton.cdiv(s_max, 128))](
+-                        qi.view(R, Hi, Di), wts.view(R, Hi), kl.pool_idx.view(-1, Di),
+-                        scores, a_ec, R, a_pos, a_ec, bt_st,
+-                        bt_st.stride(0),
++                # The score stride and the tile alignment both follow the kv tile, which the
++                # ladder may shrink on small-smem devices (smem.py)
++                from .attention_fn.smem import pick_config, shared_bytes, halving_ladder
++                def i_args(bn):
++                    s_max = -(-kl.capacity // bn) * bn
++                    scores = g_tensor_cache.get(device, (R, s_max), torch.half, "dsv4_b_scores")
++                    args = (qi.view(R, Hi, Di), wts.view(R, Hi), kl.pool_idx.view(-1, Di),
++                            scores, a_ec, R, a_pos, a_ec, bt_st, bt_st.stride(0))
++                    consts = dict(
+                         H_i = Hi, H_pad = max(triton.next_power_of_2(Hi), 16), D_i = Di,
+                         S_stride = s_max, compress_rate = m,
+-                        scale = Di ** -0.5 * Hi ** -0.5, BLOCK_N = 128,
++                        scale = Di ** -0.5 * Hi ** -0.5, BLOCK_N = bn,
+                         SEQ = S, MULTIROW = 1, EPP = kl.epp,
+                         DEBUG_BOUNDS = 1 if dsa_debug_bounds else 0,
+-                        DEBUG_PAGES = kl.num_pages if dsa_debug_bounds else 0,
+-                        num_warps = 8, num_stages = 2)
++                        DEBUG_PAGES = kl.num_pages if dsa_debug_bounds else 0)
++                    return s_max, scores, args, consts
++                with torch.cuda.device(device):
++                    def probe(bn):
++                        _, _, args, consts = i_args(bn)
++                        return shared_bytes(_dsa_indexer_fewq_kernel, args, **consts, num_warps = 8, num_stages = 2)
++                    idx_bn = pick_config(device, "dsv4_indexer_fewq", (Hi, Di, m, S, kl.epp, kl.capacity), halving_ladder(128), probe)
++                    s_max, scores, args, consts = i_args(idx_bn)
++                    _dsa_indexer_fewq_kernel[(R, triton.cdiv(s_max, idx_bn))](*args, **consts, num_warps = 8, num_stages = 2)
+                 indices = g_tensor_cache.get(device, (R, kp), torch.int32, "dsv4_b_idx")
+                 # Per-row scan bound from the state array: each row reads only its own
+                 # causal region, so the score buffer needs no -inf backfill
+diff --git a/exllamav3/modules/hyperconnections.py b/exllamav3/modules/hyperconnections.py
+index 7ff31c7..ed66e84 100644
+--- a/exllamav3/modules/hyperconnections.py
++++ b/exllamav3/modules/hyperconnections.py
+@@ -273,8 +273,10 @@ class GatedResidual(Module):
+     dots on the raw streams + a finalize that derives the low-rank gate inline); large R
+     (prefill) runs the tiled ext.gr_mix_tiled kernels (hc_mix_tiled.cu: int8 tensor-core
+     tiles over the row stack with exact integer accumulation and a fixed fp32 combination, so
+-    replicated TP ranks of ANY architecture produce identical streams and any replicated
+-    decision downstream agrees),
++    replicated TP ranks of any sm_80+ architecture produce identical streams and any
++    replicated decision downstream agrees — the tiled int8 kernels need cp.async and
++    mma.m16n8k32 s8, both sm_80+, so pre-Ampere devices take the cuBLAS path below
++    (device-dependent, but uniform within a single-arch fleet),
+     or, where the shape does not fit that kernel or EXL3_GR_MIX_TILED=0, half cuBLAS GEMMs +
+     a few elementwise ops. apply_() is ext.hc_apply without a comb (x[h] += post[h] * y),
+     shared with mHC. _mix_ref() keeps the fp32 torch reference the parity tests compare
+@@ -393,8 +395,12 @@ class GatedResidual(Module):
+         # pre-quantized per row (14-bit fixed point split into two int8 slices, det_quant_weight)
+         # (the TP loader stages modules on the CPU in the parent process; workers rebuild them
+         # on their devices, so the int8 tables are only prepared for CUDA-resident copies)
++        # The tiled int8 kernels use cp.async and mma.m16n8k32 s8 — sm_80+
++        # instructions — so the path is Ampere+ only; below that the cuBLAS
++        # fallback serves the projection.
+         self.tiled = _gr_mix_tiled_enable and H == 4 and Dh % 128 == 0 and self.rank % 64 == 0 \
+-            and Mpad <= 512 and not torch.version.hip and dev.type == "cuda"
++            and Mpad <= 512 and not torch.version.hip and dev.type == "cuda" \
++            and torch.cuda.get_device_capability(dev)[0] >= 8
+         tmp = g_tensor_cache.get_bucketed(dev, M * H * Dh, torch.float, "gr_prep_tmp") \
+             .view(M, H * Dh)
+         tmp.copy_(self.proj_h[: M])
+diff --git a/exllamav3/modules/mla_attn.py b/exllamav3/modules/mla_attn.py
+index 7454028..498bb70 100644
+--- a/exllamav3/modules/mla_attn.py
++++ b/exllamav3/modules/mla_attn.py
+@@ -16,6 +16,7 @@ from .attention_fn.mla_triton import (
+     mla_unfold,
+ )
+ from .attention_fn.bc_attn import MAX_BSZ as _bc_max_bsz
++from .attention_fn.smem import NoFittingConfig
+ import os
+ 
+ # Prefill strategy: "mha" (default) up-projects past tiles from the compressed cache and attends
+@@ -279,6 +280,27 @@ class MLAttention(Module):
+         })
+ 
+ 
++
++    def _mha_form(self, q, q_pe, ckv_cache, kpe_cache, block_table, host_seqlens, bsz, seqlen, qc, params):
++        """MHA-form attention: everything (past and current chunk) is read back from the cache
++        and attended over per-head up-projections. RoPE produced q_pe as a copy (the strided
++        slice cannot reshape into a view), so fold it back into q's pe columns for the kernel's
++        packed [nope | pe] per-head rows."""
++        H = self.num_q_heads
++        R = bsz * seqlen
++        q = q.view(R, H, self.qk_head_dim)
++        q[:, :, self.qk_nope_head_dim:] = q_pe.reshape(R, H, self.qk_rope_head_dim)
++        o = mla_attn_triton_prefill_mha(
++            q,
++            self.w_uk_flat, self.w_uv_flat,
++            ckv_cache, kpe_cache, block_table, host_seqlens,
++            bsz, seqlen, self.v_head_dim, self.qk_nope_head_dim, self.sm_scale,
++            pre_appended_len = seqlen,
++            qc = qc,
++        )
++        o = o.reshape(bsz, seqlen, H * self.v_head_dim)
++        return self.o_proj.forward(o, params)
++
+     def cache_layer_type(self, default, kwargs: dict):
+         """MLA stores a latent instead of per-head K/V, so it overrides the cache layer the Cache
+         was constructed with. A quantized cache request maps to the packed-latent layer: k_bits
+@@ -891,33 +913,30 @@ class MLAttention(Module):
+             return self.o_proj.forward(o, params)
+ 
+         if use_mha:
+-            # MHA-form prefill: everything (past and current chunk) is read back from the cache
+-            # and attended over per-head up-projections. RoPE produced q_pe as a copy (the strided
+-            # slice cannot reshape into a view), so fold it back into q's pe columns for the
+-            # kernel's packed [nope | pe] per-head rows
+-            q = q.view(R, H, self.qk_head_dim)
+-            q[:, :, self.qk_nope_head_dim:] = q_pe.reshape(R, H, self.qk_rope_head_dim)
+-            o = mla_attn_triton_prefill_mha(
+-                q,
+-                self.w_uk_flat, self.w_uv_flat,
+-                ckv_cache, kpe_cache, block_table, host_seqlens,
+-                bsz, seqlen, self.v_head_dim, self.qk_nope_head_dim, self.sm_scale,
+-                pre_appended_len = seqlen,
+-                qc = qc,
+-            )
+-            o = o.reshape(bsz, seqlen, H * self.v_head_dim)
+-            return self.o_proj.forward(o, params)
++            return self._mha_form(q, q_pe, ckv_cache, kpe_cache, block_table, host_seqlens, bsz, seqlen, qc, params)
+ 
+         kernel = mla_attn_triton_decode if seqlen <= MAX_DECODE_QLEN else mla_attn_triton_prefill
+         extra = {}
+-        o_lat = kernel(
+-            q_lat, q_pe_hm, ckv_cache, kpe_cache, block_table, cache_seqlens,
+-            bsz = bsz, q_len = seqlen,
+-            causal = causal, softmax_scale = self.sm_scale,
+-            pre_appended_len = seqlen,
+-            qc = qc,
+-            **extra,
+-        )
++        try:
++            o_lat = kernel(
++                q_lat, q_pe_hm, ckv_cache, kpe_cache, block_table, cache_seqlens,
++                bsz = bsz, q_len = seqlen,
++                causal = causal, softmax_scale = self.sm_scale,
++                pre_appended_len = seqlen,
++                qc = qc,
++                **extra,
++            )
++        except NoFittingConfig:
++            # No latent-form tile fits this device's shared memory at this query length (the
++            # latent width sets the floor; Turing at 512-wide latents). The MHA form attends
++            # over per-head up-projections from the same cache at any query length, and the
++            # un-absorbed q is still live here. Dense causal only, as for use_mha
++            if not (causal and not sparse and self.w_uk_flat is not None):
++                raise
++            if host_seqlens is None:
++                host_seqlens = _host_seqlens(params, cache_seqlens)
++            del q_lat, q_pe_hm
++            return self._mha_form(q, q_pe, ckv_cache, kpe_cache, block_table, host_seqlens, bsz, seqlen, qc, params)
+ 
+         from .attention_fn.mla_triton import _debug_sync
+         if _debug_sync:
+diff --git a/exllamav3/version.py b/exllamav3/version.py
+index 64d9de7..e1d1962 100644
+--- a/exllamav3/version.py
++++ b/exllamav3/version.py
+@@ -1 +1 @@
+-__version__ = "1.5.1"
+\ No newline at end of file
++__version__ = "1.5.2"
+\ No newline at end of file

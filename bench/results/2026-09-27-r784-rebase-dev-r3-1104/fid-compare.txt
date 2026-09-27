@@ -1,0 +1,5 @@
+run                         bucket    tokens     NLL   ΔNLL%  top1agree  KL(ref||m)
+fid-ON.jsonl                ALL       409400  1.2173   -0.04     0.9677     0.01564
+fid-ON.jsonl                agent      81880  0.7334   -0.30     0.9697     0.02583
+fid-ON.jsonl                code      163760  1.1493   -0.01     0.9663     0.01488
+fid-ON.jsonl                prose     163760  1.5271   -0.00     0.9680     0.01131

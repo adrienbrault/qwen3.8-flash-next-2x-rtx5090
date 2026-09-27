@@ -1,0 +1,119 @@
+# audit.log of the unit, as written on the box.
+2026-09-27T11:04:34+00:00 [r784-rebase-dev-r3] start: daily tabbyapi:stack-r3-rows32-tokcount-loopthink3 (live md5 3f8c18109f1c6dc16cf0701761993f38), pool 983040, 41 keys; P tabbyapi:rebase-dev-r3 on tabbyapi:stack-r3-rows32-tokcount-loopthink4 (sha256:d0f174de2329c199142bf774b67810c77141490fc341a82c2460257715bb6ffd); tree 150497b44e6f49b06b8a13f2568e68fc41841bc28964928509e181b633285501; arms 'S P P S PNT'; timebox 150 min; stock power '600 575'; results /srv/qwen5090/results/2026-09-27-r784-rebase-dev-r3-1104
+/dev/mapper/ubuntu--vg-ubuntu--lv  1.8T  1.5T  262G  86% /
+2026-09-27T11:04:34+00:00 [r784-rebase-dev-r3] image tabbyapi:rebase-dev-r3 current (base id + tree sha labels match)
+2026-09-27T11:04:34+00:00 [r784-rebase-dev-r3] lock held; daily at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; offsets core 0 0 / memory 4500 4500; power 600 575
+2026-09-27T11:04:45+00:00 [r784-rebase-dev-r3] P landing: rebase-dev-r3 landed: exllamav3 1.5.2 (served stack-r3-rows32 on dev 5783a93), precompiled extension in site; served landing (rows32 r4 + stack-r3) PASS on the ported tree; the 41-key served env impor
+2026-09-27T11:05:06+00:00 [r784-rebase-dev-r3] [S1] UP @ 983040 [30,30]: tabbyapi:stack-r3-rows32-tokcount-loopthink3, env keys 41, free 1125/1573 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:05:06+00:00 [r784-rebase-dev-r3] headroom reference (S1): 1125/1573 MiB (within the plan reference 1125/1573 +- 32)
+2026-09-27T11:05:08+00:00 [r784-rebase-dev-r3] [S1] layer placement (card:first-last layer): 0:0-25,1:26-47
+2026-09-27T11:05:08+00:00 [r784-rebase-dev-r3] [S1] measuring boot S1 (boot-/env-/config-/split- files carry that tag; data files carry S1)
+2026-09-27T11:05:39+00:00 [r784-rebase-dev-r3] [S1] fn_greedy: 6 prompts, 0 errors
+2026-09-27T11:05:42+00:00 [r784-rebase-dev-r3] [S1] chat_greedy (recorded): 5 prompts, rc 0
+2026-09-27T11:06:16+00:00 [r784-rebase-dev-r3] [S1] cold prefill medians: 30k 10162 t/s (n 3); 120k 10793 t/s (n 3); free after the 120k 311/847 MiB
+2026-09-27T11:09:22+00:00 [r784-rebase-dev-r3] [S1] mp_decode: 144 records (0 failed; want 144 ok)
+2026-09-27T11:10:33+00:00 [r784-rebase-dev-r3] [S1] F5 lp_margin: 80 records, 0 errors
+2026-09-27T11:10:33+00:00 [r784-rebase-dev-r3] [S1] OOM 0; tracebacks 0; restarts 0; served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-27T11:12:18+00:00 [r784-rebase-dev-r3] [P@917504-s30-30] UP @ 917504 [30,30]: tabbyapi:rebase-dev-r3, env keys 42, free 679/1039 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:12:18+00:00 [r784-rebase-dev-r3] [P@917504-s30-30] cold kernel cache (warmup 47.367803s, free 679/1039): not judged, re-booting once
+2026-09-27T11:12:38+00:00 [r784-rebase-dev-r3] [P@917504-s30-30+w] UP @ 917504 [30,30]: tabbyapi:rebase-dev-r3, env keys 42, free 1061/1619 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:12:41+00:00 [r784-rebase-dev-r3] [P@917504-s30-30+w] layer placement (card:first-last layer): 0:0-25,1:26-47
+2026-09-27T11:12:41+00:00 [r784-rebase-dev-r3] [P@917504-s30-30+w] headroom BELOW(1061/1619 vs 1125/1573) (layout 0:0-25,1:26-47)
+2026-09-27T11:13:01+00:00 [r784-rebase-dev-r3] [P@917504-s29.5-30] UP @ 917504 [29.5,30]: tabbyapi:rebase-dev-r3, env keys 42, free 1785/873 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:13:03+00:00 [r784-rebase-dev-r3] [P@917504-s29.5-30] layer placement (card:first-last layer): 0:0-24,1:25-47
+2026-09-27T11:13:03+00:00 [r784-rebase-dev-r3] [P@917504-s29.5-30] headroom BELOW(1785/873 vs 1125/1573) (layout 0:0-24,1:25-47)
+2026-09-27T11:13:27+00:00 [r784-rebase-dev-r3] [P@901120-s30-30] UP @ 901120 [30,30]: tabbyapi:rebase-dev-r3, env keys 42, free 1181/1759 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:13:29+00:00 [r784-rebase-dev-r3] [P@901120-s30-30] layer placement (card:first-last layer): 0:0-25,1:26-47
+2026-09-27T11:13:29+00:00 [r784-rebase-dev-r3] [P] search: 901120 [30, 30] after 3 judged boot(s)
+2026-09-27T11:13:29+00:00 [r784-rebase-dev-r3] EARLY pool: FOUND 901120 [30, 30] tiled ON (-5 steps vs 983040; floor 884736: PASS) UP 1181/1759 (REF 1125/1573)
+2026-09-27T11:13:29+00:00 [r784-rebase-dev-r3] [P1] measuring boot P@901120-s30-30 (boot-/env-/config-/split- files carry that tag; data files carry P1)
+2026-09-27T11:14:56+00:00 [r784-rebase-dev-r3] [P1] fn_greedy: 6 prompts, 0 errors
+2026-09-27T11:15:00+00:00 [r784-rebase-dev-r3] [P1] chat_greedy (recorded): 5 prompts, rc 0
+2026-09-27T11:15:31+00:00 [r784-rebase-dev-r3] [P1] cold prefill medians: 30k 10957 t/s (n 3); 120k 12186 t/s (n 3); free after the 120k 273/629 MiB
+2026-09-27T11:18:38+00:00 [r784-rebase-dev-r3] [P1] mp_decode: 144 records (0 failed; want 144 ok)
+2026-09-27T11:19:44+00:00 [r784-rebase-dev-r3] [P1] F5 lp_margin: 80 records, 0 errors
+2026-09-27T11:19:44+00:00 [r784-rebase-dev-r3] [P1] OOM 0; tracebacks 0; restarts 0; served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-27T11:19:45+00:00 [r784-rebase-dev-r3] EARLY prefill P1/S1 medians: 30k x1.078 120k x1.129 (bar 0.95x, expectation >= 1.10x at 120k)
+2026-09-27T11:20:05+00:00 [r784-rebase-dev-r3] [P2] UP @ 901120 [30,30]: tabbyapi:rebase-dev-r3, env keys 42, free 1181/1759 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:20:06+00:00 [r784-rebase-dev-r3] [P2] layer placement (card:first-last layer): 0:0-25,1:26-47
+2026-09-27T11:20:06+00:00 [r784-rebase-dev-r3] [P2] measuring boot P2 (boot-/env-/config-/split- files carry that tag; data files carry P2)
+2026-09-27T11:20:36+00:00 [r784-rebase-dev-r3] [P2] fn_greedy: 6 prompts, 0 errors
+2026-09-27T11:20:40+00:00 [r784-rebase-dev-r3] [P2] chat_greedy (recorded): 5 prompts, rc 0
+2026-09-27T11:21:10+00:00 [r784-rebase-dev-r3] [P2] cold prefill medians: 30k 11733 t/s (n 3); 120k 12210 t/s (n 3); free after the 120k 473/1029 MiB
+2026-09-27T11:24:13+00:00 [r784-rebase-dev-r3] [P2] mp_decode: 144 records (0 failed; want 144 ok)
+2026-09-27T11:24:13+00:00 [r784-rebase-dev-r3] [P2] OOM 0; tracebacks 0; restarts 0; served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-27T11:24:33+00:00 [r784-rebase-dev-r3] [S2] UP @ 983040 [30,30]: tabbyapi:stack-r3-rows32-tokcount-loopthink3, env keys 41, free 1125/1573 MiB, GEN_SANE, power 600 575, offsets 0 0 / 4500 4500
+2026-09-27T11:24:34+00:00 [r784-rebase-dev-r3] [S2] layer placement (card:first-last layer): 0:0-25,1:26-47
+2026-09-27T11:24:34+00:00 [r784-rebase-dev-r3] [S2] measuring boot S2 (boot-/env-/config-/split- files carry that tag; data files carry S2)
+2026-09-27T11:25:06+00:00 [r784-rebase-dev-r3] [S2] fn_greedy: 6 prompts, 0 errors
+2026-09-27T11:25:10+00:00 [r784-rebase-dev-r3] [S2] chat_greedy (recorded): 5 prompts, rc 0
+2026-09-27T11:25:44+00:00 [r784-rebase-dev-r3] [S2] cold prefill medians: 30k 9870 t/s (n 3); 120k 10667 t/s (n 3); free after the 120k 311/845 MiB
+2026-09-27T11:28:50+00:00 [r784-rebase-dev-r3] [S2] mp_decode: 144 records (0 failed; want 144 ok)
+2026-09-27T11:28:50+00:00 [r784-rebase-dev-r3] [S2] OOM 0; tracebacks 0; restarts 0; served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+2026-09-27T11:29:07+00:00 [r784-rebase-dev-r3] F6 smoke OFF (tabbyapi:stack-r3-rows32-tokcount-loopthink3): rc 0, [fid] DONE 2 chunks, 4094 positions, mean NLL 0.36214 (ppl 1.436)
+2026-09-27T11:29:23+00:00 [r784-rebase-dev-r3] F6 smoke ON (tabbyapi:rebase-dev-r3): rc 0, [fid] DONE 2 chunks, 4094 positions, mean NLL 0.36234 (ppl 1.437)
+2026-09-27T11:31:06+00:00 [r784-rebase-dev-r3] F6 OFF: rc 0, [fid] DONE 200 chunks, 409400 positions, mean NLL 1.21773 (ppl 3.380)
+2026-09-27T11:32:40+00:00 [r784-rebase-dev-r3] F6 ON: rc 0, [fid] DONE 200 chunks, 409400 positions, mean NLL 1.21725 (ppl 3.378)
+  [F6, report-only, UNCALIBRATED: GATE.md bars +0.05 dNLL% / top1 0.995 / KL 5e-4; R756 floor ~6e-3 KL] run                         bucket    tokens     NLL   ΔNLL%  top1agree  KL(ref||m)
+  [F6, report-only, UNCALIBRATED: GATE.md bars +0.05 dNLL% / top1 0.995 / KL 5e-4; R756 floor ~6e-3 KL] fid-ON.jsonl                ALL       409400  1.2173   -0.04     0.9677     0.01564
+  [F6, report-only, UNCALIBRATED: GATE.md bars +0.05 dNLL% / top1 0.995 / KL 5e-4; R756 floor ~6e-3 KL] fid-ON.jsonl                agent      81880  0.7334   -0.30     0.9697     0.02583
+  [F6, report-only, UNCALIBRATED: GATE.md bars +0.05 dNLL% / top1 0.995 / KL 5e-4; R756 floor ~6e-3 KL] fid-ON.jsonl                code      163760  1.1493   -0.01     0.9663     0.01488
+  [F6, report-only, UNCALIBRATED: GATE.md bars +0.05 dNLL% / top1 0.995 / KL 5e-4; R756 floor ~6e-3 KL] fid-ON.jsonl                prose     163760  1.5271   -0.00     0.9680     0.01131
+  [greedy vs S1] GREEDY P1 vs S1: 4 identical, 2 DIVERGENT
+  [greedy vs S1] GREEDY P2 vs S1: 4 identical, 2 DIVERGENT
+  [greedy vs S1] GREEDY S2 vs S1: 6 identical, IDENTICAL
+  [greedy vs S1] GREEDY-SUMMARY reference=S1 divergences=4
+  [chat greedy, record only] CHAT-GREEDY P1 vs S1: 1/5 identical
+  [chat greedy, record only] CHAT-GREEDY P2 vs S1: 1/5 identical
+  [chat greedy, record only] CHAT-GREEDY S2 vs S1: 5/5 identical
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c10@60000 at token 63: ref top2 [['</', -0.5356734991073608], ['Assistant', -1.5669233798980713]] margin 1.031 nats; P1 took '</think>' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c12@60000 at token 7: ref top2 [[' ', -0.24236595630645752], ['<|im_end|>', -2.218928575515747]] margin 1.977 nats; P1 took None (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c13@0 at token 39: ref top2 [['2', -1.5702749490737915], ['1', -1.7421499490737915]] margin 0.172 nats; P1 took '1' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c13@60000 at token 37: ref top2 [[' --', -1.0058398246765137], [' $', -1.0527148246765137]] margin 0.047 nats; P1 took ' $' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c15@0 at token 0: ref top2 [['2', -0.9325560927391052], ['1', -1.1044310331344604]] margin 0.172 nats; P1 took '1' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c15@60000 at token 25: ref top2 [[' A', -2.4196219444274902], [' Lor', -2.4196219444274902]] margin 0.000 nats; P1 took ' M' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c1@60000 at token 21: ref top2 [[' start', -0.6940871477127075], [' get', -1.225337266921997]] margin 0.531 nats; P1 took ' get' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c22@60000 at token 41: ref top2 [] margin NA nats; P1 took '_tokens' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c23@60000 at token 62: ref top2 [['LL', -0.5588105916976929], ['[', -1.5275605916976929]] margin 0.969 nats; P1 took '[' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c25@0 at token 13: ref top2 [[' (', -0.9433927536010742], [' on', -1.3183927536010742]] margin 0.375 nats; P1 took ' on' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c26@0 at token 3: ref top2 [[' \\', -0.6906179189682007], [' --', -0.7218679189682007]] margin 0.031 nats; P1 took ' --' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c26@60000 at token 3: ref top2 [[' --', -0.6762607097625732], [' \\', -0.7856356501579285]] margin 0.109 nats; P1 took ' \\' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c27@0 at token 8: ref top2 [[' wrote', -2.247215509414673], [' thr', -2.403465509414673]] margin 0.156 nats; P1 took ' thr' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c27@60000 at token 36: ref top2 [[' The', -2.7037949562072754], [' Without', -2.7819199562072754]] margin 0.078 nats; P1 took ' Without' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c2@60000 at token 20: ref top2 [['\n', -0.9916453957557678], ['?', -1.147895336151123]] margin 0.156 nats; P1 took '?' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c30@0 at token 0: ref top2 [[' ', -3.0380730628967285], [' marvel', -3.1630730628967285]] margin 0.125 nats; P1 took ' marvel' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c31@60000 at token 22: ref top2 [[' ', -0.08184050768613815], ['<|im_end|>', -3.7224655151367188]] margin 3.641 nats; P1 took None (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c32@0 at token 51: ref top2 [[' chunk', -0.9596468806266785], [' block', -1.0065217018127441]] margin 0.047 nats; P1 took ' block' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c32@60000 at token 49: ref top2 [[' Q', -3.473308801651001], [' ', -3.559246301651001]] margin 0.086 nats; P1 took ' ' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c34@60000 at token 0: ref top2 [] margin NA nats; P1 took 's' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c35@0 at token 16: ref top2 [['")', -1.2876715660095215], [' ({', -1.568921446800232]] margin 0.281 nats; P1 took ' ({' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c35@60000 at token 31: ref top2 [[' pass', -1.4183979034423828], [' phase', -1.5277729034423828]] margin 0.109 nats; P1 took ' phase' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c39@0 at token 3: ref top2 [['eg', -0.4578898251056671], ['e', -1.0828897953033447]] margin 0.625 nats; P1 took 'e' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c39@60000 at token 1: ref top2 [[' the', -2.8053739070892334], [' un', -2.8131864070892334]] margin 0.008 nats; P1 took ' images' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c5@60000 at token 47: ref top2 [['multiple', -0.7900077700614929], ['generate', -1.1493827104568481]] margin 0.359 nats; P1 took 'generate' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c6@0 at token 38: ref top2 [['Note', -0.9439595937728882], ['This', -1.5377097129821777]] margin 0.594 nats; P1 took 'This' (CONFIDENT FLIP)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c6@60000 at token 5: ref top2 [[' Custom', -0.7037891745567322], [' Can', -0.8444141149520874]] margin 0.141 nats; P1 took ' Can' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c7@0 at token 37: ref top2 [['):', -0.6894371509552002], [')', -0.7050620317459106]] margin 0.016 nats; P1 took ')' (near-tie)
+  [F5 margin, report-only]   DIVERGE P1 vs S1 c9@60000 at token 18: ref top2 [['_by', -0.6800757646560669], ['_byte', -1.3207006454467773]] margin 0.641 nats; P1 took '_byte' (CONFIDENT FLIP)
+  [F5 margin, report-only] MARGIN-SUMMARY P1 vs S1: 80 prompts, 29 divergent (12 not near-tie at <= 0.5 nats); |dlp| on agreeing prefixes n=3729 median 0.0001 p99 0.1973 max 1.0795
+boots: S1 pool 983040 [30,30] free 1125/1573 post 311/847 headroom REF GEN_SANE oom 0 tb 0, P1 pool 901120 [30,30] free 1181/1759 post 273/629 headroom OK GEN_SANE oom 0 tb 0, P2 pool 901120 [30,30] free 1181/1759 post 473/1029 headroom OK GEN_SANE oom 0 tb 0, S2 pool 983040 [30,30] free 1125/1573 post 311/845 headroom OK GEN_SANE oom 0 tb 0
+A/A S2 vs S1 c4 (both): -0.98 % [-2.05, +0.24] (n 48); band +-2.0 %
+P pool FOUND 901,120 [30,30] vs served 983,040 (-5 steps, -8.3 %); floor 884,736
+P vs S c1: code -1.28 % [-4.11, +1.67] (n 24); prose +0.76 % [-1.20, +2.59] (n 24); both -0.27 % [-1.96, +1.49] (n 48)   (report only)
+P vs S c4: code +1.58 % [-0.53, +3.72] (n 24); prose -0.77 % [-1.99, +0.50] (n 24); both +0.40 % [-0.85, +1.65] (n 48)
+P vs S c8: code -0.07 % [-1.80, +1.54] (n 24); prose -0.44 % [-2.30, +2.40] (n 24); both -0.26 % [-1.62, +1.40] (n 48)
+P vs S cold prefill 30k: median S 9966 / P 11548 tok/s = 1.159x (S 6 / P 6 samples)
+P vs S cold prefill 120k: median S 10756 / P 12198 tok/s = 1.134x (S 6 / P 6 samples)   (expectation >= 1.10: met)
+report S1: free after the 120k prefill 311/847 MiB (UP 1125/1573)
+report S2: free after the 120k prefill 311/845 MiB (UP 1125/1573)
+report P1: free after the 120k prefill 273/629 MiB (UP 1181/1759)
+report P2: free after the 120k prefill 473/1029 MiB (UP 1181/1759)
+report F5 lp_margin (first server run, report only): MARGIN-SUMMARY P1 vs S1: 80 prompts, 29 divergent (12 not near-tie at <= 0.5 nats); |dlp| on agreeing prefixes n=3729 median 0.0001 p99 0.1973 max 1.0795
+report F6 corpus fidelity (report only, bars UNCALIBRATED): see fid-compare.txt
+RULE NOT-A-CANDIDATE (decode prose c8 -0.44 % [-2.30, +2.40] (n 24) (bar >= -1 %, CI >= -2 %))
+DECISION: NOT-A-CANDIDATE (decode prose c8 -0.44 % [-2.30, +2.40] (n 24) (bar >= -1 %, CI >= -2 %))
+2026-09-27T11:32:48+00:00 [r784-rebase-dev-r3] promote.env: DECISION=NOT-A-CANDIDATE FOUND=901120 SPLIT=30, 30
+2026-09-27T11:32:48+00:00 [sctl] GPU queue continues (r785-promote-rebase-r3(pid 2372964)); leaving the GPUs to the next unit
+2026-09-27T11:32:48+00:00 [r784-rebase-dev-r3] Hermes: :8022 does not serve qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab (a queued unit holds the GPUs): not repointed
+2026-09-27T11:32:49+00:00 [r784-rebase-dev-r3] offsets core 0 0 / memory 4500 4500; daily none
+2026-09-27T11:32:49+00:00 [r784-rebase-dev-r3] === r784-rebase-dev-r3 DONE (DECISION: NOT-A-CANDIDATE (decode prose c8 -0.44 % [-2.30, +2.40] (n 24) (bar >= -1 %, CI >= -2 %))) ===

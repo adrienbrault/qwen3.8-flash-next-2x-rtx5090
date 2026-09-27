@@ -1,0 +1,16 @@
+  DIVERGE P1 vs S1 prompt=long100k
+     S1: '\n\nThe provided text is a lengthy, nonsensical sequence of NATO phonetic alphabet code word' (finish=stop, n=None)
+     P1: '\n\n<think>\nThe user has provided a very long string of NATO phonetic alphabet words. I need' (finish=length, n=None)
+  DIVERGE P1 vs S1 prompt=short4
+     S1: '\n\n<think>\nThe user wants a concise two-sentence explanation of why the sky appears blue. I' (finish=length, n=None)
+     P1: '\n\n<think>\nThe user wants a concise two-sentence explanation of why the sky appears blue. I' (finish=length, n=None)
+GREEDY P1 vs S1: 4 identical, 2 DIVERGENT
+  DIVERGE P2 vs S1 prompt=long100k
+     S1: '\n\nThe provided text is a lengthy, nonsensical sequence of NATO phonetic alphabet code word' (finish=stop, n=None)
+     P2: '\n\n<think>\nThe user has provided a very long string of NATO phonetic alphabet words. I need' (finish=length, n=None)
+  DIVERGE P2 vs S1 prompt=short4
+     S1: '\n\n<think>\nThe user wants a concise two-sentence explanation of why the sky appears blue. I' (finish=length, n=None)
+     P2: '\n\n<think>\nThe user wants a concise two-sentence explanation of why the sky appears blue. I' (finish=length, n=None)
+GREEDY P2 vs S1: 4 identical, 2 DIVERGENT
+GREEDY S2 vs S1: 6 identical, IDENTICAL
+GREEDY-SUMMARY reference=S1 divergences=4

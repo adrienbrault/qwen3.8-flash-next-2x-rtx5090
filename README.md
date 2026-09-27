@@ -1,12 +1,14 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf], served as [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250] by [TabbyAPI][tabby] on [ExLlamaV3][exl3] v1.5.0 across two RTX 5090 cards. The window is 262,144 tokens, the KV cache is 8-bit, and vision, reasoning, tool calls, structured output and the checkpoint's own MTP draft head are all on.
+Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf], served as [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250] by [TabbyAPI][tabby] on [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) across two RTX 5090 cards. The window is 262,144 tokens, the KV cache is 8-bit, and vision, reasoning, tool calls, structured output and the checkpoint's own MTP draft head are all on.
 
 Every number here was measured on one machine on the date given, and each links the write-up that names its raw results directory. None is an estimate. The index of experiments is [`bench/RESULTS.md`][results], newest first.
 
 ## Numbers
 
-Decode on `tabbyapi:stack-r3-rows32`, the served configuration (draft-KV window off since [R728][r728], memory clock offset +4500), measured 2026-09-25 07:59 to 08:16 UTC ([R719b][r719b], results `2026-09-25-r719-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+The served image changed on 2026-09-27 to the same stack on upstream ExLlamaV3 `dev` `5783a93` ([R785][r785]). The figures and tables in this section were measured on the previous engine, ExLlamaV3 v1.5.0 with this repository's chain, and are not yet re-measured on the new one. Against the previous image in one session ([R784][r784], results `2026-09-27-r784-rebase-dev-r3-1104`, short prompts, 512 forced greedy tokens), the new one reads −1.3 to +1.6 % per-stream decode at 1, 4 and 8 streams for code and prose, with 95 % intervals between −4.1 and +3.7 %, which is within what one ABBA block resolves; it prefills a cold 90k-token prompt 1.134× faster and a 22.6k-token prompt 1.159× faster, and fits a page pool 8.3 % smaller. At long cached context an agent-shaped replay (median prompt 29,616 tokens, 91 % from the prefix cache) read 123.0 and 123.7 t/s per stream on two runs, against 128.6 for the previous image in [R728][r728] on another day with the NVMe tier off: a possible 4 to 6 % long-context decode regression, which a same-session A/B has not yet tested ([R785][r785]).
+
+Decode on `tabbyapi:stack-r3-rows32`, the served configuration of 2026-09-25 (draft-KV window off since [R728][r728], memory clock offset +4500), measured 2026-09-25 07:59 to 08:16 UTC ([R719b][r719b], results `2026-09-25-r719-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
 
@@ -25,15 +27,15 @@ Cold prefill keeps its rate up to the top of the window: 199,844 tokens in 18.8 
 | | value | source |
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
-| page pool | 983,040 tokens, 15,236 B per token: 1.52 GB per 100k, 15.0 GB total | [R579][r579], [R717c][r717] |
-| free VRAM after boot | 1,125 / 1,573 MiB | [R728][r728] |
+| page pool | 901,120 tokens, 15,236 B per token: 1.52 GB per 100k, 13.7 GB total | [R784][r784], [R579][r579], [R717c][r717] |
+| free VRAM after boot | 1,181 / 1,759 MiB | [R785][r785] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
 | prompt restored from the NVMe tier after a restart | 29,952 tokens in 0.69 s (cold 3.96 s); 119,808 in 0.99 s (cold 12.33 s) | [R534][r534] |
-| long-context retrieval | 5/5 needles at 131k and at 240k prompt tokens | [R548][r548], [R546][r546] |
-| GSM8K 5-shot, n=500, no stop strings | 0.978 | [R565][r565] |
-| [tool-eval-bench][tool-eval], 69 × 4 | 84.0 ± 2.4 | [R565][r565] |
+| long-context retrieval | 5/5 needles at 131k and at 240k prompt tokens | [R785][r785], [R548][r548], [R546][r546] |
+| GSM8K 5-shot, n=500, no stop strings | 0.980 and 0.982 on two runs, 8 concurrent (0.978 on 2026-09-20) | [R785][r785], [R565][r565] |
+| [tool-eval-bench][tool-eval], 69 × 4 | 86.5 ± 3.1 and 85.5 on two runs (84.0 ± 2.4 on 2026-09-20) | [R785][r785], [R565][r565] |
 | [SWE-bench Verified][swebench], all 500, [mini-SWE-agent][mini-swe] 2.4.6, task containers without network | 397 resolved (79.4 %); 7 ended without a patch, 2 of them on server errors | [R586, R586d][r586] |
 | boot to serving | ~20 s, warm kernel caches | [R525][r525] |
 
@@ -50,15 +52,15 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 ## Served configuration
 
-- Since 2026-09-27 11:49 CEST ([R783][r783]): image `tabbyapi:stack-r3-rows32-tokcount-loopthink3` = `stack-r3-rows32` ([R717c][r717]) plus the requeue token-count fix ([R747][r747]), which changes reported token counts and nothing else, and a TabbyAPI patch that ends a loop in the thinking with a forced `</think>` instead of a `stop` with no content (greedy output identical on the promotion gates' prompts); draft-KV window off since 2026-09-25 05:52 CEST ([R728][r728]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
-- 8 slots, 983,040-token page pool, 8-bit KV.
+- Since 2026-09-27 15:01 CEST ([R785][r785]): image `tabbyapi:rebase-dev-r3`, the served engine stack ported onto upstream ExLlamaV3 `dev` `5783a93` (v1.5.2) with upstream's tiled hyper-connection prefill mix on (`EXL3_GR_MIX_TILED=1`), and TabbyAPI's loop patch in its fourth round. Upstream's code changes numerics, so greedy output differs from the previous image; it was promoted on GSM8K, tool-eval, needles, agentic edit and an agent replay instead of greedy identity ([R784][r784], [R785][r785]). The rollback is the image served from 2026-09-27 11:49 CEST ([R783][r783]), `tabbyapi:stack-r3-rows32-tokcount-loopthink3` = `stack-r3-rows32` ([R717c][r717]) plus the requeue token-count fix ([R747][r747]) and a TabbyAPI patch that ends a loop in the thinking with a forced `</think>` instead of a `stop` with no content. Draft-KV window off since 2026-09-25 05:52 CEST ([R728][r728]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- 8 slots, 901,120-token page pool (983,040 until 2026-09-27), 8-bit KV.
 - MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); the draft cache is page-indexed over the whole pool on the second GPU, without the 16,384-token window served from [R579][r579] to [R728][r728].
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
 
 ## What the stack is
 
 - **Checkpoint**: [r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw][ckpt-250], routed experts at K = 2, 3 and 4 bits. It boots a 2.18× larger pool than [turboderp's 3.05 bpw pack][ckpt-turbo] and decodes 3–8 % faster except code at c1 ([R495b][r495b]); both score the same on GSM8K ([R509][r509]).
-- **Engine**: [ExLlamaV3][exl3] v1.5.0 under [TabbyAPI][tabby] `53da7919`, plus the chain in [`docker/`][docker-readme]. Every patch is opt-in by environment flag and was admitted with byte-identical greedy output, or with GSM8K, needles and tool-eval where it changes numerics:
+- **Engine**: [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) under [TabbyAPI][tabby] `53da7919`, with the chain in [`docker/`][docker-readme] ported onto it since 2026-09-27; until then the chain was applied to v1.5.0, and the gains below were measured there. Every patch is opt-in by environment flag and was admitted with byte-identical greedy output, or with GSM8K, needles and tool-eval where it changes numerics:
   - [exllamav3#337][pr337]: keeps the CUDA device on the module's device during a layer-split forward ([R362][r362]).
   - multi-job QSA sparse attention and concurrency-indexed draft depth ([R341][r341], [R340][r340]).
   - the fused MoE decode path at 16 rows ([R414][r414]) and a wide stage-B tile ([R421][r421]).
@@ -78,10 +80,11 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
   - the hyper-connection mixer's int8 kernels with each weight converted once per iteration, the loads batched and the reduction as a reduce-scatter ([R698, R699][r698]), and the routed-expert MoE decode kernels with a cp.async weight ring, an activation prefetch and one counter arrival per item ([R700b][r700b]); both bitwise-identical, admitted on the stack-track rule in [`docs/PROMOTION.md`][promotion] and promoted together: 1.051 to 1.093 times the per-stream prose decode rate at 1 to 8 streams and 1.064 times at 26k context, mean of three alternating pairs, greedy output identical ([R701][r701]).
   - a second batch of bitwise-identical decode changes: the mixer kernels' round 2 with per-row-count tiles ([R702][r702]); the Gated-DeltaNet recurrence held in registers, the QSA indexer as a parallel CUDA-graph branch and compile options for the QSA split and combine kernels ([R712][r712]); V2 twins of the dense K=4 decode GEMM, mgemm and gemv kernels ([R714][r714]); the round-2 MoE decode kernels with the shared expert forked before the router ([R713][r713]). Promoted together on 2026-09-24 as `stack-r3`: 1.149, 1.088 and 1.087 times the per-stream prose decode rate of `stack-r2` at 1, 4 and 8 streams at about 4k tokens of context, and 1.104 times at 26k tokens and 4 streams (canonical gate, 1,024 forced tokens, greedy, mean over three alternating pairs of the per-request median, results `2026-09-24-r716b-stack-r3`); logits identical to `stack-r2` at every served decode shape ([R716b, R716c][r716b]).
   - decode paths for 17 to 32 rows (the routed-expert MoE decode in one launch, the shared expert and the dense GEMMs at 32 rows), so that 6 to 8 jobs verify at draft depth 2 instead of 1; host code only, each MoE output at 17 to 32 rows equal to two served 16-row calls. Promoted on 2026-09-25 as `stack-r3-rows32` with the policy `[[4, 3], [8, 2]]` and a page pool 1.6 % smaller: about +3 % per-stream decode (0 to +6 % across cells) at 6 and 8 streams at the 16k and 32k context settings (prompts of 12,000 to 44,000 tokens), and up to +16 to +21 % at 6 streams with 4k context, where the output is highly predictable; 1 to 5 streams unchanged (1,024 forced tokens, greedy, code and prose, mean over three alternating pairs of the per-boot median, results `2026-09-24-r717c-rows32-context`, [R717, R717b, R717c][r717]).
+  - the whole chain ported onto upstream `dev` `5783a93`, which brings upstream's tiled hyper-connection prefill mix ([`825db5b`][exl3-825db5b], measured alone in [R568][r568]), fp16 GDN prefill projections and a deterministic router GEMM, and changes greedy output: cold prefill 1.134× at 90k tokens, page pool −8.3 %, short-prompt decode within one ABBA block's resolution ([R784][r784]); long-context decode is unresolved ([R785][r785]). Promoted on 2026-09-27 as `rebase-dev-r3`.
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 2 at 5 to 8 (`[[4, 3], [8, 2]]`, since [R717c][r717]; from [R576][r576] to then depth 1 at 6 to 8, `[[4, 3], [5, 2], [8, 1]]`). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
-- **Loop detection**: TabbyAPI's default window of 800 tokens, which ends a repeated period of up to 400 tokens. Since [R783][r783] a loop in the thinking of a chat request forces `</think>` and the model answers or calls a tool; before, the request ended as `stop` with reasoning and no content, which agent clients that promote reasoning on an empty `stop` show as the reply ([`docs/GOTCHAS.md`][gotchas] 25).
+- **Loop detection**: TabbyAPI's default window of 800 tokens, which ends a repeated period of up to 400 tokens. Since [R783][r783] a loop in the thinking of a chat request forces `</think>` and the model answers or calls a tool; before, the request ended as `stop` with reasoning and no content, which agent clients that promote reasoning on an empty `stop` show as the reply ([`docs/GOTCHAS.md`][gotchas] 25). Since [R785][r785] a second detector on the thinking also ends periods of up to 1,000 tokens once three copies are generated; on the GPU no request has reached that case yet ([`loop-think-r4`](docker/overlays/loop-think-r4/README.md)).
 - **Guard rails**: the launcher refuses to start without the checkpoint or the image, stops any other engine holding the cards, waits for them to drain and mounts the kernel caches. Every promotion re-runs the gates in [`docs/PROMOTION.md`][promotion] on the exact launcher.
 
 ## Hardware
@@ -95,7 +98,6 @@ Read from the box on 2026-09-19. Every number in this README was measured on thi
 
 ## In progress (2026-09-20)
 
-- Upstream's tiled hyper-connection prefill mix ([`825db5b`][exl3-825db5b]) ported onto this stack behind one flag: worth +14.0 % at 60k and +11.4 % at 120k where it was measured upstream ([R568][r568]), at 302 MiB per card there and a claimed 2.1 MiB here.
 - One fused kernel per layer for the GDN linear-attention decode block, claimed bit-exact; GDN is 0.80 ms of a 13.9 ms 1-stream step ([R519][r519]).
 
 ## Measured and not served
@@ -111,7 +113,7 @@ Each entry names the change and the number that kept it out of the served config
 - Two draft chains verified together: +5 to +6.5 % accepted tokens for twice the verify rows, modelled at −10 to −13 % ([R564][r564]).
 - A 4,096-token prefill chunk: does not boot beside the page pool ([R574][r574]).
 - Prefill chunk 1,024 or 512 instead of 2,048: running streams get 1.5× the decode frames while another request prefills, but cold prefill runs at about half the rate and the new request waits 1.4–1.7× longer for its first token ([R553][r553]). Chunk 1,024 for pool size: [R483][r483], [R485][r485].
-- The served stack on upstream `dev`: −49,152 pool tokens and 1–3 % decode ([R563][r563]).
+- The served stack on upstream `dev` `1d64111`: −49,152 pool tokens and 1–3 % decode ([R563][r563]). A later port onto `dev` `5783a93` is served since 2026-09-27, at −81,920 pool tokens ([R784][r784]).
 - The MTP draft's embedding copy on cuda:0: +16,384 pool tokens for −1.8 % code and −2.0 % prose at 1 stream ([R555][r555]).
 - The K=3 MoE decode kernel without register spills: bit-exact, slower per call in 28 of 30 kernel cells, −0.37 % code at c1 over 8 boots with a 95 % interval of −0.83 to +0.09 % (2026-09-19, [R536][r536]).
 - Recurrent checkpoints stored at the end of each reply: correct, but they save about 9k prefill tokens over a 120-call agent replay, below its run-to-run spread ([R524][r524]).
@@ -188,9 +190,11 @@ At 8 streams the wall-clock figure and the `fn_bench` decode aggregate differ ma
 
 ```sh
 # the served image, published 2026-09-27 (the served layers plus one label-only layer); tag it as the launcher expects
-docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074
-docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074 tabbyapi:stack-r3-rows32-tokcount-loopthink3
-# the rollback image (DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount): ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f
+docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:@@GHCR_DIGEST@@
+docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:@@GHCR_DIGEST@@ tabbyapi:rebase-dev-r3
+# the rollback image, tagged tabbyapi:stack-r3-rows32-tokcount-loopthink3 and served with DAILY_IMG set to that tag, CACHE=983040,
+# TUNEDIR=/srv/qwen5090/.exl3cache and EXTRA_ENV without EXL3_GR_MIX_TILED=1:
+#   ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074
 
 ssh flan 'bash -s' < scripts/launch-flashnext.sh                  # serve on :8022
 PORT=8023 bash scripts/launch-flashnext.sh                        # a second instance
@@ -390,6 +394,8 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r587]: bench/results/r587-tabby-metrics.md
 [r583]: bench/results/r583-long-generation.md
 [r585]: bench/results/r585-prefill-interference.md
+[r784]: bench/results/r784-rebase-dev-r3.md
+[r785]: bench/results/r785-promote-rebase-r3.md
 [r581]: bench/results/r581-split-rebalance.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md

@@ -71,7 +71,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-983040}   # R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+CACHE=${CACHE:-901120}   # R785 (rebase-dev r3, tiled HC prefill on): the pool R784 found, floor 884,736 (user 2026-09-27); was 983040. R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -204,7 +204,20 @@ DRAFT=${DRAFT:-3}
 #   2026-09-27); now it forces </think> after W=800 looping tokens and the model answers. R782 on the finetune: the real
 #   loop recovers 4/4 into a tool call. Greedy output identical on the gates' short prompts. Gates: bench/results/r783-loopthink.md.
 #   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount.
-DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3
+# R785 (2026-09-27): image tabbyapi:rebase-dev-r3 = the served ExLlamaV3 stack (the 41 keys below) ported onto upstream
+#   exllamav3 dev 5783a93 (v1.5.2) + tokcount-r1 (docker/overlays/rebase-dev-r3), on tabbyapi:stack-r3-rows32-tokcount-loopthink4
+#   (the served TabbyAPI + loop-think r4, docker/overlays/loop-think-r4: a collector-only LoopDetector(3L, L), L = 1.25W =
+#   1,000, catches reasoning loops with periods up to 1,000 tokens).
+#   EXL3_GR_MIX_TILED=1 (42nd key, upstream's tiled HC prefill, explicit so the env-keys line records it). Pool 901120
+#   [30, 30] = the largest that fits with per-card boot free >= S1 - 32 MiB (R784; was 983,040; floor 884,736). Own
+#   kernel cache TUNEDIR=/srv/qwen5090/.exl3cache-rebase-dev-r3 (the port's autotune keys differ from the served ones).
+#   Numerics change by design (GDN fp16 prefill projections, deterministic router GEMM, tiled HC prefill, PLE in-place
+#   add): greedy fingerprints roll over to R785's greedy.jsonl / chat-greedy.jsonl. Rendered from the repo template
+#   scripts/launchers/launch-flashnext-r785-rebase-r3.sh by scripts/r785-promote-rebase-r3.sh under the GPU lock (901120 / 30, 30 from
+#   R784's promote.env). Gates: bench/results/r784-rebase-dev-r3.md, bench/results/r785-promote-rebase-r3.md.
+#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache and
+#   EXTRA_ENV without EXL3_GR_MIX_TILED=1 (the R783 launcher: 983,040, 41 keys).
+DAILY_IMG=tabbyapi:rebase-dev-r3
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -285,7 +298,18 @@ NGRAM_RAM=${NGRAM_RAM:-0}
 case "$NGRAM_RAM" in 0) NGRAM_RAM_BOOL=false;; 1) NGRAM_RAM_BOOL=true;; *) echo "ABORT: NGRAM_RAM must be 0 or 1 (got $NGRAM_RAM)"; exit 3;; esac
 CACHE_MODE=${CACHE_MODE:-8,8}
 MOE_OFFLOAD=${MOE_OFFLOAD:-0}
-GPU_SPLIT=${GPU_SPLIT:-30, 30}
+GPU_SPLIT=${GPU_SPLIT:-30, 30}   # R785: the split R784 found with the pool (was 30, 30)
+# R741 (2026-09-26): tensor parallel knobs for the upstream-EP arms. Defaults = served (layer split; the served image's
+# v1.5.0 engine refuses TP for qwen4_exp). Upstream dev 9d18a7f enables TP for Flash-Next + MTP; TabbyAPI then passes
+# tensor_p / tp_backend to load_gen and NOT tp_options, so MoE layers run upstream's default under TP: expert parallel.
+#   TP=true|false         tensor_parallel (served false)
+#   TP_BACKEND=native|nccl  tensor_parallel_backend (TabbyAPI default native; its doc and upstream model_init: "native is
+#                         recommended for PCIe GPUs, NCCL for NVLink" -- flan is 2 cards on PCIe with P2P, no NVLink).
+#                         R617/R618 (our tp-r3) ran nccl, so a native TP number is not directly comparable to R618's.
+TP=${TP:-false}
+TP_BACKEND=${TP_BACKEND:-native}
+case "$TP" in true|false) ;; *) echo "ABORT: TP must be true|false (got $TP)"; exit 3;; esac
+case "$TP_BACKEND" in native|nccl) ;; *) echo "ABORT: TP_BACKEND must be native|nccl (got $TP_BACKEND)"; exit 3;; esac
 DRAFT_GPU_SPLIT=${DRAFT_GPU_SPLIT-0, 32}   # R694 served value; set empty to drop the key
 # R660 (2026-09-23): the nvfp4kv-r1 image adds NVFP4 sides (exllamav3/cache/nvfp4.py parse_cache_mode: "nvfp4",
 # "nvfp4+s2", "8,nvfp4", ...). Any other image rejects them at load, so the launcher only lets the forms through.
@@ -308,7 +332,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_REGRID=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_PDL=0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
@@ -342,7 +366,9 @@ log "env keys ($(echo $EXTRA_ENV | wc -w)): $EXTRA_ENV"
 CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab}   # R511 (was qwen3.8-flash-next-exl3-3.05bpw)
 CKPT=/srv/qwen5090/models/$CKPT_NAME
 MODEL=$CKPT_NAME
-TUNEDIR=/srv/qwen5090/.exl3cache           # kernel caches (Triton + coop autotune); survives container replacement
+TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-rebase-dev-r3}   # kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
+# R741: overridable so an experiment image with other kernels (e.g. upstream's half_k autotune keys) warms its own
+# directory and never writes into the daily's; default = the daily's.
 CFG=/srv/qwen5090/flashnext-config.yml
 SAMP_PRESET=qwen38_thinking
 SAMP_DIR=/srv/qwen5090/sampler_overrides   # mounted into the container's cwd-relative sampler_overrides/
@@ -422,7 +448,10 @@ model:
   #   NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration
   # Layer split is the only mode, and it SERIALIZES the two cards: measured alternating 100%/0% utilisation,
   # so only one GPU computes at a time. That is the ceiling on aggregate throughput here.
-  tensor_parallel: false
+  # R741: TP / TP_BACKEND (default false / native = served). Upstream dev 9d18a7f lifts the qwen4_exp TP refusal;
+  # the served image (v1.5.0 engine) still refuses it.
+  tensor_parallel: $TP
+  tensor_parallel_backend: $TP_BACKEND
   gpu_split: [$GPU_SPLIT]        # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type
   gpu_split_auto: false      # explicit rather than autosplit: TabbyAPI #405 applies autosplit_reserve to device 0 only
   cpu_moe_offload_layers: $MOE_OFFLOAD  # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)
@@ -537,7 +566,19 @@ if [ -n "$MEMOC" ]; then
   moc=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetMemClkVfOffset(h, $MEMOC) for h in hs]; print(*[N.nvmlDeviceGetMemClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
   log "memory clock offset: set +$MEMOC on every GPU, readback $moc"
 fi
-log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], draft_mode $DRAFT_MODE, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
+# 2026-09-25: the power limit and core offset are per card and shared with the 27B daily, whose launcher caps both cards
+# at 400 W (daily-power.sh cap). After a 27B -> Flash-Next switch nothing restored stock, so R731 and part of R732 ran at
+# 400 W. Flash-Next serves and publishes at stock (600 / 575 W) with core offset 0 (R730: core OC dropped, user):
+# set both on every boot. POWER=cap keeps the 27B policy, POWER= skips. daily-power.sh is a script of the serving host, not
+# in this repository: `stock` sets each card to its power.default_limit with nvidia-smi -pl, `cap` to 400 W; without it the
+# NVML line below still sets core offset 0 and logs both cards' limits, so the readback shows what the boot ran at.
+POWER=${POWER-stock}
+if [ -n "$POWER" ]; then
+  bash /srv/qwen5090/daily-power.sh "$POWER" > /dev/null 2>&1
+  pwr=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetGpcClkVfOffset(h, 0) for h in hs]; print('limit W', *[N.nvmlDeviceGetPowerManagementLimit(h) // 1000 for h in hs], '| core offset', *[N.nvmlDeviceGetGpcClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
+  log "power policy $POWER, core offset 0: readback $pwr"
+fi
+log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], tp $TP ($TP_BACKEND), tunedir $TUNEDIR, draft_mode $DRAFT_MODE, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
 # Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
 # the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
 HV=()

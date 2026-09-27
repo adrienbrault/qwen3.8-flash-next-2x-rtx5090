@@ -1,0 +1,8 @@
+tag	arm	image	pool	tp	env_n	up_free	post_free	headroom	power	gpc	mem	gen	oom	void	measured	split	layout	tb	restarts	mp_n	mp_fail
+S1	S	tabbyapi:stack-r3-rows32-tokcount-loopthink3	983040	false	41	1125/1573	311/847	REF	600 575	0 0	4500 4500	GEN_SANE	0	-	1	30,30	0:0-25,1:26-47	0	0	144	0
+P@917504-s30-30	P	tabbyapi:rebase-dev-r3	917504	false	42	679/1039	-	COLD(warmup 47.367803s)	600 575	0 0	4500 4500	GEN_SANE	-	-	0	30,30	-	-	-	-	-
+P@917504-s30-30+w	P	tabbyapi:rebase-dev-r3	917504	false	42	1061/1619	-	BELOW(1061/1619 vs 1125/1573)	600 575	0 0	4500 4500	GEN_SANE	-	-	0	30,30	0:0-25,1:26-47	-	-	-	-
+P@917504-s29.5-30	P	tabbyapi:rebase-dev-r3	917504	false	42	1785/873	-	BELOW(1785/873 vs 1125/1573)	600 575	0 0	4500 4500	GEN_SANE	-	-	0	29.5,30	0:0-24,1:25-47	-	-	-	-
+P1	P	tabbyapi:rebase-dev-r3	901120	false	42	1181/1759	273/629	OK	600 575	0 0	4500 4500	GEN_SANE	0	-	1	30,30	0:0-25,1:26-47	0	0	144	0
+P2	P	tabbyapi:rebase-dev-r3	901120	false	42	1181/1759	473/1029	OK	600 575	0 0	4500 4500	GEN_SANE	0	-	1	30,30	0:0-25,1:26-47	0	0	144	0
+S2	S	tabbyapi:stack-r3-rows32-tokcount-loopthink3	983040	false	41	1125/1573	311/845	OK	600 575	0 0	4500 4500	GEN_SANE	0	-	1	30,30	0:0-25,1:26-47	0	0	144	0
