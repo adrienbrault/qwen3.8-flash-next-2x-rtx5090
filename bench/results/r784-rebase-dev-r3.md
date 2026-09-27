@@ -54,7 +54,7 @@ The `mp_decode` prompts are one-line requests (a few dozen tokens), so this meas
 | 8 | both, S2 / S1 (A/A) | 100.4 | 99.3 | −1.02 % | −1.97 to −0.14 % |
 
 - Prose at 8 streams contains one prompt (pid 23) at +31.2 % in both P boots, where MTP acceptance is 0.18 on S and 0.74 on P; without it the cell reads −1.63 % (−2.51 to −0.84 %). The other 23 prompts lie between −6.7 and +1.6 %.
-- At long context the only reading is R785's agent replay (median 29,616-token prompts, 91 % served from the prefix cache): 123.0 and 123.7 tokens/s per stream on two boots of P, against 128.6 for the previous image with the same flags in [R728](r728-promote-window-off.md) (2026-09-25, NVMe tier off there and on in R785). That is a possible 4 to 6 % decode regression at long context; no same-session A/B of it has run ([R785](r785-promote-rebase-r3.md)).
+- At long context, [R786](r786-replay-abba.md) ran the agent replay (prompts of median about 29,000 tokens, 91 % served from the prefix cache) on three ABBA pairs of fresh boots of S and P: P / S 1.015 per stream on the requests common to all arms (pairs 1.016, 0.981 and 1.048; 95 % interval 0.980 to 1.053). R785's single replay runs, 123.0 and 123.7 tokens/s against 128.6 for an older image in [R728](r728-promote-window-off.md), differ through MTP acceptance and concurrency, not the engine.
 - P2 read 1.1 to 3.0 % above P1 in every cell, at identical acceptance at 1 stream (24 of 24 prompts). P1 was the search boot and the first process on the new kernel cache: it wrote the cooperative-kernel autotune file and compiled Triton kernels during its measurement, and its `fn_greedy` took 87 s against 30 to 32 s on the other boots.
 
 ## Greedy output
@@ -77,5 +77,5 @@ A review of the run found the rule applied correctly and underpowered for this c
 ## Limits of the evidence
 
 - One ABBA block. P1's lower free VRAM after the 90k prefill (273 / 629 MiB against P2's 473 / 1,029) is attributed to the autotuner's buffers staying reserved on the tuning boot; not measured.
-- The decode cells are paired by prompt, not by boot; see the review's reading above. They cover short prompts only; the long-context replay reading above has no same-session reference.
+- The decode cells are paired by prompt, not by boot; see the review's reading above. They cover short prompts only; long cached context is R786's replay, which resolves about ±5 to 7 % per pair.
 - The fidelity tools ran on the server for the first time and have no null distribution; their numbers are reported, not judged.

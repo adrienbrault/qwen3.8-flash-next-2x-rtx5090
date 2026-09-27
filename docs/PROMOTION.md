@@ -74,7 +74,7 @@ R784 read `NOT-A-CANDIDATE` on one clause, prose at 8 streams with a lower bound
 | G9 tool-eval | 69 scenarios × 4, mean at least 82.0 |
 | G10 GSM8K | n = 500 documents, 8 concurrent, through the no-stop proxy, flexible-extract at least 0.970; 0.960 to 0.970 re-runs at 4 concurrent |
 
-`USER_ACCEPT_DECODE=1` lets the unit proceed on a `NOT-A-CANDIDATE` whose every failing clause is decode; any other failing clause aborts it. R785 ran with it. G7's bar is about 6.5 % below the previous image's own reading (128.6 in R728), so it does not detect a long-context decode loss of that size; a same-session ABBA of the replay against the previous launcher does.
+`USER_ACCEPT_DECODE=1` lets the unit proceed on a `NOT-A-CANDIDATE` whose every failing clause is decode; any other failing clause aborts it. R785 ran with it. G7's bar is about 6.5 % below the previous image's own reading (128.6 in R728), so it does not detect a long-context decode loss of that size. A same-session ABBA of the replay against the previous launcher does, within its resolution: [R786](../bench/results/r786-replay-abba.md) read three pairs of fresh boots on the requests common to all arms, one pair resolving about ±5 to 7 % and the mean of three about ±3.5 %. A single replay run also fails a fixed bar when one low-acceptance session instance lands ([GOTCHAS 30](GOTCHAS.md)).
 
 ## 2026-09-16: the first promotion of this stack
 

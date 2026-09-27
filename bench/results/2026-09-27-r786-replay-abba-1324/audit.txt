@@ -1,0 +1,81 @@
+2026-09-27T13:24:40+00:00 [r786-replay-abba] O = /srv/qwen5090/launch-flashnext.sh.pre-r785 (DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3); N = /srv/qwen5090/launch-flashnext.sh (DAILY_IMG=tabbyapi:rebase-dev-r3); order O1 N1 N2 O2 O3 N3; 600 s per arm; tier off
+2026-09-27T13:24:40+00:00 [r786-replay-abba] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab
+gateway_wait_idle: waiting for flan-flashnext(healthy, 0 in flight)
+2026-09-27T13:24:55+00:00 [r786-replay-abba] Hermes stopped for the arms: hermes hermes-webui
+2026-09-27T13:25:16+00:00 [r786-replay-abba] [O1] booted tabbyapi:stack-r3-rows32-tokcount-loopthink3; keys 43; cache 983040; VRAM free MiB 1125/1573/
+2026-09-27T13:41:43+00:00 [r786-replay-abba] [O1] replay rc=0; OOM 0; tracebacks 0; engine loop stops 63
+  [O1] window         : 0.27 h, 412 completed requests
+  [O1] decode-busy    : 0.19 h (70% of the window)
+  [O1] AGGREGATE      : 424.6 t/s   tokens / wall seconds with >=1 stream decoding
+  [O1] PER STREAM     : 133.7 t/s   tokens / summed per-request decode seconds
+  [O1] mean streams   : 3.18 decoding while anything decodes
+  [O1] prompt tokens/request    : median 28,572  p90 65,807  max 92,829
+  [O1] prefix cached            : median 91%
+  [O1] MTP acceptance           : 202,186/228,363 = 89%
+  [O1] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-O1.log: n 412 (chat 0) per-stream all 133.7 | non-loop n 349 129.0 acc 0.87 | loop n 63 159.3 acc 0.96 tokens-in-loop-reqs 53955 | max prompt 92829
+2026-09-27T13:42:03+00:00 [r786-replay-abba] [N1] booted tabbyapi:rebase-dev-r3; keys 44; cache 901120; VRAM free MiB 1181/1759/
+2026-09-27T13:58:21+00:00 [r786-replay-abba] [N1] replay rc=0; OOM 0; tracebacks 0; engine loop stops 62
+  [N1] window         : 0.27 h, 428 completed requests
+  [N1] decode-busy    : 0.19 h (72% of the window)
+  [N1] AGGREGATE      : 435.6 t/s   tokens / wall seconds with >=1 stream decoding
+  [N1] PER STREAM     : 137.6 t/s   tokens / summed per-request decode seconds
+  [N1] mean streams   : 3.17 decoding while anything decodes
+  [N1] prompt tokens/request    : median 28,784  p90 65,793  max 92,833
+  [N1] prefix cached            : median 90%
+  [N1] MTP acceptance           : 210,844/237,468 = 89%
+  [N1] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-N1.log: n 428 (chat 0) per-stream all 137.6 | non-loop n 366 132.5 acc 0.87 | loop n 62 167.1 acc 0.96 tokens-in-loop-reqs 54115 | max prompt 92833
+2026-09-27T13:58:41+00:00 [r786-replay-abba] [N2] booted tabbyapi:rebase-dev-r3; keys 44; cache 901120; VRAM free MiB 1181/1759/
+2026-09-27T14:14:48+00:00 [r786-replay-abba] [N2] replay rc=0; OOM 0; tracebacks 0; engine loop stops 67
+  [N2] window         : 0.27 h, 412 completed requests
+  [N2] decode-busy    : 0.20 h (74% of the window)
+  [N2] AGGREGATE      : 412.4 t/s   tokens / wall seconds with >=1 stream decoding
+  [N2] PER STREAM     : 127.9 t/s   tokens / summed per-request decode seconds
+  [N2] mean streams   : 3.22 decoding while anything decodes
+  [N2] prompt tokens/request    : median 28,979  p90 65,804  max 90,014
+  [N2] prefix cached            : median 91%
+  [N2] MTP acceptance           : 197,443/240,540 = 82%
+  [N2] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-N2.log: n 412 (chat 0) per-stream all 127.9 | non-loop n 345 124.6 acc 0.83 | loop n 67 143.1 acc 0.77 tokens-in-loop-reqs 59279 | max prompt 90014
+2026-09-27T14:15:08+00:00 [r786-replay-abba] [O2] booted tabbyapi:stack-r3-rows32-tokcount-loopthink3; keys 43; cache 983040; VRAM free MiB 1125/1573/
+2026-09-27T14:31:26+00:00 [r786-replay-abba] [O2] replay rc=0; OOM 0; tracebacks 0; engine loop stops 47
+  [O2] window         : 0.27 h, 412 completed requests
+  [O2] decode-busy    : 0.19 h (70% of the window)
+  [O2] AGGREGATE      : 433.1 t/s   tokens / wall seconds with >=1 stream decoding
+  [O2] PER STREAM     : 130.4 t/s   tokens / summed per-request decode seconds
+  [O2] mean streams   : 3.32 decoding while anything decodes
+  [O2] prompt tokens/request    : median 28,826  p90 66,519  max 92,831
+  [O2] prefix cached            : median 91%
+  [O2] MTP acceptance           : 203,807/232,090 = 88%
+  [O2] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-O2.log: n 412 (chat 0) per-stream all 130.4 | non-loop n 365 126.2 acc 0.87 | loop n 47 165.5 acc 0.94 tokens-in-loop-reqs 40561 | max prompt 92831
+2026-09-27T14:31:46+00:00 [r786-replay-abba] [O3] booted tabbyapi:stack-r3-rows32-tokcount-loopthink3; keys 43; cache 983040; VRAM free MiB 1125/1573/
+2026-09-27T14:48:13+00:00 [r786-replay-abba] [O3] replay rc=0; OOM 0; tracebacks 0; engine loop stops 25
+  [O3] window         : 0.27 h, 412 completed requests
+  [O3] decode-busy    : 0.19 h (71% of the window)
+  [O3] AGGREGATE      : 430.9 t/s   tokens / wall seconds with >=1 stream decoding
+  [O3] PER STREAM     : 130.7 t/s   tokens / summed per-request decode seconds
+  [O3] mean streams   : 3.30 decoding while anything decodes
+  [O3] prompt tokens/request    : median 28,862  p90 66,520  max 92,832
+  [O3] prefix cached            : median 91%
+  [O3] MTP acceptance           : 208,239/232,105 = 90%
+  [O3] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-O3.log: n 412 (chat 0) per-stream all 130.7 | non-loop n 387 131.1 acc 0.89 | loop n 25 126.0 acc 0.95 tokens-in-loop-reqs 23643 | max prompt 92832
+2026-09-27T14:48:33+00:00 [r786-replay-abba] [N3] booted tabbyapi:rebase-dev-r3; keys 44; cache 901120; VRAM free MiB 1181/1759/
+2026-09-27T15:05:23+00:00 [r786-replay-abba] [N3] replay rc=0; OOM 0; tracebacks 0; engine loop stops 41
+  [N3] window         : 0.28 h, 442 completed requests
+  [N3] decode-busy    : 0.20 h (74% of the window)
+  [N3] AGGREGATE      : 430.7 t/s   tokens / wall seconds with >=1 stream decoding
+  [N3] PER STREAM     : 140.6 t/s   tokens / summed per-request decode seconds
+  [N3] mean streams   : 3.06 decoding while anything decodes
+  [N3] prompt tokens/request    : median 30,594  p90 66,988  max 92,301
+  [N3] prefix cached            : median 91%
+  [N3] MTP acceptance           : 222,444/250,812 = 89%
+  [N3] /srv/qwen5090/results/2026-09-27-r786-replay-abba-1324/container-N3.log: n 442 (chat 0) per-stream all 140.6 | non-loop n 401 136.4 acc 0.88 | loop n 41 176.0 acc 0.95 tokens-in-loop-reqs 41917 | max prompt 92301
+all per-stream decode t/s: {'O1': 133.7, 'N1': 137.6, 'O2': 130.4, 'N2': 127.9, 'O3': 130.7, 'N3': 140.6}
+all N/O pairs 1.029 0.981 1.076 mean 1.029
+all DECISION: PARITY (N/O 1.029)
+non-loop (report-only) per-stream decode t/s: {'O1': 129.0, 'N1': 132.5, 'O2': 126.2, 'N2': 124.6, 'O3': 131.1, 'N3': 136.4}
+non-loop (report-only) N/O pairs 1.027 0.987 1.040 mean 1.018
+non-loop (report-only) DECISION: PARITY (N/O 1.018)
+2026-09-27T15:05:23+00:00 [sctl] GPU queue continues (r787-chain(pid 2490665)
+r788a-ablation(pid 2502084)
+r788b-ablation-mem(pid 2502376)); leaving the GPUs to the next unit
+2026-09-27T15:05:38+00:00 [r786-replay-abba] Hermes on :8022
+2026-09-27T15:05:38+00:00 [r786-replay-abba] === r786 DONE ===

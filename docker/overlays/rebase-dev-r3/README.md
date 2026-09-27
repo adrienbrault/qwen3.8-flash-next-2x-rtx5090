@@ -31,7 +31,7 @@ Upstream code that the v1.5.0 chain did not have and that the port keeps: GDN pr
 
 - [R784](../../../bench/results/r784-rebase-dev-r3.md), one ABBA block against `stack-r3-rows32-tokcount-loopthink3` at the served flags: page pool 901,120 tokens at the same per-card headroom (−8.3 %, 983,040 before); cold prefill 1.134× at 90k tokens and 1.159× (pooled) at 22.6k; decode on short prompts −1.3 to +1.6 % per cell at 1, 4 and 8 streams (95 % intervals between −4.1 and +3.7 %), which the pre-registered rule could not resolve (prose at 8 streams, lower bound −2.30 %).
 - [R785](../../../bench/results/r785-promote-rebase-r3.md), the promotion gates on the serving port, passed twice: GSM8K 0.982 and 0.980, tool-eval 85.5 and 86.5, needles 5/5 at 131k and 240k, agentic edit 24/24.
-- Long-context decode is unresolved: R785's agent replay (median prompt 29,616 tokens) read 123.0 and 123.7 tokens/s per stream against 128.6 for the previous image in R728, on another day and with the NVMe tier off there. A same-session A/B has not run.
+- [R786](../../../bench/results/r786-replay-abba.md), the agent replay (prompts of median about 29,000 tokens) on three ABBA pairs against the previous image in one session: 1.015× per stream on the requests common to all arms, 95 % interval 0.980 to 1.053. It does not exercise the smaller page pool.
 
 ## Files
 
