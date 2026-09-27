@@ -383,15 +383,15 @@ fi
 sudo docker image inspect "$IMG" >/dev/null 2>&1 || { log "ABORT: image $IMG missing"; exit 3; }
 
 # --- sampler fallbacks ------------------------------------------------------------------------------
-# Quoted heredoc: this file is pure data, so nothing in it may be expanded. Values are the checkpoint's
-# thinking-mode recommendation (temperature 0.6, top_p 0.95, top_k 20) -- the same triple the 27B vLLM daily
-# applies through --override-generation-config. `force: false` on every entry: these apply only to requests
+# Quoted heredoc: this file is pure data, so nothing in it may be expanded. Values are the Qwen3.8-Flash-Next
+# model card's thinking-mode recommendation (temperature 1.0, top_p 0.95, top_k 20, presence_penalty 0 = TabbyAPI's
+# default). Temperature was 0.6 until 2026-09-27 (the 27B's triple); the user switched it to the card's 1.0. `force: false` on every entry: these apply only to requests
 # that omit the parameter, so a client that samples deliberately is never overridden.
 cat > "$SAMP_DIR/$SAMP_PRESET.yml" <<'YML'
 # Fallback sampler for Qwen3.8-Flash-Next thinking mode. Measured 2026-09-16: without it, DSH's requests
 # (which send max_tokens only) sample at temperature 1.0 with no truncation and degenerate.
 temperature:
-  override: 0.6
+  override: 1.0
   force: false
 top_k:
   override: 20

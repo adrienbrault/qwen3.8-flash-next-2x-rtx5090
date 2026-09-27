@@ -183,3 +183,10 @@ R785's agent replay read 123.0 and 123.7 t/s per stream against 128.6 for an old
 
 Rollback: `DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache` and `EXTRA_ENV` without `EXL3_GR_MIX_TILED=1`, the R783 launcher.
 
+## 2026-09-27: sampler fallback temperature 1.0
+
+| changed (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 22:18 | launcher: the `qwen38_thinking` preset's fallback temperature 0.6 → 1.0, the Qwen3.8-Flash-Next model card's thinking-mode value; top_k 20 and top_p 0.95 unchanged, every entry `force: false`, so only requests that omit the temperature change; image and engine environment unchanged | none (sampler fallback only; greedy and explicitly sampled requests are unaffected) | 901,120 | — |
+
+Rollback: `override: 0.6` in the `temperature` entry of the launcher's sampler heredoc.

@@ -72,7 +72,7 @@ is, which is why decode rate is content-dependent (see `GOTCHAS.md` #9).
 `/srv/qwen5090/sampler_overrides/` and mounts over `/app/sampler_overrides/qwen38_thinking.yml`:
 
 ```yaml
-temperature: {override: 0.6,  force: false}
+temperature: {override: 1.0,  force: false}
 top_k:       {override: 20,   force: false}
 top_p:       {override: 0.95, force: false}
 ```
@@ -82,13 +82,14 @@ omitting samplers run "untruncated: temperature 1.0, top_k 0, top_p 1.0, min_p 0
 every DSH request was sampled at raw T=1.0. The reasoning degenerated into multilingual text, emitted an
 end-of-thinking tag inside it, and the remainder was delivered as the visible answer (R338).
 
-**Why these values:** truncation is what stops the runaway thinking (T=1.0 with top_p/top_k added was also
-coherent), and 0.6/0.95/20 is the model's thinking-mode recommendation. No sweep of these three values is recorded
-in this repository.
+**Why these values:** truncation is what stops the runaway thinking (T=1.0 with top_p/top_k added was coherent in
+R338), and 1.0/0.95/20 with presence_penalty 0 is the thinking-mode recommendation of the Qwen3.8-Flash-Next model
+card. The preset used temperature 0.6 until 2026-09-27. No sweep of these values is recorded in this repository.
 
 **`force: false` matters:** the preset supplies fallbacks only, so a client that samples deliberately keeps its own
-values. Verified in the log: a greedy probe still reads `temperature: 0, greedy (req)`, while DSH's requests read
-`temperature: 0.6 (preset), top_k: 20 (preset), top_p: 0.95 (preset)`.
+values. Verified in the log: a greedy probe still reads `temperature: 0, greedy (req)`, while a request that sends
+only `max_tokens` reads `top_k: 20 (preset), top_p: 0.95 (preset)`; TabbyAPI does not print a temperature equal to
+its default of 1.0.
 
 ## Loop detection — TabbyAPI's default window, two detectors since R783, three since R785
 
