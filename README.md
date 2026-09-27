@@ -50,7 +50,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 ## Served configuration
 
-- Since 2026-09-26 13:37 CEST ([R747][r747]): image `tabbyapi:stack-r3-rows32-tokcount` = `stack-r3-rows32` ([R717c][r717]) plus the requeue token-count fix, which changes reported token counts and nothing else; draft-KV window off since 2026-09-25 05:52 CEST ([R728][r728]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- Since 2026-09-27 11:49 CEST ([R783][r783]): image `tabbyapi:stack-r3-rows32-tokcount-loopthink3` = `stack-r3-rows32` ([R717c][r717]) plus the requeue token-count fix ([R747][r747]), which changes reported token counts and nothing else, and a TabbyAPI patch that ends a loop in the thinking with a forced `</think>` instead of a `stop` with no content (greedy output identical on the promotion gates' prompts); draft-KV window off since 2026-09-25 05:52 CEST ([R728][r728]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
 - 8 slots, 983,040-token page pool, 8-bit KV.
 - MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); the draft cache is page-indexed over the whole pool on the second GPU, without the 16,384-token window served from [R579][r579] to [R728][r728].
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
@@ -81,6 +81,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 2 at 5 to 8 (`[[4, 3], [8, 2]]`, since [R717c][r717]; from [R576][r576] to then depth 1 at 6 to 8, `[[4, 3], [5, 2], [8, 1]]`). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 0.6, top_k 20, top_p 0.95 with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests at temperature 1.0 untruncated ([`docs/GOTCHAS.md`][gotchas]).
+- **Loop detection**: TabbyAPI's default window of 800 tokens, which ends a repeated period of up to 400 tokens. Since [R783][r783] a loop in the thinking of a chat request forces `</think>` and the model answers or calls a tool; before, the request ended as `stop` with reasoning and no content, which agent clients that promote reasoning on an empty `stop` show as the reply ([`docs/GOTCHAS.md`][gotchas] 25).
 - **Guard rails**: the launcher refuses to start without the checkpoint or the image, stops any other engine holding the cards, waits for them to drain and mounts the kernel caches. Every promotion re-runs the gates in [`docs/PROMOTION.md`][promotion] on the exact launcher.
 
 ## Hardware
@@ -186,10 +187,10 @@ At 8 streams the wall-clock figure and the `fn_bench` decode aggregate differ ma
 ## Reproducing a boot
 
 ```sh
-# the served image, published 2026-09-26 (the served layers plus one label-only layer); tag it as the launcher expects
-docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f
-docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f tabbyapi:stack-r3-rows32-tokcount
-# the rollback image (DAILY_IMG=tabbyapi:stack-r3-rows32): ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:876be2dfeab9f8741c2c00c1d6ec252d661431c3ea5c9f8f2c5ff3d1d2f140f1
+# the served image, published 2026-09-27 (the served layers plus one label-only layer); tag it as the launcher expects
+docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074
+docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074 tabbyapi:stack-r3-rows32-tokcount-loopthink3
+# the rollback image (DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount): ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:2157eab3a845ee434f8e5a0f658c154f5491694ca1e419f72f7603c97803de6f
 
 ssh flan 'bash -s' < scripts/launch-flashnext.sh                  # serve on :8022
 PORT=8023 bash scripts/launch-flashnext.sh                        # a second instance
@@ -385,6 +386,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r726]: bench/results/r726-memoc.md
 [r728]: bench/results/r728-promote-window-off.md
 [r747]: bench/results/r747-tokcount.md
+[r783]: bench/results/r783-loopthink.md
 [r587]: bench/results/r587-tabby-metrics.md
 [r583]: bench/results/r583-long-generation.md
 [r585]: bench/results/r585-prefill-interference.md
