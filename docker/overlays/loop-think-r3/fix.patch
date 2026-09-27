@@ -1,0 +1,122 @@
+diff -ruN a/common/sampling.py b/common/sampling.py
+--- a/common/sampling.py	2026-09-27 11:41:15
++++ b/common/sampling.py	2026-09-27 11:41:15
+@@ -11,6 +11,7 @@
+     AliasChoices,
+     BaseModel,
+     Field,
++    PrivateAttr,
+     field_validator,
+     model_validator,
+ )
+@@ -39,6 +40,10 @@
+ class BaseSamplerRequest(BaseModel):
+     """Common class for sampler params that are used in APIs"""
+ 
++    # Engine loop detector override, set by the chat collector when it watches the
++    # reasoning phase itself (loop-think, flan R782/R783): (window, min_reps)
++    _loop_backstop: Optional[tuple] = PrivateAttr(default=None)
++
+     max_tokens: Optional[int] = Field(
+         default_factory=lambda: get_default_sampler_value("max_tokens"),
+         validation_alias=AliasChoices("max_tokens", "max_completion_tokens", "max_length"),
+@@ -345,6 +350,8 @@
+         """Get ExLlamaV3 loop detection parameters."""
+ 
+         if self.loop_detect_window and self.loop_detect_window > 1:
++            if self._loop_backstop is not None:
++                return self._loop_backstop
+             return self.loop_detect_window, 2
+ 
+         return None
+diff -ruN a/endpoints/OAI/utils/chat_completion.py b/endpoints/OAI/utils/chat_completion.py
+--- a/endpoints/OAI/utils/chat_completion.py	2026-09-27 11:41:15
++++ b/endpoints/OAI/utils/chat_completion.py	2026-09-27 11:41:15
+@@ -53,7 +53,18 @@
+     validate_tool_choice,
+ )
+ 
++try:
++    from exllamav3.generator.loop_detect import LoopDetector
++except ImportError:
++    LoopDetector = None
+ 
++# Forced into the stream, ahead of the end-of-reasoning tag, when the reasoning
++# phase loops (loop-think r3, flan R783)
++LOOP_THINK_MESSAGE = (
++    "\n\nI am repeating myself, so I will stop thinking here and act on what I have.\n"
++)
++
++
+ def _start_in_reasoning_mode(prompt: str, user_suffix_len: int = 0) -> bool:
+     """
+     Utility function to determine if the formatted prompt indicates that inference should
+@@ -732,6 +743,39 @@
+         reasoning_cap = resolve_reasoning_cap(budget)
+         params.grammar_string = forcing.grammar
+ 
++    # Reasoning loop: the backend's loop detector ends the job, which in the
++    # reasoning phase leaves a response with finish_reason "stop" and no
++    # content (clients such as Hermes then show the reasoning as the answer).
++    # Detect the loop here on reasoning tokens with the request's window W and
++    # force the end of the reasoning phase instead, like the budget does. The
++    # backend detector moves to a 2W window as a backstop so this one fires
++    # first, with 4 repetitions so it still only matches periods up to W/2 (a
++    # (2W, 2) detector would newly end 401-800-token loops as reasoning-only
++    # stops). It still ends content-phase loops, after 2W instead of W. Not
++    # armed when 2W exceeds the output chunk: the engine rebuilds its detector
++    # at every requeue, so a 2W window would never fill (R782 review).
++    loop_detector = None
++    loop_injection = None
++    stop_on_loop = params.get_stop_on_loop()
++    if (
++        stop_on_loop is not None
++        and LoopDetector is not None
++        and forcing is None
++        and use_think
++        and start_in_reasoning_mode
++        and not (params.json_schema or params.regex_pattern or params.grammar_string)
++    ):
++        loop_injection = _reasoning_budget_injection(mc, LOOP_THINK_MESSAGE)
++        window, min_reps = stop_on_loop
++        max_rq = getattr(mc, "max_rq_tokens", None)
++        if loop_injection is not None and (max_rq is None or window * 2 <= max_rq):
++            loop_detector = LoopDetector(window, window // min_reps)
++            params._loop_backstop = (window * 2, min_reps * 2)
++            xlogger.debug(
++                f"{label}: reasoning loop watch at window {window}, "
++                f"engine backstop {params._loop_backstop}"
++            )
++
+     # Collect logprobs
+     collected_logprobs = []
+ 
+@@ -801,6 +845,28 @@
+                             "forcing the end of the reasoning phase.",
+                             {"injection": budget_injection},
+                         )
++                    budget_injection = None
++                    loop_detector = None
++
++            if (
++                loop_detector is not None
++                and not finish_reason
++                and parser.in_reasoning
++                and not parser.in_tool
++            ):
++                if loop_detector.feed_many(generation.get("token_ids") or []):
++                    injected = mc.constrain_generation_output(request_id, loop_injection)
++                    xlogger.warning(
++                        f"{label}: reasoning loop detected after "
++                        f"{loop_detector._total} reasoning tokens observed; "
++                        + (
++                            "forcing the end of the reasoning phase"
++                            if injected
++                            else "could not force the end of the reasoning phase"
++                        ),
++                        {"request_id": request_id, "injection": loop_injection},
++                    )
++                    loop_detector = None
+                     budget_injection = None
+ 
+             # Collect logprobs in content span only, skipping chunks that

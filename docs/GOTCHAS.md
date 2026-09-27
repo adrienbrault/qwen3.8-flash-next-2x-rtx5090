@@ -28,6 +28,11 @@ A forced 16,384-token greedy code generation ended at **7,107 tokens** with the 
 `generation stopped because a token loop was detected`. exllamav3 has a loop detector and it will end a long
 greedy run. Any throughput sample whose `finish_reason` is not `length` is not a throughput sample.
 
+Since 2026-09-27 ([R783](../bench/results/r783-loopthink.md)) a chat request that starts in the thinking ends a loop
+there with a forced `</think>` instead of a stop, and the engine's detector on such a request has a 1,600-token window,
+so a content-phase loop runs up to about twice as long before it is ended (not measured on the GPU; #25).
+`/v1/completions` requests and chat requests with thinking off keep the 800-token window.
+
 ## 4. The engine under-reported its own generation by ~5× (2026-09-16, fixed)
 
 **Looks like:** 32.7 T/s logged for a generation the model's own tokenizer counts as 17,544 tokens, i.e. a
@@ -258,3 +263,11 @@ Ladder each candidate pool with a full 1-to-8-stream ramp, one request per batch
 
 **What it looks like:** the memory clock offset is +4500 because the host's boot-time service applies it and the host has not rebooted.
 **What it is:** the offset read 0 on both cards on 2026-09-25 after the service had applied it on 2026-09-02, with no reboot in between; it was recorded intact on 2026-09-03 and absent in this model's logs from 2026-09-19 on, and the cause is not determined. Every number measured in that span ran at the stock memory clock, about 1.7 % below +4500 in decode at 1 stream ([R726](../bench/results/r726-memoc.md)). The launcher now sets the offset before every engine boot and logs the readback, so every results directory records the state it was measured in.
+
+## 25. An empty `stop` after a loop in the thinking shows the thoughts as the reply (2026-09-26, fixed for periods up to 400 tokens)
+
+**What it looks like:** an agent client shows the model's thinking as its answer, often ending mid-sentence or repeating one paragraph; the stream carried reasoning deltas and no content, and `finish_reason` is `"stop"`.
+
+**What it is:** the model looped inside its thinking and ExLlamaV3's loop detector ended the job (#3; TabbyAPI's `loop_detect_window`, default 800 tokens with 2 repetitions, catches periods up to 400 tokens). TabbyAPI reports that end as `"stop"`, so the response has reasoning and no content, the same shape as a model that ends its turn with an empty answer. A client that promotes the reasoning to the answer on an empty `stop` (Hermes Agent logs it as "Reasoning-only clean stop") shows the looping thoughts as the reply. On this configuration it happened on 2026-09-26 in two agent turns of 18,125 and 9,218 output tokens.
+
+**Fix:** `loop-think-r3`, served since 2026-09-27 11:49 CEST: on a request that starts in the reasoning phase, TabbyAPI's chat collector detects the loop at the same window and forces a one-line message and `</think>` into the stream, and the model answers or calls a tool; the engine's detector moves to `(2W, 4)` on those requests ([R783](../bench/results/r783-loopthink.md), [CONFIG](CONFIG.md)). A loop with a period above 400 tokens is caught by neither detector, before or after the fix, and runs until the model leaves it or reaches `max_tokens`, where `finish_reason` is `length`. A request that sets `loop_detect_window` above 1,024 is not watched, because the engine's 2W window would not fit the 2,048-token output chunk, and keeps the old behaviour.

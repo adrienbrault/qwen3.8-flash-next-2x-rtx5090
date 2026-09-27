@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-27
+
+- [R781 to R783: a loop in the thinking ends the thinking instead of the request; `stack-r3-rows32-tokcount-loopthink3` promoted: the chat collector detects a repeated period of up to 400 tokens in the reasoning and forces `</think>`, where the request used to end as `stop` with no content; greedy output identical on 6 completion and 5 chat prompts; a loop prefilled in the thinking answered 2 of 2, a thinking-off loop stopped at 800 tokens 2 of 2; periods above 400 tokens are not covered](results/r783-loopthink.md)
+
 ## 2026-09-26
 
 - [R737 and R747: the requeue token-count fix, lost from every image since 2026-09-16, restored and promoted as `stack-r3-rows32-tokcount`; the served image reported 2,969 / 2,888 / 3,714 tokens for 9,000 / 13,000 / 20,000-token generations, the fixed one the true counts; greedy output identical; R583's 65.6 tokens/s per stream withdrawn](results/r747-tokcount.md)

@@ -198,7 +198,13 @@ DRAFT=${DRAFT:-3}
 #   2,969/2,888/3,714; fn_greedy 6/6 identical). Engine behaviour unchanged; only per-request token counts and T/s in the
 #   log and in usage change. Gates: bench/results/r747-tokcount.md.
 #   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32.
-DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount
+# R783 (2026-09-27): image stack-r3-rows32-tokcount-loopthink3 = stack-r3-rows32-tokcount + loop-think r3
+#   (docker/overlays/loop-think-r3, TabbyAPI only). A loop inside the thinking used to end the request as
+#   finish_reason "stop" with no content, which Hermes shows as the reply (this configuration 2026-09-26, a finetune
+#   2026-09-27); now it forces </think> after W=800 looping tokens and the model answers. R782 on the finetune: the real
+#   loop recovers 4/4 into a tool call. Greedy output identical on the gates' short prompts. Gates: bench/results/r783-loopthink.md.
+#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount.
+DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of

@@ -1,0 +1,31 @@
+# audit.log of the unit, as written on the box, with two edits for publication: the finetune's name in the first line is
+# replaced by "the finetune", and the four lines printed by the Hermes set-model script (its config lines and a smoke
+# test's session id) are removed after "G5". Trailing spaces at the end of two lines are removed.
+2026-09-27T09:43:54+00:00 [r783-promote-loopthink] queued; waiting for the GPU-exclusive lock (R782 serves the finetune until the user stops it)
+2026-09-27T09:43:54+00:00 [r783-promote-loopthink] queued behind: r782-loopthink2(pid 2318883)
+2026-09-27T09:47:36+00:00 [r783-promote-loopthink] lock held; served ; VRAM free 32149 32149
+2026-09-27T09:47:53+00:00 [r783-promote-loopthink] old daily up: tabbyapi:stack-r3-rows32-tokcount, VRAM free 1125 1573
+2026-09-27T09:47:57+00:00 [r783-promote-loopthink] launcher installed: e0ea5c22b428f075cfee372faff188f4 -> 3f8c18109f1c6dc16cf0701761993f38 (rollback launch-flashnext.sh.pre-r783)
+2026-09-27T09:48:17+00:00 [r783-promote-loopthink] G1: image tabbyapi:stack-r3-rows32-tokcount-loopthink3, keys 41, pool 983040, UP free 1125/1573 (REF 1125/1573, floor 1093/1541)
+GREEDY P vs A: 6 identical, IDENTICAL
+GREEDY-SUMMARY reference=A divergences=0
+CHAT-GREEDY code: IDENTICAL sha 6997e3a326074ddc
+CHAT-GREEDY math: IDENTICAL sha 983f96b92371ce10
+CHAT-GREEDY prose: IDENTICAL sha e10be9c53103fe82
+CHAT-GREEDY tool: IDENTICAL sha d0301dcacd441a07
+CHAT-GREEDY multi: IDENTICAL sha 1ef18ec5f76399a3
+CHAT-GREEDY NEW vs OLD: 5/5 identical
+prefix p107: 7234 chars, paragraph copies at [5965, 6599, 7234], paragraph 197 tokens; p500 paragraph 532 tokens (2200 chars)
+forced #0: content finish=stop R=3598 C=5 tok=826 tools=[] wall=2.78
+forced #1: content finish=stop R=3598 C=5 tok=826 tools=[] wall=2.78
+RESULT forced: n=2 {'content': 2}
+nothink #0: content finish=stop R=0 C=3520 tok=800 tools=[] wall=2.61
+nothink #1: content finish=stop R=0 C=3520 tok=800 tools=[] wall=2.61
+RESULT nothink: n=2 {'content': 2}
+p107 #0: tool_call finish=tool_calls R=2681 C=362 tok=1346 tools=['patch', 'patch'] wall=25.69
+p107 #1: tool_call finish=tool_calls R=20613 C=0 tok=6506 tools=['patch', 'patch'] wall=43.33
+RESULT p107: n=2 {'tool_call': 2}
+2026-09-27T09:49:23+00:00 [r783-promote-loopthink] G4: collector injections 3, engine loop stops 2
+2026-09-27T09:49:23+00:00 [r783-promote-loopthink] G5: OOM 0 tracebacks 0 restarts 0
+2026-09-27T09:49:44+00:00 [r783-promote-loopthink] Hermes on :8022
+2026-09-27T09:49:44+00:00 [r783-promote-loopthink] === r783-promote-loopthink PROMOTED: daily = tabbyapi:stack-r3-rows32-tokcount-loopthink3 (rollback: launch-flashnext.sh.pre-r783, image tabbyapi:stack-r3-rows32-tokcount) ===

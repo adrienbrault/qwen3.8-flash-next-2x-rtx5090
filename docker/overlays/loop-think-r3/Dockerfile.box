@@ -1,0 +1,17 @@
+# loop-think r3 (R783): a loop in the reasoning phase ends the reasoning instead of the request. TabbyAPI only,
+# endpoints/OAI/utils/chat_completion.py + common/sampling.py (see README.md).
+#   B=tabbyapi:stack-r3-rows32-tokcount
+#   docker build -f Dockerfile.box --build-arg BASE=$B \
+#     --label local.loopthink.base_id=$(docker image inspect $B --format '{{.Id}}') \
+#     --label local.loopthink.patch_sha256=$(sha256sum fix.patch | cut -c1-64) -t $B-loopthink3 .
+# Build context = this directory (fix.patch, landing_loopthink.py). CPU only. --forward makes a second apply fail
+# instead of reversing the patch.
+ARG BASE=tabbyapi:stack-r3-rows32-tokcount
+FROM ${BASE}
+COPY fix.patch landing_loopthink.py /opt/loopthink-r3/
+RUN set -e; \
+    patch -p1 --fuzz=0 --forward --dry-run -d /app < /opt/loopthink-r3/fix.patch; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d /app < /opt/loopthink-r3/fix.patch; \
+    find /app -name __pycache__ -type d -exec rm -rf {} + ; \
+    env -u EXL3_NVME_TIER python3 /opt/loopthink-r3/landing_loopthink.py
+LABEL local.loopthink.round="r3"
