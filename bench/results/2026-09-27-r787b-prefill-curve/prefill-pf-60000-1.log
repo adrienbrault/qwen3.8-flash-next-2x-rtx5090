@@ -1,0 +1,3 @@
+tag=pf-60000 url=http://127.0.0.1:8022/v1 conc=[1] forced_tokens=64 ctx~[79642] kind=prose endpoint=chat runs=1 temp=0.0
+  c=1 run0 ctx~79642: {"conc": 1, "ctx_requested": 79642, "n_ok": 1, "tokens_median": 64, "prompt_tokens": 59907, "aggregate_tps": 12.4, "per_stream_wall_tps": 12.5, "decode_tps": 380.2, "ttft_s": 4.949}
+  warmup c=1 ctx~79642: 1/1 ok

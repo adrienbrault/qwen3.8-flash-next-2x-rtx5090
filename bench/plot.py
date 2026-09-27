@@ -61,7 +61,7 @@ def annotate(ax, xs, ys, color, fmt="{:.0f}", dy=7):
 
 def decode_rates(path, arm):
     """Per '<conc>-<kind>' for one arm of a decode-curve round (tags '<ARM><boot>-c<conc>-<kind>', both boots pooled;
-    R704 has the arms OLD and NEW, R719 and R719b the arm NEW only):
+    R704 has the arms OLD and NEW, R719, R719b and R787a the arm NEW only):
 
     per_stream   median over requests of decode_tps = (tokens - 1) / (t_last - t_first), the streaming rate after
                  the first token;
@@ -73,8 +73,8 @@ def decode_rates(path, arm):
                  window during which every stream of the round is decoding. It bounds how far decode_agg overstates
                  the rate the streams sustain together.
 
-    These are the definitions of the R704 and R719 drivers' analysis step (R719b re-ran the R719 driver), so the printed
-    values reproduce their curve.tsv.
+    These are the definitions of the R704 and R719 drivers' analysis step (R719b re-ran the R719 driver, R787a is a copy of
+    it with provenance checks added), so the printed values reproduce their curve.tsv.
     """
     reqs, rounds = collections.defaultdict(list), collections.defaultdict(list)
     for line in open(path):
@@ -84,6 +84,8 @@ def decode_rates(path, arm):
         shape = r["tag"].split("-", 1)[1]
         reqs[shape].append(r)
         rounds[(shape, r["tag"], r["run"])].append(r)
+    if not reqs:
+        raise ValueError(f"{path}: no ok records for arm {arm}")
     out = {}
     for shape, rs in reqs.items():
         rr = [v for (s, _, _), v in rounds.items() if s == shape]
@@ -104,13 +106,20 @@ R719 = RESULTS / "2026-09-24-r719-decode-curve" / "records.jsonl"
 R719B = RESULTS / "2026-09-25-r719b-decode-curve" / "records.jsonl"
 R580 = RESULTS / "2026-09-20-r580-decode-curve-try2" / "records.jsonl"
 R580_PREFILL = R580.parent / "prefill.jsonl"
+R554_DEPTH = RESULTS / "2026-09-19-r554-depth-decode" / "depth.jsonl"
+# R787 (2026-09-27): the four figure inputs re-measured on the R785 daily (tabbyapi:rebase-dev-r3, pool 901,120, 42 env
+# keys with the tiled HC prefill) with the instruments of R719b, R580 (prefill part), R554 and R731b.
+R787A = RESULTS / "2026-09-27-r787a-decode-curve" / "records.jsonl"
+R787B_PREFILL = RESULTS / "2026-09-27-r787b-prefill-curve" / "prefill.jsonl"
+R787C_DEPTH = RESULTS / "2026-09-27-r787c-depth-decode" / "depth.jsonl"
 
 
 def figure_decode_scaling():
-    """The served configuration's decode curve: R719b (stack-r3-rows32 with the MTP draft-KV window off since R728 and the
-    +4500 memory clock offset re-applied at boot since R726, two boots, 1 to 8 streams, each stream on its own prompt). The chart draws the decode metrics only; the round-wall aggregate, TTFT and the overlap are printed
-    for the write-up's table."""
-    new = decode_rates(R719B, "NEW")
+    """The served configuration's decode curve: R787a (the R785 daily, tabbyapi:rebase-dev-r3 at a 901,120-token pool with
+    the tiled HC prefill, memory clock +4500, core offset 0, stock power; two boots, 1 to 8 streams, each stream on its
+    own prompt; the R719b driver). The chart draws the decode metrics only; the round-wall aggregate, TTFT and the
+    overlap are printed for the write-up's table."""
+    new = decode_rates(R787A, "NEW")
     conc = [c for c in range(1, 9) if f"c{c}-code" in new]
     agg = {k: [new[f"c{c}-{k}"]["decode_agg"] for c in conc] for k in ("code", "prose")}
     per = {k: [new[f"c{c}-{k}"]["per_stream"] for c in conc] for k in ("code", "prose")}
@@ -138,7 +147,7 @@ def figure_decode_scaling():
         a.legend(frameon=False, fontsize=9, loc="lower right" if a is ax else "upper right")
     fig.suptitle("Decode rate after the first token against concurrency, served configuration", fontsize=11,
                  fontweight="bold")
-    print(f"decode scaling (R719b, 2 boots x 3 rounds) at {conc}")
+    print(f"decode scaling (R787a, 2 boots x 3 rounds) at {conc}")
     print("  shape      per-stream   decode agg   round-wall agg   TTFT     overlap")
     for kind in ("code", "prose"):
         for c in conc:
@@ -165,6 +174,21 @@ def print_r719():
                   f"   {o['ttft']:.2f} / {n['ttft']:.2f} s")
 
 
+def print_r787a():
+    """R719b's curve (the R728 daily, stack-r3-rows32) against R787a's (the R785 daily, rebase-dev-r3), printed for
+    R787a's comparison table. Same driver, prompts and tags."""
+    old, new = decode_rates(R719B, "NEW"), decode_rates(R787A, "NEW")
+    conc = [c for c in range(1, 9) if f"c{c}-code" in new and f"c{c}-code" in old]
+    print(f"R719b -> R787a (2 boots x 3 rounds each) at {conc}")
+    print("  shape      per-stream R719b -> R787a   decode agg R719b -> R787a   TTFT R719b / R787a")
+    for kind in ("code", "prose"):
+        for c in conc:
+            o, n = old[f"c{c}-{kind}"], new[f"c{c}-{kind}"]
+            print(f"  {kind:5} c{c}   {o['per_stream']:6.1f} -> {n['per_stream']:6.1f} ({n['per_stream'] / o['per_stream']:.3f}x)"
+                  f"   {o['decode_agg']:4.0f} -> {n['decode_agg']:4.0f} ({n['decode_agg'] / o['decode_agg']:.3f}x)"
+                  f"   {o['ttft']:.2f} / {n['ttft']:.2f} s")
+
+
 def print_r704():
     """R704's two arms (stack-r2 against the configuration before R701), printed for its write-up's tables. R704
     sent one prompt to every stream of a round, R719 one prompt per stream, so the two rounds are not drawn together."""
@@ -183,37 +207,60 @@ def print_r704():
     print(f"  overlap at 2-8 streams, per shape and arm: {min(ov):.3f} to {max(ov):.3f}")
 
 
-def depth_decode():
-    """R554 read decode rate at one stream on top of an already-prefilled context, per kind."""
+def need(path):
+    """The figures draw one named round each. A missing input is an error, never a silent switch to an older round."""
+    if not path.exists():
+        raise FileNotFoundError(f"{path} is missing; the figure is drawn from that round only")
+    return path
+
+
+def depth_decode(path=R787C_DEPTH):
+    """Decode rate at one stream on top of an already-prefilled context, per kind: R787c by default (the R554 probe on
+    the R785 daily; its code targets aim at ~100k / ~200k tokens, where R554's code points landed at ~180k and past the
+    window). R554's records are read only by print_depth_compare().
+
+    Returns per kind a list of (prompt tokens, mean decode rate, mean tokens per decode step), the last being completion
+    tokens / streamed frames: fn_bench streams one frame per verify step, so it carries the MTP draft acceptance."""
     rows = collections.defaultdict(list)
-    for line in open(RESULTS / "2026-09-19-r554-depth-decode" / "depth.jsonl"):
+    for line in open(need(path)):
         r = json.loads(line)
         # c1 only: the file also holds a 4-stream arm, whose per-request rate is a different quantity.
         if r.get("decode_tps") and r.get("prompt_tokens") and r["tag"].startswith("c1-"):
-            rows[(r["tag"].split("-")[1], r["prompt_tokens"])].append(r["decode_tps"])
+            rows[(r["tag"].split("-")[1], r["prompt_tokens"])].append(
+                (r["decode_tps"], r["completion_tokens"] / r["client_frames"] if r.get("client_frames") else None))
+    if not rows:
+        raise ValueError(f"{path}: no c1 decode records")
     out = collections.defaultdict(list)
     for (kind, toks), v in sorted(rows.items(), key=lambda kv: kv[0][1]):
-        out[kind].append((toks, st.mean(v)))
+        tps = [t for _, t in v if t]
+        out[kind].append((toks, st.mean(d for d, _ in v), st.mean(tps) if tps else None))
     return out
 
 
-def figure_prefill():
-    """R580 asked for the filler budget that lands on each target, so its tags are the token counts it aimed at
-    and the points are what the server counted. Before it, the only prefill records were R574's, whose "120k"
-    is really 90,008 tokens because fn_bench's --ctx is a budget at about 0.75 tokens per unit."""
-    if R580_PREFILL.exists():
-        path, keys = R580_PREFILL, [f"pf-{t}" for t in (30000, 60000, 120000, 200000, 240000)]
-    else:
-        path, keys = (RESULTS / "2026-09-19-r574-chunk4096" / "prefill.jsonl",
-                      ["pf-S-30000", "pf-S-60000", "pf-S-120000"])
+PREFILL_TARGETS = (30000, 60000, 120000, 200000, 240000)
+
+
+def prefill_points(path):
+    """Cold prefill per target of an R580-protocol round (R580, R787b): the round asked for the filler budget that
+    lands on each target, so its tags are the token counts it aimed at and the points are what the server counted
+    (mean prompt tokens, mean prompt tokens / TTFT over the target's salted prompts). Every target must have records."""
     rows = collections.defaultdict(list)
-    for line in open(path):
+    for line in open(need(path)):
         r = json.loads(line)
         if r.get("ttft_s") and r.get("prompt_tokens"):
             rows[r["tag"]].append((r["prompt_tokens"], r["prompt_tokens"] / r["ttft_s"]))
-    keys = [k for k in keys if rows[k]]
-    toks = [st.mean([t for t, _ in rows[k]]) for k in keys]
-    rate = [st.mean([v for _, v in rows[k]]) for k in keys]
+    keys = [f"pf-{t}" for t in PREFILL_TARGETS]
+    missing = [k for k in keys if not rows[k]]
+    if missing:
+        raise ValueError(f"{path}: no records for {missing}")
+    return ([st.mean([t for t, _ in rows[k]]) for k in keys], [st.mean([v for _, v in rows[k]]) for k in keys])
+
+
+def figure_prefill():
+    """Cold prefill from R787b and decode at depth from R787c, both on the R785 daily. The older rounds (R580, R554)
+    are printed by print_prefill_compare() and print_depth_compare(), not drawn."""
+    path = R787B_PREFILL
+    toks, rate = prefill_points(path)
     depth = depth_decode()
 
     fig, ax = plt.subplots(figsize=(8.4, 4.2))
@@ -222,38 +269,52 @@ def figure_prefill():
     ax2.spines["right"].set_color("#d8dee4")
     handles = ax.plot(toks, rate, marker="o", color=PREFILL, linewidth=2, label="prefill rate")
     annotate(ax, toks, rate, PREFILL)
-    for kind, color, dy in (("code", CODE, 7), ("prose", PROSE, -14)):
-        xs = [t for t, _ in depth[kind]]
-        ys = [v for _, v in depth[kind]]
+    # the series with the higher mean rate labels above its markers, the other below, so the two do not collide
+    # Each point is labelled with its rate and its tokens per decode step: at depth the rate follows how much of the
+    # continuation the MTP draft predicts, so the two numbers are read together.
+    upper = max(("code", "prose"), key=lambda k: st.mean(v for _, v, _ in depth[k]))
+    for kind, color in (("code", CODE), ("prose", PROSE)):
+        dy = 7 if kind == upper else -24
+        xs = [t for t, _, _ in depth[kind]]
+        ys = [v for _, v, _ in depth[kind]]
         handles += ax2.plot(xs, ys, marker="s", markersize=4, linestyle="--", color=color, linewidth=1.6,
-                            label=f"decode at depth, {kind}")
-        annotate(ax2, xs, ys, color, dy=dy)
-    ax.set_title("Prompt length costs latency, not rate")
+                            label=f"decode at depth, {kind} (label: t/s, tokens per step)")
+        for i, (x, y, tps) in enumerate(depth[kind]):
+            # the first point sits at the left edge: its label starts at the marker instead of centring on it
+            ax2.annotate(f"{y:.0f}, {tps:.2f}/step" if tps else f"{y:.0f}", (x, y), textcoords="offset points",
+                         xytext=(-4 if i == 0 else 0, dy), ha="left" if i == 0 else "center", fontsize=8, color=color)
+    ax.set_title("Prompt length costs prefill time; the decode step time stays flat")
     ax.set_xlabel("prompt tokens")
     ax.set_ylabel("prompt tokens per second, prefill")
     ax2.set_ylabel("tokens per second, decode at 1 stream")
     ax.set_ylim(0, max(rate) * 1.3)
-    ax2.set_ylim(0, max(v for d in depth.values() for _, v in d) * 1.6)
+    ax2.set_ylim(0, max(v for d in depth.values() for _, v, _ in d) * 1.6)
     ax.set_xticks(toks, [f"{round(t / 1000)}k" for t in toks])
     ax.grid(axis="y", color="#eaeef2")
     ax.set_axisbelow(True)
     ax.legend(handles, [h.get_label() for h in handles], frameon=False, fontsize=9, loc="lower right")
-    print("prefill:", [round(v) for v in rate], "t/s at", [round(t) for t in toks], "tokens")
-    print("decode at depth:", {k: [(round(t), round(v)) for t, v in d] for k, d in depth.items()})
+    print(f"prefill ({path.parent.name}):", [round(v) for v in rate], "t/s at", [round(t) for t in toks], "tokens")
+    print("decode at depth (tokens, t/s, tokens per step):",
+          {k: [(round(t), round(v), round(p, 2) if p else None) for t, v, p in d] for k, d in depth.items()})
     save(fig, "prefill.svg", "Cold prefill rate and decode rate at depth against prompt length")
 
 
 R731B = RESULTS / "2026-09-25-r731b-std-bench-stock" / "results"
+R787D = RESULTS / "2026-09-27-r787d-std-bench" / "results"
 SHAREGPT, SPECBENCH = "#1a7f37", "#9a6700"
 
 
-def std_bench():
-    """R731b's cells, per (dataset, conc), as the mean of passes A and B: output tok/s is `vllm bench serve`'s
+def std_bench(path=R787D):
+    """A standard-benchmark round's cells (R787d by default, R731b's protocol on the R785 daily), per (dataset, conc), as
+    the mean of passes A and B: output tok/s is `vllm bench serve`'s
     output_throughput (all completion tokens over the run's wall time, prefill and request turnover included);
     per-stream is 1000 / TPOT p50, TPOT = (latency - TTFT) / (output tokens - 1) per request, which includes the time
     a request waits while other requests' prefill chunks run. Both as in bench/std_bench_summary.py."""
     cells = collections.defaultdict(list)
-    for f in sorted(R731B.glob("[AB]-*-c*.json")):
+    files = sorted(need(path).glob("[AB]-*-c*.json"))
+    if not files:
+        raise FileNotFoundError(f"{path} holds no [AB]-*-c*.json cell")
+    for f in files:
         d = json.load(open(f))
         tpot = [(lat - ttft) / (n - 1) for lat, ttft, n in zip(d["latencies"], d["ttfts"], d["output_lens"]) if n > 1]
         cells[(d["dataset"], int(d["conc"]))].append((d["output_throughput"], 1.0 / st.median(tpot)))
@@ -261,13 +322,13 @@ def std_bench():
 
 
 def figure_std_bench():
-    """The decode curve (R719b: steady-state decode after the first token, all streams starting together, no prefill
-    in the window) against the standard benchmark (R731b: closed loop, requests arriving as others finish, so their
+    """The decode curve (R787a: steady-state decode after the first token, all streams starting together, no prefill
+    in the window) against the standard benchmark (R787d: closed loop, requests arriving as others finish, so their
     prefill chunks interleave with the running streams' decode). The two also differ in output length (1,024 forced
     tokens against ~210-256), which puts more of each request's life in TTFT and turnover in the standard benchmark."""
-    fn = decode_rates(R719B, "NEW")
+    fn = decode_rates(R787A, "NEW")
     fn_conc = [c for c in range(1, 9) if f"c{c}-code" in fn]
-    sb = std_bench()
+    sb = std_bench(R787D)
     datasets = (("sharegpt", "ShareGPT V3", SHAREGPT), ("specbench", "Spec-Bench", SPECBENCH))
     sb_conc = sorted({c for (_, c) in sb})
 
@@ -275,15 +336,15 @@ def figure_std_bench():
     for a, idx, fn_key, title in ((ax, 0, "decode_agg", "Aggregate over streams"), (ax2, 1, "per_stream", "Per stream")):
         for kind, color in (("code", CODE), ("prose", PROSE)):
             ys = [fn[f"c{c}-{kind}"][fn_key] for c in fn_conc]
-            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (R719b)")
+            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (R787a)")
             if kind == "code":
                 annotate(a, fn_conc, ys, color, dy=7)
         for key, name, color in datasets:
             ys = [sb[(key, c)][idx] for c in sb_conc]
             a.plot(sb_conc, ys, marker="s", markersize=4, color=color, linewidth=2, linestyle="--",
-                   label=f"{name}, prefill interleaved (R731b)")
-            # Labels only where the dashed lines have left the solid ones (the values are in the README tables):
-            # at 1 stream on the aggregate and up to 2 streams per stream, the four series print on top of each other.
+                   label=f"{name}, prefill interleaved (R787d)")
+            # Labels only from 2 streams on the aggregate panel and from 4 on the per-stream panel (the values are in
+            # the README tables): below that the dashed and solid series lie within a few label heights of each other.
             first = 2 if a is ax else 4
             annotate(a, sb_conc, [y if c >= first else None for c, y in zip(sb_conc, ys)], color,
                      dy=-14 if key == "sharegpt" else 7)
@@ -297,17 +358,50 @@ def figure_std_bench():
     ax.set_ylabel("tokens per second, sum over streams\n(standard benchmark: output tok/s, wall clock)")
     ax2.set_ylabel("tokens per second, one stream\n(standard benchmark: 1000 / TPOT p50)")
     fig.suptitle("Decode alone against the standard benchmark, served configuration", fontsize=11, fontweight="bold")
-    print(f"standard benchmark (R731b, passes A/B mean) at {sb_conc}")
+    print(f"standard benchmark (R787d, passes A/B mean) at {sb_conc}")
     for key, name, _ in datasets:
         print(f"  {name:11}  output tok/s {[round(sb[(key, c)][0], 1) for c in sb_conc]}"
               f"   per-stream {[round(sb[(key, c)][1]) for c in sb_conc]}")
     save(fig, "std-bench.svg", "Decode alone against the standard benchmark, sum over streams and per stream")
 
 
+def print_r787d():
+    """R731b (the R728 daily) against R787d (the R785 daily), same protocol and sample, passes A/B mean per cell."""
+    old, new = std_bench(R731B), std_bench(R787D)
+    print("R731b -> R787d (passes A/B mean)")
+    for key in ("sharegpt", "specbench"):
+        for c in sorted(c for (k, c) in new if k == key):
+            if (key, c) not in old:
+                continue
+            (oo, op), (no, np_) = old[(key, c)], new[(key, c)]
+            print(f"  {key:9} c{c}   output tok/s {oo:6.1f} -> {no:6.1f} ({no / oo:.3f}x)"
+                  f"   per-stream {op:5.1f} -> {np_:5.1f} ({np_ / op:.3f}x)")
+
+
+def print_prefill_compare():
+    """R580's cold prefill (the R580 daily, 2026-09-20) against R787b's (the R785 daily), same protocol and targets."""
+    (ot, orate), (nt, nrate) = prefill_points(R580_PREFILL), prefill_points(R787B_PREFILL)
+    print("R580 -> R787b cold prefill (mean of 3 salted prompts per target)")
+    for t, a, b, x, y in zip(PREFILL_TARGETS, ot, nt, orate, nrate):
+        print(f"  target {t:>7,}   tokens {a:9,.0f} / {b:9,.0f}   t/s {x:7,.0f} -> {y:7,.0f} ({y / x:.3f}x)")
+
+
+def print_depth_compare():
+    """R554's decode at depth (1 stream) against R787c's. The code targets differ (R554's landed at ~180k tokens)."""
+    for name, path in (("R554", R554_DEPTH), ("R787c", R787C_DEPTH)):
+        d = depth_decode(path)
+        print(f"{name} decode at depth, 1 stream (tokens, t/s, tokens per step):",
+              {k: [(round(t), round(v), round(p, 2) if p else None) for t, v, p in pts] for k, pts in d.items()})
+
+
 if __name__ == "__main__":
     figure_decode_scaling()
     figure_std_bench()
+    print_r787a()
+    print_r787d()
     print_r719()
     print_r704()
     figure_prefill()
+    print_prefill_compare()
+    print_depth_compare()
     print("wrote", ", ".join(sorted(p.name for p in OUT.glob("*.svg"))))

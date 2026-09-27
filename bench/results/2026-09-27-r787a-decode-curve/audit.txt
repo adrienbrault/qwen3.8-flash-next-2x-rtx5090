@@ -1,0 +1,27 @@
+2026-09-27T15:06:24+00:00 [r787a] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; direct :8022 clients stopped: none (none running, or the chain already stopped them)
+2026-09-27T15:06:44+00:00 [r787a] [NEW1] booted: image tabbyapi:rebase-dev-r3 (sha256:30ed33eb6036); env keys 42 (tiled 1); cache 901120 @ 8,8; split [30, 30]; tier 0; power 600 575 W; core 0 0; memory 4500 4500; launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500 / power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0; VRAM free MiB 1181/1759/; free 1181 1759 
+2026-09-27T15:15:02+00:00 [r787a] [NEW1] done; OOM 0; restarts 0; foreign (report-only) 0; after: power 600 575 W; core 0 0; memory 4500 4500; free after 1001 1567 
+2026-09-27T15:15:21+00:00 [r787a] [NEW2] booted: image tabbyapi:rebase-dev-r3 (sha256:30ed33eb6036); env keys 42 (tiled 1); cache 901120 @ 8,8; split [30, 30]; tier 0; power 600 575 W; core 0 0; memory 4500 4500; launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500 / power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0; VRAM free MiB 1181/1759/; free 1181 1759 
+2026-09-27T15:23:37+00:00 [r787a] [NEW2] done; OOM 0; restarts 0; foreign (report-only) 0; after: power 600 575 W; core 0 0; memory 4500 4500; free after 1001 1567 
+code c1: decode/stream 254.8 | decode aggregate 255 (boots 255 / 255) | round-wall aggregate 247 | TTFT 0.13s
+code c2: decode/stream 208.1 | decode aggregate 418 (boots 416 / 419) | round-wall aggregate 395 | TTFT 0.24s
+code c3: decode/stream 178.5 | decode aggregate 529 (boots 530 / 527) | round-wall aggregate 487 | TTFT 0.34s
+code c4: decode/stream 151.5 | decode aggregate 618 (boots 614 / 622) | round-wall aggregate 556 | TTFT 0.45s
+code c5: decode/stream 136.1 | decode aggregate 684 (boots 683 / 684) | round-wall aggregate 627 | TTFT 0.55s
+code c6: decode/stream 119.1 | decode aggregate 715 (boots 707 / 723) | round-wall aggregate 655 | TTFT 0.64s
+code c7: decode/stream 113.1 | decode aggregate 800 (boots 805 / 795) | round-wall aggregate 720 | TTFT 0.67s
+code c8: decode/stream 104.3 | decode aggregate 834 (boots 832 / 837) | round-wall aggregate 764 | TTFT 0.73s
+prose c1: decode/stream 276.8 | decode aggregate 277 (boots 277 / 277) | round-wall aggregate 268 | TTFT 0.13s
+prose c2: decode/stream 201.3 | decode aggregate 405 (boots 406 / 404) | round-wall aggregate 379 | TTFT 0.22s
+prose c3: decode/stream 175.4 | decode aggregate 525 (boots 528 / 522) | round-wall aggregate 491 | TTFT 0.32s
+prose c4: decode/stream 154.0 | decode aggregate 619 (boots 622 / 617) | round-wall aggregate 571 | TTFT 0.43s
+prose c5: decode/stream 137.3 | decode aggregate 687 (boots 683 / 690) | round-wall aggregate 632 | TTFT 0.53s
+prose c6: decode/stream 122.7 | decode aggregate 737 (boots 746 / 729) | round-wall aggregate 679 | TTFT 0.58s
+prose c7: decode/stream 113.0 | decode aggregate 790 (boots 788 / 792) | round-wall aggregate 728 | TTFT 0.64s
+prose c8: decode/stream 106.1 | decode aggregate 852 (boots 847 / 856) | round-wall aggregate 768 | TTFT 0.69s
+2026-09-27T15:23:37+00:00 [sctl] GPU queue continues (r787-chain(pid 2490665)
+r788a-ablation(pid 2502084)
+r788b-ablation-mem(pid 2502376)); leaving the GPUs to the next unit
+2026-09-27T15:23:37+00:00 [r787a] no direct client to restart
+2026-09-27T15:23:37+00:00 [r787a] === R787a DONE ===
+2026-09-27T15:23:37+00:00 [r787a] VERDICT: DONE 432 / 432 ok records (want 432)

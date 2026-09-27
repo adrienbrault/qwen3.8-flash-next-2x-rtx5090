@@ -1,0 +1,268 @@
+15:23:42.011 INFO:     Sampler preset "qwen38_thinking": temperature 0.6, top_k
+                       20, top_p 0.95
+15:23:42.013 INFO:     exllamav3 version: 1.5.2
+15:23:43.377 INFO:     Using main model MTP component for drafting
+15:23:43.397 INFO:     Context: max_seq_len 262,144 tokens (configured),
+                       cache_size 901,120 tokens
+15:23:43.456 INFO:     Using tool format: qwen3_coder
+15:23:43.456 INFO:     Using template "chat_template" for chat completions.
+15:23:45.721 INFO:     Loading model
+                       /models/qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab (manual
+                       GPU split)
+Loading vision modules ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:00
+Loading draft modules  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 3/3   0:00:00
+Loading model modules  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 53/53 0:00:00
+EXL3_EMBED_GPU_PRUNED=1: embedding mirror 65536 of 248320 rows (320.0 MiB, prefix) on cuda:1
+15:23:56.343 INFO:     Model loaded in 12.9 s
+
+15:23:56.343 WARNING:  Disabling authentication makes your instance vulnerable.
+                       Set the `disable_auth` flag to False in config.yml if you
+                       want to share this instance with others.
+15:23:56.344 WARNING:  With authentication disabled and `allowed_origins` left
+                       at ["*"], any website open in a browser on this machine
+                       can send requests to this instance and read the
+                       responses, including admin endpoints. Set
+                       `network.allowed_origins` to your own frontends (or [])
+                       unless you use a browser-based frontend that needs it.
+15:23:56.344 INFO:     Serving OAI API on http://0.0.0.0:8022 (docs at
+                       http://0.0.0.0:8022/redoc)
+15:23:56.944 INFO:     #3 completions: 3 prompt tokens · temperature: 0, greedy
+                       (req), max_tokens: 16 (req)
+densegemm lcguard: device 1: dense calls on the QSA side branch use the side scratch (hctr upper half, side slots)
+densegemm lcguard: device 0: dense calls on the QSA side branch use the side scratch (hctr upper half, side slots)
+15:23:57.298 INFO:     #3 completions: 16 tokens generated at 105.2 T/s · prompt
+                       3 tokens, none cached, 3 new in 0.19 s · first token 0.20
+                       s, total 0.35 s · draft 7/27 accepted (26%) · max_tokens
+                       reached
+15:23:57.539 INFO:     #5 chat/completions: 78 prompt tokens · temperature: 0,
+                       greedy (req), max_tokens: 256 (req), min_tokens: 256
+                       (req)
+15:23:58.677 INFO:     #5 chat/completions: 256 tokens generated at 252.1 T/s ·
+                       prompt 78 tokens, none cached, 78 new in 0.12 s · first
+                       token 0.12 s, total 1.14 s · draft 160/288 accepted (56%)
+                       · max_tokens reached
+15:23:58.733 INFO:     #6 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:23:58.850 INFO:     #6 chat/completions (stream): 8 tokens generated at 267.1
+                       T/s · prompt 55 tokens, none cached, 55 new in 0.08 s ·
+                       first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:23:58.941 INFO:     #7 chat/completions (stream): 45,202 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+ -- LS prefill pipeline: {'devices': ['cuda:0', 'cuda:1'], 'stages': [[('hc_expand', 0, 1), ('model.language_model.layers.0', 0, 2), ('model.language_model.layers.1.ple', 0, 3), ('model.language_model.layers.1', 0, 4), ('model.language_model.layers.2', 0, 5), ('model.language_model.layers.3', 0, 6), ('model.language_model.layers.4', 0, 7), ('model.language_model.layers.5', 0, 8), ('model.language_model.layers.6', 0, 9), ('model.language_model.layers.7', 0, 10), ('model.language_model.layers.8', 0, 11), ('model.language_model.layers.9', 0, 12), ('model.language_model.layers.10', 0, 13), ('model.language_model.layers.11', 0, 14), ('model.language_model.layers.12', 0, 15), ('model.language_model.layers.13', 0, 16), ('model.language_model.layers.14', 0, 17), ('model.language_model.layers.15', 0, 18), ('model.language_model.layers.16', 0, 19), ('model.language_model.layers.17', 0, 20), ('model.language_model.layers.18', 0, 21), ('model.language_model.layers.19', 0, 22), ('model.language_model.layers.20', 0, 23), ('model.language_model.layers.21', 0, 24), ('model.language_model.layers.22', 0, 25), ('model.language_model.layers.23', 0, 26), ('model.language_model.layers.24', 0, 27), ('model.language_model.layers.25', 0, 28)], [('model.language_model.layers.26', 0, 29), ('model.language_model.layers.27', 0, 30), ('model.language_model.layers.28', 0, 31), ('model.language_model.layers.29', 0, 32), ('model.language_model.layers.30', 0, 33), ('model.language_model.layers.31', 0, 34), ('model.language_model.layers.32', 0, 35), ('model.language_model.layers.33', 0, 36), ('model.language_model.layers.34', 0, 37), ('model.language_model.layers.35', 0, 38), ('model.language_model.layers.36', 0, 39), ('model.language_model.layers.37', 0, 40), ('model.language_model.layers.38', 0, 41), ('model.language_model.layers.39', 0, 42), ('model.language_model.layers.40', 0, 43), ('model.language_model.layers.41', 0, 44), ('model.language_model.layers.42', 0, 45), ('model.language_model.layers.43', 0, 46), ('model.language_model.layers.44', 0, 47), ('model.language_model.layers.45', 0, 48), ('model.language_model.layers.46', 0, 49), ('model.language_model.layers.47', 0, 50), ('model.language_model.hyper_connection_mixer', 0, 51), ('lm_head', 0, 52)]]}
+15:24:03.445 INFO:     #7 chat/completions (stream): 64 tokens generated at
+                       291.0 T/s · prompt 45,202 tokens, none cached, 45,202 new
+                       in 4.23 s (10,686 T/s) · first token 4.29 s, total 4.51 s
+                       · draft 45/57 accepted (79%) · max_tokens reached
+15:24:03.518 INFO:     #9 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:03.620 INFO:     #9 chat/completions (stream): 8 tokens generated at 271.0
+                       T/s · prompt 55 tokens, none cached, 55 new in 0.07 s ·
+                       first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:03.681 INFO:     #10 chat/completions (stream): 29,844 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:06.500 INFO:     #10 chat/completions (stream): 64 tokens generated at
+                       327.5 T/s · prompt 29,844 tokens, none cached, 29,844 new
+                       in 2.62 s (11,391 T/s) · first token 2.63 s, total 2.82 s
+                       · draft 45/57 accepted (79%) · max_tokens reached
+15:24:06.544 INFO:     #11 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:06.646 INFO:     #11 chat/completions (stream): 8 tokens generated at
+                       269.6 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:06.709 INFO:     #12 chat/completions (stream): 30,011 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:09.551 INFO:     #12 chat/completions (stream): 64 tokens generated at
+                       298.0 T/s · prompt 30,011 tokens, none cached, 30,011 new
+                       in 2.62 s (11,455 T/s) · first token 2.62 s, total 2.84 s
+                       · draft 46/54 accepted (85%) · max_tokens reached
+15:24:09.595 INFO:     #13 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:09.697 INFO:     #13 chat/completions (stream): 8 tokens generated at
+                       270.0 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:09.761 INFO:     #14 chat/completions (stream): 29,942 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:12.574 INFO:     #14 chat/completions (stream): 64 tokens generated at
+                       255.2 T/s · prompt 29,942 tokens, none cached, 29,942 new
+                       in 2.56 s (11,696 T/s) · first token 2.56 s, total 2.82 s
+                       · draft 41/69 accepted (59%) · max_tokens reached
+15:24:12.659 INFO:     #16 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:12.762 INFO:     #16 chat/completions (stream): 8 tokens generated at
+                       269.1 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:12.886 INFO:     #17 chat/completions (stream): 59,907 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:17.903 INFO:     #17 chat/completions (stream): 64 tokens generated at
+                       327.2 T/s · prompt 59,907 tokens, none cached, 59,907 new
+                       in 4.81 s (12,455 T/s) · first token 4.82 s, total 5.01 s
+                       · draft 45/57 accepted (79%) · max_tokens reached
+15:24:17.947 INFO:     #19 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:18.049 INFO:     #19 chat/completions (stream): 8 tokens generated at
+                       271.2 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:18.177 INFO:     #20 chat/completions (stream): 59,926 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:23.218 INFO:     #20 chat/completions (stream): 64 tokens generated at
+                       283.6 T/s · prompt 59,926 tokens, none cached, 59,926 new
+                       in 4.81 s (12,459 T/s) · first token 4.82 s, total 5.04 s
+                       · draft 42/66 accepted (64%) · max_tokens reached
+15:24:23.261 INFO:     #21 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:23.363 INFO:     #21 chat/completions (stream): 8 tokens generated at
+                       269.9 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:23.494 INFO:     #22 chat/completions (stream): 59,718 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:28.571 INFO:     #22 chat/completions (stream): 64 tokens generated at
+                       344.8 T/s · prompt 59,718 tokens, none cached, 59,718 new
+                       in 4.88 s (12,237 T/s) · first token 4.89 s, total 5.07 s
+                       · draft 46/54 accepted (85%) · max_tokens reached
+15:24:28.657 INFO:     #24 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:28.759 INFO:     #24 chat/completions (stream): 8 tokens generated at
+                       269.3 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:29.014 INFO:     #25 chat/completions (stream): 119,471 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:38.843 INFO:     #25 chat/completions (stream): 64 tokens generated at
+                       275.1 T/s · prompt 119,471 tokens, none cached, 119,471
+                       new in 9.58 s (12,471 T/s) · first token 9.59 s, total
+                       9.82 s · draft 42/66 accepted (64%) · max_tokens reached
+15:24:38.887 INFO:     #27 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:38.990 INFO:     #27 chat/completions (stream): 8 tokens generated at
+                       272.0 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.10 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:39.258 INFO:     #28 chat/completions (stream): 119,354 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:49.086 INFO:     #28 chat/completions (stream): 64 tokens generated at
+                       317.5 T/s · prompt 119,354 tokens, none cached, 119,354
+                       new in 9.61 s (12,420 T/s) · first token 9.62 s, total
+                       9.82 s · draft 45/57 accepted (79%) · max_tokens reached
+15:24:49.130 INFO:     #30 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:49.234 INFO:     #30 chat/completions (stream): 8 tokens generated at
+                       268.8 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:24:49.505 INFO:     #31 chat/completions (stream): 119,765 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:24:59.387 INFO:     #31 chat/completions (stream): 64 tokens generated at
+                       317.5 T/s · prompt 119,765 tokens, none cached, 119,765
+                       new in 9.67 s (12,385 T/s) · first token 9.68 s, total
+                       9.88 s · draft 45/57 accepted (79%) · max_tokens reached
+15:24:59.474 INFO:     #33 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:24:59.577 INFO:     #33 chat/completions (stream): 8 tokens generated at
+                       270.0 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:25:00.022 INFO:     #34 chat/completions (stream): 199,530 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:25:16.334 INFO:     #34 chat/completions (stream): 64 tokens generated at
+                       296.1 T/s · prompt 199,530 tokens, none cached, 199,530
+                       new in 16.1 s (12,409 T/s) · first token 16.1 s, total
+                       16.3 s · draft 44/60 accepted (73%) · max_tokens reached
+15:25:16.379 INFO:     #36 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:25:16.483 INFO:     #36 chat/completions (stream): 8 tokens generated at
+                       267.9 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:25:16.918 INFO:     #37 chat/completions (stream): 199,501 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:25:33.312 INFO:     #37 chat/completions (stream): 64 tokens generated at
+                       285.9 T/s · prompt 199,501 tokens, none cached, 199,501
+                       new in 16.1 s (12,368 T/s) · first token 16.1 s, total
+                       16.4 s · draft 43/63 accepted (68%) · max_tokens reached
+15:25:33.360 INFO:     #40 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:25:33.469 INFO:     #40 chat/completions (stream): 8 tokens generated at
+                       267.5 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:25:33.908 INFO:     #41 chat/completions (stream): 199,243 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:25:50.215 INFO:     #41 chat/completions (stream): 64 tokens generated at
+                       317.4 T/s · prompt 199,243 tokens, none cached, 199,243
+                       new in 16.1 s (12,406 T/s) · first token 16.1 s, total
+                       16.3 s · draft 45/57 accepted (79%) · max_tokens reached
+15:25:50.302 INFO:     #44 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:25:50.408 INFO:     #44 chat/completions (stream): 8 tokens generated at
+                       268.2 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:25:50.986 INFO:     #45 chat/completions (stream): 239,088 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:26:10.798 INFO:     #45 chat/completions (stream): 64 tokens generated at
+                       296.6 T/s · prompt 239,088 tokens, none cached, 239,088
+                       new in 19.6 s (12,230 T/s) · first token 19.6 s, total
+                       19.8 s · draft 44/60 accepted (73%) · max_tokens reached
+15:26:10.843 INFO:     #47 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:26:10.950 INFO:     #47 chat/completions (stream): 8 tokens generated at
+                       261.3 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:26:11.512 INFO:     #48 chat/completions (stream): 239,351 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:26:31.377 INFO:     #48 chat/completions (stream): 64 tokens generated at
+                       329.9 T/s · prompt 239,351 tokens, none cached, 239,351
+                       new in 19.6 s (12,193 T/s) · first token 19.6 s, total
+                       19.8 s · draft 46/54 accepted (85%) · max_tokens reached
+15:26:31.422 INFO:     #50 chat/completions (stream): 55 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 8 (req),
+                       min_tokens: 8 (req)
+15:26:31.528 INFO:     #50 chat/completions (stream): 8 tokens generated at
+                       268.2 T/s · prompt 55 tokens, none cached, 55 new in 0.07
+                       s · first token 0.08 s, total 0.11 s · draft 5/9 accepted
+                       (56%) · max_tokens reached
+15:26:32.084 INFO:     #51 chat/completions (stream): 238,890 prompt tokens ·
+                       temperature: 0, greedy (req), max_tokens: 64 (req),
+                       min_tokens: 64 (req)
+15:26:51.876 INFO:     #51 chat/completions (stream): 64 tokens generated at
+                       314.0 T/s · prompt 238,890 tokens, none cached, 238,890
+                       new in 19.6 s (12,219 T/s) · first token 19.6 s, total
+                       19.8 s · draft 45/57 accepted (79%) · max_tokens reached

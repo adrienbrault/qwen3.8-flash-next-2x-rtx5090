@@ -1,0 +1,17 @@
+2026-09-27T15:23:38+00:00 [r787b] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab cache_size: 901120 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; direct :8022 clients stopped: none (none running, or the chain already stopped them)
+2026-09-27T15:23:38+00:00 [r787b] === one boot of the live launcher, tier off ===
+2026-09-27T15:23:57+00:00 [r787b] UP: image tabbyapi:rebase-dev-r3 (sha256:30ed33eb6036); env keys 42 (tiled 1); cache 901120 @ 8,8; split [30, 30]; tier 0; power 600 575 W; core 0 0; memory 4500 4500; launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500 / power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0; VRAM free MiB 1181/1759/
+2026-09-27T15:23:58+00:00 [r787b] UP: cache_size: 901120 cache_mode: 8,8 max_batch_size: 8 gpu_split: [30, 30] # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type chunk_size: 2048 vision: true ; draft_num_tokens_by_batch: [[4, 3], [8, 2]]; VRAM free 1181 1759 ; c1 fingerprint db314692593d9a32
+2026-09-27T15:24:03+00:00 [r787b] prefill calibration: budget 60,000 -> 45202 prompt tokens (0.7534 tokens per budget unit)
+2026-09-27T15:24:12+00:00 [r787b] prefill target 30000: budget 39821 -> 29932 prompt tokens, 11159 t/s, TTFT 2.68 s (n 3)
+2026-09-27T15:24:28+00:00 [r787b] prefill target 60000: budget 79642 -> 59850 prompt tokens, 12037 t/s, TTFT 4.97 s (n 3)
+2026-09-27T15:24:59+00:00 [r787b] prefill target 120000: budget 159285 -> 119530 prompt tokens, 12108 t/s, TTFT 9.87 s (n 3)
+2026-09-27T15:25:50+00:00 [r787b] prefill target 200000: budget 265475 -> 199425 prompt tokens, 12097 t/s, TTFT 16.48 s (n 3)
+2026-09-27T15:26:51+00:00 [r787b] prefill target 240000: budget 318570 -> 239110 prompt tokens, 11910 t/s, TTFT 20.08 s (n 3)
+2026-09-27T15:26:52+00:00 [r787b] after the ladder: OOM 0; restarts 0; foreign (report-only) 0; power 600 575 W; core 0 0; memory 4500 4500; VRAM free at the end: 579 1115 
+2026-09-27T15:26:52+00:00 [sctl] GPU queue continues (r787-chain(pid 2490665)
+r788a-ablation(pid 2502084)
+r788b-ablation-mem(pid 2502376)); leaving the GPUs to the next unit
+2026-09-27T15:26:52+00:00 [r787b] no direct client to restart
+2026-09-27T15:26:52+00:00 [r787b] === R787b DONE ===
+2026-09-27T15:26:52+00:00 [r787b] VERDICT: DONE 5/5 prefill targets with records (want 5)
