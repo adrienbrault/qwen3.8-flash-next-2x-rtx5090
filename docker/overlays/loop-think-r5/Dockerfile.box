@@ -1,0 +1,22 @@
+# loop-think r5 (R791, R792): loop-think r4 plus two long-period rungs, (6L, 2L) and (12L, 4L), on the reasoning loop
+# watch, and finish_reason "length" when max_tokens cuts a tool call that does not parse. TabbyAPI only,
+# endpoints/OAI/utils/chat_completion.py + common/sampling.py (see README.md). Two routes, picked by what the base carries:
+#   - base WITHOUT loop-think (pristine /app, e.g. tabbyapi:stack-r3-rows32-tokcount): applies fix.patch (base -> r5);
+#   - base WITH loop-think r4 (/opt/loopthink-r4 present: ...-loopthink4 and every image FROM it, including
+#     tabbyapi:rebase-dev-r3, which does not touch /app): applies r4-to-r5.patch (r4 -> r5). Same /app files either way.
+#   B=tabbyapi:rebase-dev-r3
+#   docker build -f Dockerfile.box --build-arg BASE=$B \
+#     --label local.loopthink.base_id=$(docker image inspect $B --format '{{.Id}}') \
+#     --label local.loopthink.patch_sha256=$(cat fix.patch r4-to-r5.patch | sha256sum | cut -c1-64) -t $B-loopthink5 .
+# Build context = this directory. CPU only. --forward makes a second apply fail instead of reversing the patch.
+ARG BASE=tabbyapi:stack-r3-rows32-tokcount
+FROM ${BASE}
+COPY fix.patch r4-to-r5.patch landing_loopthink.py /opt/loopthink-r5/
+RUN set -e; \
+    if [ -f /opt/loopthink-r4/landing_loopthink.py ]; then P=/opt/loopthink-r5/r4-to-r5.patch; else P=/opt/loopthink-r5/fix.patch; fi; \
+    echo "loop-think r5: applying $P"; \
+    patch -p1 --fuzz=0 --forward --dry-run -d /app < $P; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d /app < $P; \
+    find /app -name __pycache__ -type d -exec rm -rf {} + ; \
+    env -u EXL3_NVME_TIER python3 /opt/loopthink-r5/landing_loopthink.py
+LABEL local.loopthink.round="r5"

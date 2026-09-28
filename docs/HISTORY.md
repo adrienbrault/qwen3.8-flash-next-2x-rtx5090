@@ -195,8 +195,18 @@ Rollback: `override: 0.6` in the `temperature` entry of the launcher's sampler h
 
 | promoted (CEST) | change | gate evidence | page pool | results |
 | --- | --- | --- | --- | --- |
-| 02:52 | launcher: `EXL3_HOST_GAP_REWIND=1`, `EXL3_GR_STATE_REGRID=1` and `EXL3_HC_MIX_V3_PDL=0` removed from `EXTRA_ENV`, 42 → 39 keys; image unchanged (`tabbyapi:rebase-dev-r3`) | G1-G10 of R785 with greedy byte-identical to R785c (fn_greedy 6/6, chat_greedy 6/6 incl. the long answer); needles 5/5 at 131k and 240k; tool-eval 85.2; GSM8K c8 0.976 | 901,120 | `2026-09-28-r789-promote-dropkeys-0013` |
+| 02:52 | launcher: `EXL3_HOST_GAP_REWIND=1`, `EXL3_GR_STATE_REGRID=1` and `EXL3_HC_MIX_V3_PDL=0` removed from `EXTRA_ENV`, 42 → 39 keys; image unchanged (`tabbyapi:rebase-dev-r3`) | G1-G10 of R785 with greedy byte-identical to R785c (fn_greedy 6/6, chat_greedy 6/6 incl. the long answer); needles 5/5 at 131k and 240k; tool-eval 85.2; GSM8K c8 0.976 | 901,120 | [R789](../bench/results/r789-promote-dropkeys.md), `2026-09-28-r789-promote-dropkeys-0013` |
 
 The first run (00:04 UTC) was rolled back at the loop-think gate: its probe sent no temperature, so it ran at the sampler fallback, 1.0 since the previous evening, while the reference ran at 0.6. The second run pins the probe at 0.6.
 
 Rollback: add the three keys back to `EXTRA_ENV`.
+
+## 2026-09-28: loop-think r5, reasoning loops with periods of up to 4,000 tokens
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 09:49 | image `tabbyapi:rebase-dev-r3-loopthink5` = `rebase-dev-r3` + [`loop-think-r5/r4-to-r5.patch`](../docker/overlays/loop-think-r5/r4-to-r5.patch), TabbyAPI `endpoints/OAI/utils/chat_completion.py`: two more collector-only reasoning-loop rungs, (6000, 2000) and (12000, 4000), beside r4's (3000, 1000), for loop periods of 1,000 to 4,000 tokens; `finish_reason: "length"` instead of `tool_calls` when `max_tokens` cuts tool-call text that does not parse; engine, 39 keys and launcher otherwise unchanged | R792, 07:09 to 07:50 UTC, R789's G1 to G10: boot free 1,181 / 1,759 MiB; greedy byte-identical to R785c (`fn_greedy` 6/6, `chat_greedy` 6/6 incl. the long answer); the overlay's 89 offline checks inside the served container, 0 failures; loop-think forced 2/2, thinking-off 2/2, agent turn 2/2 at temperature 0.6; needles 5/5 at 131k and 240k; agent replay 133.0 t/s per stream (bar 120.3); agentic edit 24/24; tool-eval 84.2; GSM8K c8 0.976; no r5 branch ran during G7 to G10. Report-only: the (6000, 2000) rung fired on a prefilled 1,199-token loop at 6,003 generated tokens (0.6); a tool call cut at 300 tokens returned `length` with 0 calls, streamed and not | 901,120 | [R792](../bench/results/r792-promote-loopthink5.md) |
+
+[R791](../bench/results/r791-temp-incidence.md) found two exact loops in the reasoning with periods of about 1,200 and 3,700 tokens on ordinary agent turns at temperature 0.6, above r4's 1,000-token reach; both ran to `max_tokens` with no answer. The same round found the `tool_calls` label on a cut tool call. At the served fallback temperature 1.0 the prefilled loop of R792's probe did not continue (0 of 8), so the ladder has not fired on the served sampler.
+
+Rollback: `DAILY_IMG=tabbyapi:rebase-dev-r3`, the R789 launcher.

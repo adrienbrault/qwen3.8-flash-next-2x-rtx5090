@@ -85,6 +85,7 @@ def main():
     ap.add_argument("--n", type=int, default=8); ap.add_argument("--conc", type=int, default=4)
     ap.add_argument("--max-tokens", type=int, default=32768); ap.add_argument("--timeout", type=int, default=1800)
     ap.add_argument("--tag", default="run"); ap.add_argument("--out", required=True)
+    ap.add_argument("--temperature", type=float, help="send an explicit temperature (default: omit it, so the server's sampler preset applies)")
     a = ap.parse_args()
     if a.forced_loop:
         msgs = [{"role": "user", "content": a.prompt or "Inside your thinking, before anything else, write the exact line "
@@ -106,6 +107,8 @@ def main():
         body["response_prefix"] = open(a.prefix_file).read()
     if a.no_think:
         body["chat_template_kwargs"] = {"enable_thinking": False}
+    if a.temperature is not None:
+        body["temperature"] = a.temperature
 
     def one(i):
         try:

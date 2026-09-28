@@ -1,0 +1,186 @@
+diff -ruN a/common/sampling.py b/common/sampling.py
+--- a/common/sampling.py	2026-09-27 12:01:08
++++ b/common/sampling.py	2026-09-27 12:01:08
+@@ -11,6 +11,7 @@
+     AliasChoices,
+     BaseModel,
+     Field,
++    PrivateAttr,
+     field_validator,
+     model_validator,
+ )
+@@ -39,6 +40,10 @@
+ class BaseSamplerRequest(BaseModel):
+     """Common class for sampler params that are used in APIs"""
+ 
++    # Engine loop detector override, set by the chat collector when it watches the
++    # reasoning phase itself (loop-think, flan R782/R783): (window, min_reps)
++    _loop_backstop: Optional[tuple] = PrivateAttr(default=None)
++
+     max_tokens: Optional[int] = Field(
+         default_factory=lambda: get_default_sampler_value("max_tokens"),
+         validation_alias=AliasChoices("max_tokens", "max_completion_tokens", "max_length"),
+@@ -345,6 +350,8 @@
+         """Get ExLlamaV3 loop detection parameters."""
+ 
+         if self.loop_detect_window and self.loop_detect_window > 1:
++            if self._loop_backstop is not None:
++                return self._loop_backstop
+             return self.loop_detect_window, 2
+ 
+         return None
+diff -ruN a/endpoints/OAI/utils/chat_completion.py b/endpoints/OAI/utils/chat_completion.py
+--- a/endpoints/OAI/utils/chat_completion.py	2026-09-27 12:01:08
++++ b/endpoints/OAI/utils/chat_completion.py	2026-09-28 04:04:55
+@@ -53,7 +53,22 @@
+     validate_tool_choice,
+ )
+ 
++try:
++    from exllamav3.generator.loop_detect import LoopDetector
++except ImportError:
++    LoopDetector = None
+ 
++# Forced into the stream, ahead of the end-of-reasoning tag, when the reasoning
++# phase loops (loop-think r4, flan R784)
++LOOP_THINK_MESSAGE = (
++    "\n\nI am repeating myself, so I will stop thinking here and act on what I have.\n"
++)
++
++# Long-period rungs of the reasoning loop watch, as multiples k of L = 1.25W:
++# each is a collector-only LoopDetector(3kL, kL) (loop-think r5, flan R791)
++LOOP_THINK_LADDER = (1, 2, 4)
++
++
+ def _start_in_reasoning_mode(prompt: str, user_suffix_len: int = 0) -> bool:
+     """
+     Utility function to determine if the formatted prompt indicates that inference should
+@@ -587,6 +602,28 @@
+     return dumped
+ 
+ 
++def _finish_with_tool_calls(generation: dict, calls: list, label: str):
++    """
++    finish_reason once tool-call text was generated. The base always reported
++    "tool_calls", so a max_tokens stop inside a tool call reached the client
++    as "tool_calls" with no call (flan R791): that case keeps "length". Every
++    other end keeps the base's "tool_calls", with or without a parsed call (a
++    reasoning-only "stop" is what Hermes shows as the reply, R781).
++    """
++
++    if not calls:
++        cap_hit = generation.get("eos_reason") == "max_new_tokens"
++        xlogger.warning(
++            f"{label}: tool call text did not parse into a tool call; "
++            f"finish_reason {'length' if cap_hit else 'tool_calls'}",
++            {"eos_reason": generation.get("eos_reason")},
++        )
++        if cap_hit:
++            generation["finish_reason"] = "length"
++            return
++    generation["finish_reason"] = "tool_calls"
++
++
+ def _resolve_reasoning_budget(data: ChatCompletionRequest, mc) -> tuple[Optional[int], str]:
+     """
+     Resolve the reasoning token budget and forced message from the request and
+@@ -732,6 +769,50 @@
+         reasoning_cap = resolve_reasoning_cap(budget)
+         params.grammar_string = forcing.grammar
+ 
++    # Reasoning loop: the backend's loop detector ends the job, which in the
++    # reasoning phase leaves a response with finish_reason "stop" and no
++    # content (clients such as Hermes then show the reasoning as the answer).
++    # Detect the loop here on reasoning tokens with the request's window W and
++    # force the end of the reasoning phase instead, like the budget does. The
++    # backend detector moves to a 2W window as a backstop so this one fires
++    # first, with 4 repetitions so it still only matches periods up to W/2 (a
++    # (2W, 2) detector would newly end 401-800-token loops as reasoning-only
++    # stops). It still ends content-phase loops, after 2W instead of W. Not
++    # armed when 2W exceeds the output chunk: the engine rebuilds its detector
++    # at every requeue, so a 2W window would never fill (R782 review). A second,
++    # collector-only detector catches periods up to 1.25W once 3 copies fill
++    # its window (R783: a ~710-token block repeated 6x escaped every detector);
++    # 3 copies, so one restated block (a draft rewritten verbatim) never fires.
++    # Two more collector-only rungs, (6L, 2L) and (12L, 4L), extend that to
++    # periods up to 4L (R791: exact loops with 1,199- and 3,713-token periods
++    # ran to max_tokens). A single larger L would not do: the whole window must
++    # be periodic, so each rung keeps the 3-copy floor at its own top period.
++    loop_detectors = []
++    loop_injection = None
++    stop_on_loop = params.get_stop_on_loop()
++    if (
++        stop_on_loop is not None
++        and LoopDetector is not None
++        and forcing is None
++        and use_think
++        and start_in_reasoning_mode
++        and not (params.json_schema or params.regex_pattern or params.grammar_string)
++    ):
++        loop_injection = _reasoning_budget_injection(mc, LOOP_THINK_MESSAGE)
++        window, min_reps = stop_on_loop
++        max_rq = getattr(mc, "max_rq_tokens", None)
++        if loop_injection is not None and (max_rq is None or window * 2 <= max_rq):
++            long_period = window + window // 4
++            loop_detectors = [LoopDetector(window, window // min_reps)] + [
++                LoopDetector(3 * rung * long_period, rung * long_period)
++                for rung in LOOP_THINK_LADDER
++            ]
++            params._loop_backstop = (window * 2, min_reps * 2)
++            xlogger.debug(
++                f"{label}: reasoning loop watch at window {window}, "
++                f"engine backstop {params._loop_backstop}"
++            )
++
+     # Collect logprobs
+     collected_logprobs = []
+ 
+@@ -802,7 +883,30 @@
+                             {"injection": budget_injection},
+                         )
+                     budget_injection = None
++                    loop_detectors = []
+ 
++            if (
++                loop_detectors
++                and not finish_reason
++                and parser.in_reasoning
++                and not parser.in_tool
++            ):
++                ids = generation.get("token_ids") or []
++                if any([d.feed_many(ids) for d in loop_detectors]):
++                    injected = mc.constrain_generation_output(request_id, loop_injection)
++                    xlogger.warning(
++                        f"{label}: reasoning loop detected after "
++                        f"{loop_detectors[0]._total} reasoning tokens observed; "
++                        + (
++                            "forcing the end of the reasoning phase"
++                            if injected
++                            else "could not force the end of the reasoning phase"
++                        ),
++                        {"request_id": request_id, "injection": loop_injection},
++                    )
++                    loop_detectors = []
++                    budget_injection = None
++
+             # Collect logprobs in content span only, skipping chunks that
+             # contain a phase transition
+             if "logprobs_content" in generation and not parser.saw_tag and parser.in_content:
+@@ -834,7 +938,7 @@
+                     generation["delta_tool_calls"] = _parse_tool_calls(
+                         full_tool, tool_format, label
+                     )
+-                    generation["finish_reason"] = "tool_calls"
++                    _finish_with_tool_calls(generation, generation["delta_tool_calls"], label)
+                 if forcing is not None and finish_reason:
+                     check_forced_tool_calls(
+                         forcing, generation, generation["delta_tool_calls"], label
+@@ -854,7 +958,7 @@
+             generation["content"] = full_content if has_content else None
+             generation["tool_calls"] = _parse_tool_calls(full_tool, tool_format, label)
+             if full_tool:
+-                generation["finish_reason"] = "tool_calls"
++                _finish_with_tool_calls(generation, generation["tool_calls"], label)
+             if forcing is not None:
+                 check_forced_tool_calls(forcing, generation, generation["tool_calls"], label)
+             return generation

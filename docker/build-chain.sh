@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 39 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 40 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -16,7 +16,9 @@
 #   stack-r3-rows32-tokcount-loopthink3       overlays/loop-think-r3 (TabbyAPI: a reasoning-phase loop ends the reasoning; the rollback tag)
 #   stack-r3-rows32-tokcount-loopthink4       overlays/loop-think-r4 (loop-think-r3 plus a long-period detector), on …-tokcount
 #   rebase-dev-r3                             overlays/rebase-dev-r3 (the engine replaced by upstream ExLlamaV3 dev 5783a93 +
-#                                                                      ported-vs-dev.patch, native rebuild)   <- the served tag
+#                                                                      ported-vs-dev.patch, native rebuild; the rollback tag)
+#   rebase-dev-r3-loopthink5                  overlays/loop-think-r5 (TabbyAPI: long-period loop rungs, length for a cut tool
+#                                                                      call; r4-to-r5.patch on rebase-dev-r3)   <- the served tag
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -29,7 +31,7 @@
 # Network: GitHub (TabbyAPI, the ExLlamaV3 wheel, the ExLlamaV3 source at 5783a93), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
 # Cost (R739, 2026-09-26, bench/results/r739-build-verify.md): 57 min on a Ryzen 7 9800X3D with MAX_JOBS=12 and the CUDA base
 # already pulled, niced beside a serving engine; 59 GB of disk beyond the base; the final image is 48 GB. TabbyAPI's Python
-# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the two
+# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the three
 # layers after it were not part of a verification build.
 #
 # Knobs:
@@ -188,10 +190,16 @@ else
   L4ID=$("${DOCKER_CMD[@]}" image inspect "$L4" --format '{{.Id}}')
   L4DEF=$("${DOCKER_CMD[@]}" image inspect "$L4" --format '{{index .Config.Labels "local.stack.dgv2_defs"}}')
 fi
-FINAL=$R:rebase-dev-r3
-build "$FINAL"                         $O/rebase-dev-r3/Dockerfile.box $O/rebase-dev-r3 --build-arg BASE="$L4" --build-arg BASE_ID="$L4ID" \
+RB=$R:rebase-dev-r3
+build "$RB"                            $O/rebase-dev-r3/Dockerfile.box $O/rebase-dev-r3 --build-arg BASE="$L4" --build-arg BASE_ID="$L4ID" \
   --build-arg DGV2_NVCC_DEFS="$L4DEF" --build-arg TREE_SHA="$(sed -nE 's/^TREE_SHA=([0-9a-f]{64})$/\1/p' $O/rebase-dev-r3/prepare-tree.sh)" \
   ${JOBS[@]+"${JOBS[@]}"}
+# loop-think r5 on rebase-dev-r3 takes the r4-to-r5.patch route (the base carries /opt/loopthink-r4); the label hashes both patches
+if [ "$DRY_RUN" = 1 ]; then RBID="<docker image inspect $RB --format {{.Id}}>"; else RBID=$("${DOCKER_CMD[@]}" image inspect "$RB" --format '{{.Id}}'); fi
+FINAL=$RB-loopthink5
+build "$FINAL"                         $O/loop-think-r5/Dockerfile.box $O/loop-think-r5 --build-arg BASE="$RB" \
+  --label local.loopthink.base_id="$RBID" \
+  --label local.loopthink.patch_sha256="$(cat $O/loop-think-r5/fix.patch $O/loop-think-r5/r4-to-r5.patch | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-64)"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

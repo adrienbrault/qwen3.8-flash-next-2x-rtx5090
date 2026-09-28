@@ -6,7 +6,7 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on `tabbyapi:rebase-dev-r3`, the served configuration (memory clock offset +4500), measured 2026-09-27 15:06 to 15:23 UTC ([R787a][r787], results `2026-09-27-r787a-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on `tabbyapi:rebase-dev-r3`, the engine layer of the served image ([R792][r792]; memory clock offset +4500), measured 2026-09-27 15:06 to 15:23 UTC ([R787a][r787], results `2026-09-27-r787a-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
 
@@ -50,7 +50,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 ## Served configuration
 
-- Since 2026-09-27 15:01 CEST ([R785][r785]): image `tabbyapi:rebase-dev-r3`, the served engine stack on upstream ExLlamaV3 `dev` `5783a93` (v1.5.2) with upstream's tiled hyper-connection prefill mix (`EXL3_GR_MIX_TILED=1`) and TabbyAPI's loop patch in its fourth round. Rollback: `tabbyapi:stack-r3-rows32-tokcount-loopthink3` ([R783][r783]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
+- Since 2026-09-28 09:49 CEST ([R792][r792]): image `tabbyapi:rebase-dev-r3-loopthink5`, the served engine stack on upstream ExLlamaV3 `dev` `5783a93` (v1.5.2) with upstream's tiled hyper-connection prefill mix (`EXL3_GR_MIX_TILED=1`) and TabbyAPI's loop patch in its fifth round. Rollback: `tabbyapi:rebase-dev-r3` ([R785][r785]). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
 - 8 slots, 901,120-token page pool, 8-bit KV.
 - MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); the draft cache is page-indexed over the whole pool on the second GPU.
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
@@ -82,7 +82,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 - **Cards**: layer split, 30 GB of weights and cache per card. `qwen4_exp` raises `NotImplementedError` for tensor parallelism in this engine, so the cards take turns over their own layers, and one stream keeps each card 44–47 % busy (2026-09-16, 3.05 bpw pack, [GPU duty cycle][duty]). Expert parallelism was built and measured at −9.5 % at 1 stream (results `2026-09-16-r408-ep-served`). Tensor parallelism was bounded before it was built: from measured half-work kernel times and all-reduce costs, a TP step would be at most 1.07–1.08× faster at 1 and 4 streams (2026-09-19, [R527][r527]).
 - **Speculative decoding**: the checkpoint's MTP head, depth 3 up to 4 concurrent jobs and depth 2 at 5 to 8 (`[[4, 3], [8, 2]]`, since [R717c][r717]; from [R576][r576] to then depth 1 at 6 to 8, `[[4, 3], [5, 2], [8, 1]]`). Confidence-gated dynamic depth crashed at 4 streams ([R497][r497]).
 - **Sampler fallbacks**: temperature 1.0, top_k 20, top_p 0.95 (the model card's thinking-mode values) with `force: false`, so a client that sends its own sampler keeps it. Without a preset TabbyAPI serves sampler-less requests untruncated (top_k 0, top_p 1.0) ([`docs/GOTCHAS.md`][gotchas]).
-- **Loop detection**: TabbyAPI's default window of 800 tokens. A loop in the thinking of a chat request forces `</think>`, and the model answers or calls a tool ([R783][r783]); a second detector on the thinking ends periods of up to 1,000 tokens after three copies ([R785][r785], [`loop-think-r4`](docker/overlays/loop-think-r4/README.md)).
+- **Loop detection**: TabbyAPI's default window of 800 tokens. A loop in the thinking of a chat request forces `</think>`, and the model answers or calls a tool ([R783][r783]); three more detectors on the thinking end periods of up to 1,000, 2,000 and 4,000 tokens after three copies ([R792][r792], [`loop-think-r5`](docker/overlays/loop-think-r5/README.md)). A tool call cut by `max_tokens` finishes as `length`.
 - **Guard rails**: the launcher refuses to start without the checkpoint or the image, stops any other engine holding the cards, waits for them to drain and mounts the kernel caches. Every promotion re-runs the gates in [`docs/PROMOTION.md`][promotion] on the exact launcher.
 
 ## Hardware
@@ -189,12 +189,14 @@ On the previous image, at 8 streams the wall-clock figure and the `fn_bench` dec
 ## Reproducing a boot
 
 ```sh
-# the served image, published 2026-09-27 (the served layers plus one label-only layer); tag it as the launcher expects
+# tabbyapi:rebase-dev-r3, published 2026-09-27 (its layers plus one label-only layer); it is also the rollback image
 docker pull ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:5fecdc9d8a30eb29c197f0a1e2c5af54bff65d603c4bc1ea7541b57c3ff19a32
 docker tag  ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:5fecdc9d8a30eb29c197f0a1e2c5af54bff65d603c4bc1ea7541b57c3ff19a32 tabbyapi:rebase-dev-r3
-# the rollback image, tagged tabbyapi:stack-r3-rows32-tokcount-loopthink3 and served with DAILY_IMG set to that tag, CACHE=983040,
-# TUNEDIR=/srv/qwen5090/.exl3cache and EXTRA_ENV without EXL3_GR_MIX_TILED=1:
-#   ghcr.io/adrienbrault/qwen3.8-flash-next-2x-rtx5090@sha256:b5fc90c6c987c72356dcfa2f329982ecec2efca08ee56e85c9e5d662d1d52074
+# the served image = that tag plus the loop-think r5 layer (CPU only, about a minute)
+docker build -f docker/overlays/loop-think-r5/Dockerfile.box --build-arg BASE=tabbyapi:rebase-dev-r3 \
+  --label local.loopthink.base_id=$(docker image inspect tabbyapi:rebase-dev-r3 --format '{{.Id}}') \
+  --label local.loopthink.patch_sha256=$(cat docker/overlays/loop-think-r5/fix.patch docker/overlays/loop-think-r5/r4-to-r5.patch | sha256sum | cut -c1-64) \
+  -t tabbyapi:rebase-dev-r3-loopthink5 docker/overlays/loop-think-r5
 
 ssh flan 'bash -s' < scripts/launch-flashnext.sh                  # serve on :8022
 PORT=8023 bash scripts/launch-flashnext.sh                        # a second instance
@@ -398,6 +400,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r785]: bench/results/r785-promote-rebase-r3.md
 [r786]: bench/results/r786-replay-abba.md
 [r787]: bench/results/r787-bench-refresh.md
+[r792]: bench/results/r792-promote-loopthink5.md
 [r581]: bench/results/r581-split-rebalance.md
 [hot-slots]: bench/hot_slots.py
 [r521]: bench/results/r521-shared-bound.md
