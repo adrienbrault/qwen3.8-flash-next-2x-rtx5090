@@ -190,3 +190,13 @@ Rollback: `DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 T
 | 22:18 | launcher: the `qwen38_thinking` preset's fallback temperature 0.6 → 1.0, the Qwen3.8-Flash-Next model card's thinking-mode value; top_k 20 and top_p 0.95 unchanged, every entry `force: false`, so only requests that omit the temperature change; image and engine environment unchanged | none (sampler fallback only; greedy and explicitly sampled requests are unaffected) | 901,120 | — |
 
 Rollback: `override: 0.6` in the `temperature` entry of the launcher's sampler heredoc.
+
+## 2026-09-28: three unused engine keys removed
+
+| promoted (CEST) | change | gate evidence | page pool | results |
+| --- | --- | --- | --- | --- |
+| 02:52 | launcher: `EXL3_HOST_GAP_REWIND=1`, `EXL3_GR_STATE_REGRID=1` and `EXL3_HC_MIX_V3_PDL=0` removed from `EXTRA_ENV`, 42 → 39 keys; image unchanged (`tabbyapi:rebase-dev-r3`) | G1-G10 of R785 with greedy byte-identical to R785c (fn_greedy 6/6, chat_greedy 6/6 incl. the long answer); needles 5/5 at 131k and 240k; tool-eval 85.2; GSM8K c8 0.976 | 901,120 | `2026-09-28-r789-promote-dropkeys-0013` |
+
+The first run (00:04 UTC) was rolled back at the loop-think gate: its probe sent no temperature, so it ran at the sampler fallback, 1.0 since the previous evening, while the reference ran at 0.6. The second run pins the probe at 0.6.
+
+Rollback: add the three keys back to `EXTRA_ENV`.
