@@ -1,0 +1,70 @@
+# prefill-merge r1 (R803, R809; served since R809p, bench/results/r803-r810-prefill-merge.md): two opt-in changes to how a
+# prefill forward is cut and how a recurrent (GDN / PLE) checkpoint is copied to the host. Python only (exllamav3
+# cache/prefill_merge.py new; generator/job.py, generator/disk_cache.py, modules/gated_delta_net.py, modules/ple.py): no
+# .cu/.cpp change, no extension rebuild. Both knobs (EXL3_PREFILL_MERGE, EXL3_STASH_ASYNC) are unset in the image = the
+# base image's code paths; the launcher sets both. TabbyAPI (/app) is untouched.
+#
+#   B=tabbyapi:tokenize-offloop-r2
+#   docker build -f Dockerfile.box --build-arg BASE=$B --build-arg BASE_ID=$(docker image inspect $B --format '{{.Id}}') \
+#     --label local.prefillmerge.patch_sha256=$(sha256sum < fix.patch | cut -c1-64) -t tabbyapi:merge-tok-r1 .
+#
+# Build order: the served image on the serving host was built the other way round, fix.patch on
+# tabbyapi:rebase-dev-r3-loopthink5 first and tokenize-offloop-r2's two patches on that result. The two overlays touch
+# disjoint files (prefill-merge: the five exllamav3 files above; tokenize-offloop: exllamav3 tokenizer/tokenizer.py and four
+# /app files), so every installed file hashes the same in both orders; the image ID differs. This file applies fix.patch
+# on tokenize-offloop-r2 so that the chain stays linear.
+#
+# Build context = this directory. Steps: the base must be tokenize-offloop r2 on loop-think r5 on rebase-dev r3; the
+# installed files fix.patch touches must hash to SHA256SUMS.base (stricter than --fuzz=0) and cache/prefill_merge.py must
+# be absent; dry-run then apply with --fuzz=0 --forward, no .rej/.orig, the result must hash to SHA256SUMS.src,
+# __pycache__ cleared; the landing check imports the real package with EXL3_* stripped and prints `prefill-merge-r1
+# landed`; the offline tests (tests/, ext + triton stubbed; test_forward_wiring compares against base/) run against the
+# installed package; tokenize-offloop-r2's installed files are re-checked against its SHA256SUMS.*.src and its landing
+# runs again on the stacked package; the served rebase-dev r3 CPU suite runs against a copy of the stacked package and its
+# TabbyAPI call-site audit against /app. No heredocs (legacy builder). CPU only, about 2 min.
+ARG BASE=tabbyapi:tokenize-offloop-r2
+FROM ${BASE}
+ARG BASE
+ARG BASE_ID=unset
+COPY fix.patch SHA256SUMS.base SHA256SUMS.src landing_prefill_merge.py /opt/prefill-merge-r1/
+COPY tests /opt/prefill-merge-r1/tests
+COPY base /opt/prefill-merge-r1/base
+RUN set -e; site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    echo "prefill-merge-r1: base ${BASE} (${BASE_ID}), exllamav3 at $site"; \
+    test -f /opt/rebase-dev-r3/landing_r3.py || { echo "prefill-merge-r1: base is not rebase-dev r3"; exit 1; }; \
+    test -f /opt/loopthink-r5/landing_loopthink.py || { echo "prefill-merge-r1: base is not loop-think r5"; exit 1; }; \
+    test -s /opt/tokenize-offloop-r2/landing.txt || { echo "prefill-merge-r1: base is not tokenize-offloop r2"; exit 1; }; \
+    ( cd "$site" && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.exl3.src ) || { echo "prefill-merge-r1: base tokenizer.py is not tokenize-offloop r2's"; exit 1; }; \
+    ( cd "$site" && sha256sum -c /opt/prefill-merge-r1/SHA256SUMS.base ) || { echo "prefill-merge-r1: installed files are not the rebase-dev r3 base"; exit 1; }; \
+    test ! -e "$site/cache/prefill_merge.py" || { echo "prefill-merge-r1: already applied"; exit 1; }; \
+    patch -p1 --fuzz=0 --forward --dry-run -d "$site" < /opt/prefill-merge-r1/fix.patch; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d "$site" < /opt/prefill-merge-r1/fix.patch; \
+    test -z "$(find "$site" -name '*.rej' -o -name '*.orig')" || { echo "prefill-merge-r1: rejects"; exit 1; }; \
+    ( cd "$site" && sha256sum -c /opt/prefill-merge-r1/SHA256SUMS.src ) || { echo "prefill-merge-r1: patched files differ from src/"; exit 1; }; \
+    find "$site" -name __pycache__ -type d -prune -exec rm -rf {} +
+# no `| tee` (no pipefail in /bin/sh): a failed step must fail the build
+RUN python3 /opt/prefill-merge-r1/landing_prefill_merge.py > /opt/prefill-merge-r1/landing.txt 2>&1 \
+      || { cat /opt/prefill-merge-r1/landing.txt; echo "prefill-merge-r1: LANDING FAILED"; exit 1; }; cat /opt/prefill-merge-r1/landing.txt
+RUN set -e; for t in test_partition.py test_split_equiv.py test_forward_wiring.py test_gpu_gate_logic.py; do \
+      python3 /opt/prefill-merge-r1/tests/$t > /opt/prefill-merge-r1/$t.txt 2>&1 \
+        || { cat /opt/prefill-merge-r1/$t.txt; echo "prefill-merge-r1: OFFLINE TEST FAILED: $t"; exit 1; }; \
+      echo "prefill-merge-r1 offline $t: $(tail -1 /opt/prefill-merge-r1/$t.txt)"; done; \
+    find /opt/prefill-merge-r1 -name __pycache__ -type d -prune -exec rm -rf {} +
+# after stacking: tokenize-offloop-r2's files unchanged and its landing still passes on the stacked package
+RUN set -e; site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    ( cd "$site" && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.exl3.src ) || { echo "prefill-merge-r1: tokenizer.py changed by the stacking"; exit 1; }; \
+    ( cd /app && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.app.src ) || { echo "prefill-merge-r1: /app is not tokenize-offloop-r2's src"; exit 1; }; \
+    python3 /opt/tokenize-offloop-r2/landing_tokenize_offloop.py > /opt/prefill-merge-r1/landing-tok.txt 2>&1 \
+      || { cat /opt/prefill-merge-r1/landing-tok.txt; echo "prefill-merge-r1: tokenize-offloop LANDING FAILED on the stack"; exit 1; }; \
+    cat /opt/prefill-merge-r1/landing-tok.txt; \
+    find "$site" /app /opt/tokenize-offloop-r2 -name __pycache__ -type d -prune -exec rm -rf {} +
+RUN set -e; site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    T=$(mktemp -d); cp -R "$site" "$T/exllamav3"; cp -R /opt/rebase-dev-r3/tests "$T/tests"; \
+    env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') bash "$T/tests/run_cpu_tests.sh" python3 > /opt/prefill-merge-r1/served-suite.txt 2>&1 \
+      || { cat /opt/prefill-merge-r1/served-suite.txt; echo "prefill-merge-r1: SERVED CPU SUITE FAILED on the stacked package"; exit 1; }; \
+    ( cd "$T/tests" && env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') EXL3_TREE="$T" TABBY_BACKENDS=/app/backends/exllamav3 \
+        TABBY_EXTRA=/app/endpoints/OAI/utils/chat_completion.py:/app/common/sampling.py:/app/common/tokenize_offloop.py:/app/endpoints/OAI/router.py \
+        python3 test_tabby_callsites.py ) > /opt/prefill-merge-r1/tabby-callsites-app.txt 2>&1 \
+      || { tail -30 /opt/prefill-merge-r1/tabby-callsites-app.txt; echo "prefill-merge-r1: TabbyAPI call-site audit FAILED on /app"; exit 1; }; \
+    rm -rf "$T"; echo "prefill-merge-r1 served CPU suite: $(grep -a 'ALL SUITES' /opt/prefill-merge-r1/served-suite.txt); call sites: $(tail -1 /opt/prefill-merge-r1/tabby-callsites-app.txt)"
+LABEL local.prefillmerge.round="r1" local.prefillmerge.base="${BASE}" local.prefillmerge.base_id="${BASE_ID}"

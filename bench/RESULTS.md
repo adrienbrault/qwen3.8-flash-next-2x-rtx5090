@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-09-29
 
+- [R803, R809, R810: `tabbyapi:merge-tok-r1` runs the rows after a prompt's last full 256-token page in the last prefill forward (`EXL3_PREFILL_MERGE`) and copies recurrent stashes to the host asynchronously (`EXL3_STASH_ASYNC`): on an 8-slot agent replay, agent-turn prefill −13.3 % (merge) and −16.6 % (both), client time to the first token −10 %, verify steps per decode second +3.1 % [+1.3, +4.9] (4 against 4 boots); the numerics change sits inside a partition null (34 against 29 of 80 prompts diverging within 64 greedy tokens, 0 confident flips, first-token KL median 0.0031 against 0.0037); tool-eval 85.0, GSM8K 0.978, a tier checkpoint restored from disk equal to the warm output over 64 tokens, needles 5/5 at 105,680 and 193,464 prompt tokens; promoted 2026-09-29 22:02 CEST](results/r803-r810-prefill-merge.md)
 - [R805, R806, R808: a streamed 30,818-token prompt arriving during 4-stream decode stalled every stream for a median 52.8 ms, two encodes of the prompt on the event loop; `tabbyapi:tokenize-offloop-r2` encodes each prompt once and, above 12,000 characters, on a worker thread through `encode_batch`: stall 53.1 → 2.8 ms, steady-state time per decode step +0.01 % [−0.25, +0.27], short-prompt time to the first token −2.9 ms [−6.2, +0.3], greedy output identical (5 alternating boot pairs); round r1 without the threshold cost short prompts +41.6 ms; promoted 2026-09-29 19:01 CEST](results/r805-r808-tokenize-offloop.md)
 
 ## 2026-09-28

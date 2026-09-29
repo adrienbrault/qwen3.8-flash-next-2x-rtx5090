@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 41 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 42 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -20,7 +20,9 @@
 #   rebase-dev-r3-loopthink5                  overlays/loop-think-r5 (TabbyAPI: long-period loop rungs, length for a cut tool
 #                                                                      call; r4-to-r5.patch on rebase-dev-r3; the rollback tag)
 #   tokenize-offloop-r2                       overlays/tokenize-offloop-r2 (TabbyAPI + ExLlamaV3 tokenizer: one encode per request,
-#                                                                      long prompts encoded off the event loop)   <- the served tag
+#                                                                      long prompts encoded off the event loop; the rollback tag)
+#   merge-tok-r1                              overlays/prefill-merge-r1 (ExLlamaV3: the sub-page prefill leftover merged into the
+#                                                                      last forward, asynchronous recurrent stash)   <- the served tag
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -33,7 +35,7 @@
 # Network: GitHub (TabbyAPI, the ExLlamaV3 wheel, the ExLlamaV3 source at 5783a93), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
 # Cost (R739, 2026-09-26, bench/results/r739-build-verify.md): 57 min on a Ryzen 7 9800X3D with MAX_JOBS=12 and the CUDA base
 # already pulled, niced beside a serving engine; 59 GB of disk beyond the base; the final image is 48 GB. TabbyAPI's Python
-# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the four
+# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the five
 # layers after it were not part of a verification build.
 #
 # Knobs:
@@ -205,10 +207,18 @@ build "$L5"                            $O/loop-think-r5/Dockerfile.box $O/loop-t
 # tokenize-offloop r2 on loopthink5 takes its base's image ID; the label hashes exl3.patch, app.patch and SHA256SUMS.tests in
 # that order (b961eb83… for the files in the overlay, the served image's value)
 if [ "$DRY_RUN" = 1 ]; then L5ID="<docker image inspect $L5 --format {{.Id}}>"; else L5ID=$("${DOCKER_CMD[@]}" image inspect "$L5" --format '{{.Id}}'); fi
-FINAL=$R:tokenize-offloop-r2
-build "$FINAL"                         $O/tokenize-offloop-r2/Dockerfile.box $O/tokenize-offloop-r2 --build-arg BASE="$L5" \
+TOK=$R:tokenize-offloop-r2
+build "$TOK"                           $O/tokenize-offloop-r2/Dockerfile.box $O/tokenize-offloop-r2 --build-arg BASE="$L5" \
   --build-arg BASE_ID="$L5ID" \
   --label local.tokoffloop.patch_sha256="$(cat $O/tokenize-offloop-r2/exl3.patch $O/tokenize-offloop-r2/app.patch $O/tokenize-offloop-r2/SHA256SUMS.tests | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-64)"
+# prefill-merge r1 on tokenize-offloop-r2 takes its base's image ID; the label is the SHA-256 of fix.patch (a5102079… for the
+# file in the overlay, the served image's value). The served image was built with the two overlays in the other order
+# (overlays/prefill-merge-r1/README.md): the installed files are the same, the image ID is not.
+if [ "$DRY_RUN" = 1 ]; then TOKID="<docker image inspect $TOK --format {{.Id}}>"; else TOKID=$("${DOCKER_CMD[@]}" image inspect "$TOK" --format '{{.Id}}'); fi
+FINAL=$R:merge-tok-r1
+build "$FINAL"                         $O/prefill-merge-r1/Dockerfile.box $O/prefill-merge-r1 --build-arg BASE="$TOK" \
+  --build-arg BASE_ID="$TOKID" \
+  --label local.prefillmerge.patch_sha256="$(sha $O/prefill-merge-r1/fix.patch)"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi
