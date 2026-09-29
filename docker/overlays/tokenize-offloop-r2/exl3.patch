@@ -1,0 +1,84 @@
+diff -ruN a/tokenizer/tokenizer.py b/tokenizer/tokenizer.py
+--- a/tokenizer/tokenizer.py
++++ b/tokenizer/tokenizer.py
+@@ -1,6 +1,6 @@
+ from __future__ import annotations
+ import torch
+-import os, re
++import os, re, threading
+ from tokenizers import Tokenizer as HFTokenizer, models
+ from ..util import synchronized
+ from ..util.file import maybe_read_json
+@@ -13,12 +13,23 @@
+ 
+ os.environ["TOKENIZERS_PARALLELISM"] = "false"
+ 
++# flan tokenize-offloop r1: encode_part_base encodes through HF encode_batch([text])[0].ids (same ids as encode(text);
++# encode_batch runs the Rust side with the GIL released, encode holds it), so a caller thread encoding a long prompt no
++# longer blocks the asyncio thread that runs Generator.iterate(). EXL3_TOKENIZE_OFFLOOP=0 restores encode(); read per call.
++TOKENIZE_OFFLOOP_REVISION = "tokenize-offloop-r1"
++
++def tokenize_offloop_enabled() -> bool:
++    return os.environ.get("EXL3_TOKENIZE_OFFLOOP", "1") != "0"
++
+ class Tokenizer:
+ 
+     def __init__(
+         self,
+         config: Config,
+     ):
++        # flan tokenize-offloop r1: serializes encode_part_base (encode_special_tokens write + encode) across threads.
++        # Its own lock, not util.misc's RLock: that one guards the vocab lists the generator reads while iterating
++        self._encode_lock = threading.Lock()
+         self.config = config
+ 
+         # TODO: Profile/optimize
+@@ -265,24 +276,34 @@
+         # TemplateProcessing step that would prepend BOS regardless of add_bos. The
+         # encode_special_tokens flag instead maps to the backend's split-special-tokens mode,
+         # which encodes special-token strings in the input as plain text when the flag is False
+-        self.tokenizer.encode_special_tokens = not special
+-        if not self.unspecial_piece_to_id:
+-            return self.tokenizer.encode(text, add_special_tokens = False).ids
++        # flan tokenize-offloop r1: the flag is shared state on the HF tokenizer, so the write and the encode that depends
++        # on it run under one lock (another thread could flip it in between). The flag is written only when it changes:
++        # a write waits for an encode in flight on another thread (measured, tokenizers 0.23.2) while holding the GIL
++        with self._encode_lock:
++            want = not special
++            if self.tokenizer.encode_special_tokens != want:
++                self.tokenizer.encode_special_tokens = want
++            if tokenize_offloop_enabled():
++                enc = lambda t: self.tokenizer.encode_batch([t], add_special_tokens = False)[0].ids
++            else:
++                enc = lambda t: self.tokenizer.encode(t, add_special_tokens = False).ids
++            if not self.unspecial_piece_to_id:
++                return enc(text)
+ 
+-        if self.unspecial_delimiters is None:
+-            self.unspecial_delimiters = re.compile(
+-                "(" + "|".join(map(re.escape, self.unspecial_piece_to_id.keys())) + ")")
++            if self.unspecial_delimiters is None:
++                self.unspecial_delimiters = re.compile(
++                    "(" + "|".join(map(re.escape, self.unspecial_piece_to_id.keys())) + ")")
+ 
+-        split = self.unspecial_delimiters.split(text)
+-        encoded = []
++            split = self.unspecial_delimiters.split(text)
++            encoded = []
+ 
+-        i = 0
+-        while i < len(split):
+-            if split[i] != "": encoded += self.tokenizer.encode(split[i], add_special_tokens = False).ids
+-            if i + 1 < len(split): encoded += [self.unspecial_piece_to_id[split[i + 1]]]
+-            i += 2
++            i = 0
++            while i < len(split):
++                if split[i] != "": encoded += enc(split[i])
++                if i + 1 < len(split): encoded += [self.unspecial_piece_to_id[split[i + 1]]]
++                i += 2
+ 
+-        return encoded
++            return encoded
+ 
+     def encode_part(self, text: str, special: bool) -> list[int]:
+         # Special tokens declared in tokenizer_config.json but absent from tokenizer.json (the

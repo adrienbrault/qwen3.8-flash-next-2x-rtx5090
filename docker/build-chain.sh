@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 40 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 41 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -16,9 +16,11 @@
 #   stack-r3-rows32-tokcount-loopthink3       overlays/loop-think-r3 (TabbyAPI: a reasoning-phase loop ends the reasoning; the rollback tag)
 #   stack-r3-rows32-tokcount-loopthink4       overlays/loop-think-r4 (loop-think-r3 plus a long-period detector), on …-tokcount
 #   rebase-dev-r3                             overlays/rebase-dev-r3 (the engine replaced by upstream ExLlamaV3 dev 5783a93 +
-#                                                                      ported-vs-dev.patch, native rebuild; the rollback tag)
+#                                                                      ported-vs-dev.patch, native rebuild)
 #   rebase-dev-r3-loopthink5                  overlays/loop-think-r5 (TabbyAPI: long-period loop rungs, length for a cut tool
-#                                                                      call; r4-to-r5.patch on rebase-dev-r3)   <- the served tag
+#                                                                      call; r4-to-r5.patch on rebase-dev-r3; the rollback tag)
+#   tokenize-offloop-r2                       overlays/tokenize-offloop-r2 (TabbyAPI + ExLlamaV3 tokenizer: one encode per request,
+#                                                                      long prompts encoded off the event loop)   <- the served tag
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -31,7 +33,7 @@
 # Network: GitHub (TabbyAPI, the ExLlamaV3 wheel, the ExLlamaV3 source at 5783a93), PyPI and the PyTorch index (TabbyAPI's cu12 extra), Docker Hub (the CUDA base).
 # Cost (R739, 2026-09-26, bench/results/r739-build-verify.md): 57 min on a Ryzen 7 9800X3D with MAX_JOBS=12 and the CUDA base
 # already pulled, niced beside a serving engine; 59 GB of disk beyond the base; the final image is 48 GB. TabbyAPI's Python
-# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the three
+# dependencies are pinned by docker/constraints-stack-r3-rows32.txt (R745). That measurement ended at loopthink3; the four
 # layers after it were not part of a verification build.
 #
 # Knobs:
@@ -196,10 +198,17 @@ build "$RB"                            $O/rebase-dev-r3/Dockerfile.box $O/rebase
   ${JOBS[@]+"${JOBS[@]}"}
 # loop-think r5 on rebase-dev-r3 takes the r4-to-r5.patch route (the base carries /opt/loopthink-r4); the label hashes both patches
 if [ "$DRY_RUN" = 1 ]; then RBID="<docker image inspect $RB --format {{.Id}}>"; else RBID=$("${DOCKER_CMD[@]}" image inspect "$RB" --format '{{.Id}}'); fi
-FINAL=$RB-loopthink5
-build "$FINAL"                         $O/loop-think-r5/Dockerfile.box $O/loop-think-r5 --build-arg BASE="$RB" \
+L5=$RB-loopthink5
+build "$L5"                            $O/loop-think-r5/Dockerfile.box $O/loop-think-r5 --build-arg BASE="$RB" \
   --label local.loopthink.base_id="$RBID" \
   --label local.loopthink.patch_sha256="$(cat $O/loop-think-r5/fix.patch $O/loop-think-r5/r4-to-r5.patch | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-64)"
+# tokenize-offloop r2 on loopthink5 takes its base's image ID; the label hashes exl3.patch, app.patch and SHA256SUMS.tests in
+# that order (b961eb83… for the files in the overlay, the served image's value)
+if [ "$DRY_RUN" = 1 ]; then L5ID="<docker image inspect $L5 --format {{.Id}}>"; else L5ID=$("${DOCKER_CMD[@]}" image inspect "$L5" --format '{{.Id}}'); fi
+FINAL=$R:tokenize-offloop-r2
+build "$FINAL"                         $O/tokenize-offloop-r2/Dockerfile.box $O/tokenize-offloop-r2 --build-arg BASE="$L5" \
+  --build-arg BASE_ID="$L5ID" \
+  --label local.tokoffloop.patch_sha256="$(cat $O/tokenize-offloop-r2/exl3.patch $O/tokenize-offloop-r2/app.patch $O/tokenize-offloop-r2/SHA256SUMS.tests | { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; } | cut -c1-64)"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

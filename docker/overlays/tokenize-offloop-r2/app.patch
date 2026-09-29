@@ -1,0 +1,272 @@
+diff -ruN a/backends/exllamav3/model.py b/backends/exllamav3/model.py
+--- a/backends/exllamav3/model.py
++++ b/backends/exllamav3/model.py
+@@ -3,6 +3,7 @@
+ import pathlib
+ import re
+ import time
++import weakref
+ from asyncio import CancelledError
+ 
+ import torch
+@@ -51,6 +52,7 @@
+ from common.status_display import status_display
+ from common.tabby_config import config
+ from common.templating import PromptTemplate, find_prompt_template
++from common.tokenize_offloop import encode_once_enabled, run_tokenize
+ from common.transformers_utils import HFModel
+ from common.utils import unwrap
+ from endpoints.OAI.types.chat_completion import ChatCompletionLogprob, ChatCompletionLogprobLeaf
+@@ -984,13 +986,21 @@
+         params: BaseSamplerRequest,
+         mm_embeddings: Optional[MultimodalEmbeddingWrapper] = None,
+     ):
+-        context_len = len(
+-            self.encode_tokens(
+-                prompt,
+-                add_bos_token=unwrap(params.add_bos_token, self.hf_model.add_bos_token()),
+-                embeddings=mm_embeddings,
++        # flan tokenize-offloop r2 (TABBY_ENCODE_ONCE): encode exactly as generate_gen does and
++        # keep the ids on the request, so the prompt is encoded once per request, not twice
++        add_bos = unwrap(params.add_bos_token, self.hf_model.add_bos_token())
++        once = encode_once_enabled() and not (mm_embeddings and mm_embeddings.content)
++        if once:
++            ids = self.tokenizer.encode(prompt, add_bos=add_bos, encode_special_tokens=True, embeddings=[])
++            context_len = ids.shape[-1]
++        else:
++            context_len = len(
++                self.encode_tokens(
++                    prompt,
++                    add_bos_token=add_bos,
++                    embeddings=mm_embeddings,
++                )
+             )
+-        )
+         max_tokens = unwrap(params.max_tokens, 0)
+         if max_tokens <= 0:
+             max_tokens = self.max_seq_len - context_len - 1
+@@ -1009,7 +1019,35 @@
+             self.job_max_rq_tokens(max_tokens),
+             allocation_boundary,
+         )
++        if once:
++            # The ids depend on the tokenizer too: keep a weak reference to it beside them (the copy
++            # module treats weakrefs as atomic, so per-choice deep copies do not copy the tokenizer)
++            store = getattr(params, "_prompt_ids", None)
++            if store is None:
++                store = params._prompt_ids = {}
++            store[(prompt, add_bos)] = (weakref.ref(self.tokenizer), ids)
+ 
++    async def _encode_prompt(self, prompt: str, params, add_bos: bool, mm_embeddings_content):
++        """
++        flan tokenize-offloop r2: the prompt's ids for generate_gen. The ids the context-length
++        check stored on this request when the text, add_bos and tokenizer match
++        (TABBY_ENCODE_ONCE), else a fresh encode: on the tokenize worker thread for a long
++        prompt (EXL3_TOKENIZE_OFFLOOP, EXL3_TOKENIZE_OFFLOOP_MIN_CHARS), inline for a short one.
++        """
++
++        if encode_once_enabled() and not mm_embeddings_content:
++            entry = (getattr(params, "_prompt_ids", None) or {}).get((prompt, add_bos))
++            if entry is not None and entry[0]() is self.tokenizer:
++                return entry[1].clone()
++        return await run_tokenize(
++            len(prompt),
++            self.tokenizer.encode,
++            prompt,
++            add_bos=add_bos,
++            encode_special_tokens=True,
++            embeddings=mm_embeddings_content,
++        )
++
+     async def generate(
+         self,
+         request_id: str,
+@@ -1394,13 +1432,10 @@
+         stop_conditions += self.config.eos_token_id_list
+         stop_conditions = list(set(stop_conditions))
+ 
++        # flan tokenize-offloop r2: the ids the context-length check already encoded, else an
++        # encode (a long prompt's on the tokenize worker thread, while the event loop keeps iterating)
+         input_ids = [
+-            self.tokenizer.encode(
+-                prompt,
+-                add_bos=add_bos_token,
+-                encode_special_tokens=True,
+-                embeddings=mm_embeddings_content,
+-            )
++            await self._encode_prompt(prompt, params, add_bos_token, mm_embeddings_content)
+             for prompt in prompts
+         ]
+ 
+diff -ruN a/common/sampling.py b/common/sampling.py
+--- a/common/sampling.py
++++ b/common/sampling.py
+@@ -44,6 +44,12 @@
+     # reasoning phase itself (loop-think, flan R782/R783): (window, min_reps)
+     _loop_backstop: Optional[tuple] = PrivateAttr(default=None)
+ 
++    # Prompt ids encoded by the pre-stream context-length check: (prompt, add_bos) ->
++    # (weakref to the tokenizer, ids tensor), so generate_gen reuses them instead of encoding
++    # the prompt a second time (flan tokenize-offloop r2, TABBY_ENCODE_ONCE).
++    # model_copy(deep=True) copies each tensor with one memcpy and keeps the weakref
++    _prompt_ids: Optional[dict] = PrivateAttr(default=None)
++
+     max_tokens: Optional[int] = Field(
+         default_factory=lambda: get_default_sampler_value("max_tokens"),
+         validation_alias=AliasChoices("max_tokens", "max_completion_tokens", "max_length"),
+diff -ruN a/common/tokenize_offloop.py b/common/tokenize_offloop.py
+--- a/common/tokenize_offloop.py	1970-01-01 00:00:00.000000000 +0000
++++ b/common/tokenize_offloop.py
+@@ -0,0 +1,121 @@
++"""flan tokenize-offloop r2: encode the prompt once per request; move only LONG encodes off the asyncio event loop.
++
++exllamav3's AsyncGenerator runs Generator.iterate() (the decode step of every running stream) as a task on the same
++event loop that runs the request handlers. The served streamed path encoded each prompt twice on that loop: once in
++the pre-stream context-length check (router -> common.model.check_context_length -> validate_context_length) and
++again in generate_gen. For a 30k-token prompt that is two ~25 ms sections in which no stream decodes (flan R805,
++REVIEW-R804-R805 sec. 1). r1 removed both (R806: class (i) stall 53.5 -> 3.5 ms), but every executor hop costs the
++arriving request ~30-40 ms of TTFT while other streams decode: the loop picks the worker's result up only between two
++synchronous iterate() calls, and the worker needs the GIL that iterate() mostly holds (REVIEW-R806 sec. 5: class (iii)
++~85-token prompts +41.6 ms TTFT). r2 hops only when the inline encode would cost more than the hop saves the others.
++
++Knobs, all read per call:
++  TABBY_ENCODE_ONCE=0      (e1 off) generate_gen encodes the prompt again after the check (the served path). ON
++                           (default): the check keeps the ids it encoded on the request (BaseSamplerRequest._prompt_ids,
++                           keyed by (prompt, add_bos); text-only prompts) and generate_gen reuses them, at any length.
++  EXL3_TOKENIZE_OFFLOOP=0  (e2 off) run_tokenize always calls fn inline on the loop (the served path). ON (default): fn
++                           runs on a dedicated one-thread executor when the text is long (below), inline otherwise;
++                           exllamav3's Tokenizer (same overlay) encodes through encode_batch, which releases the GIL,
++                           so the loop keeps iterating while the worker encodes.
++  EXL3_TOKENIZE_OFFLOOP_MIN_CHARS (default 12000) the hop threshold: fn goes to the worker when the prompt text has MORE
++                           than this many characters. 12,000 chars ~ 4,200 tokens on this model's rendered prompts (2.87
++                           chars/token measured, R806 TOKCHECK: 60,301 chars = 20,992 tokens) ~ 3.8 ms of inline encode
++                           at the ~0.9 us/token measured in the served container: below it the inline encode stalls the
++                           other streams less than one decode step (~17 ms), while a hop would cost the request 1-2 steps.
++                           0 = hop at every length (r1's behaviour). Anything but plain ASCII digits (a sign, '_',
++                           whitespace, a decimal point) = the default. The threshold counts characters, not tokens:
++                           CJK runs ~1 char/token (12,000 chars ~ 12k tokens ~ 11 ms inline) and byte-fallback-heavy
++                           text can run several tokens per char; both are rare on this traffic.
++  Busy worker: a short text also goes to the worker while an earlier hop is still queued or running there. Inline it
++  would wait on the exllamav3 encode lock that the worker holds, i.e. block the loop for the rest of the long encode;
++  queued behind it on the worker it costs only its own request's TTFT.
++
++One worker thread: calls run one at a time, in submission order, off the default executor that other blocking helpers
++share. The context is copied as asyncio.to_thread does. Results and exceptions are those of fn; a cancelled await
++leaves the running call to finish in the worker and drops its result.
++"""
++
++import asyncio
++import contextvars
++import functools
++import os
++import threading
++from concurrent.futures import ThreadPoolExecutor
++
++REVISION = "tokenize-offloop-r2"
++DEFAULT_MIN_CHARS = 12000
++
++_executor = None
++_pending_lock = threading.Lock()
++_pending = 0           # hops submitted to the worker and not finished there (run, raised or cancelled before running)
++hops = 0               # executor submissions since import (tests and diagnostics; loop thread only)
++
++
++def offloop_enabled() -> bool:
++    return os.environ.get("EXL3_TOKENIZE_OFFLOOP", "1") != "0"
++
++
++def offload_min_chars() -> int:
++    # plain ASCII digits only: '', '-5', '1.5', 'abc', '1_000', ' 12000 ' all mean the default
++    v = os.environ.get("EXL3_TOKENIZE_OFFLOOP_MIN_CHARS", "")
++    if not (v.isascii() and v.isdigit()):
++        return DEFAULT_MIN_CHARS
++    return int(v)
++
++
++def prompt_chars(prompts) -> int:
++    """Characters of a prompt (str) or of every prompt of a list prompt (/v1/completions)."""
++    if isinstance(prompts, str):
++        return len(prompts)
++    try:
++        return sum(len(p) for p in prompts if isinstance(p, str))
++    except TypeError:
++        return 0
++
++
++def should_offload(nchars: int) -> bool:
++    if not offloop_enabled():
++        return False
++    return nchars > offload_min_chars() or _pending > 0
++
++
++def _done(_f):
++    # runs in the worker when the call ends, or in the cancelling thread when a queued call is cancelled
++    global _pending
++    with _pending_lock:
++        _pending -= 1
++
++
++def _get_executor() -> ThreadPoolExecutor:
++    # Created on first use from the loop thread (no race: one event loop thread calls this)
++    global _executor
++    if _executor is None:
++        _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="tokenize")
++    return _executor
++
++
++async def run_tokenize(nchars, fn, /, *args, **kwargs):
++    """fn(*args, **kwargs) for a prompt of nchars characters: on the tokenize worker when should_offload(nchars), else
++    inline on the loop thread (no hop: the result is ready without waiting for an iterate() to end)."""
++    global _pending, hops
++    if not should_offload(nchars):
++        return fn(*args, **kwargs)
++    ctx = contextvars.copy_context()
++    with _pending_lock:
++        _pending += 1
++    hops += 1
++    # what loop.run_in_executor does (submit + wrap_future: a cancelled await cancels a still-queued call), plus the
++    # completion callback that keeps _pending exact
++    try:
++        cf = _get_executor().submit(functools.partial(ctx.run, fn, *args, **kwargs))
++    except BaseException:
++        _done(None)
++        raise
++    cf.add_done_callback(_done)
++    return await asyncio.wrap_future(cf)
++
++
++def encode_once_enabled() -> bool:
++    # TABBY_ENCODE_ONCE=0: generate_gen encodes the prompt again after the context-length check
++    # (the served path); read per call
++    return os.environ.get("TABBY_ENCODE_ONCE", "1") != "0"
+diff -ruN a/endpoints/OAI/router.py b/endpoints/OAI/router.py
+--- a/endpoints/OAI/router.py
++++ b/endpoints/OAI/router.py
+@@ -19,6 +19,7 @@
+     run_with_request_disconnect,
+ )
+ from common.tabby_config import config
++from common.tokenize_offloop import prompt_chars, run_tokenize
+ from common.logger import xlogger
+ from endpoints.OAI.types.completion import CompletionRequest, CompletionResponse
+ from endpoints.OAI.types.chat_completion import (
+@@ -91,7 +92,8 @@
+         await disconnect_handler.poll()
+ 
+         if data.stream and not config.developer.disable_request_streaming:
+-            model.check_context_length(prompt, data)
++            # flan tokenize-offloop r2: the check encodes the prompt; a long one off the event loop
++            await run_tokenize(prompt_chars(prompt), model.check_context_length, prompt, data)
+             return EventSourceResponse(
+                 stream_generate_completion(prompt, data, request, model_path, disconnect_handler),
+                 ping=get_sse_ping_interval(),
+@@ -152,7 +154,8 @@
+         await disconnect_handler.poll()
+ 
+         if data.stream and not config.developer.disable_request_streaming:
+-            model.check_context_length(prompt, data, mm_embeddings)
++            # flan tokenize-offloop r2: the check encodes the prompt; a long one off the event loop
++            await run_tokenize(prompt_chars(prompt), model.check_context_length, prompt, data, mm_embeddings)
+             return EventSourceResponse(
+                 stream_generate_chat_completion(
+                     prompt, mm_embeddings, data, request, model_path, disconnect_handler

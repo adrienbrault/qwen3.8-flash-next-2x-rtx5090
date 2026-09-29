@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-29
+
+- [R805, R806, R808: a streamed 30,818-token prompt arriving during 4-stream decode stalled every stream for a median 52.8 ms, two encodes of the prompt on the event loop; `tabbyapi:tokenize-offloop-r2` encodes each prompt once and, above 12,000 characters, on a worker thread through `encode_batch`: stall 53.1 → 2.8 ms, steady-state time per decode step +0.01 % [−0.25, +0.27], short-prompt time to the first token −2.9 ms [−6.2, +0.3], greedy output identical (5 alternating boot pairs); round r1 without the threshold cost short prompts +41.6 ms; promoted 2026-09-29 19:01 CEST](results/r805-r808-tokenize-offloop.md)
+
 ## 2026-09-28
 
 - [R792: `tabbyapi:rebase-dev-r3-loopthink5` (TabbyAPI loop-think r5) promoted, every gate passed and greedy output byte-identical to the reference; the (6000, 2000) rung fired live on a prefilled 1,199-token loop at 6,003 generated tokens at temperature 0.6 (one trajectory); at the served fallback 1.0 the same prefix did not continue the loop, 0 of 8; a tool call cut by `max_tokens` finishes as `length` with 0 calls, streamed and not; no speed, tool-eval or GSM8K effect claimed](results/r792-promote-loopthink5.md)

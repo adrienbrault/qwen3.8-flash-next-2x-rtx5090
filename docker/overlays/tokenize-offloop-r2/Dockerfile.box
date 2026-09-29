@@ -1,0 +1,70 @@
+# tokenize-offloop r2 (R808, bench/results/r805-r808-tokenize-offloop.md): each prompt is encoded once per request, and a
+# prompt longer than 12,000 characters is encoded on a one-thread worker off the asyncio event loop; a shorter one is
+# encoded inline, with no executor hop. Applies to tabbyapi:rebase-dev-r3-loopthink5 directly. Python only, no extension
+# rebuild. Two patches (exl3.patch is round r1's, unchanged):
+#   exl3.patch  -> the installed exllamav3 package (tokenizer/tokenizer.py: encode_batch path + per-instance encode lock)
+#   app.patch   -> /app (backends/exllamav3/model.py, endpoints/OAI/router.py, common/sampling.py, new
+#                  common/tokenize_offloop.py)
+# Knobs (both default ON, read per call): TABBY_ENCODE_ONCE=0 re-encodes in generate_gen (e1 off),
+# EXL3_TOKENIZE_OFFLOOP=0 encodes inline on the loop with HF encode() (e2 off). Both =0 = the base image's code paths.
+# EXL3_TOKENIZE_OFFLOOP_MIN_CHARS (default 12000): the worker hop only for prompts longer than this (0 = r1: always).
+#
+#   B=tabbyapi:rebase-dev-r3-loopthink5
+#   docker build -f Dockerfile.box --build-arg BASE=$B --build-arg BASE_ID=$(docker image inspect $B --format '{{.Id}}') \
+#     --label local.tokoffloop.patch_sha256=$(cat exl3.patch app.patch SHA256SUMS.tests | sha256sum | cut -c1-64) \
+#     -t tabbyapi:tokenize-offloop-r2 .
+#
+# Build context = this directory. Steps: the base must be rebase-dev r3 + loop-think r5; the installed files each patch
+# touches must hash to SHA256SUMS.*.base (stricter than --fuzz=0) and the new file must be absent; dry-run then apply
+# with --fuzz=0 --forward, no .rej/.orig, the result must hash to SHA256SUMS.*.src, __pycache__ cleared; the landing
+# check imports the REAL packages (tests/ and the landing first hash-checked against SHA256SUMS.tests) with EXL3_* / TABBY_ENCODE_ONCE stripped and prints `tokenize-offloop-r2 landed`;
+# the offline tests (tests/: identity, lock, gil, event loop, hops; synthetic tokenizer: there is no model at build time) run against the installed package
+# and /app; the served rebase-dev r3 CPU suite runs against a copy of the patched package and its TabbyAPI call-site
+# audit against the patched /app. No heredocs (legacy builder). CPU only, ~1 min.
+ARG BASE=tabbyapi:rebase-dev-r3-loopthink5
+FROM ${BASE}
+ARG BASE
+ARG BASE_ID=unset
+COPY exl3.patch app.patch SHA256SUMS.exl3.base SHA256SUMS.exl3.src SHA256SUMS.app.base SHA256SUMS.app.src \
+     SHA256SUMS.tests landing_tokenize_offloop.py /opt/tokenize-offloop-r2/
+COPY base/exllamav3/tokenizer/tokenizer.py /opt/tokenize-offloop-r2/base/exllamav3/tokenizer/tokenizer.py
+COPY tests /opt/tokenize-offloop-r2/tests
+RUN set -e; ( cd /opt/tokenize-offloop-r2 && sha256sum -c SHA256SUMS.tests ) || { echo "tokenize-offloop-r2: tests/landing differ from SHA256SUMS.tests"; exit 1; }; \
+    site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    echo "tokenize-offloop-r2: base ${BASE} (${BASE_ID}), exllamav3 at $site"; \
+    test -f /opt/loopthink-r5/landing_loopthink.py || { echo "tokenize-offloop-r2: base is not loop-think r5"; exit 1; }; \
+    test -f /opt/rebase-dev-r3/landing_r3.py || { echo "tokenize-offloop-r2: base is not rebase-dev r3"; exit 1; }; \
+    ( cd "$site" && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.exl3.base ) || { echo "tokenize-offloop-r2: installed exllamav3 is not the rebase-dev r3 base"; exit 1; }; \
+    ( cd /app && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.app.base ) || { echo "tokenize-offloop-r2: /app is not the served loop-think r5 base"; exit 1; }; \
+    test ! -e /app/common/tokenize_offloop.py || { echo "tokenize-offloop-r2: already applied"; exit 1; }; \
+    patch -p1 --fuzz=0 --forward --dry-run -d "$site" < /opt/tokenize-offloop-r2/exl3.patch; \
+    patch -p1 --fuzz=0 --forward --dry-run -d /app < /opt/tokenize-offloop-r2/app.patch; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d "$site" < /opt/tokenize-offloop-r2/exl3.patch; \
+    patch -p1 --fuzz=0 --forward --no-backup-if-mismatch -d /app < /opt/tokenize-offloop-r2/app.patch; \
+    test -z "$(find "$site" /app -name '*.rej' -o -name '*.orig')" || { echo "tokenize-offloop-r2: rejects"; exit 1; }; \
+    ( cd "$site" && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.exl3.src ) || { echo "tokenize-offloop-r2: patched package differs from src/"; exit 1; }; \
+    ( cd /app && sha256sum -c /opt/tokenize-offloop-r2/SHA256SUMS.app.src ) || { echo "tokenize-offloop-r2: patched /app differs from src/"; exit 1; }; \
+    find "$site" /app -name __pycache__ -type d -prune -exec rm -rf {} +
+# no `| tee` (no pipefail in /bin/sh): a failed step must fail the build
+RUN python3 /opt/tokenize-offloop-r2/landing_tokenize_offloop.py > /opt/tokenize-offloop-r2/landing.txt 2>&1 \
+      || { cat /opt/tokenize-offloop-r2/landing.txt; echo "tokenize-offloop-r2: LANDING FAILED"; exit 1; }; cat /opt/tokenize-offloop-r2/landing.txt; \
+    find / -xdev -name __pycache__ -type d \( -path '/app/*' -o -path '*/exllamav3/*' -o -path '/opt/tokenize-offloop-r2/*' \) -prune -exec rm -rf {} + 2>/dev/null || true
+RUN set -e; site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    for t in test_identity.py test_lock.py test_gil.py test_event_loop.py test_hops.py; do \
+      env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') -u TABBY_ENCODE_ONCE TOK_EXL3="$site" TOK_APP=/app \
+        TOK_EXL3_BASE=/opt/tokenize-offloop-r2/base/exllamav3/tokenizer/tokenizer.py \
+        python3 /opt/tokenize-offloop-r2/tests/$t > /opt/tokenize-offloop-r2/$t.txt 2>&1 \
+        || { cat /opt/tokenize-offloop-r2/$t.txt; echo "tokenize-offloop-r2: OFFLINE TEST FAILED: $t"; exit 1; }; \
+      echo "tokenize-offloop-r2 offline $t: $(tail -1 /opt/tokenize-offloop-r2/$t.txt)"; done; \
+    grep -h 'max loop gap\|concurrent Python thread\|lock O\|hops' /opt/tokenize-offloop-r2/test_gil.py.txt /opt/tokenize-offloop-r2/test_event_loop.py.txt /opt/tokenize-offloop-r2/test_lock.py.txt /opt/tokenize-offloop-r2/test_hops.py.txt; \
+    find /opt/tokenize-offloop-r2 /app -name __pycache__ -type d -prune -exec rm -rf {} +
+RUN set -e; site=$(python3 -c "import importlib.util as u,os;print(os.path.dirname(u.find_spec('exllamav3').origin))"); \
+    T=$(mktemp -d); cp -R "$site" "$T/exllamav3"; cp -R /opt/rebase-dev-r3/tests "$T/tests"; \
+    env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') bash "$T/tests/run_cpu_tests.sh" python3 > /opt/tokenize-offloop-r2/served-suite.txt 2>&1 \
+      || { cat /opt/tokenize-offloop-r2/served-suite.txt; echo "tokenize-offloop-r2: SERVED CPU SUITE FAILED on the patched package"; exit 1; }; \
+    ( cd "$T/tests" && env $(env | sed -n 's/^\(EXL3_[A-Za-z0-9_]*\)=.*/-u \1/p') EXL3_TREE="$T" TABBY_BACKENDS=/app/backends/exllamav3 \
+        TABBY_EXTRA=/app/endpoints/OAI/utils/chat_completion.py:/app/common/sampling.py:/app/common/tokenize_offloop.py:/app/endpoints/OAI/router.py \
+        python3 test_tabby_callsites.py ) > /opt/tokenize-offloop-r2/tabby-callsites-app.txt 2>&1 \
+      || { tail -30 /opt/tokenize-offloop-r2/tabby-callsites-app.txt; echo "tokenize-offloop-r2: TabbyAPI call-site audit FAILED on /app"; exit 1; }; \
+    rm -rf "$T"; echo "tokenize-offloop-r2 served CPU suite: $(grep -a 'ALL SUITES' /opt/tokenize-offloop-r2/served-suite.txt); call sites: $(tail -1 /opt/tokenize-offloop-r2/tabby-callsites-app.txt)"
+LABEL local.tokoffloop.round="r2" local.tokoffloop.base="${BASE}" local.tokoffloop.base_id="${BASE_ID}"
