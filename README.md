@@ -6,7 +6,7 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on the served image `tabbyapi:merge-tok-r1` with the served launcher (41 engine keys, 901,120-token pool, memory clock offset +4500), measured 2026-09-30 01:17 to 01:34 UTC ([R813][r811], results `2026-09-30-r813-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on the served image `tabbyapi:merge-tok-r1` with the served configuration (41 engine keys, 901,120-token pool, memory clock offset +4500), measured 2026-09-30 01:17 to 01:34 UTC ([R813][r811], results `2026-09-30-r813-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured). These boots ran without the launcher's boot warm-up, so the 1- and 2-stream points of both lines in the figure below are in the slower decode state a process starts in; the served process runs in the faster state from boot, where the time per decode step is ×0.966 to ×0.968 at 1 stream and ×0.972 to ×0.977 at 2 and unchanged at 4 and 8 ([R818][r815], 2026-09-30, results `2026-09-30-r818-warmfast-gate`).
 
 ![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
 
@@ -26,7 +26,7 @@ Cold prefill keeps its rate up to the top of the window: 199,425 tokens in 16.5 
 | --- | --- | --- |
 | context window | 262,144 tokens | checkpoint |
 | page pool | 901,120 tokens, 15,236 B per token: 1.52 GB per 100k, 13.7 GB total | [R784][r784], [R579][r579], [R717c][r717] |
-| free VRAM after boot | 1,181 / 1,759 MiB | [R809p][r809] |
+| free VRAM after boot and the boot warm-up | 1,099 / 1,667 MiB | [R818p][r815] |
 | decode, agent-shaped edit, greedy (2026-09-19) | 1 stream: 233.0 t/s decode rate per request (median), 223.7 t/s end-to-end over the run; 4 streams, first wave: 502.2 t/s end-to-end burst aggregate, 143.1 t/s per stream end-to-end (time to first token included) | [R525][r525] |
 | MTP drafts accepted per verify | code 1.57, prose 1.55 of 3 | [R572][r572] |
 | 8-agent SWE-bench replay, 366 calls | wall 408.6 s; latency p50 3.76 s; queue wait p50 0.12 s | [R558][r558], [R557][r557] |
@@ -54,6 +54,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 - 8 slots, 901,120-token page pool, 8-bit KV.
 - MTP draft depth 3 up to 4 jobs and 2 at 5 to 8 jobs (`[[4, 3], [8, 2]]`); the draft cache is page-indexed over the whole pool on the second GPU.
 - Layer split `[30, 30]`, with the MTP draft component on the second GPU ([R694][r694]).
+- Boot warm-up since 2026-09-30 13:52 CEST ([R818p][r815]): after boot the launcher sends three raw completions of 20, 29 and 11 prompt tokens, which run the routed-MoE decode path for up to 32 rows at new row counts and put the process in the faster decode state at 1 and 2 streams; output unchanged. `FASTWARM=0` skips it.
 
 ## What the stack is
 
@@ -438,3 +439,4 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r716b]: bench/results/r716b-stack-r3.md
 [r717]: bench/results/r717-rows32.md
 [r586]: bench/results/r586-swebench-500.md
+[r815]: bench/results/r815-r820-fast-state.md
