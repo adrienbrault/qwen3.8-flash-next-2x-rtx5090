@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-09-30
+
+- [R811, R811b, R812b, R813: the served `tabbyapi:merge-tok-r1` re-measured with the README's instruments. Decode curve: 104.5 / 106.7 t/s per stream and 838 / 857 decode aggregate at 8 streams, 255.9 / 278.1 at 1 stream (code / prose), time per decode step 0.979 to 0.999× R787a's on the base image. `vllm bench serve` against the previous image in one session: output tok/s 0.987 to 1.086×, mean TTFT 7.4 to 15.4 % lower; the ShareGPT 4-stream cell is the mean of four boots, 433.0 tok/s (419.4 to 438.6), after R811 read a 4.22 % A/B spread there. At 1 and 2 streams the previous image's decode step falls 2.1 to 3.6 % at one ~786-token request and stays lower, and with the prefill merge on it does not fall (R812b: the merge key, not the asynchronous stash or the image); mechanism not known](results/r811-r813-std-bench-merge.md)
+
 ## 2026-09-29
 
 - [R803, R809, R810: `tabbyapi:merge-tok-r1` runs the rows after a prompt's last full 256-token page in the last prefill forward (`EXL3_PREFILL_MERGE`) and copies recurrent stashes to the host asynchronously (`EXL3_STASH_ASYNC`): on an 8-slot agent replay, agent-turn prefill −13.3 % (merge) and −16.6 % (both), client time to the first token −10 %, verify steps per decode second +3.1 % [+1.3, +4.9] (4 against 4 boots); the numerics change sits inside a partition null (34 against 29 of 80 prompts diverging within 64 greedy tokens, 0 confident flips, first-token KL median 0.0031 against 0.0037); tool-eval 85.0, GSM8K 0.978, a tier checkpoint restored from disk equal to the warm output over 64 tokens, needles 5/5 at 105,680 and 193,464 prompt tokens; promoted 2026-09-29 22:02 CEST](results/r803-r810-prefill-merge.md)

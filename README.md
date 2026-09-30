@@ -6,21 +6,21 @@ Every number here was measured on one machine on the date given, and each links 
 
 ## Numbers
 
-Decode on `tabbyapi:rebase-dev-r3`, the base of the served image, whose later layers change prompt encoding and prefill but not the decode kernels ([R809p][r809]; memory clock offset +4500), measured 2026-09-27 15:06 to 15:23 UTC ([R787a][r787], results `2026-09-27-r787a-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
+Decode on the served image `tabbyapi:merge-tok-r1` with the served launcher (41 engine keys, 901,120-token pool, memory clock offset +4500), measured 2026-09-30 01:17 to 01:34 UTC ([R813][r811], results `2026-09-30-r813-decode-curve`): `fn_bench --distinct`, so each stream has its own prompt; greedy, 1,024 forced tokens per request, short prompts, all streams starting together, two boots. Rates are tokens per second after each request's first token; the aggregate is the sum over the streams running together. Method: [How the numbers are measured](#how-the-numbers-are-measured).
 
 ![Decode alone against the standard benchmark, sum over streams and per stream](docs/img/std-bench.svg)
 
-Solid lines: decode alone, the curve described above. Dashed lines: `vllm bench serve` on ShareGPT V3 and Spec-Bench ([R787d][r787], 2026-09-27, results `2026-09-27-r787d-std-bench`), where requests arrive as others finish, so their prefill interleaves with the running streams' decode; its aggregate is wall-clock output tok/s and its per-stream rate is 1000 / TPOT p50 ([Standard benchmark](#standard-benchmark-vllm-bench-serve)).
+Solid lines: decode alone, the curve described above. Dashed lines: `vllm bench serve` on ShareGPT V3 and Spec-Bench on the same image ([R811][r811], 2026-09-29, results `2026-09-29-r811-std-bench-ab`; the ShareGPT point at 4 streams is the mean of four boots with R811b, 2026-09-30, results `2026-09-29-r811b-sharegpt-c4`), where requests arrive as others finish, so their prefill interleaves with the running streams' decode; its aggregate is wall-clock output tok/s and its per-stream rate is 1000 / TPOT p50 ([Standard benchmark](#standard-benchmark-vllm-bench-serve)).
 
-- The aggregate rises at every step from 1 to 8 streams, from 5 to 6 streams as well (code 684 to 715 t/s, prose 687 to 737); the draft policy keeps two draft tokens from 5 to 8 streams ([Conditions](#conditions)).
-- The rates depend on how often the MTP draft is accepted, which depends on the text being generated: on these ~110-token prompts a decode step yields 2.28 to 2.37 tokens at 5 to 8 streams (median per request, [R787a][r787]).
-- Time to the first token is 0.13 s at 1 stream and 0.69 to 0.73 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
+- The aggregate rises at every step from 1 to 8 streams, from 5 to 6 streams as well (code 694 to 735 t/s, prose 693 to 734); the draft policy keeps two draft tokens from 5 to 8 streams ([Conditions](#conditions)).
+- The rates depend on how often the MTP draft is accepted, which depends on the text being generated: on these ~110-token prompts a decode step yields 2.28 to 2.35 tokens at 5 to 8 streams (median per request, [R813][r811]).
+- Time to the first token is 0.13 s at 1 stream and 0.69 to 0.79 s at 8 streams. The numbers behind the figure are in [How the numbers are measured](#how-the-numbers-are-measured).
 - These are batches on an otherwise idle server; agent traffic, with prompts arriving while others decode, is slower per stream ([Conditions](#conditions)).
 - vLLM's serving benchmark on ShareGPT V3 and Spec-Bench, a wall-clock measure that includes prefill and request turnover, is in [Standard benchmark](#standard-benchmark-vllm-bench-serve).
 
 ![Cold prefill rate against prompt length, and decode rate at depth labelled with tokens per decode step](docs/img/prefill.svg)
 
-Cold prefill keeps its rate up to the top of the window: 199,425 tokens in 16.5 s, 239,110 in 20.1 s (2026-09-27, [R787b][r787]). On an already-prefilled context the time per decode step stays at 10.3 to 10.7 ms to about 200k tokens; the decode rate rises with depth because the draft is accepted more often on the text after the filler, as the tokens per step on each point show ([R787c][r787]).
+Cold prefill keeps its rate up to the top of the window: 199,425 tokens in 16.5 s, 239,110 in 20.1 s (2026-09-27, on `tabbyapi:rebase-dev-r3`, the base image under the served image's TabbyAPI and prefill layers, [R787b][r787]). On an already-prefilled context the time per decode step stays at 10.3 to 10.7 ms to about 200k tokens; the decode rate rises with depth because the draft is accepted more often on the text after the filler, as the tokens per step on each point show ([R787c][r787], same image and date).
 
 | | value | source |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 
 - **Agent traffic.** On the same server, one 3,000-token generation at ~10k context decodes at 236 t/s after its first token alone, 154 while fresh ~45k-token prompts arrive every 8 seconds, and 141 with two other long generations running (2026-09-20). Sampling at temperature 0.6 costs a further 0 to 24 % ([R584, R585][r585]). A 45k-token prompt is 22 chunks of 2,048 tokens, and each chunk is a forward pass in which the running streams do not decode; context depth and generation length do not account for the loss ([R583][r583]).
 - **Draft depth.** The served policy drafts three tokens up to 4 streams and two at 5 to 8 streams; at 6 to 8 streams that is 18 to 24 verify rows, which the 17-to-32-row decode paths take in one launch ([R717, R717c][r717]).
-- **Code and prose.** Each kind is one prompt. Prose decodes 8.6 % faster than code per stream at 1 stream and 1.7 % faster at 8 streams ([R787a][r787]); at 1 stream the code prompt yields 2.59 tokens per decode step against prose's 2.82, at the same time per step.
+- **Code and prose.** Each kind is one prompt. Prose decodes 8.7 % faster than code per stream at 1 stream and 2.1 % faster at 8 streams ([R813][r811]); at 1 stream the code prompt yields 2.59 tokens per decode step against prose's 2.82, at the same time per step.
 - **Slots.** 8 slots raise throughput over 4 on synthetic concurrency but not on the agent replay, which spends two thirds of its wall time at 5–7 concurrent calls ([R558][r558], [R557][r557]).
 - **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
 - **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
@@ -126,24 +126,24 @@ Each entry names the change and the number that kept it out of the served config
 
 ## How the numbers are measured
 
-**Decode** ([R787a][r787], 2026-09-27 15:06 to 15:23 UTC, results `2026-09-27-r787a-decode-curve`, driver [`scripts/r787a-decode-curve.sh`](scripts/r787a-decode-curve.sh), R719b's driver with provenance checks): `fn_bench` ([`bench/probe.py`][probe]) against the served launcher of `tabbyapi:rebase-dev-r3` (42 environment keys, memory clock offset +4500) on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off. `--distinct` appends a per-stream suffix to each request's prompt, so no two streams of a round share a prompt; prompts are 118 tokens (code) and 106 tokens (prose), and no request revives a cached prefix. The two boots agree within 1.3 % on the per-stream rate and on the decode aggregate in 14 of 16 cells; at 6 streams they differ by 2.5 % (code) and 3.3 % (prose) per stream.
+**Decode** ([R813][r811], 2026-09-30 01:17 to 01:34 UTC, results `2026-09-30-r813-decode-curve`, driver [`scripts/r813-decode-curve.sh`](scripts/r813-decode-curve.sh), R787a's measurement loop with provenance checks for the served image): `fn_bench` ([`bench/probe.py`][probe]) against the served launcher of `tabbyapi:merge-tok-r1` (41 environment keys, memory clock offset +4500) on two boots, greedy, 1,024 forced tokens (`min_tokens`), a warm-up round plus three recorded rounds per shape, NVMe tier off. `--distinct` appends a per-stream suffix to each request's prompt, so no two streams of a round share a prompt; prompts are 118 tokens (code) and 106 tokens (prose), so no request revives a cached prefix and none is long enough for the prefill merge, which needs more than 257 prompt tokens. The two boots differ by at most 2.0 % per cell on the per-stream rate and on the decode aggregate.
 
 - **Decode rate per stream**: the median over requests of (tokens − 1) / (time of the last token − time of the first token).
-- **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 91.1 to 98.9 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 9 %.
+- **Decode aggregate**: the sum of the decode rates of the requests running together. At 2 to 8 streams every stream decodes during 90.1 to 98.9 % of the round's mean decode window, so the sum overstates the rate the streams sustain together by at most about 10 %.
 - **End-to-end burst aggregate**: all streams' tokens over the round's wall time, including time to the first token and the tail after the first stream finishes.
 
 | streams | decode per stream, t/s, code / prose | decode aggregate, t/s, code / prose | time to first token, s, code / prose | end-to-end burst aggregate, t/s, code / prose |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 254.8 / 276.8 | 255 / 277 | 0.13 / 0.13 | 247 / 268 |
-| 2 | 208.1 / 201.3 | 418 / 405 | 0.24 / 0.22 | 395 / 379 |
-| 3 | 178.5 / 175.4 | 529 / 525 | 0.34 / 0.32 | 487 / 491 |
-| 4 | 151.5 / 154.0 | 618 / 619 | 0.45 / 0.43 | 556 / 571 |
-| 5 | 136.1 / 137.3 | 684 / 687 | 0.55 / 0.53 | 627 / 632 |
-| 6 | 119.1 / 122.7 | 715 / 737 | 0.64 / 0.58 | 655 / 679 |
-| 7 | 113.1 / 113.0 | 800 / 790 | 0.67 / 0.64 | 720 / 728 |
-| 8 | 104.3 / 106.1 | 834 / 852 | 0.73 / 0.69 | 764 / 768 |
+| 1 | 255.9 / 278.1 | 255 / 278 | 0.13 / 0.13 | 247 / 269 |
+| 2 | 208.9 / 201.7 | 419 / 406 | 0.24 / 0.23 | 395 / 380 |
+| 3 | 179.2 / 176.4 | 535 / 531 | 0.34 / 0.33 | 493 / 497 |
+| 4 | 152.6 / 154.4 | 622 / 623 | 0.45 / 0.43 | 561 / 575 |
+| 5 | 138.1 / 138.5 | 694 / 693 | 0.56 / 0.53 | 634 / 637 |
+| 6 | 121.3 / 121.7 | 735 / 734 | 0.61 / 0.61 | 667 / 675 |
+| 7 | 114.6 / 114.6 | 816 / 805 | 0.67 / 0.63 | 728 / 738 |
+| 8 | 104.5 / 106.7 | 838 / 857 | 0.79 / 0.69 | 762 / 772 |
 
-**Prefill** ([R787b][r787], 2026-09-27 15:23 to 15:27 UTC, results `2026-09-27-r787b-prefill-curve`, R580's protocol): three salted cold prompts per target, counted by the server, NVMe tier off; 11,159 to 12,108 t/s from 29,932 to 239,110 tokens, 1.13 to 1.16× [R580][r580]'s rates of 2026-09-20, which ran on an older image at the stock memory clock ([R726][r726]). The decode-at-depth points are [R787c][r787] (results `2026-09-27-r787c-depth-decode`, R554's probe with the code targets moved to about 100k and 200k tokens, where [R554][r554]'s landed at 180k): 1 stream, 2,048 forced greedy tokens, the mean of the cold and the cached run. Time per decode step is decode seconds over streamed frames, one frame per verify step:
+**Prefill** ([R787b][r787], 2026-09-27 15:23 to 15:27 UTC, results `2026-09-27-r787b-prefill-curve`, R580's protocol, on `tabbyapi:rebase-dev-r3`, the base image under the served image's TabbyAPI and prefill layers): three salted cold prompts per target, counted by the server, NVMe tier off; 11,159 to 12,108 t/s from 29,932 to 239,110 tokens, 1.13 to 1.16× [R580][r580]'s rates of 2026-09-20, which ran on an older image at the stock memory clock ([R726][r726]). The decode-at-depth points are [R787c][r787] (same image, results `2026-09-27-r787c-depth-decode`, R554's probe with the code targets moved to about 100k and 200k tokens, where [R554][r554]'s landed at 180k): 1 stream, 2,048 forced greedy tokens, the mean of the cold and the cached run. Time per decode step is decode seconds over streamed frames, one frame per verify step:
 
 | prompt tokens, code / prose | decode, t/s, code / prose | tokens per decode step, code / prose | ms per decode step, code / prose |
 | ---: | ---: | ---: | ---: |
@@ -155,37 +155,37 @@ Figures are drawn from the raw records in `bench/results/` by [`bench/plot.py`](
 
 ## Standard benchmark (`vllm bench serve`)
 
-[vLLM][vllm]'s serving benchmark v0.30.0 on [ShareGPT V3][sharegpt] and [Spec-Bench][spec-bench], a harness and datasets that third-party serving results also use, run against the served configuration through [`bench/vllm_bench_tabby.py`][vllm-bench-tabby] ([R787d][r787], 2026-09-27 15:30 to 17:00 UTC, results `2026-09-27-r787d-std-bench`, driver [`scripts/r787d-std-bench.sh`](scripts/r787d-std-bench.sh), [R731b][r731b]'s protocol and sample). Output tok/s is a wall-clock figure: all completion tokens over the time from the first request's start to the last completion, closed loop at `c` concurrent requests, including prefill, time to the first token and the turnover between requests. It is therefore lower than the decode aggregate in [Numbers](#numbers), which sums steady-state decode rates with no prefill in the window. The headline metrics of this repository are the per-stream decode rate and the decode aggregate; output tok/s is a secondary metric, and a per-stream rate multiplied by the stream count is not called an aggregate.
+[vLLM][vllm]'s serving benchmark v0.30.0 on [ShareGPT V3][sharegpt] and [Spec-Bench][spec-bench], a harness and datasets that third-party serving results also use, run against the served configuration through [`bench/vllm_bench_tabby.py`][vllm-bench-tabby] ([R811][r811], 2026-09-29 20:34 to 23:27 UTC, results `2026-09-29-r811-std-bench-ab`, and R811b for ShareGPT at 4 streams, 2026-09-30 01:01 to 01:16 UTC, results `2026-09-29-r811b-sharegpt-c4`; driver [`scripts/r811-std-bench-ab.sh`](scripts/r811-std-bench-ab.sh), [R787d][r787]'s protocol and [R731b][r731b]'s sample). Output tok/s is a wall-clock figure: all completion tokens over the time from the first request's start to the last completion, closed loop at `c` concurrent requests, including prefill, time to the first token and the turnover between requests. It is therefore lower than the decode aggregate in [Numbers](#numbers), which sums steady-state decode rates with no prefill in the window. The headline metrics of this repository are the per-stream decode rate and the decode aggregate; output tok/s is a secondary metric, and a per-stream rate multiplied by the stream count is not called an aggregate.
 
-Conditions: `tabbyapi:rebase-dev-r3` on the served launcher, power limits at the stock 600 / 575 W, core clock offset 0, memory offset +4500, NVMe tier off. Every cell ran on a fresh boot (0 cached prompt tokens over 7,040 requests), and the matrix ran twice, passes A and B; cells are the mean of the two, and the p99 columns give both passes as a range where they differ. Every concurrency sends the same sample: ShareGPT 400 conversations drawn with seed 7310, Spec-Bench all 480 questions of its 13 categories. Inputs are short: mean 272 / 322 tokens, maximum 1,070 / 1,540 (ShareGPT / Spec-Bench). Requests are greedy with thinking on, and `min_tokens` forces each output to the ShareGPT reference reply's length (mean 210 tokens) or to 256 tokens, so the outputs are truncated reasoning, not answers.
+Conditions: `tabbyapi:merge-tok-r1` on the served launcher (41 keys), power limits at the stock 600 / 575 W, core clock offset 0, memory offset +4500, NVMe tier off. Every cell ran on a fresh boot (0 cached prompt tokens over R811's 14,080 requests and R811b's 1,600), and the matrix ran twice, passes A and B, each cell alternating with a boot of the previous image (arm OLD, below); cells are the mean of the two passes, the ShareGPT cell at 4 streams the mean of four boots, and the p99 columns give the runs as a range where they differ. Every concurrency sends the same sample: ShareGPT 400 conversations drawn with seed 7310, Spec-Bench all 480 questions of its 13 categories. Inputs are short: mean 272 / 322 tokens, maximum 1,070 / 1,540 (ShareGPT / Spec-Bench). Requests are greedy with thinking on, and `min_tokens` forces each output to the ShareGPT reference reply's length (mean 210 tokens) or to 256 tokens, so the outputs are truncated reasoning, not answers.
 
-In the figure at the top, per stream, the standard benchmark is level with decode alone or above it at 1 and 2 streams (ShareGPT / Spec-Bench 291 / 295 and 207 / 208 t/s against code / prose 255 / 277 and 208 / 201) and falls below it from 4 streams (128 / 131 against 152 / 154; 71 / 74 against 104 / 106 at 8), where requests arrive while others decode and their prefill chunks take steps from the running streams. The aggregate gap also includes each request's time to the first token and the turnover between requests, which weigh more here than in the decode curve because outputs are ~210-256 tokens instead of 1,024. At 1 stream the solid lines are one prompt per kind, at 2.59 (code) and 2.82 (prose) tokens per decode step; R787d's τ over 400 ShareGPT and 480 Spec-Bench prompts is 2.65 and 2.87, as in R731b. Both panels come from `bench/plot.py`, which reads the published raw records of R787a and R787d. Against R731b on the previous image (2026-09-25), output tok/s is 0.996 to 1.007× in every cell; per-stream is 0.990 to 1.001× except ShareGPT at 4 streams, 0.964× (132.7 to 128.0 t/s); TTFT p50 is 0.7 to 6.8 % lower in 7 cells and 3.7 % higher at Spec-Bench 8 streams ([R787][r787]).
+In the figure at the top, per stream, the standard benchmark is level with decode alone or above it at 1 and 2 streams (ShareGPT / Spec-Bench 288 / 288 and 205 / 212 t/s against code / prose 256 / 278 and 209 / 202) and falls below it from 4 streams (136 / 141 against 153 / 154; 78 / 81 against 105 / 107 at 8), where requests arrive while others decode and their prefill chunks take steps from the running streams. The aggregate gap also includes each request's time to the first token and the turnover between requests, which weigh more here than in the decode curve because outputs are ~210-256 tokens instead of 1,024. At 1 stream the solid lines are one prompt per kind, at 2.59 (code) and 2.82 (prose) tokens per decode step; R811's τ over 400 ShareGPT and 480 Spec-Bench prompts is 2.66 and 2.87. Both panels come from `bench/plot.py`, which reads the published raw records of R813, R811 and R811b and prints these tables. Against the previous image in the same session, output tok/s is 1.005 / 0.993 / 1.052 / 1.086× on ShareGPT and 0.987 / 1.030 / 1.042 / 1.067× on Spec-Bench at 1 / 2 / 4 / 8 streams, and mean TTFT is 7.4 to 15.4 % lower in every cell ([R811][r811]).
 
 **ShareGPT V3**
 
 | streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 221.6 | 0.08 % | 1.05 | 137 / 322–359 | 3.44 / 4.56–4.57 | 291 | 0.64 | 2.65 |
-| 2 | 307.0 | 0.09 % | 1.46 | 194 / 541–542 | 4.83 / 9.06–9.19 | 207 | 0.90 | 2.65 |
-| 4 | 397.0 | 0.36 % | 1.88 | 282 / 639–693 | 7.81 / 17.01–18.99 | 128 | 1.35 | 2.66 |
-| 8 | 471.6 | 0.03 % | 2.24 | 382 / 1,343–1,500 | 14.02 / 23.16–24.34 | 71 | 2.23 | 2.30 |
+| 1 | 226.0 | 2.01 % | 1.07 | 136 / 227–279 | 3.47 / 4.63–4.66 | 288 | 0.61 | 2.66 |
+| 2 | 315.5 | 0.12 % | 1.50 | 199 / 354–362 | 4.88 / 8.26–8.60 | 205 | 0.87 | 2.65 |
+| 4 | 433.0 | four boots, 419.4–438.6 | 2.06 | 246 / 529–594 | 7.38 / 14.80–17.87 | 136 | 1.25 | 2.64 |
+| 8 | 528.7 | 0.59 % | 2.51 | 307 / 854–995 | 12.79 / 19.83–20.80 | 78 | 1.99 | 2.30 |
 
 **Spec-Bench**
 
 | streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 244.5 | 0.39 % | 0.95 | 130 / 384–392 | 3.40 / 4.34 | 295 | 1.04 | 2.87 |
-| 2 | 343.4 | 0.07 % | 1.34 | 183 / 496–503 | 4.79 / 6.58–6.67 | 208 | 1.47 | 2.87 |
-| 4 | 445.0 | 0.04 % | 1.74 | 248 / 650–657 | 7.66 / 10.75–10.78 | 131 | 2.27 | 2.87 |
-| 8 | 524.7 | 0.10 % | 2.05 | 394 / 978–1,028 | 13.46 / 17.40–17.42 | 74 | 3.83 | 2.43 |
+| 1 | 245.1 | 0.46 % | 0.96 | 132 / 317–319 | 3.47 / 4.42–4.45 | 288 | 1.04 | 2.87 |
+| 2 | 358.8 | 0.27 % | 1.40 | 182 / 361–384 | 4.72 / 6.18–6.19 | 212 | 1.40 | 2.88 |
+| 4 | 485.4 | 0.58 % | 1.90 | 241 / 590–591 | 7.09 / 9.27–9.57 | 141 | 2.07 | 2.87 |
+| 8 | 580.8 | 0.12 % | 2.27 | 314 / 790–855 | 12.31 / 15.48–15.55 | 81 | 3.48 | 2.44 |
 
-On the previous image, at 8 streams the wall-clock figure and the `fn_bench` decode aggregate differ mainly by prefill interleaved with decode (R731, 2026-09-25, results `2026-09-25-r731-std-bench`: the same samples with both cards limited to 400 W, and R731b at stock differs from it by −0.72 to +0.87 % per cell). ShareGPT / Spec-Bench: 471 / 529 tok/s wall clock; 541 / 596 counting only each request's time after its first token; 786 / 803 after also removing the frames longer than twice the median inter-token latency, which are the steps that run other requests' prefill chunks and hold 35 / 31 % of decode time. That is 98.2 / 100.4 tok/s per stream, against `fn_bench`'s 105.8 / 106.9 per stream and 845 / 853 decode aggregate (code / prose, [R719b][r719b]); the remainder is a longer decode step, not τ ([R731b][r731b]). This decomposition has not been repeated on R787d's records.
+The previous image (arm OLD, `tabbyapi:tokenize-offloop-r2` without `EXL3_PREFILL_MERGE` and `EXL3_STASH_ASYNC`) ran in the same session, one boot per cell next to each served-image boot. At 4 and 8 streams the median decode step (ITL p50) of the served image is 0.977 to 1.015 times OLD's, and its higher output tok/s comes from the steps that run other requests' prefill: the frames longer than twice the median inter-token latency hold 30.3 / 30.6 % of decode time at ShareGPT 8 streams against 36.3 / 35.0 % on OLD, and 27.3 / 28.0 % against 31.5 / 32.2 % at Spec-Bench 8 streams (passes A / B). At 1 stream the median decode step is 2.1 to 3.4 % longer than OLD's in all four pass pairs, with τ equal within 0.3 %, so the per-stream rate is 2.5 to 2.9 % lower. Split in time, this is a speed-up OLD acquires during the run: at 1 and 2 streams OLD's median decode step falls by 2.1 to 3.2 % at one request of each sample (ShareGPT request 45, a 786-token prompt; Spec-Bench request 29, 788 tokens) and stays lower to the end, while the served image's does not fall; before that request the two images' steps are within 2 % of each other. The difference follows `EXL3_PREFILL_MERGE` (R812b), and its mechanism is not known; the decode curve above sends no such prompt ([R811 to R813][r811]). Mean TTFT is lower in every cell, and on Spec-Bench's summarization and RAG prompts (about 775 tokens) by 18 to 28 % at 1 to 8 streams. R731's decomposition of the gap between the wall-clock figure and the `fn_bench` decode aggregate, on an older image, is in [R731b][r731b].
 
 - TTFT is the client-side time to the first streamed token, which with thinking on is the first reasoning token.
 - TPOT is (E2E − TTFT) / (output tokens − 1) per request and includes the time a request waits while other requests' prefills run. Per-stream tok/s is 1000 / TPOT p50, derived from it, and is not comparable to the `fn_bench` per-stream decode rate.
 - τ is tokens per verify step from the server log, Σ generated / (Σ generated − Σ accepted drafts); it counts the prefill step, which puts it about 1 % low. It falls at 8 streams because the draft policy drafts two tokens above 4 streams. Spec-Bench τ is not comparable to acceptance figures published with Spec-Bench.
-- The A/B spread is replication within one session. On the previous image the same samples in another session (R731) differed by up to 0.9 % per cell, so each cell reads as ±1 %. ShareGPT's TPOT p99 at 4 streams moves between sessions (13.6 to 19.4 ms in R731).
-- No request ended on exllamav3's loop detector in R787d; in R731b it ended about one request per ShareGPT cell before its forced length, at most 0.36 % of the tokens.
+- The A/B spread is replication within one session: 0.12 to 2.01 % per cell in R811 outside ShareGPT at 4 streams (R787d on the base image: 0.03 to 0.39 %). At ShareGPT 4 streams R811 read 437.5 and 419.4 tok/s, a 4.22 % spread: the boots of that cell fell into two states whose time per decode step differs by about 2.3 % over the whole run, and both images hit both. R811b re-ran the cell (436.5 and 438.6 tok/s, spread 0.47 %, both boots in the faster state); the table gives the mean of the four boots with their range, a rule written down after R811 and before R811b. ShareGPT's TPOT p99 at 4 streams moves between boots (14.80 to 17.87 ms).
+- No request ended on exllamav3's loop detector in R811 or R811b: every cell's output tokens equal the forced total (84,120 ShareGPT, 122,880 Spec-Bench); in R731b it ended about one request per ShareGPT cell before its forced length, at most 0.36 % of the tokens.
 - vLLM's `max_concurrent_requests` and `max_output_tokens_per_s` result fields are not used: the first counts requests that touch a one-second bucket, the second counts streamed frames per second.
 
 ## Reproducing a boot
@@ -408,6 +408,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r784]: bench/results/r784-rebase-dev-r3.md
 [r786]: bench/results/r786-replay-abba.md
 [r787]: bench/results/r787-bench-refresh.md
+[r811]: bench/results/r811-r813-std-bench-merge.md
 [r792]: bench/results/r792-promote-loopthink5.md
 [r808]: bench/results/r805-r808-tokenize-offloop.md
 [r809]: bench/results/r803-r810-prefill-merge.md

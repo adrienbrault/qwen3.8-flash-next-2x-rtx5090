@@ -1,0 +1,45 @@
+== configuration (first boot; FLAGS list any boot that differs) ==
+  image          tabbyapi:tokenize-offloop-r2
+  image_id       sha256:04b06fa97c4d
+  launcher_md5   04e347cccea238730f04de85807283e5
+  env_n          41
+  env_sha        846adef67399
+  keys_n         39
+  window         0
+  slots          8
+  cache          901120
+  policy         [[4, 3], [8, 2]]
+  gpc_boot       0 0
+  mem_boot       4500 4500
+  power_limit_w  600 575
+  vram_free      1181/1759/
+  pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  boots          4
+
+== sharegpt, pass A ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 400 | 226.3 | 1.08 | 133 / 300 | 3.37 / 4.44 | 297 | 0.63 | 2.65 | 3.00 |
+| 2 | 400 | 313.8 | 1.49 | 191 / 517 | 4.71 / 8.94 | 212 | 0.88 | 2.65 | 3.00 |
+
+== sharegpt, pass B ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 400 | 225.4 | 1.07 | 134 / 303 | 3.38 / 4.46 | 296 | 0.63 | 2.65 | 3.00 |
+| 2 | 400 | 311.2 | 1.48 | 192 / 536 | 4.77 / 9.00 | 210 | 0.89 | 2.65 | 3.00 |
+
+== sharegpt: pass A vs B (spread = |A - B| / mean) ==
+conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+   1    226.3    225.4    225.8   0.38%     3.37   3.38      133    134   2.65  2.65
+   2    313.8    311.2    312.5   0.83%     4.71   4.77      191    192   2.65  2.65
+
+== diagnostics (not for the README) ==
+tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+A-sharegpt-c1             372     272   210     519.2     9.87  2.65    2.68    0.551     0.00    0   400
+A-sharegpt-c2             268     272   210     720.1    12.45  2.65    2.68    0.549     0.00    0   400
+B-sharegpt-c1             373     272   210     517.2     9.90  2.65    2.68    0.551     0.00    0   400
+B-sharegpt-c2             270     272   210     714.2    12.56  2.65    2.68    0.549     0.00    0   400
+
+FLAGS: none
+
+DECISION: PUBLISHABLE (max A/B spread 0.83 % at sharegpt c2; every cell cached <= 1 %)

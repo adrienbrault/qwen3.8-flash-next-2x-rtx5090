@@ -1,0 +1,131 @@
+  shim: patched vllm 0.30.0: openai-chat -> tabby_chat (usage from any frame, CRLF SSE, min_tokens=output_len ON); SpecBench skip_chat_template forced, SpecBench jsonl read without pandas; sample manifest ON
+  preflight: tokenizer CachedQwen2Tokenizer vocab 248077 | template tail 'user\nhi<|im_end|>\n<|im_start|>assistant\n<think>\n'
+  preflight: specbench rows 480
+2026-09-29T23:43:42+00:00 [r811b-sharegpt-c4] probes (snapshot md5): vllm_bench_tabby.py d2bc4794; parse_container.py a0f80a17; std_bench_summary.py 87ba04fe; r811_ab_compare.py 4e92c38e; test_r811_ab_compare.py 2f87106a; self-test: 10 passed, 0 failed
+2026-09-29T23:43:42+00:00 [r811b-sharegpt-c4] R811 std-bench A/B: NEW launch-flashnext.sh (6429dfa2, tabbyapi:merge-tok-r1 ac16920f72cf, 41 keys) vs OLD launch-flashnext.sh.pre-r809 (04e347cc, tabbyapi:tokenize-offloop-r2 04b06fa97c4d, 39 keys); passes A B (A: NEW then OLD, B: OLD then NEW); datasets sharegpt; concs 4; SG_N 400 seed 7310; SB_N 480 out 256; want core 0 0 / memory 4500 4500 / power 600 575 W; results 2026-09-29-r811b-sharegpt-c4
+2026-09-29T23:43:42+00:00 [r811b-sharegpt-c4] queued behind: r812b-layer-ab(pid 129422)
+2026-09-30T01:00:49+00:00 [r811b-sharegpt-c4] after the lock: both launchers and both image ids unchanged
+2026-09-30T01:01:27+00:00 [r811b-sharegpt-c4] lock held; served at entry: none; direct clients stopped: hermes hermes-webui owui-proxy; offsets now core 0 0 / memory 4500 4500, power 600 575 W
+2026-09-30T01:01:44+00:00 [r811b-sharegpt-c4] [NEW/A-sharegpt-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-30T01:01:45+00:00 [r811b-sharegpt-c4] [NEW/A-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-30T01:05:11+00:00 [r811b-sharegpt-c4] [NEW/A-sharegpt-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-30T01:05:11+00:00 [r811b-sharegpt-c4] [NEW/A-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 192.70 ;Output token throughput (tok/s): 436.54 ;Mean TTFT (ms): 254.24 ;Median TPOT (ms): 7.34 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-30T01:05:29+00:00 [r811b-sharegpt-c4] [OLD/A-sharegpt-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-30T01:05:30+00:00 [r811b-sharegpt-c4] [OLD/A-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-30T01:09:05+00:00 [r811b-sharegpt-c4] [OLD/A-sharegpt-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-30T01:09:05+00:00 [r811b-sharegpt-c4] [OLD/A-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..425); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 202.44 ;Output token throughput (tok/s): 415.52 ;Mean TTFT (ms): 290.15 ;Median TPOT (ms): 7.46 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-30T01:09:24+00:00 [r811b-sharegpt-c4] [OLD/B-sharegpt-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-30T01:09:25+00:00 [r811b-sharegpt-c4] [OLD/B-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-30T01:12:59+00:00 [r811b-sharegpt-c4] [OLD/B-sharegpt-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-30T01:12:59+00:00 [r811b-sharegpt-c4] [OLD/B-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 201.91 ;Output token throughput (tok/s): 416.62 ;Mean TTFT (ms): 291.88 ;Median TPOT (ms): 7.46 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-30T01:13:18+00:00 [r811b-sharegpt-c4] [NEW/B-sharegpt-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-30T01:13:18+00:00 [r811b-sharegpt-c4] [NEW/B-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] [NEW/B-sharegpt-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] [NEW/B-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 9..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 191.79 ;Output token throughput (tok/s): 438.60 ;Mean TTFT (ms): 252.50 ;Median TPOT (ms): 7.22 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] at the end: both launchers unchanged
+  [NEW] == configuration (first boot; FLAGS list any boot that differs) ==
+  [NEW]   image          tabbyapi:merge-tok-r1
+  [NEW]   image_id       sha256:ac16920f72cf
+  [NEW]   launcher_md5   6429dfa2035a37dba51bb09651d374e8
+  [NEW]   env_n          43
+  [NEW]   env_sha        c27236961230
+  [NEW]   keys_n         41
+  [NEW]   window         0
+  [NEW]   slots          8
+  [NEW]   cache          901120
+  [NEW]   policy         [[4, 3], [8, 2]]
+  [NEW]   gpc_boot       0 0
+  [NEW]   mem_boot       4500 4500
+  [NEW]   power_limit_w  600 575
+  [NEW]   vram_free      1181/1759/
+  [NEW]   pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  [NEW]   boots          2
+  [NEW] 
+  [NEW] == sharegpt, pass A ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 4 | 400 | 436.5 | 2.08 | 245 / 530 | 7.34 / 17.61 | 136 | 1.25 | 2.64 | 3.00 |
+  [NEW] 
+  [NEW] == sharegpt, pass B ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 4 | 400 | 438.6 | 2.09 | 240 / 578 | 7.22 / 14.80 | 139 | 1.24 | 2.65 | 3.00 |
+  [NEW] 
+  [NEW] == sharegpt: pass A vs B (spread = |A - B| / mean) ==
+  [NEW] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [NEW]    4    436.5    438.6    437.6   0.47%     7.34   7.22      245    240   2.64  2.65
+  [NEW] 
+  [NEW] == diagnostics (not for the README) ==
+  [NEW] tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+  [NEW] A-sharegpt-c4             193     272   210    1001.7    17.41  2.64    2.67    0.547     0.00    0   400
+  [NEW] B-sharegpt-c4             192     272   210    1006.4    17.31  2.65    2.67    0.549     0.00    0   400
+  [NEW] 
+  [NEW] FLAGS: none
+  [NEW] 
+  [NEW] DECISION: PUBLISHABLE (max A/B spread 0.47 % at sharegpt c4; every cell cached <= 1 %)
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] [NEW] arm decision: PUBLISHABLE (max A/B spread 0.47 % at sharegpt c4; every cell cached <= 1 %)
+  [OLD] == configuration (first boot; FLAGS list any boot that differs) ==
+  [OLD]   image          tabbyapi:tokenize-offloop-r2
+  [OLD]   image_id       sha256:04b06fa97c4d
+  [OLD]   launcher_md5   04e347cccea238730f04de85807283e5
+  [OLD]   env_n          41
+  [OLD]   env_sha        846adef67399
+  [OLD]   keys_n         39
+  [OLD]   window         0
+  [OLD]   slots          8
+  [OLD]   cache          901120
+  [OLD]   policy         [[4, 3], [8, 2]]
+  [OLD]   gpc_boot       0 0
+  [OLD]   mem_boot       4500 4500
+  [OLD]   power_limit_w  600 575
+  [OLD]   vram_free      1181/1759/
+  [OLD]   pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  [OLD]   boots          2
+  [OLD] 
+  [OLD] == sharegpt, pass A ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 4 | 400 | 415.5 | 1.98 | 271 / 804 | 7.46 / 18.05 | 134 | 1.29 | 2.66 | 3.00 |
+  [OLD] 
+  [OLD] == sharegpt, pass B ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 4 | 400 | 416.6 | 1.98 | 274 / 791 | 7.46 / 16.28 | 134 | 1.29 | 2.65 | 3.00 |
+  [OLD] 
+  [OLD] == sharegpt: pass A vs B (spread = |A - B| / mean) ==
+  [OLD] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [OLD]    4    415.5    416.6    416.1   0.26%     7.46   7.46      271    274   2.66  2.65
+  [OLD] 
+  [OLD] == diagnostics (not for the README) ==
+  [OLD] tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+  [OLD] A-sharegpt-c4             202     272   210     953.5    17.39  2.66    2.68    0.552     0.00    0   400
+  [OLD] B-sharegpt-c4             202     272   210     956.0    17.32  2.65    2.67    0.549     0.00    0   400
+  [OLD] 
+  [OLD] FLAGS: none
+  [OLD] 
+  [OLD] DECISION: PUBLISHABLE (max A/B spread 0.26 % at sharegpt c4; every cell cached <= 1 %)
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] [OLD] arm decision: PUBLISHABLE (max A/B spread 0.26 % at sharegpt c4; every cell cached <= 1 %)
+  == R811 paired comparison: NEW vs OLD (ratio = NEW / OLD; output tok/s > 1 = NEW faster; TTFT / TPOT < 1 = NEW faster) ==
+  pooled = mean over the passes both arms have; agree = both passes on the same side of 1; noise = larger within-arm A/B spread (%); >noise = |pooled - 1| above it
+  
+  == sharegpt ==
+  | c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | 4 | output tok/s | 436.5 | 415.5 | 1.051 | 438.6 | 416.6 | 1.053 | 1.052 | yes | 0.47 | yes |
+  | 4 | TTFT mean ms | 254.2 | 290.2 | 0.876 | 252.5 | 291.9 | 0.865 | 0.871 | yes | 0.68 | yes |
+  | 4 | TTFT median ms | 245.0 | 271.0 | 0.904 | 240.1 | 274.2 | 0.875 | 0.890 | yes | 2.02 | yes |
+  | 4 | TTFT p99 ms | 529.6 | 803.7 | 0.659 | 578.0 | 791.3 | 0.730 | 0.694 | yes | 8.74 | yes |
+  | 4 | TPOT mean ms | 7.37 | 7.52 | 0.980 | 7.22 | 7.37 | 0.979 | 0.980 | yes | 2.08 | no |
+  
+  == pre-registered expectation (report-only; measured = pooled NEW/OLD - 1, %; above / below = the measured % lies above / below the expected band, so for TTFT `below` is a LARGER cut than expected) ==
+    sharegpt c4 output tok/s                       expected +1..+3 %    measured    5.17 %  -> above  (A/B noise 0.47 %)
+    sharegpt c4 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -12.94 %  -> below  (A/B noise 0.68 %)
+  
+  FLAGS: none
+2026-09-30T01:16:43+00:00 [r811b-sharegpt-c4] README: the NEW arm is PUBLISHABLE: 2026-09-29-r811b-sharegpt-c4/NEW/results may replace R787d in the std-bench figure / tables
+2026-09-30T01:16:45+00:00 [sctl] GPU queue continues (r813-decode-curve(pid 229556)); leaving the GPUs to the next unit
+2026-09-30T01:16:45+00:00 [r811b-sharegpt-c4] after: served none; image none ; tier 0; launcher md5s now NEW 6429dfa2 OLD 04e347cc; core 0 0; memory 4500 4500; power 600 575 W
+2026-09-30T01:16:45+00:00 [r811b-sharegpt-c4] WARN: :8022 not serving (another unit queued?); restarting the direct clients anyway
+2026-09-30T01:16:46+00:00 [r811b-sharegpt-c4] restarted: hermes hermes-webui owui-proxy
+2026-09-30T01:16:46+00:00 [r811b-sharegpt-c4] === r811b-sharegpt-c4 DONE ===
+2026-09-30T01:16:46+00:00 [r811b-sharegpt-c4] DECISION: NEW PUBLISHABLE (max A/B spread 0.47 % at sharegpt c4; every cell cached <= 1 %); OLD PUBLISHABLE (max A/B spread 0.26 % at sharegpt c4; every cell cached <= 1 %)

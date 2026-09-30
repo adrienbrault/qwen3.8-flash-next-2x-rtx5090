@@ -1,0 +1,114 @@
+== R811 paired comparison: NEW vs OLD (ratio = NEW / OLD; output tok/s > 1 = NEW faster; TTFT / TPOT < 1 = NEW faster) ==
+pooled = mean over the passes both arms have; agree = both passes on the same side of 1; noise = larger within-arm A/B spread (%); >noise = |pooled - 1| above it
+
+== sharegpt ==
+| c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | output tok/s | 223.7 | 226.4 | 0.988 | 228.3 | 223.5 | 1.021 | 1.005 | no | 2.01 | no |
+| 1 | TTFT mean ms | 154.9 | 168.7 | 0.918 | 144.3 | 176.1 | 0.819 | 0.868 | yes | 7.10 | yes |
+| 1 | TTFT median ms | 139.3 | 132.1 | 1.055 | 133.3 | 136.2 | 0.979 | 1.016 | no | 4.39 | no |
+| 1 | TTFT p99 ms | 279.3 | 281.3 | 0.993 | 226.8 | 321.0 | 0.707 | 0.840 | yes | 20.73 | no |
+| 1 | TPOT mean ms | 3.02 | 2.93 | 1.032 | 3.04 | 2.95 | 1.030 | 1.031 | yes | 0.83 | yes |
+| 2 | output tok/s | 315.3 | 317.3 | 0.994 | 315.7 | 318.0 | 0.993 | 0.993 | yes | 0.22 | yes |
+| 2 | TTFT mean ms | 214.0 | 230.4 | 0.929 | 212.0 | 229.5 | 0.924 | 0.926 | yes | 0.97 | yes |
+| 2 | TTFT median ms | 200.6 | 186.9 | 1.074 | 197.6 | 184.9 | 1.069 | 1.071 | yes | 1.51 | yes |
+| 2 | TTFT p99 ms | 362.3 | 482.2 | 0.751 | 353.7 | 471.2 | 0.751 | 0.751 | yes | 2.39 | yes |
+| 2 | TPOT mean ms | 4.74 | 4.59 | 1.033 | 4.71 | 4.63 | 1.018 | 1.025 | yes | 0.95 | yes |
+| 4 | output tok/s | 437.5 | 401.0 | 1.091 | 419.4 | 413.7 | 1.014 | 1.052 | yes | 4.22 | yes |
+| 4 | TTFT mean ms | 254.1 | 307.4 | 0.826 | 270.1 | 290.8 | 0.929 | 0.876 | yes | 6.11 | yes |
+| 4 | TTFT median ms | 244.6 | 283.1 | 0.864 | 255.4 | 273.2 | 0.935 | 0.899 | yes | 4.34 | yes |
+| 4 | TTFT p99 ms | 528.9 | 681.8 | 0.776 | 594.0 | 829.1 | 0.716 | 0.743 | yes | 19.50 | yes |
+| 4 | TPOT mean ms | 7.35 | 7.66 | 0.960 | 7.64 | 7.55 | 1.012 | 0.986 | no | 3.79 | no |
+| 8 | output tok/s | 527.1 | 482.2 | 1.093 | 530.2 | 491.8 | 1.078 | 1.086 | yes | 1.98 | yes |
+| 8 | TTFT mean ms | 336.0 | 395.3 | 0.850 | 326.2 | 387.1 | 0.843 | 0.846 | yes | 2.94 | yes |
+| 8 | TTFT median ms | 308.6 | 380.4 | 0.811 | 306.4 | 375.0 | 0.817 | 0.814 | yes | 1.42 | yes |
+| 8 | TTFT p99 ms | 995.1 | 1217.7 | 0.817 | 854.3 | 1301.0 | 0.657 | 0.734 | yes | 15.23 | yes |
+| 8 | TPOT mean ms | 12.49 | 13.45 | 0.929 | 12.32 | 13.01 | 0.947 | 0.938 | yes | 3.33 | yes |
+
+== specbench ==
+| c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | output tok/s | 245.7 | 249.4 | 0.985 | 244.5 | 247.1 | 0.990 | 0.987 | yes | 0.92 | yes |
+| 1 | TTFT mean ms | 156.8 | 169.0 | 0.927 | 159.4 | 176.0 | 0.906 | 0.916 | yes | 4.03 | yes |
+| 1 | TTFT median ms | 131.7 | 128.2 | 1.028 | 132.8 | 129.3 | 1.027 | 1.027 | yes | 0.86 | yes |
+| 1 | TTFT p99 ms | 319.1 | 330.6 | 0.965 | 317.0 | 366.8 | 0.864 | 0.912 | yes | 10.36 | no |
+| 1 | TPOT mean ms | 3.46 | 3.36 | 1.032 | 3.47 | 3.37 | 1.032 | 1.032 | yes | 0.30 | yes |
+| 2 | output tok/s | 358.4 | 342.8 | 1.045 | 359.3 | 353.8 | 1.015 | 1.030 | yes | 3.16 | no |
+| 2 | TTFT mean ms | 205.7 | 246.9 | 0.833 | 203.5 | 231.3 | 0.880 | 0.856 | yes | 6.52 | yes |
+| 2 | TTFT median ms | 181.6 | 183.9 | 0.988 | 181.9 | 179.2 | 1.015 | 1.001 | no | 2.57 | no |
+| 2 | TTFT p99 ms | 384.2 | 529.7 | 0.725 | 360.7 | 461.0 | 0.782 | 0.752 | yes | 13.86 | yes |
+| 2 | TPOT mean ms | 4.75 | 4.84 | 0.981 | 4.74 | 4.72 | 1.005 | 0.993 | no | 2.51 | no |
+| 4 | output tok/s | 486.8 | 465.8 | 1.045 | 484.0 | 465.5 | 1.040 | 1.042 | yes | 0.58 | yes |
+| 4 | TTFT mean ms | 258.0 | 292.6 | 0.882 | 261.1 | 289.4 | 0.902 | 0.892 | yes | 1.20 | yes |
+| 4 | TTFT median ms | 236.0 | 247.7 | 0.953 | 245.6 | 248.6 | 0.988 | 0.970 | yes | 4.02 | no |
+| 4 | TTFT p99 ms | 590.3 | 666.3 | 0.886 | 590.6 | 630.0 | 0.937 | 0.911 | yes | 5.60 | yes |
+| 4 | TPOT mean ms | 7.14 | 7.37 | 0.969 | 7.18 | 7.39 | 0.971 | 0.970 | yes | 0.55 | yes |
+| 8 | output tok/s | 580.5 | 554.2 | 1.047 | 581.2 | 535.4 | 1.086 | 1.066 | yes | 3.46 | yes |
+| 8 | TTFT mean ms | 346.1 | 385.2 | 0.898 | 337.3 | 407.8 | 0.827 | 0.862 | yes | 5.68 | yes |
+| 8 | TTFT median ms | 315.6 | 357.6 | 0.882 | 312.8 | 382.2 | 0.818 | 0.849 | yes | 6.65 | yes |
+| 8 | TTFT p99 ms | 790.1 | 858.5 | 0.920 | 855.0 | 841.2 | 1.016 | 0.968 | no | 7.89 | no |
+| 8 | TPOT mean ms | 12.28 | 12.80 | 0.960 | 12.31 | 13.20 | 0.933 | 0.946 | yes | 3.09 | yes |
+
+== specbench TTFT per task group (ms; both passes pooled; paired = median over prompts of NEW / OLD TTFT, same prompt, same pass) ==
+| c | group | n | mean prompt tok | NEW mean | OLD mean | NEW median | OLD median | A ratio | B ratio | pooled mean ratio | paired median ratio |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | mt_bench | 80 | 121 | 130 | 133 | 124 | 121 | 0.974 | 0.987 | 0.980 | 1.022 |
+| 1 | translation | 80 | 87 | 126 | 126 | 123 | 121 | 0.991 | 0.998 | 0.994 | 1.018 |
+| 1 | summarization | 80 | 779 | 223 | 273 | 209 | 268 | 0.835 | 0.802 | 0.818 | 0.790 |
+| 1 | qa | 80 | 63 | 119 | 110 | 109 | 107 | 1.067 | 1.086 | 1.076 | 1.017 |
+| 1 | math_reasoning | 80 | 111 | 137 | 129 | 131 | 128 | 1.057 | 1.055 | 1.056 | 1.023 |
+| 1 | rag | 80 | 770 | 215 | 264 | 214 | 266 | 0.839 | 0.791 | 0.814 | 0.799 |
+| 2 | mt_bench | 80 | 121 | 178 | 200 | 171 | 172 | 0.883 | 0.893 | 0.888 | 1.002 |
+| 2 | translation | 80 | 87 | 181 | 179 | 171 | 170 | 1.006 | 1.019 | 1.012 | 1.008 |
+| 2 | summarization | 80 | 779 | 253 | 352 | 238 | 342 | 0.689 | 0.749 | 0.718 | 0.726 |
+| 2 | qa | 80 | 63 | 175 | 173 | 158 | 156 | 1.007 | 1.024 | 1.015 | 1.012 |
+| 2 | math_reasoning | 80 | 111 | 192 | 191 | 178 | 176 | 0.980 | 1.029 | 1.004 | 1.008 |
+| 2 | rag | 80 | 770 | 248 | 339 | 241 | 329 | 0.702 | 0.765 | 0.732 | 0.730 |
+| 4 | mt_bench | 80 | 121 | 233 | 245 | 211 | 209 | 0.955 | 0.948 | 0.952 | 0.997 |
+| 4 | translation | 80 | 87 | 251 | 251 | 210 | 209 | 1.010 | 0.995 | 1.002 | 1.001 |
+| 4 | summarization | 80 | 779 | 309 | 404 | 278 | 367 | 0.735 | 0.797 | 0.765 | 0.772 |
+| 4 | qa | 80 | 63 | 220 | 228 | 193 | 193 | 0.951 | 0.979 | 0.965 | 0.997 |
+| 4 | math_reasoning | 80 | 111 | 234 | 240 | 212 | 215 | 0.971 | 0.984 | 0.977 | 1.000 |
+| 4 | rag | 80 | 770 | 310 | 378 | 277 | 364 | 0.814 | 0.824 | 0.819 | 0.768 |
+| 8 | mt_bench | 80 | 121 | 340 | 369 | 304 | 322 | 0.966 | 0.882 | 0.924 | 0.977 |
+| 8 | translation | 80 | 87 | 328 | 334 | 257 | 264 | 1.056 | 0.914 | 0.981 | 0.989 |
+| 8 | summarization | 80 | 779 | 383 | 504 | 344 | 466 | 0.794 | 0.729 | 0.760 | 0.756 |
+| 8 | qa | 80 | 63 | 294 | 309 | 244 | 257 | 0.984 | 0.920 | 0.951 | 0.986 |
+| 8 | math_reasoning | 80 | 111 | 328 | 362 | 265 | 284 | 0.930 | 0.880 | 0.905 | 0.987 |
+| 8 | rag | 80 | 770 | 377 | 502 | 324 | 465 | 0.772 | 0.734 | 0.753 | 0.750 |
+
+== pre-registered expectation (report-only; measured = pooled NEW/OLD - 1, %; above / below = the measured % lies above / below the expected band, so for TTFT `below` is a LARGER cut than expected) ==
+  sharegpt c4 output tok/s                       expected +1..+3 %    measured    5.17 %  -> above  (A/B noise 4.22 %)
+  sharegpt c8 output tok/s                       expected +1..+3 %    measured    8.55 %  -> above  (A/B noise 1.98 %)
+  specbench c4 output tok/s                      expected +1..+3 %    measured    4.24 %  -> above  (A/B noise 0.58 %)
+  specbench c8 output tok/s                      expected +1..+3 %    measured    6.62 %  -> above  (A/B noise 3.46 %)
+  sharegpt c1 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -13.22 %  -> below  (A/B noise 7.10 %)
+  sharegpt c2 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured   -7.38 %  -> below  (A/B noise 0.97 %)
+  sharegpt c4 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -12.38 %  -> below  (A/B noise 6.11 %)
+  sharegpt c8 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -15.36 %  -> below  (A/B noise 2.94 %)
+  specbench c1 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -1.98 %  -> within
+  specbench c1 translation TTFT mean             expected ~0 (+-5 %)  measured   -0.58 %  -> within
+  specbench c1 summarization TTFT mean           expected -30..-40 %  measured  -18.23 %  -> above
+  specbench c1 qa TTFT mean                      expected ~0 (+-5 %)  measured    7.64 %  -> above
+  specbench c1 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured    5.62 %  -> above
+  specbench c1 rag TTFT mean                     expected -30..-40 %  measured  -18.63 %  -> above
+  specbench c2 mt_bench TTFT mean                expected ~0 (+-5 %)  measured  -11.18 %  -> below
+  specbench c2 translation TTFT mean             expected ~0 (+-5 %)  measured    1.22 %  -> within
+  specbench c2 summarization TTFT mean           expected -30..-40 %  measured  -28.23 %  -> above
+  specbench c2 qa TTFT mean                      expected ~0 (+-5 %)  measured    1.54 %  -> within
+  specbench c2 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured    0.39 %  -> within
+  specbench c2 rag TTFT mean                     expected -30..-40 %  measured  -26.83 %  -> above
+  specbench c4 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -4.83 %  -> within
+  specbench c4 translation TTFT mean             expected ~0 (+-5 %)  measured    0.21 %  -> within
+  specbench c4 summarization TTFT mean           expected -30..-40 %  measured  -23.51 %  -> above
+  specbench c4 qa TTFT mean                      expected ~0 (+-5 %)  measured   -3.51 %  -> within
+  specbench c4 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured   -2.29 %  -> within
+  specbench c4 rag TTFT mean                     expected -30..-40 %  measured  -18.14 %  -> above
+  specbench c8 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -7.64 %  -> below
+  specbench c8 translation TTFT mean             expected ~0 (+-5 %)  measured   -1.87 %  -> within
+  specbench c8 summarization TTFT mean           expected -30..-40 %  measured  -23.97 %  -> above
+  specbench c8 qa TTFT mean                      expected ~0 (+-5 %)  measured   -4.87 %  -> within
+  specbench c8 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured   -9.51 %  -> below
+  specbench c8 rag TTFT mean                     expected -30..-40 %  measured  -24.75 %  -> above
+
+FLAGS: none

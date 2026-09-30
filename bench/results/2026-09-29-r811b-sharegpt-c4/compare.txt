@@ -1,0 +1,17 @@
+== R811 paired comparison: NEW vs OLD (ratio = NEW / OLD; output tok/s > 1 = NEW faster; TTFT / TPOT < 1 = NEW faster) ==
+pooled = mean over the passes both arms have; agree = both passes on the same side of 1; noise = larger within-arm A/B spread (%); >noise = |pooled - 1| above it
+
+== sharegpt ==
+| c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | output tok/s | 436.5 | 415.5 | 1.051 | 438.6 | 416.6 | 1.053 | 1.052 | yes | 0.47 | yes |
+| 4 | TTFT mean ms | 254.2 | 290.2 | 0.876 | 252.5 | 291.9 | 0.865 | 0.871 | yes | 0.68 | yes |
+| 4 | TTFT median ms | 245.0 | 271.0 | 0.904 | 240.1 | 274.2 | 0.875 | 0.890 | yes | 2.02 | yes |
+| 4 | TTFT p99 ms | 529.6 | 803.7 | 0.659 | 578.0 | 791.3 | 0.730 | 0.694 | yes | 8.74 | yes |
+| 4 | TPOT mean ms | 7.37 | 7.52 | 0.980 | 7.22 | 7.37 | 0.979 | 0.980 | yes | 2.08 | no |
+
+== pre-registered expectation (report-only; measured = pooled NEW/OLD - 1, %; above / below = the measured % lies above / below the expected band, so for TTFT `below` is a LARGER cut than expected) ==
+  sharegpt c4 output tok/s                       expected +1..+3 %    measured    5.17 %  -> above  (A/B noise 0.47 %)
+  sharegpt c4 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -12.94 %  -> below  (A/B noise 0.68 %)
+
+FLAGS: none

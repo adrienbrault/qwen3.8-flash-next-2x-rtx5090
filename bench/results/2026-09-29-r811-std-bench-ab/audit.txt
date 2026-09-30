@@ -1,0 +1,524 @@
+  shim: patched vllm 0.30.0: openai-chat -> tabby_chat (usage from any frame, CRLF SSE, min_tokens=output_len ON); SpecBench skip_chat_template forced, SpecBench jsonl read without pandas; sample manifest ON
+  preflight: tokenizer CachedQwen2Tokenizer vocab 248077 | template tail 'user\nhi<|im_end|>\n<|im_start|>assistant\n<think>\n'
+  preflight: specbench rows 480
+2026-09-29T20:33:38+00:00 [r811-std-bench-ab] probes (snapshot md5): vllm_bench_tabby.py d2bc4794; parse_container.py a0f80a17; std_bench_summary.py 87ba04fe; r811_ab_compare.py 4e92c38e; test_r811_ab_compare.py 2f87106a; self-test: 10 passed, 0 failed
+2026-09-29T20:33:38+00:00 [r811-std-bench-ab] R811 std-bench A/B: NEW launch-flashnext.sh (6429dfa2, tabbyapi:merge-tok-r1 ac16920f72cf, 41 keys) vs OLD launch-flashnext.sh.pre-r809 (04e347cc, tabbyapi:tokenize-offloop-r2 04b06fa97c4d, 39 keys); passes A B (A: NEW then OLD, B: OLD then NEW); datasets sharegpt specbench; concs 1 2 4 8; SG_N 400 seed 7310; SB_N 480 out 256; want core 0 0 / memory 4500 4500 / power 600 575 W; results 2026-09-29-r811-std-bench-ab
+2026-09-29T20:33:38+00:00 [r811-std-bench-ab] after the lock: both launchers and both image ids unchanged
+2026-09-29T20:34:14+00:00 [r811-std-bench-ab] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; direct clients stopped: hermes hermes-webui owui-proxy; offsets now core 0 0 / memory 4500 4500, power 600 575 W
+gateway_wait_idle: waiting for flan-flashnext(healthy, 0 in flight) 
+2026-09-29T20:34:43+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c1] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T20:34:43+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T20:41:12+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c1] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T20:41:12+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c1] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 5..433); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 376.02 ;Output token throughput (tok/s): 223.71 ;Mean TTFT (ms): 154.95 ;Median TPOT (ms): 3.47 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T20:41:31+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c1] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T20:41:31+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T20:47:58+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c1] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T20:47:58+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c1] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 5..433); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 371.52 ;Output token throughput (tok/s): 226.42 ;Mean TTFT (ms): 168.74 ;Median TPOT (ms): 3.38 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T20:48:16+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c2] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T20:48:17+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T20:52:58+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c2] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T20:52:58+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c2] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 6..427); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 266.82 ;Output token throughput (tok/s): 315.27 ;Mean TTFT (ms): 214.01 ;Median TPOT (ms): 4.88 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T20:53:16+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c2] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T20:53:17+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T20:57:56+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c2] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T20:57:56+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c2] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 6..427); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 265.15 ;Output token throughput (tok/s): 317.26 ;Mean TTFT (ms): 230.37 ;Median TPOT (ms): 4.68 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T20:58:14+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T20:58:15+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T21:01:39+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:01:39+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 192.29 ;Output token throughput (tok/s): 437.47 ;Mean TTFT (ms): 254.07 ;Median TPOT (ms): 7.35 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:01:58+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:01:58+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T21:05:40+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T21:05:40+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..425); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 209.76 ;Output token throughput (tok/s): 401.04 ;Mean TTFT (ms): 307.42 ;Median TPOT (ms): 7.73 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:05:59+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c8] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:06:00+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T21:08:52+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c8] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:08:52+00:00 [r811-std-bench-ab] [NEW/A-sharegpt-c8] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 12..426); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 159.59 ;Output token throughput (tok/s): 527.09 ;Mean TTFT (ms): 335.97 ;Median TPOT (ms): 12.82 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:09:11+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c8] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:09:12+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T21:12:20+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c8] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T21:12:20+00:00 [r811-std-bench-ab] [OLD/A-sharegpt-c8] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 12..426); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 174.46 ;Output token throughput (tok/s): 482.17 ;Mean TTFT (ms): 395.25 ;Median TPOT (ms): 13.83 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:12:38+00:00 [r811-std-bench-ab] [NEW/A-specbench-c1] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:12:39+00:00 [r811-std-bench-ab] [NEW/A-specbench-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T21:21:10+00:00 [r811-std-bench-ab] [NEW/A-specbench-c1] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:21:10+00:00 [r811-std-bench-ab] [NEW/A-specbench-c1] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 5..521); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 500.20 ;Output token throughput (tok/s): 245.66 ;Mean TTFT (ms): 156.78 ;Median TPOT (ms): 3.46 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:21:29+00:00 [r811-std-bench-ab] [OLD/A-specbench-c1] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:21:29+00:00 [r811-std-bench-ab] [OLD/A-specbench-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T21:29:53+00:00 [r811-std-bench-ab] [OLD/A-specbench-c1] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T21:29:53+00:00 [r811-std-bench-ab] [OLD/A-specbench-c1] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 5..521); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 492.77 ;Output token throughput (tok/s): 249.37 ;Mean TTFT (ms): 169.04 ;Median TPOT (ms): 3.36 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:30:14+00:00 [r811-std-bench-ab] [NEW/A-specbench-c2] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:30:15+00:00 [r811-std-bench-ab] [NEW/A-specbench-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T21:36:09+00:00 [r811-std-bench-ab] [NEW/A-specbench-c2] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:36:09+00:00 [r811-std-bench-ab] [NEW/A-specbench-c2] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 6..512); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 342.89 ;Output token throughput (tok/s): 358.36 ;Mean TTFT (ms): 205.70 ;Median TPOT (ms): 4.73 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:36:30+00:00 [r811-std-bench-ab] [OLD/A-specbench-c2] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:36:30+00:00 [r811-std-bench-ab] [OLD/A-specbench-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T21:42:41+00:00 [r811-std-bench-ab] [OLD/A-specbench-c2] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T21:42:41+00:00 [r811-std-bench-ab] [OLD/A-specbench-c2] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 6..513); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 358.43 ;Output token throughput (tok/s): 342.82 ;Mean TTFT (ms): 246.93 ;Median TPOT (ms): 4.79 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:43:00+00:00 [r811-std-bench-ab] [NEW/A-specbench-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:43:00+00:00 [r811-std-bench-ab] [NEW/A-specbench-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T21:47:24+00:00 [r811-std-bench-ab] [NEW/A-specbench-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:47:24+00:00 [r811-std-bench-ab] [NEW/A-specbench-c4] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 8..508); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 252.44 ;Output token throughput (tok/s): 486.78 ;Mean TTFT (ms): 258.02 ;Median TPOT (ms): 7.07 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:47:43+00:00 [r811-std-bench-ab] [OLD/A-specbench-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:47:44+00:00 [r811-std-bench-ab] [OLD/A-specbench-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T21:52:19+00:00 [r811-std-bench-ab] [OLD/A-specbench-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T21:52:19+00:00 [r811-std-bench-ab] [OLD/A-specbench-c4] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 8..509); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 263.79 ;Output token throughput (tok/s): 465.82 ;Mean TTFT (ms): 292.57 ;Median TPOT (ms): 7.27 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:52:40+00:00 [r811-std-bench-ab] [NEW/A-specbench-c8] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:52:42+00:00 [r811-std-bench-ab] [NEW/A-specbench-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T21:56:25+00:00 [r811-std-bench-ab] [NEW/A-specbench-c8] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T21:56:25+00:00 [r811-std-bench-ab] [NEW/A-specbench-c8] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 12..509); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 211.68 ;Output token throughput (tok/s): 580.51 ;Mean TTFT (ms): 346.14 ;Median TPOT (ms): 12.30 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T21:56:45+00:00 [r811-std-bench-ab] [OLD/A-specbench-c8] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T21:56:47+00:00 [r811-std-bench-ab] [OLD/A-specbench-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T22:00:40+00:00 [r811-std-bench-ab] [OLD/A-specbench-c8] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:00:40+00:00 [r811-std-bench-ab] [OLD/A-specbench-c8] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 12..510); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 221.72 ;Output token throughput (tok/s): 554.22 ;Mean TTFT (ms): 385.25 ;Median TPOT (ms): 12.85 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:01:01+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c1] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:01:01+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T22:07:30+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c1] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:07:30+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c1] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 5..433); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 376.40 ;Output token throughput (tok/s): 223.48 ;Mean TTFT (ms): 176.14 ;Median TPOT (ms): 3.38 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:07:48+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c1] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:07:49+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T22:14:11+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c1] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T22:14:11+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c1] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 5..432); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 368.53 ;Output token throughput (tok/s): 228.26 ;Mean TTFT (ms): 144.32 ;Median TPOT (ms): 3.47 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:14:31+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c2] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:14:32+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T22:19:08+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c2] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:19:08+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c2] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 6..427); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 264.56 ;Output token throughput (tok/s): 317.97 ;Mean TTFT (ms): 229.51 ;Median TPOT (ms): 4.70 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:19:29+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c2] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:19:29+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T22:24:08+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c2] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T22:24:08+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c2] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 6..427); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 266.49 ;Output token throughput (tok/s): 315.65 ;Mean TTFT (ms): 211.95 ;Median TPOT (ms): 4.88 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:24:27+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:24:27+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T22:28:04+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:28:04+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 203.34 ;Output token throughput (tok/s): 413.69 ;Mean TTFT (ms): 290.76 ;Median TPOT (ms): 7.56 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:28:25+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:28:26+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T22:31:59+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T22:31:59+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c4] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 8..424); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 200.58 ;Output token throughput (tok/s): 419.39 ;Mean TTFT (ms): 270.07 ;Median TPOT (ms): 7.61 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:32:18+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c8] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:32:19+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T22:35:24+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c8] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:35:24+00:00 [r811-std-bench-ab] [OLD/B-sharegpt-c8] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 13..427); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 171.04 ;Output token throughput (tok/s): 491.83 ;Mean TTFT (ms): 387.10 ;Median TPOT (ms): 13.40 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:35:42+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c8] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:35:44+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T22:38:34+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c8] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T22:38:34+00:00 [r811-std-bench-ab] [NEW/B-sharegpt-c8] rc 0; 1 shim line; 400 sampled; server lines 400/400 (serials 12..425); Successful requests: 400 ;Failed requests: 0 ;Benchmark duration (s): 158.65 ;Output token throughput (tok/s): 530.22 ;Mean TTFT (ms): 326.25 ;Median TPOT (ms): 12.75 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:38:53+00:00 [r811-std-bench-ab] [OLD/B-specbench-c1] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:38:53+00:00 [r811-std-bench-ab] [OLD/B-specbench-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T22:47:21+00:00 [r811-std-bench-ab] [OLD/B-specbench-c1] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T22:47:21+00:00 [r811-std-bench-ab] [OLD/B-specbench-c1] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 5..521); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 497.33 ;Output token throughput (tok/s): 247.08 ;Mean TTFT (ms): 176.00 ;Median TPOT (ms): 3.37 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:47:42+00:00 [r811-std-bench-ab] [NEW/B-specbench-c1] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:47:43+00:00 [r811-std-bench-ab] [NEW/B-specbench-c1] warm-up: 1/1 ok, completion tokens [None]
+2026-09-29T22:56:17+00:00 [r811-std-bench-ab] [NEW/B-specbench-c1] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T22:56:17+00:00 [r811-std-bench-ab] [NEW/B-specbench-c1] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 5..521); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 502.53 ;Output token throughput (tok/s): 244.53 ;Mean TTFT (ms): 159.42 ;Median TPOT (ms): 3.47 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T22:56:35+00:00 [r811-std-bench-ab] [OLD/B-specbench-c2] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T22:56:36+00:00 [r811-std-bench-ab] [OLD/B-specbench-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T23:02:34+00:00 [r811-std-bench-ab] [OLD/B-specbench-c2] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T23:02:34+00:00 [r811-std-bench-ab] [OLD/B-specbench-c2] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 6..512); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 347.28 ;Output token throughput (tok/s): 353.84 ;Mean TTFT (ms): 231.35 ;Median TPOT (ms): 4.69 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:02:53+00:00 [r811-std-bench-ab] [NEW/B-specbench-c2] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T23:02:53+00:00 [r811-std-bench-ab] [NEW/B-specbench-c2] warm-up: 2/2 ok, completion tokens [None, None]
+2026-09-29T23:08:46+00:00 [r811-std-bench-ab] [NEW/B-specbench-c2] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T23:08:46+00:00 [r811-std-bench-ab] [NEW/B-specbench-c2] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 6..511); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 341.98 ;Output token throughput (tok/s): 359.32 ;Mean TTFT (ms): 203.50 ;Median TPOT (ms): 4.72 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:09:05+00:00 [r811-std-bench-ab] [OLD/B-specbench-c4] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T23:09:06+00:00 [r811-std-bench-ab] [OLD/B-specbench-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T23:13:41+00:00 [r811-std-bench-ab] [OLD/B-specbench-c4] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T23:13:41+00:00 [r811-std-bench-ab] [OLD/B-specbench-c4] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 8..508); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 263.99 ;Output token throughput (tok/s): 465.47 ;Mean TTFT (ms): 289.43 ;Median TPOT (ms): 7.30 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:14:01+00:00 [r811-std-bench-ab] [NEW/B-specbench-c4] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T23:14:02+00:00 [r811-std-bench-ab] [NEW/B-specbench-c4] warm-up: 4/4 ok, completion tokens [None, None, None, None]
+2026-09-29T23:18:27+00:00 [r811-std-bench-ab] [NEW/B-specbench-c4] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T23:18:27+00:00 [r811-std-bench-ab] [NEW/B-specbench-c4] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 8..508); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 253.90 ;Output token throughput (tok/s): 483.97 ;Mean TTFT (ms): 261.14 ;Median TPOT (ms): 7.11 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:18:47+00:00 [r811-std-bench-ab] [OLD/B-specbench-c8] UP: image tabbyapi:tokenize-offloop-r2 (04b06fa97c4d); launcher md5 04e347cc; keys 39 (container EXL3_ env 41, sha 846adef67399, window 0); readback 'absent exllamav3.cache.prefill_merge'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T23:18:49+00:00 [r811-std-bench-ab] [OLD/B-specbench-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T23:22:49+00:00 [r811-std-bench-ab] [OLD/B-specbench-c8] prefill-merge lines in the container log: 0; disabled: 
+2026-09-29T23:22:49+00:00 [r811-std-bench-ab] [OLD/B-specbench-c8] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 13..511); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 229.53 ;Output token throughput (tok/s): 535.36 ;Mean TTFT (ms): 407.79 ;Median TPOT (ms): 13.19 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:23:08+00:00 [r811-std-bench-ab] [NEW/B-specbench-c8] UP: image tabbyapi:merge-tok-r1 (ac16920f72cf); launcher md5 6429dfa2; keys 41 (container EXL3_ env 43, sha c27236961230, window 0); readback 'prefill-merge-r1 1 1'; slots 8 cache 901120 policy '[[4, 3], [8, 2]]'; power 600 575 W (launcher: power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0); core offsets 0 0; memory offsets 4500 4500 (launcher: memory clock offset: set +4500 on every GPU, readback 4500 4500); VRAM free 1181/1759/
+2026-09-29T23:23:09+00:00 [r811-std-bench-ab] [NEW/B-specbench-c8] warm-up: 8/8 ok, completion tokens [None, None, None, None, None, None, None, None]
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] [NEW/B-specbench-c8] prefill-merge lines in the container log: 2; disabled: 
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] [NEW/B-specbench-c8] rc 0; 1 shim line; 480 sampled; server lines 480/480 (serials 12..509); Successful requests: 480 ;Failed requests: 0 ;Benchmark duration (s): 211.43 ;Output token throughput (tok/s): 581.18 ;Mean TTFT (ms): 337.31 ;Median TPOT (ms): 12.31 ; OOM 0 TORCH_CHECK 0 tracebacks 0 unsupported 0; offsets after core 0 0 memory 4500 4500, power 600 575 W; foreign 0
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] at the end: both launchers unchanged
+  [NEW] == configuration (first boot; FLAGS list any boot that differs) ==
+  [NEW]   image          tabbyapi:merge-tok-r1
+  [NEW]   image_id       sha256:ac16920f72cf
+  [NEW]   launcher_md5   6429dfa2035a37dba51bb09651d374e8
+  [NEW]   env_n          43
+  [NEW]   env_sha        c27236961230
+  [NEW]   keys_n         41
+  [NEW]   window         0
+  [NEW]   slots          8
+  [NEW]   cache          901120
+  [NEW]   policy         [[4, 3], [8, 2]]
+  [NEW]   gpc_boot       0 0
+  [NEW]   mem_boot       4500 4500
+  [NEW]   power_limit_w  600 575
+  [NEW]   vram_free      1181/1759/
+  [NEW]   pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  [NEW]   boots          16
+  [NEW] 
+  [NEW] == sharegpt, pass A ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 1 | 400 | 223.7 | 1.06 | 139 / 279 | 3.47 / 4.63 | 288 | 0.62 | 2.66 | 3.00 |
+  [NEW] | 2 | 400 | 315.3 | 1.50 | 201 / 362 | 4.88 / 8.60 | 205 | 0.88 | 2.65 | 3.00 |
+  [NEW] | 4 | 400 | 437.5 | 2.08 | 245 / 529 | 7.35 / 17.43 | 136 | 1.24 | 2.64 | 3.00 |
+  [NEW] | 8 | 400 | 527.1 | 2.51 | 309 / 995 | 12.82 / 20.80 | 78 | 1.99 | 2.30 | 2.01 |
+  [NEW] 
+  [NEW] == sharegpt, pass B ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 1 | 400 | 228.3 | 1.09 | 133 / 227 | 3.47 / 4.66 | 288 | 0.61 | 2.66 | 3.00 |
+  [NEW] | 2 | 400 | 315.7 | 1.50 | 198 / 354 | 4.88 / 8.26 | 205 | 0.86 | 2.65 | 3.00 |
+  [NEW] | 4 | 400 | 419.4 | 1.99 | 255 / 594 | 7.61 / 17.87 | 131 | 1.29 | 2.64 | 3.00 |
+  [NEW] | 8 | 400 | 530.2 | 2.52 | 306 / 854 | 12.75 / 19.83 | 78 | 1.99 | 2.30 | 2.01 |
+  [NEW] 
+  [NEW] == specbench, pass A ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 1 | 480 | 245.7 | 0.96 | 132 / 319 | 3.46 / 4.42 | 289 | 1.04 | 2.87 | 3.00 |
+  [NEW] | 2 | 480 | 358.4 | 1.40 | 182 / 384 | 4.73 / 6.18 | 212 | 1.41 | 2.88 | 3.00 |
+  [NEW] | 4 | 480 | 486.8 | 1.90 | 236 / 590 | 7.07 / 9.27 | 142 | 2.06 | 2.87 | 3.00 |
+  [NEW] | 8 | 480 | 580.5 | 2.27 | 316 / 790 | 12.30 / 15.55 | 81 | 3.48 | 2.43 | 2.01 |
+  [NEW] 
+  [NEW] == specbench, pass B ==
+  [NEW] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [NEW] |---|---|---|---|---|---|---|---|---|---|
+  [NEW] | 1 | 480 | 244.5 | 0.96 | 133 / 317 | 3.47 / 4.45 | 288 | 1.04 | 2.87 | 3.00 |
+  [NEW] | 2 | 480 | 359.3 | 1.40 | 182 / 361 | 4.72 / 6.19 | 212 | 1.40 | 2.88 | 3.00 |
+  [NEW] | 4 | 480 | 484.0 | 1.89 | 246 / 591 | 7.11 / 9.57 | 141 | 2.08 | 2.87 | 3.00 |
+  [NEW] | 8 | 480 | 581.2 | 2.27 | 313 / 855 | 12.31 / 15.48 | 81 | 3.47 | 2.44 | 2.00 |
+  [NEW] 
+  [NEW] == sharegpt: pass A vs B (spread = |A - B| / mean) ==
+  [NEW] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [NEW]    1    223.7    228.3    226.0   2.01%     3.47   3.47      139    133   2.66  2.66
+  [NEW]    2    315.3    315.7    315.5   0.12%     4.88   4.88      201    198   2.65  2.65
+  [NEW]    4    437.5    419.4    428.4   4.22%     7.35   7.61      245    255   2.64  2.64
+  [NEW]    8    527.1    530.2    528.7   0.59%    12.82  12.75      309    306   2.30  2.30
+  [NEW] 
+  [NEW] == specbench: pass A vs B (spread = |A - B| / mean) ==
+  [NEW] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [NEW]    1    245.7    244.5    245.1   0.46%     3.46   3.47      132    133   2.87  2.87
+  [NEW]    2    358.4    359.3    358.8   0.27%     4.73   4.72      182    182   2.88  2.88
+  [NEW]    4    486.8    484.0    485.4   0.58%     7.07   7.11      236    246   2.87  2.87
+  [NEW]    8    580.5    581.2    580.8   0.12%    12.30  12.31      316    313   2.43  2.44
+  [NEW] 
+  [NEW] == diagnostics (not for the README) ==
+  [NEW] tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+  [NEW] A-sharegpt-c1             376     272   210     513.3    10.21  2.66    2.69    0.554     0.00    0   400
+  [NEW] A-sharegpt-c2             267     272   210     723.4    12.88  2.65    2.68    0.550     0.00    0   400
+  [NEW] A-sharegpt-c4             192     272   210    1003.8    17.37  2.64    2.67    0.547     0.00    0   400
+  [NEW] A-sharegpt-c8             160     272   210    1209.5    23.42  2.30    2.32    0.647     0.00    0   400
+  [NEW] A-specbench-c1            500     322   256     554.6    10.19  2.87    2.92    0.624     0.00    0   480
+  [NEW] A-specbench-c2            343     322   256     809.1    12.73  2.88    2.93    0.625     0.00    0   480
+  [NEW] A-specbench-c4            252     322   256    1099.0    17.46  2.87    2.92    0.625     0.00    0   480
+  [NEW] A-specbench-c8            212     322   256    1310.6    23.59  2.43    2.47    0.715     0.00    0   480
+  [NEW] B-sharegpt-c1             369     272   210     523.8    10.13  2.66    2.69    0.554     0.00    0   400
+  [NEW] B-sharegpt-c2             266     272   210     724.3    12.87  2.65    2.67    0.549     0.00    0   400
+  [NEW] B-sharegpt-c4             201     272   210     962.3    17.77  2.64    2.67    0.547     0.00    0   400
+  [NEW] B-sharegpt-c8             159     272   210    1216.6    23.30  2.30    2.32    0.645     0.00    0   400
+  [NEW] B-specbench-c1            503     322   256     552.0    10.21  2.87    2.92    0.624     0.00    0   480
+  [NEW] B-specbench-c2            342     322   256     811.2    12.71  2.88    2.93    0.625     0.00    0   480
+  [NEW] B-specbench-c4            254     322   256    1092.6    17.48  2.87    2.92    0.625     0.00    0   480
+  [NEW] B-specbench-c8            211     322   256    1312.1    23.54  2.44    2.47    0.717     0.00    0   480
+  [NEW] 
+  [NEW] == A-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+  [NEW] category           n   tau acc/prop     gen
+  [NEW] translation       80  2.83    0.611   20480
+  [NEW] summarization     80  2.73    0.576   20480
+  [NEW] math_reasoning    80  3.30    0.765   20480
+  [NEW] coding            10  2.66    0.555    2560
+  [NEW] qa                80  2.73    0.578   20480
+  [NEW] writing           10  2.63    0.543    2560
+  [NEW] rag               80  2.96    0.653   20480
+  [NEW] extraction        10  3.04    0.679    2560
+  [NEW] stem              10  2.64    0.545    2560
+  [NEW] reasoning         10  2.94    0.648    2560
+  [NEW] roleplay          10  2.57    0.524    2560
+  [NEW] math              10  3.30    0.768    2560
+  [NEW] humanities        10  2.45    0.482    2560
+  [NEW] -- task groups (MT-bench pooled) --
+  [NEW] translation       80  2.83    0.611   20480
+  [NEW] summarization     80  2.73    0.576   20480
+  [NEW] math_reasoning    80  3.30    0.765   20480
+  [NEW] mt_bench          80  2.75    0.585   20480
+  [NEW] qa                80  2.73    0.578   20480
+  [NEW] rag               80  2.96    0.653   20480
+  [NEW] 
+  [NEW] == B-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+  [NEW] category           n   tau acc/prop     gen
+  [NEW] translation       80  2.83    0.611   20480
+  [NEW] summarization     80  2.73    0.576   20480
+  [NEW] math_reasoning    80  3.30    0.765   20480
+  [NEW] coding            10  2.66    0.555    2560
+  [NEW] qa                80  2.73    0.578   20480
+  [NEW] writing           10  2.63    0.543    2560
+  [NEW] rag               80  2.96    0.653   20480
+  [NEW] extraction        10  3.04    0.679    2560
+  [NEW] stem              10  2.64    0.545    2560
+  [NEW] reasoning         10  2.94    0.648    2560
+  [NEW] roleplay          10  2.57    0.524    2560
+  [NEW] math              10  3.30    0.768    2560
+  [NEW] humanities        10  2.45    0.482    2560
+  [NEW] -- task groups (MT-bench pooled) --
+  [NEW] translation       80  2.83    0.611   20480
+  [NEW] summarization     80  2.73    0.576   20480
+  [NEW] math_reasoning    80  3.30    0.765   20480
+  [NEW] mt_bench          80  2.75    0.585   20480
+  [NEW] qa                80  2.73    0.578   20480
+  [NEW] rag               80  2.96    0.653   20480
+  [NEW] 
+  [NEW] FLAGS: none
+  [NEW] 
+  [NEW] DECISION: NOT-PUBLISHABLE sharegpt c4: A/B spread 4.22 % > 3 % (437.5 vs 419.4 tok/s)
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] [NEW] arm decision: NOT-PUBLISHABLE sharegpt c4: A/B spread 4.22 % > 3 % (437.5 vs 419.4 tok/s)
+  [OLD] == configuration (first boot; FLAGS list any boot that differs) ==
+  [OLD]   image          tabbyapi:tokenize-offloop-r2
+  [OLD]   image_id       sha256:04b06fa97c4d
+  [OLD]   launcher_md5   04e347cccea238730f04de85807283e5
+  [OLD]   env_n          41
+  [OLD]   env_sha        846adef67399
+  [OLD]   keys_n         39
+  [OLD]   window         0
+  [OLD]   slots          8
+  [OLD]   cache          901120
+  [OLD]   policy         [[4, 3], [8, 2]]
+  [OLD]   gpc_boot       0 0
+  [OLD]   mem_boot       4500 4500
+  [OLD]   power_limit_w  600 575
+  [OLD]   vram_free      1181/1759/
+  [OLD]   pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  [OLD]   boots          16
+  [OLD] 
+  [OLD] == sharegpt, pass A ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 1 | 400 | 226.4 | 1.08 | 132 / 281 | 3.38 / 4.44 | 296 | 0.63 | 2.65 | 3.00 |
+  [OLD] | 2 | 400 | 317.3 | 1.51 | 187 / 482 | 4.68 / 8.81 | 214 | 0.86 | 2.65 | 3.00 |
+  [OLD] | 4 | 400 | 401.0 | 1.91 | 283 / 682 | 7.73 / 13.79 | 129 | 1.38 | 2.66 | 3.00 |
+  [OLD] | 8 | 400 | 482.2 | 2.29 | 380 / 1218 | 13.83 / 27.30 | 72 | 2.20 | 2.30 | 2.01 |
+  [OLD] 
+  [OLD] == sharegpt, pass B ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 1 | 400 | 223.5 | 1.06 | 136 / 321 | 3.38 / 4.50 | 296 | 0.64 | 2.65 | 3.00 |
+  [OLD] | 2 | 400 | 318.0 | 1.51 | 185 / 471 | 4.70 / 8.90 | 213 | 0.86 | 2.65 | 3.00 |
+  [OLD] | 4 | 400 | 413.7 | 1.97 | 273 / 829 | 7.56 / 18.16 | 132 | 1.29 | 2.66 | 3.00 |
+  [OLD] | 8 | 400 | 491.8 | 2.34 | 375 / 1301 | 13.40 / 20.99 | 75 | 2.11 | 2.30 | 2.01 |
+  [OLD] 
+  [OLD] == specbench, pass A ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 1 | 480 | 249.4 | 0.97 | 128 / 331 | 3.36 / 4.25 | 298 | 1.02 | 2.87 | 3.00 |
+  [OLD] | 2 | 480 | 342.8 | 1.34 | 184 / 530 | 4.79 / 6.67 | 209 | 1.47 | 2.87 | 3.00 |
+  [OLD] | 4 | 480 | 465.8 | 1.82 | 248 / 666 | 7.27 / 10.15 | 138 | 2.17 | 2.86 | 3.00 |
+  [OLD] | 8 | 480 | 554.2 | 2.16 | 358 / 859 | 12.85 / 16.28 | 78 | 3.64 | 2.44 | 2.00 |
+  [OLD] 
+  [OLD] == specbench, pass B ==
+  [OLD] | Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+  [OLD] |---|---|---|---|---|---|---|---|---|---|
+  [OLD] | 1 | 480 | 247.1 | 0.97 | 129 / 367 | 3.37 / 4.30 | 296 | 1.03 | 2.87 | 3.00 |
+  [OLD] | 2 | 480 | 353.8 | 1.38 | 179 / 461 | 4.69 / 6.36 | 213 | 1.43 | 2.87 | 3.00 |
+  [OLD] | 4 | 480 | 465.5 | 1.82 | 249 / 630 | 7.30 / 9.80 | 137 | 2.19 | 2.87 | 3.00 |
+  [OLD] | 8 | 480 | 535.4 | 2.09 | 382 / 841 | 13.19 / 17.11 | 76 | 3.77 | 2.44 | 2.01 |
+  [OLD] 
+  [OLD] == sharegpt: pass A vs B (spread = |A - B| / mean) ==
+  [OLD] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [OLD]    1    226.4    223.5    225.0   1.31%     3.38   3.38      132    136   2.65  2.65
+  [OLD]    2    317.3    318.0    317.6   0.22%     4.68   4.70      187    185   2.65  2.65
+  [OLD]    4    401.0    413.7    407.4   3.11%     7.73   7.56      283    273   2.66  2.66
+  [OLD]    8    482.2    491.8    487.0   1.98%    13.83  13.40      380    375   2.30  2.30
+  [OLD] 
+  [OLD] == specbench: pass A vs B (spread = |A - B| / mean) ==
+  [OLD] conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+  [OLD]    1    249.4    247.1    248.2   0.92%     3.36   3.37      128    129   2.87  2.87
+  [OLD]    2    342.8    353.8    348.3   3.16%     4.79   4.69      184    179   2.87  2.87
+  [OLD]    4    465.8    465.5    465.6   0.07%     7.27   7.30      248    249   2.86  2.87
+  [OLD]    8    554.2    535.4    544.8   3.46%    12.85  13.19      358    382   2.44  2.44
+  [OLD] 
+  [OLD] == diagnostics (not for the README) ==
+  [OLD] tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+  [OLD] A-sharegpt-c1             372     272   210     519.6     9.87  2.65    2.68    0.551     0.00    0   400
+  [OLD] A-sharegpt-c2             265     272   210     728.0    12.42  2.65    2.68    0.549     0.00    0   400
+  [OLD] A-sharegpt-c4             210     272   210     920.2    17.77  2.66    2.68    0.553     0.00    0   400
+  [OLD] A-sharegpt-c8             174     272   210    1106.4    23.80  2.30    2.32    0.646     0.00    0   400
+  [OLD] A-specbench-c1            493     322   256     563.0     9.88  2.87    2.92    0.624     0.00    0   480
+  [OLD] A-specbench-c2            358     322   256     774.0    12.63  2.87    2.92    0.625     0.00    0   480
+  [OLD] A-specbench-c4            264     322   256    1051.6    17.46  2.86    2.91    0.620     0.00    0   480
+  [OLD] A-specbench-c8            222     322   256    1251.2    23.63  2.44    2.47    0.717     0.00    0   480
+  [OLD] B-sharegpt-c1             376     272   210     512.8     9.92  2.65    2.68    0.551     0.00    0   400
+  [OLD] B-sharegpt-c2             265     272   210     729.6    12.40  2.65    2.68    0.549     0.00    0   400
+  [OLD] B-sharegpt-c4             203     272   210     949.2    17.51  2.66    2.68    0.552     0.00    0   400
+  [OLD] B-sharegpt-c8             171     272   210    1128.5    23.73  2.30    2.32    0.646     0.00    0   400
+  [OLD] B-specbench-c1            497     322   256     557.8     9.90  2.87    2.92    0.624     0.00    0   480
+  [OLD] B-specbench-c2            347     322   256     798.8    12.46  2.87    2.92    0.625     0.00    0   480
+  [OLD] B-specbench-c4            264     322   256    1050.9    17.48  2.87    2.92    0.622     0.00    0   480
+  [OLD] B-specbench-c8            230     322   256    1208.6    24.04  2.44    2.47    0.716     0.00    0   480
+  [OLD] 
+  [OLD] == A-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+  [OLD] category           n   tau acc/prop     gen
+  [OLD] translation       80  2.83    0.611   20480
+  [OLD] summarization     80  2.74    0.581   20480
+  [OLD] math_reasoning    80  3.30    0.765   20480
+  [OLD] coding            10  2.66    0.555    2560
+  [OLD] qa                80  2.73    0.578   20480
+  [OLD] writing           10  2.63    0.543    2560
+  [OLD] rag               80  2.95    0.649   20480
+  [OLD] extraction        10  3.04    0.679    2560
+  [OLD] stem              10  2.64    0.545    2560
+  [OLD] reasoning         10  2.94    0.648    2560
+  [OLD] roleplay          10  2.57    0.524    2560
+  [OLD] math              10  3.30    0.768    2560
+  [OLD] humanities        10  2.45    0.482    2560
+  [OLD] -- task groups (MT-bench pooled) --
+  [OLD] translation       80  2.83    0.611   20480
+  [OLD] summarization     80  2.74    0.581   20480
+  [OLD] math_reasoning    80  3.30    0.765   20480
+  [OLD] mt_bench          80  2.75    0.585   20480
+  [OLD] qa                80  2.73    0.578   20480
+  [OLD] rag               80  2.95    0.649   20480
+  [OLD] 
+  [OLD] == B-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+  [OLD] category           n   tau acc/prop     gen
+  [OLD] translation       80  2.83    0.611   20480
+  [OLD] summarization     80  2.74    0.581   20480
+  [OLD] math_reasoning    80  3.30    0.765   20480
+  [OLD] coding            10  2.66    0.555    2560
+  [OLD] qa                80  2.73    0.578   20480
+  [OLD] writing           10  2.63    0.543    2560
+  [OLD] rag               80  2.95    0.649   20480
+  [OLD] extraction        10  3.04    0.679    2560
+  [OLD] stem              10  2.64    0.545    2560
+  [OLD] reasoning         10  2.94    0.648    2560
+  [OLD] roleplay          10  2.57    0.524    2560
+  [OLD] math              10  3.30    0.768    2560
+  [OLD] humanities        10  2.45    0.482    2560
+  [OLD] -- task groups (MT-bench pooled) --
+  [OLD] translation       80  2.83    0.611   20480
+  [OLD] summarization     80  2.74    0.581   20480
+  [OLD] math_reasoning    80  3.30    0.765   20480
+  [OLD] mt_bench          80  2.75    0.585   20480
+  [OLD] qa                80  2.73    0.578   20480
+  [OLD] rag               80  2.95    0.649   20480
+  [OLD] 
+  [OLD] FLAGS: none
+  [OLD] 
+  [OLD] DECISION: NOT-PUBLISHABLE sharegpt c4: A/B spread 3.11 % > 3 % (401.0 vs 413.7 tok/s); specbench c2: A/B spread 3.16 % > 3 % (342.8 vs 353.8 tok/s); specbench c8: A/B spread 3.46 % > 3 % (554.2 vs 535.4 tok/s)
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] [OLD] arm decision: NOT-PUBLISHABLE sharegpt c4: A/B spread 3.11 % > 3 % (401.0 vs 413.7 tok/s); specbench c2: A/B spread 3.16 % > 3 % (342.8 vs 353.8 tok/s); specbench c8: A/B spread 3.46 % > 3 % (554.2 vs 535.4 tok/s)
+  == R811 paired comparison: NEW vs OLD (ratio = NEW / OLD; output tok/s > 1 = NEW faster; TTFT / TPOT < 1 = NEW faster) ==
+  pooled = mean over the passes both arms have; agree = both passes on the same side of 1; noise = larger within-arm A/B spread (%); >noise = |pooled - 1| above it
+  
+  == sharegpt ==
+  | c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | 1 | output tok/s | 223.7 | 226.4 | 0.988 | 228.3 | 223.5 | 1.021 | 1.005 | no | 2.01 | no |
+  | 1 | TTFT mean ms | 154.9 | 168.7 | 0.918 | 144.3 | 176.1 | 0.819 | 0.868 | yes | 7.10 | yes |
+  | 1 | TTFT median ms | 139.3 | 132.1 | 1.055 | 133.3 | 136.2 | 0.979 | 1.016 | no | 4.39 | no |
+  | 1 | TTFT p99 ms | 279.3 | 281.3 | 0.993 | 226.8 | 321.0 | 0.707 | 0.840 | yes | 20.73 | no |
+  | 1 | TPOT mean ms | 3.02 | 2.93 | 1.032 | 3.04 | 2.95 | 1.030 | 1.031 | yes | 0.83 | yes |
+  | 2 | output tok/s | 315.3 | 317.3 | 0.994 | 315.7 | 318.0 | 0.993 | 0.993 | yes | 0.22 | yes |
+  | 2 | TTFT mean ms | 214.0 | 230.4 | 0.929 | 212.0 | 229.5 | 0.924 | 0.926 | yes | 0.97 | yes |
+  | 2 | TTFT median ms | 200.6 | 186.9 | 1.074 | 197.6 | 184.9 | 1.069 | 1.071 | yes | 1.51 | yes |
+  | 2 | TTFT p99 ms | 362.3 | 482.2 | 0.751 | 353.7 | 471.2 | 0.751 | 0.751 | yes | 2.39 | yes |
+  | 2 | TPOT mean ms | 4.74 | 4.59 | 1.033 | 4.71 | 4.63 | 1.018 | 1.025 | yes | 0.95 | yes |
+  | 4 | output tok/s | 437.5 | 401.0 | 1.091 | 419.4 | 413.7 | 1.014 | 1.052 | yes | 4.22 | yes |
+  | 4 | TTFT mean ms | 254.1 | 307.4 | 0.826 | 270.1 | 290.8 | 0.929 | 0.876 | yes | 6.11 | yes |
+  | 4 | TTFT median ms | 244.6 | 283.1 | 0.864 | 255.4 | 273.2 | 0.935 | 0.899 | yes | 4.34 | yes |
+  | 4 | TTFT p99 ms | 528.9 | 681.8 | 0.776 | 594.0 | 829.1 | 0.716 | 0.743 | yes | 19.50 | yes |
+  | 4 | TPOT mean ms | 7.35 | 7.66 | 0.960 | 7.64 | 7.55 | 1.012 | 0.986 | no | 3.79 | no |
+  | 8 | output tok/s | 527.1 | 482.2 | 1.093 | 530.2 | 491.8 | 1.078 | 1.086 | yes | 1.98 | yes |
+  | 8 | TTFT mean ms | 336.0 | 395.3 | 0.850 | 326.2 | 387.1 | 0.843 | 0.846 | yes | 2.94 | yes |
+  | 8 | TTFT median ms | 308.6 | 380.4 | 0.811 | 306.4 | 375.0 | 0.817 | 0.814 | yes | 1.42 | yes |
+  | 8 | TTFT p99 ms | 995.1 | 1217.7 | 0.817 | 854.3 | 1301.0 | 0.657 | 0.734 | yes | 15.23 | yes |
+  | 8 | TPOT mean ms | 12.49 | 13.45 | 0.929 | 12.32 | 13.01 | 0.947 | 0.938 | yes | 3.33 | yes |
+  
+  == specbench ==
+  | c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | 1 | output tok/s | 245.7 | 249.4 | 0.985 | 244.5 | 247.1 | 0.990 | 0.987 | yes | 0.92 | yes |
+  | 1 | TTFT mean ms | 156.8 | 169.0 | 0.927 | 159.4 | 176.0 | 0.906 | 0.916 | yes | 4.03 | yes |
+  | 1 | TTFT median ms | 131.7 | 128.2 | 1.028 | 132.8 | 129.3 | 1.027 | 1.027 | yes | 0.86 | yes |
+  | 1 | TTFT p99 ms | 319.1 | 330.6 | 0.965 | 317.0 | 366.8 | 0.864 | 0.912 | yes | 10.36 | no |
+  | 1 | TPOT mean ms | 3.46 | 3.36 | 1.032 | 3.47 | 3.37 | 1.032 | 1.032 | yes | 0.30 | yes |
+  | 2 | output tok/s | 358.4 | 342.8 | 1.045 | 359.3 | 353.8 | 1.015 | 1.030 | yes | 3.16 | no |
+  | 2 | TTFT mean ms | 205.7 | 246.9 | 0.833 | 203.5 | 231.3 | 0.880 | 0.856 | yes | 6.52 | yes |
+  | 2 | TTFT median ms | 181.6 | 183.9 | 0.988 | 181.9 | 179.2 | 1.015 | 1.001 | no | 2.57 | no |
+  | 2 | TTFT p99 ms | 384.2 | 529.7 | 0.725 | 360.7 | 461.0 | 0.782 | 0.752 | yes | 13.86 | yes |
+  | 2 | TPOT mean ms | 4.75 | 4.84 | 0.981 | 4.74 | 4.72 | 1.005 | 0.993 | no | 2.51 | no |
+  | 4 | output tok/s | 486.8 | 465.8 | 1.045 | 484.0 | 465.5 | 1.040 | 1.042 | yes | 0.58 | yes |
+  | 4 | TTFT mean ms | 258.0 | 292.6 | 0.882 | 261.1 | 289.4 | 0.902 | 0.892 | yes | 1.20 | yes |
+  | 4 | TTFT median ms | 236.0 | 247.7 | 0.953 | 245.6 | 248.6 | 0.988 | 0.970 | yes | 4.02 | no |
+  | 4 | TTFT p99 ms | 590.3 | 666.3 | 0.886 | 590.6 | 630.0 | 0.937 | 0.911 | yes | 5.60 | yes |
+  | 4 | TPOT mean ms | 7.14 | 7.37 | 0.969 | 7.18 | 7.39 | 0.971 | 0.970 | yes | 0.55 | yes |
+  | 8 | output tok/s | 580.5 | 554.2 | 1.047 | 581.2 | 535.4 | 1.086 | 1.066 | yes | 3.46 | yes |
+  | 8 | TTFT mean ms | 346.1 | 385.2 | 0.898 | 337.3 | 407.8 | 0.827 | 0.862 | yes | 5.68 | yes |
+  | 8 | TTFT median ms | 315.6 | 357.6 | 0.882 | 312.8 | 382.2 | 0.818 | 0.849 | yes | 6.65 | yes |
+  | 8 | TTFT p99 ms | 790.1 | 858.5 | 0.920 | 855.0 | 841.2 | 1.016 | 0.968 | no | 7.89 | no |
+  | 8 | TPOT mean ms | 12.28 | 12.80 | 0.960 | 12.31 | 13.20 | 0.933 | 0.946 | yes | 3.09 | yes |
+  
+  == specbench TTFT per task group (ms; both passes pooled; paired = median over prompts of NEW / OLD TTFT, same prompt, same pass) ==
+  | c | group | n | mean prompt tok | NEW mean | OLD mean | NEW median | OLD median | A ratio | B ratio | pooled mean ratio | paired median ratio |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | 1 | mt_bench | 80 | 121 | 130 | 133 | 124 | 121 | 0.974 | 0.987 | 0.980 | 1.022 |
+  | 1 | translation | 80 | 87 | 126 | 126 | 123 | 121 | 0.991 | 0.998 | 0.994 | 1.018 |
+  | 1 | summarization | 80 | 779 | 223 | 273 | 209 | 268 | 0.835 | 0.802 | 0.818 | 0.790 |
+  | 1 | qa | 80 | 63 | 119 | 110 | 109 | 107 | 1.067 | 1.086 | 1.076 | 1.017 |
+  | 1 | math_reasoning | 80 | 111 | 137 | 129 | 131 | 128 | 1.057 | 1.055 | 1.056 | 1.023 |
+  | 1 | rag | 80 | 770 | 215 | 264 | 214 | 266 | 0.839 | 0.791 | 0.814 | 0.799 |
+  | 2 | mt_bench | 80 | 121 | 178 | 200 | 171 | 172 | 0.883 | 0.893 | 0.888 | 1.002 |
+  | 2 | translation | 80 | 87 | 181 | 179 | 171 | 170 | 1.006 | 1.019 | 1.012 | 1.008 |
+  | 2 | summarization | 80 | 779 | 253 | 352 | 238 | 342 | 0.689 | 0.749 | 0.718 | 0.726 |
+  | 2 | qa | 80 | 63 | 175 | 173 | 158 | 156 | 1.007 | 1.024 | 1.015 | 1.012 |
+  | 2 | math_reasoning | 80 | 111 | 192 | 191 | 178 | 176 | 0.980 | 1.029 | 1.004 | 1.008 |
+  | 2 | rag | 80 | 770 | 248 | 339 | 241 | 329 | 0.702 | 0.765 | 0.732 | 0.730 |
+  | 4 | mt_bench | 80 | 121 | 233 | 245 | 211 | 209 | 0.955 | 0.948 | 0.952 | 0.997 |
+  | 4 | translation | 80 | 87 | 251 | 251 | 210 | 209 | 1.010 | 0.995 | 1.002 | 1.001 |
+  | 4 | summarization | 80 | 779 | 309 | 404 | 278 | 367 | 0.735 | 0.797 | 0.765 | 0.772 |
+  | 4 | qa | 80 | 63 | 220 | 228 | 193 | 193 | 0.951 | 0.979 | 0.965 | 0.997 |
+  | 4 | math_reasoning | 80 | 111 | 234 | 240 | 212 | 215 | 0.971 | 0.984 | 0.977 | 1.000 |
+  | 4 | rag | 80 | 770 | 310 | 378 | 277 | 364 | 0.814 | 0.824 | 0.819 | 0.768 |
+  | 8 | mt_bench | 80 | 121 | 340 | 369 | 304 | 322 | 0.966 | 0.882 | 0.924 | 0.977 |
+  | 8 | translation | 80 | 87 | 328 | 334 | 257 | 264 | 1.056 | 0.914 | 0.981 | 0.989 |
+  | 8 | summarization | 80 | 779 | 383 | 504 | 344 | 466 | 0.794 | 0.729 | 0.760 | 0.756 |
+  | 8 | qa | 80 | 63 | 294 | 309 | 244 | 257 | 0.984 | 0.920 | 0.951 | 0.986 |
+  | 8 | math_reasoning | 80 | 111 | 328 | 362 | 265 | 284 | 0.930 | 0.880 | 0.905 | 0.987 |
+  | 8 | rag | 80 | 770 | 377 | 502 | 324 | 465 | 0.772 | 0.734 | 0.753 | 0.750 |
+  
+  == pre-registered expectation (report-only; measured = pooled NEW/OLD - 1, %; above / below = the measured % lies above / below the expected band, so for TTFT `below` is a LARGER cut than expected) ==
+    sharegpt c4 output tok/s                       expected +1..+3 %    measured    5.17 %  -> above  (A/B noise 4.22 %)
+    sharegpt c8 output tok/s                       expected +1..+3 %    measured    8.55 %  -> above  (A/B noise 1.98 %)
+    specbench c4 output tok/s                      expected +1..+3 %    measured    4.24 %  -> above  (A/B noise 0.58 %)
+    specbench c8 output tok/s                      expected +1..+3 %    measured    6.62 %  -> above  (A/B noise 3.46 %)
+    sharegpt c1 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -13.22 %  -> below  (A/B noise 7.10 %)
+    sharegpt c2 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured   -7.38 %  -> below  (A/B noise 0.97 %)
+    sharegpt c4 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -12.38 %  -> below  (A/B noise 6.11 %)
+    sharegpt c8 TTFT mean (short prompts)          expected ~0 (+-5 %)  measured  -15.36 %  -> below  (A/B noise 2.94 %)
+    specbench c1 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -1.98 %  -> within
+    specbench c1 translation TTFT mean             expected ~0 (+-5 %)  measured   -0.58 %  -> within
+    specbench c1 summarization TTFT mean           expected -30..-40 %  measured  -18.23 %  -> above
+    specbench c1 qa TTFT mean                      expected ~0 (+-5 %)  measured    7.64 %  -> above
+    specbench c1 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured    5.62 %  -> above
+    specbench c1 rag TTFT mean                     expected -30..-40 %  measured  -18.63 %  -> above
+    specbench c2 mt_bench TTFT mean                expected ~0 (+-5 %)  measured  -11.18 %  -> below
+    specbench c2 translation TTFT mean             expected ~0 (+-5 %)  measured    1.22 %  -> within
+    specbench c2 summarization TTFT mean           expected -30..-40 %  measured  -28.23 %  -> above
+    specbench c2 qa TTFT mean                      expected ~0 (+-5 %)  measured    1.54 %  -> within
+    specbench c2 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured    0.39 %  -> within
+    specbench c2 rag TTFT mean                     expected -30..-40 %  measured  -26.83 %  -> above
+    specbench c4 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -4.83 %  -> within
+    specbench c4 translation TTFT mean             expected ~0 (+-5 %)  measured    0.21 %  -> within
+    specbench c4 summarization TTFT mean           expected -30..-40 %  measured  -23.51 %  -> above
+    specbench c4 qa TTFT mean                      expected ~0 (+-5 %)  measured   -3.51 %  -> within
+    specbench c4 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured   -2.29 %  -> within
+    specbench c4 rag TTFT mean                     expected -30..-40 %  measured  -18.14 %  -> above
+    specbench c8 mt_bench TTFT mean                expected ~0 (+-5 %)  measured   -7.64 %  -> below
+    specbench c8 translation TTFT mean             expected ~0 (+-5 %)  measured   -1.87 %  -> within
+    specbench c8 summarization TTFT mean           expected -30..-40 %  measured  -23.97 %  -> above
+    specbench c8 qa TTFT mean                      expected ~0 (+-5 %)  measured   -4.87 %  -> within
+    specbench c8 math_reasoning TTFT mean          expected ~0 (+-5 %)  measured   -9.51 %  -> below
+    specbench c8 rag TTFT mean                     expected -30..-40 %  measured  -24.75 %  -> above
+  
+  FLAGS: none
+2026-09-29T23:26:52+00:00 [r811-std-bench-ab] README: the NEW arm is not PUBLISHABLE: R787d stays in the std-bench figure / tables
+2026-09-29T23:26:54+00:00 [sctl] GPU queue continues (r812b-layer-ab(pid 129422)); leaving the GPUs to the next unit
+2026-09-29T23:26:54+00:00 [r811-std-bench-ab] after: served none; image none ; tier 0; launcher md5s now NEW 6429dfa2 OLD 04e347cc; core 0 0; memory 4500 4500; power 600 575 W
+2026-09-29T23:26:55+00:00 [r811-std-bench-ab] WARN: :8022 not serving (another unit queued?); restarting the direct clients anyway
+2026-09-29T23:26:55+00:00 [r811-std-bench-ab] restarted: hermes hermes-webui owui-proxy
+2026-09-29T23:26:55+00:00 [r811-std-bench-ab] === r811-std-bench-ab DONE ===
+2026-09-29T23:26:55+00:00 [r811-std-bench-ab] DECISION: NEW NOT-PUBLISHABLE sharegpt c4: A/B spread 4.22 % > 3 % (437.5 vs 419.4 tok/s); OLD NOT-PUBLISHABLE sharegpt c4: A/B spread 3.11 % > 3 % (401.0 vs 413.7 tok/s); specbench c2: A/B spread 3.16 % > 3 % (342.8 vs 353.8 tok/s); specbench c8: A/B spread 3.46 % > 3 % (554.2 vs 535.4 tok/s)
