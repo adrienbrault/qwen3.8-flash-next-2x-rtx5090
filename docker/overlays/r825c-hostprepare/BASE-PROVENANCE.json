@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-01",
+  "base_image": "sha256:01c967e088a35f3ffb02f98a458fefa5fb3da1604a18591c05f71399c6d548b9",
+  "generator": "../r825b-resumable/src",
+  "trace": "base/cache_trace.py",
+  "app_tree": "fixtures/app",
+  "raw": "bench/results/2026-10-01-r825p-promote-wholeprompt-4XgSt8",
+  "fixtures": {
+    "app/backends/exllamav3/model.py": "d9d6a6ceb290632aae7264f21c71c65a24b02765a95c54df5b2d58a07cac7e56",
+    "app/backends/exllamav3/vision.py": "de722626a20ddaab270793a4cbb86e8116ff250a3d8262224ee4955cb2750efc",
+    "app/common/metrics.py": "e018ac792da5110a39b0e5b229d4b6a1f3315d504bd5053626ca4b207ad336cf",
+    "app/common/multimodal.py": "f2a8d357e5ee874a8660def20df104ea1db38170568889ab8252e147730e3571",
+    "app/common/networking.py": "fce8899ecde52ad4ad0babbd8bc6b5b7c79b47b5ea1684475f5e3587a419e3d7",
+    "app/common/status_display.py": "f1d2ea680de6424f66e131cc2e122d6d109548f2c60552d8bbf6fd74449d5c11",
+    "app/endpoints/OAI/utils/chat_completion.py": "9116332544045c109b8860d247b3909a84ed1d420f1674fdb8f3b644fa5f286e",
+    "app/endpoints/OAI/utils/completion.py": "4adf82f11a145c4213d9b3da58f854147baafebcbfd77263a6fed1aaca5989c1",
+    "app/endpoints/OAI/utils/tool_choice.py": "76c3cc3ec9bb08355adc5b7a30f9800d269c5202598cfa448ea4f7460f34cf67",
+    "architecture/qwen3_5.py": "60c32d2b42cb14e5b346e94717e952bd1a0f29970991b2c6f56ad574023ad55d",
+    "exllamav3_ext/rope.cu": "fd81a902cb2ca3817baf664fd5a07d31325aa0257d97eba4addb68a5d4e3e106",
+    "exllamav3_ext/sam.cpp": "671103cfa608a68be213cc0f003bc84ee08e108aa451cfb5d6a86259fa21fc4a",
+    "exllamav3_ext/sam.h": "f9e42a2b495dde096cf00b369d55d4e9407abdcbab3c603e068da731627e9c95",
+    "exllamav3_ext/sam_bc.h": "1b8427800f9beb1a3bb75c876c701047857969a2ed7ada8aaa7e221e6da7a4af",
+    "util/rope.py": "35b95b3e1eeafb37b520678cd06aaa2e1597bfd40b7d1a72aa528ac7fa3df9c1",
+    "util/tensor.py": "d49d599e6a64a2dbc235c6ecf153c78dc635e9111ab7302f2317d94b9365c931",
+    "late-arrival-failure.json": "dea8127f606e7f828f8fd1710be5acf7dc8650f273d8ba295ed316d8277a935a"
+  },
+  "sha256": {
+    "cache/cache.py": "a4a849642e710a7dfd0bafa89f65058fbf529af6dabcad29f0da3aeb27e4b103",
+    "cache/prefill_merge.py": "67cc7758714530647197c477184ca36702e44104bd65b92c1b0b5ec25f7889f9",
+    "cache_trace.py": "f16c2b953ebcd386e500f50b430cd018f67a0ef48f1b4ba5a175df78793a6d50",
+    "generator/async_generator.py": "c03012325037c82ef8e52a94ed0e8b7c51e9e2920ea3cb60c94d3edfb0fb00ca",
+    "generator/generator.py": "517a19e17ab42f305660c7c135972a3a25e8cf9172b54a7559d74903ccab573c",
+    "generator/job.py": "8209dc65a1a7737d32019ba742815d94f3689af6d11c40bfb8e0812ac16fa0c4",
+    "generator/pagetable.py": "605cf7a4ec06475f6faaa22d0dba404693905ad74f98c9806f43914e86a6ba78",
+    "generator/prefill_pipeline.py": "69b64f3d1541cfc97d1f6b57d38375131c36a8265dbfeadf627f7d12bac04365"
+  },
+  "public_mirror_note": "Build self-test reads extracted failure JSON instead of the omitted container-log excerpt; engine patches and source SHA manifests are unchanged."
+}

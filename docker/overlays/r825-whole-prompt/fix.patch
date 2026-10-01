@@ -1,0 +1,247 @@
+--- a/cache/prefill_merge.py
++++ b/cache/prefill_merge.py
+@@ -565,3 +565,35 @@
+                         crossed=getattr(split, "crossed", False))
+     finally:
+         split.cap.abandon()
++
++
++def try_pipeline_capture(job, start, end, split_at=None, alloc=None):
++    """R825 owning-thread reservation; live position can lag by ONE target chunk.
++
++    The planner validates fresh exclusive pages. A final inside-chunk capture uses
++    the served Split hooks and the served recurrence partition, with site events.
++    No device storage is allocated here. Failure must cut before issuing lookahead.
++    """
++    rs = job.recurrent_state
++    if (not tail_capture_enabled() or not merge_enabled() or rs is None or rs.exported or
++            job.generator.model.loaded_tp or len(job.sequences) != 1 or job.embeddings or
++            not 0 < end - start <= 2048 or
++            not 0 <= start - rs.position <= 2048):
++        return None
++    position = end if split_at is None else split_at
++    if not start < position <= end or position % PAGE_SIZE:
++        return None
++    lay = stash_layout(rs.cache)
++    if lay is None:
++        return None
++    slab = _pool(rs.cache, lay, alloc).try_acquire()
++    if slab is None:
++        # At most current and lookahead captures are unpublished. With two slabs,
++        # all additional owners are submitted worker tasks, which can be drained
++        # without reading live lookahead state or allocating any device workspace.
++        drain_worker()
++        slab = _pool(rs.cache, lay, alloc).try_acquire()
++    if slab is None:
++        return None
++    return Split(position - start, position,
++                 Capture(lay, rs.slot, slab, rs.cache._pm_pool, site_events=True))
+--- a/generator/job.py
++++ b/generator/job.py
+@@ -1325,10 +1325,15 @@
+                 seqlen = len(seq.sequence_ids) - 1
+                 last_page_b = seqlen // PAGE_SIZE * PAGE_SIZE
+                 if prefill_start < last_page_b <= prefill_end:
+-                    pm_split = _pm.try_split(self, prefill_start, prefill_end, seqlen)
++                    runtime = getattr(self, "_ls_prefill_pipeline", None)
++                    if runtime is not None and runtime.whole_prompt:
++                        pm_split = runtime.merges.get(runtime.index)
++                    else:
++                        pm_split = _pm.try_split(self, prefill_start, prefill_end, seqlen)
+                     if pm_split is None:
+                         prefill_end = last_page_b
+-                        recurrent_last_page = True
++                        recurrent_last_page = not (runtime is not None and runtime.whole_prompt and
++                                                   runtime.index in runtime.captures)
+                         prefill_ids = seq.sequence_ids.torch_slice(prefill_start, prefill_end)
+ 
+             # Exact multimodal chunking (DeepSeek-V4 vision): an image span is prefilled as
+--- a/generator/prefill_pipeline.py
++++ b/generator/prefill_pipeline.py
+@@ -4,6 +4,7 @@
+ to Job's draft/commit continuation. Caller streams are reused: new stream-local
+ allocator arenas would waste the served configuration's small memory margin.
+ """
++import os
+ from concurrent.futures import ThreadPoolExecutor
+ from ..cache.checkpoint_policy import interval as r823b_interval
+ from ..cache import prefill_merge as _pm
+@@ -38,15 +39,45 @@
+     return ends
+ 
+ 
++def whole_prompt_enabled():
++    # Read per window: one image and one stack load can exercise both arms.
++    return (os.environ.get("EXL3_PREFILL_WHOLE_PROMPT", "0") == "1" and
++            _pm.tail_capture_enabled() and _pm.merge_enabled())
++
++
++def whole_window_ends(start, prompt_end, limit):
++    """Keep Job's 2048-row forwards, including its original merged final tail.
++
++    Reservation can shorten the final forward to last_page before it is issued.
++    Checkpoints are barriers only when their capture reservation fails.
++    """
++    ends = []
++    while start < prompt_end and len(ends) < limit:
++        end = min((start + 2048) // 256 * 256, prompt_end)
++        if end <= start:
++            break
++        ends.append(end)
++        start = end
++    return ends
++
++
+ def run_window(job, results, runtime, count):
+     """The real driver, also exercised with a CPU-only fake stage executor."""
+     job._ls_prefill_pipeline = runtime
+     try:
+         # Reservation failure can shorten ends before any lookahead crosses that boundary.
+         while runtime.index < len(runtime.ends):
++            if runtime.whole_prompt:
++                # Prepare on the owning thread even for the first/fallback chunk.
++                # Job must use exactly the reserved final split, never reserve twice.
++                runtime._capture_params(runtime.index, {})
+             job.prefill(results)  # target, then existing draft, pages and progress
+             split = runtime.captures.pop(runtime.index - 1, None)
+-            if split is not None:
++            merged = runtime.merges.pop(runtime.index - 1, None)
++            if merged is not None:
++                # Job has published at last_page using the original stash_split path.
++                merged.cap.abandon()
++            elif split is not None:
+                 _pm.stash_boundary(job, split)
+             elif job.generator.recurrent_cache is not None:
+                 job.maybe_stash_recurrent(job.generator.recurrent_cache)
+@@ -55,9 +86,10 @@
+         try:
+             runtime.drain()
+         finally:
+-            for split in runtime.captures.values():
++            for split in list(runtime.captures.values()) + list(runtime.merges.values()):
+                 split.cap.abandon()
+             runtime.captures.clear()
++            runtime.merges.clear()
+             del job._ls_prefill_pipeline
+ 
+ 
+@@ -171,24 +203,58 @@
+         self.index = 0
+         self.pending = None
+         self.captures = {}
++        self.merges = {}
++        self.prepared = set()
++        self.whole_prompt = whole_prompt_enabled()
+ 
+     def _capture_params(self, index, params):
+         # The raw lookahead copy must NEVER inherit the current chunk's descriptor.
+         params.pop("_prefill_tail_capture", None)
+         params.pop("_prefill_split", None)
+         end = self.ends[index]
+-        interval = r823b_interval(self.job.generator, end, len(self.job.sequences[0].sequence_ids) - 1)
+-        checkpoint = (end - self.job.cached_pages * 256) % interval == 0
+-        if _pm.tail_capture_enabled() and checkpoint:
+-            split = _pm.try_boundary(self.job, end - 2048, end)
+-            if split is None:
+-                # No capture -> no A_(i+1) before this checkpoint's live stash.
+-                del self.ends[index + 1:]
+-                r823_trace.emit("tail_fallback", **r823_trace.owner(self.job), position=end)
+-            else:
+-                split.crossed = index + 1 < len(self.ends)
+-                self.captures[index] = split
+-                params["_prefill_tail_capture"] = split
++        prompt_end = len(self.job.sequences[0].sequence_ids) - 1
++        start = self.ends[index - 1] if index else self.job.sequences[0].kv_position
++        if self.whole_prompt:
++            if index not in self.prepared:
++                self.prepared.add(index)
++                last_page = prompt_end // 256 * 256
++                interval = r823b_interval(self.job.generator, end, prompt_end)
++                checkpoint = (end - self.job.cached_pages * 256) % interval == 0
++                split_at = _pm.split_point(start, end, prompt_end)
++                if split_at is not None:
++                    split = _pm.try_pipeline_capture(self.job, start, end, split_at)
++                    if split is None:
++                        # Keep the served no-slab last-page cut, before slicing IDs.
++                        self.ends[index] = last_page
++                        del self.ends[index + 1:]
++                        r823_trace.emit("tail_fallback", **r823_trace.owner(self.job),
++                                        position=last_page, final_split=True)
++                    else:
++                        self.merges[index] = split
++                elif end % 256 == 0 and (checkpoint or end == last_page):
++                    split = _pm.try_pipeline_capture(self.job, start, end)
++                    if split is None:
++                        del self.ends[index + 1:]
++                        r823_trace.emit("tail_fallback", **r823_trace.owner(self.job), position=end)
++                    else:
++                        split.crossed = index + 1 < len(self.ends)
++                        self.captures[index] = split
++            if index in self.merges:
++                params["_prefill_split"] = self.merges[index]
++            if index in self.captures:
++                params["_prefill_tail_capture"] = self.captures[index]
++        else:
++            interval = r823b_interval(self.job.generator, end, prompt_end)
++            checkpoint = (end - self.job.cached_pages * 256) % interval == 0
++            if _pm.tail_capture_enabled() and checkpoint:
++                split = _pm.try_boundary(self.job, end - 2048, end)
++                if split is None:
++                    del self.ends[index + 1:]
++                    r823_trace.emit("tail_fallback", **r823_trace.owner(self.job), position=end)
++                else:
++                    split.crossed = index + 1 < len(self.ends)
++                    self.captures[index] = split
++                    params["_prefill_tail_capture"] = split
+         return params
+ 
+     def _modules(self, x, params, modules):
+@@ -262,7 +328,8 @@
+         """Called only at Job.prefill's target dispatch, never Model.forward/decode."""
+         with torch.inference_mode():
+             start = int(params["cache_seqlens"][0])
+-            assert ids.shape == (1, 2048) and start + 2048 == self.ends[self.index]
++            assert ids.shape[0] == 1 and 0 < ids.shape[1] <= 2048
++            assert start + ids.shape[1] == self.ends[self.index]
+             raw = params.copy()
+             if self.pending is None:
+                 descriptor = self._stage0(ids, self._capture_params(self.index, params))
+@@ -277,10 +344,10 @@
+                     self.streams[1].wait_event(ready)
+                     x = self.peer_copy(source, self.devices[1], self.streams[1])
+                 if self.index + 1 < len(self.ends):
++                    raw["cache_seqlens"] = torch.tensor([self.ends[self.index]], dtype = torch.int32)
++                    raw = self._capture_params(self.index + 1, raw)
+                     next_ids = self.job.sequences[0].sequence_ids.torch_slice(
+                         self.ends[self.index], self.ends[self.index + 1])
+-                    raw["cache_seqlens"] = torch.tensor([self.ends[self.index]], dtype = torch.int32)
+-                    raw = self._capture_params(self.index + 1, raw)
+                     self.pending = self.executor.submit(self._stage0, next_ids, raw)
+                 # Host readbacks in MoE require independent issue of A_(i+1) and B_i.
+                 # The worker touches device 0 only; device 1 remains on this thread.
+@@ -328,7 +395,7 @@
+         return False
+     # Other active jobs bound the prefill burst, even if still prefilling. Decode
+     # assembly, speculative depth selection and the full target pass remain unchanged.
+-    limit = 2 if len(gen.active_jobs) > 1 else (prompt_end - start) // 2048
++    limit = 2 if len(gen.active_jobs) > 1 else (prompt_end - start + 2047) // 2048
+     def checkpoint(end):
+         interval = r823b_interval(gen, end, prompt_end)
+         return (end - job.cached_pages * 256) % interval == 0
+@@ -338,11 +405,13 @@
+         # Retain A's coarse/near window ends; only added tail checkpoints are crossed.
+         served_interval = gen.recurrent_checkpoint_interval if end >= prompt_end - gen.max_chunk_size * 2 else 32768
+         return (end - job.cached_pages * 256) % served_interval == 0
+-    ends = window_ends(start, prompt_end, window_checkpoint, limit)
++    whole = whole_prompt_enabled()
++    ends = (whole_window_ends(start, prompt_end, limit) if whole else
++            window_ends(start, prompt_end, window_checkpoint, limit))
+     if len(ends) < 2:
+         return False
+-    pages = seq.allocated_pages[start // 256:ends[-1] // 256]
+-    if (len(pages) != (ends[-1] - start) // 256 or
++    pages = seq.allocated_pages[start // 256:(ends[-1] + 255) // 256]
++    if (len(pages) != (ends[-1] + 255) // 256 - start // 256 or
+             any(p.kv_position != 0 or p.ref_count != 1 for p in pages) or
+             len({p.page_index for p in pages}) != len(pages)):
+         return False  # retain prefix reuse/replay/copy-on-write handling in Job

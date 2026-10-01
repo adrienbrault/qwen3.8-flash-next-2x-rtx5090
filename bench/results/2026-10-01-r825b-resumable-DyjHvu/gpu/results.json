@@ -1,0 +1,1464 @@
+{
+  "equality_passed": true,
+  "daily_identity_passed": true,
+  "timings": [
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1885.040044784546,
+      "prompt_sha256": "84359560a6c31859259d5bc2660ae8fb56f90232d0ac3116419c92b490a19d6d",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1923.5380130121484,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1358.8012789841741,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 0,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1597.9199409484863,
+      "prompt_sha256": "84359560a6c31859259d5bc2660ae8fb56f90232d0ac3116419c92b490a19d6d",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 280.8721649926156,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 280.4520430509001,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 0,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1615.2169704437256,
+      "prompt_sha256": "84359560a6c31859259d5bc2660ae8fb56f90232d0ac3116419c92b490a19d6d",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 280.9388200985268,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 280.5207130732015,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 0,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1855.8132648468018,
+      "prompt_sha256": "84359560a6c31859259d5bc2660ae8fb56f90232d0ac3116419c92b490a19d6d",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1874.9310789862648,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1330.5069099878892,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 0,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1878.7751197814941,
+      "prompt_sha256": "df15467a1139dc3d9ab7ed2304d683bea723132d3e8978505783c749c7375e7c",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1897.448156028986,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1352.9141020262614,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 1,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1599.6124744415283,
+      "prompt_sha256": "df15467a1139dc3d9ab7ed2304d683bea723132d3e8978505783c749c7375e7c",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 280.3566619986668,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 279.93444504681975,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 1,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1600.4323959350586,
+      "prompt_sha256": "df15467a1139dc3d9ab7ed2304d683bea723132d3e8978505783c749c7375e7c",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.07860207092017,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 280.53604008164257,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 1,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1851.5617847442627,
+      "prompt_sha256": "df15467a1139dc3d9ab7ed2304d683bea723132d3e8978505783c749c7375e7c",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1868.9147720579058,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1325.9075679816306,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 1,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1880.279302597046,
+      "prompt_sha256": "7f7799c88595eedb222436fd509ae890003d01da0fdbaac5dc43ee261d1befa9",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1899.404069990851,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1355.1039489684626,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 2,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1598.0441570281982,
+      "prompt_sha256": "7f7799c88595eedb222436fd509ae890003d01da0fdbaac5dc43ee261d1befa9",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.4600500278175,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 281.0455390717834,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 2,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1596.9388484954834,
+      "prompt_sha256": "7f7799c88595eedb222436fd509ae890003d01da0fdbaac5dc43ee261d1befa9",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 280.65291803795844,
+      "heartbeat_ticks": 11,
+      "iterate_max_ms": 280.22297692950815,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        8192,
+        12288,
+        16384,
+        18432
+      ],
+      "size": 20000,
+      "block": 2,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 20000,
+      "cached": 0,
+      "engine_ms": 1852.4224758148193,
+      "prompt_sha256": "7f7799c88595eedb222436fd509ae890003d01da0fdbaac5dc43ee261d1befa9",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 1869.7243069764227,
+      "heartbeat_ticks": 1,
+      "iterate_max_ms": 1326.7835929291323,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3615,
+      "final_pipeline": false,
+      "crossed": [
+        8192,
+        12288
+      ],
+      "size": 20000,
+      "block": 2,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4226.206541061401,
+      "prompt_sha256": "779a0ccaff4f799af75e1e7b6a3d1d8aadd053cbfa4f23c850c213c0678b1f93",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4056.82275199797,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2551.8014159752056,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 0,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3836.8494510650635,
+      "prompt_sha256": "779a0ccaff4f799af75e1e7b6a3d1d8aadd053cbfa4f23c850c213c0678b1f93",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.0027619600296,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 281.1471379827708,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 0,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3838.503837585449,
+      "prompt_sha256": "779a0ccaff4f799af75e1e7b6a3d1d8aadd053cbfa4f23c850c213c0678b1f93",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.4869580324739,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 280.63059295527637,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 0,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4201.315879821777,
+      "prompt_sha256": "779a0ccaff4f799af75e1e7b6a3d1d8aadd053cbfa4f23c850c213c0678b1f93",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4032.0343780331314,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2523.6157820327207,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 0,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4199.0065574646,
+      "prompt_sha256": "fde423d5d6340234689fced596bc4a1e0e62cbc497b89c3c5cfeca428e56c352",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4028.7847170839086,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2522.2669990034774,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 1,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3841.740369796753,
+      "prompt_sha256": "fde423d5d6340234689fced596bc4a1e0e62cbc497b89c3c5cfeca428e56c352",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.2074680114165,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 280.35121294669807,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 1,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3843.104124069214,
+      "prompt_sha256": "fde423d5d6340234689fced596bc4a1e0e62cbc497b89c3c5cfeca428e56c352",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.19652601890266,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 280.33840795978904,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 1,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4203.541994094849,
+      "prompt_sha256": "fde423d5d6340234689fced596bc4a1e0e62cbc497b89c3c5cfeca428e56c352",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4033.47127197776,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2524.887835024856,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 1,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4202.343463897705,
+      "prompt_sha256": "5fb52b276973daa64c2174d32e3b2ab2917b54e185de626977c3f25c3a920187",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4032.5272580375895,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2525.6557149114087,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 2,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3837.721347808838,
+      "prompt_sha256": "5fb52b276973daa64c2174d32e3b2ab2917b54e185de626977c3f25c3a920187",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.0974519709125,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 281.00650501437485,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 2,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 3868.9944744110107,
+      "prompt_sha256": "5fb52b276973daa64c2174d32e3b2ab2917b54e185de626977c3f25c3a920187",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 281.56133100856096,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 280.7118180207908,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152
+      ],
+      "size": 50000,
+      "block": 2,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 50000,
+      "cached": 0,
+      "engine_ms": 4204.499006271362,
+      "prompt_sha256": "5fb52b276973daa64c2174d32e3b2ab2917b54e185de626977c3f25c3a920187",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 2,
+      "heartbeat_max_gap_ms": 4034.4471590360627,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2527.1664480678737,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 2895,
+      "final_pipeline": false,
+      "crossed": [
+        40960,
+        45056
+      ],
+      "size": 50000,
+      "block": 2,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7435.441970825195,
+      "prompt_sha256": "bf090ec631f323bd682f9efd94a7030f46fa0a1addf4b1709e5535daf74e494f",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6854.679416981526,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2591.900866944343,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 0,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6843.031406402588,
+      "prompt_sha256": "bf090ec631f323bd682f9efd94a7030f46fa0a1addf4b1709e5535daf74e494f",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.56091196089983,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 281.0818130383268,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 0,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6853.045225143433,
+      "prompt_sha256": "bf090ec631f323bd682f9efd94a7030f46fa0a1addf4b1709e5535daf74e494f",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.52691600937396,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 281.08112001791596,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 0,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7417.800426483154,
+      "prompt_sha256": "bf090ec631f323bd682f9efd94a7030f46fa0a1addf4b1709e5535daf74e494f",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6837.045243009925,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2597.7155379951,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 0,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7413.451433181763,
+      "prompt_sha256": "0e59b01f5f686ed566eff31342e9fd48fefaecf5e0c5997915b0172095e9f44e",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6834.277465008199,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2594.7452830150723,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 1,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6849.895477294922,
+      "prompt_sha256": "0e59b01f5f686ed566eff31342e9fd48fefaecf5e0c5997915b0172095e9f44e",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.2773701045662,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 280.82141501363367,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 1,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6863.62624168396,
+      "prompt_sha256": "0e59b01f5f686ed566eff31342e9fd48fefaecf5e0c5997915b0172095e9f44e",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.3711459059268,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 280.9386149747297,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 1,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7445.666790008545,
+      "prompt_sha256": "0e59b01f5f686ed566eff31342e9fd48fefaecf5e0c5997915b0172095e9f44e",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6865.5844690511,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2617.7799849538133,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 1,
+      "slot": 3,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7415.9979820251465,
+      "prompt_sha256": "169ab6287a0f5a7012efbb789283e198a4dba90b1a3cb4a74c1a22fc0ff316db",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6835.509624914266,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2595.7670039497316,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 2,
+      "slot": 0,
+      "arm": "A"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6861.606121063232,
+      "prompt_sha256": "169ab6287a0f5a7012efbb789283e198a4dba90b1a3cb4a74c1a22fc0ff316db",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.80283499043435,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 281.36130690108985,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 2,
+      "slot": 1,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 6858.886957168579,
+      "prompt_sha256": "169ab6287a0f5a7012efbb789283e198a4dba90b1a3cb4a74c1a22fc0ff316db",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 1,
+      "heartbeat_max_gap_ms": 282.4043120490387,
+      "heartbeat_ticks": 45,
+      "iterate_max_ms": 280.95441905315965,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ],
+      "size": 90000,
+      "block": 2,
+      "slot": 2,
+      "arm": "B"
+    },
+    {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 7423.834800720215,
+      "prompt_sha256": "169ab6287a0f5a7012efbb789283e198a4dba90b1a3cb4a74c1a22fc0ff316db",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 3,
+      "heartbeat_max_gap_ms": 6843.338044011034,
+      "heartbeat_ticks": 2,
+      "iterate_max_ms": 2599.759464035742,
+      "peer_boundary": {},
+      "short_output_ids": [],
+      "serial_rows": 3983,
+      "final_pipeline": false,
+      "crossed": [
+        77824,
+        81920
+      ],
+      "size": 90000,
+      "block": 2,
+      "slot": 3,
+      "arm": "A"
+    }
+  ]
+}

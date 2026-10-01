@@ -1,0 +1,21 @@
+{
+  "note": "Extracted observed failure evidence; stack markers and only the fields used by the frontend CPU replay are retained. Container log omitted.",
+  "stack_markers": [
+    "'NoneType' object is not iterable",
+    "r823_trace.attach(job.job, trace_record)",
+    "313, in stream_generate_completion",
+    "212, in _stream_collector",
+    "line 1559, in",
+    "race.py\", line 131, in attach"
+  ],
+  "encode": {
+    "event": "encode",
+    "n": 205,
+    "t": 1790865738.9837346
+  },
+  "allocation": {
+    "event": "allocation",
+    "serial": 39,
+    "t": 1790865739.2758858
+  }
+}

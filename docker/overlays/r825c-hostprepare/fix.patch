@@ -1,0 +1,93 @@
+--- a/cache_trace.py
++++ b/cache_trace.py
+@@ -127,12 +127,16 @@
+         job._r823_trace = record
+         for seq in job.sequences:
+             seq._r823_owner = job
++        hashes = job.sequences[0].page_hashes
++        generator = job.generator
++        job._r823_pending_page_digests = hashes is None
+         emit('render',**record,serial=job.serial_number,
+-             page_digests=[digest(h) for h in job.sequences[0].page_hashes],
+-             policy_pp=job.generator.recurrent_checkpoint_interval_pp,
+-             policy_tail=getattr(job.generator,"recurrent_checkpoint_tail_pp",0),
++             page_digests=None if hashes is None else [digest(h) for h in hashes],
++             policy_pp=getattr(generator, "recurrent_checkpoint_interval_pp", None),
++             policy_tail=getattr(generator, "recurrent_checkpoint_tail_pp", 0) if generator is not None else None,
+              policy_inforward=os.environ.get("EXL3_RECURRENT_CHECKPOINT_INFORWARD", "0") == "1",
+-             policy_near=job.generator.recurrent_checkpoint_interval,chunk=job.generator.max_chunk_size)
++             policy_near=getattr(generator, "recurrent_checkpoint_interval", None),
++             chunk=getattr(generator, "max_chunk_size", None))
+ 
+ 
+ def complete(job):
+@@ -160,6 +164,13 @@
+ def before_allocation(seq,pt,rc):
+     if not ENABLED:
+         return None
++    # Defence for callers that attach a trace before host preparation. None is
++    # unknown, not an empty prompt. Publish the full list once at allocation.
++    job = getattr(seq, '_r823_owner', None)
++    if (getattr(job, '_r823_pending_page_digests', False)
++            and seq.page_hashes is not None):
++        emit('page_digests', **owner(job), page_digests=[digest(h) for h in seq.page_hashes])
++        job._r823_pending_page_digests = False
+     available = 0
+     for h in seq.page_hashes:
+         if pt.get_live_page(h) is None:
+--- a/generator/async_generator.py
++++ b/generator/async_generator.py
+@@ -90,7 +90,13 @@
+         # land in. The sync generator still owns scheduling and serial assignment.
+         assert job.job not in self.jobs
+         self.jobs[job.job] = job
+-        self.generator.enqueue(job.job)
++        try:
++            self.generator.enqueue(job.job)
++        except Exception:
++            # Host validation can fail before AsyncJob construction returns and
++            # before the frontend registers cancellation. Leave no orphan mapping.
++            del self.jobs[job.job]
++            raise
+ 
+         # Condition.notify_all() must run while holding the condition lock, so schedule a tiny coroutine instead of
+         # trying to notify directly from this synchronous method.
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -570,15 +570,11 @@
+                 serials.append(self.enqueue(j))
+             return serials
+ 
+-        if self._ls_prefill_runtime is not None:
+-            # Queue-time MRoPE/embedding preparation may use GPU state too. Defer
+-            # all preparation until the retained lookahead has committed.
+-            job.generator = self
+-            job.pagetable = self.pagetable
+-            job.serial_number = self.job_serial
+-            job._ls_deferred_prepare = True
+-        else:
+-            job.prepare_for_queue(self, self.job_serial)
++        # prepare_for_queue is host-only in this stack: CPU IDs/hashes, budgets,
++        # buffers and CPU MRoPE freqs (model.g_rope is constructed on "cpu").
++        # Frontends inspect this state immediately after AsyncJob construction.
++        # Page allocation/recurrent restore/activation remain in guarded admission.
++        job.prepare_for_queue(self, self.job_serial)
+         self.job_serial += 1
+         self.pending_jobs.append(job)
+         return job.serial_number
+@@ -2078,15 +2074,6 @@
+         """
+ 
+         assert self._ls_prefill_runtime is None
+-        for job in self.pending_jobs.copy():
+-            if getattr(job, "_ls_deferred_prepare", False):
+-                del job._ls_deferred_prepare
+-                try:
+-                    job.prepare_for_queue(self, job.serial_number)
+-                except Exception as exc:
+-                    self.pending_jobs.remove(job)
+-                    self.reap_failed_job(job, exc, results)
+-
+         # Get current max batch
+         current_max_batch = 0
+         for job in self.active_jobs:

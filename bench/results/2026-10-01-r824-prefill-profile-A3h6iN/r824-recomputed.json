@@ -1,0 +1,9 @@
+{
+  "verdict": "TIE: inspect timeline/counterfactual before a kernel round",
+  "note": "busy uses Kineto intervals; CUDA-event envelopes include launch starvation and are not kernel busy",
+  "captures_files": [
+    "r824-recomputed-cap1.json",
+    "r824-recomputed-cap2.json"
+  ],
+  "public_mirror_note": "Complete captures split to retain every record below 2 MB; reconstruct captures in listed order."
+}

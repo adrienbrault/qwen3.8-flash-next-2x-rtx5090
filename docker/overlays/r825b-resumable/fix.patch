@@ -1,0 +1,316 @@
+--- a/cache/cache.py
++++ b/cache/cache.py
+@@ -448,6 +448,9 @@
+         """
+         Return every state slot to the pool. A Generator calls this when it takes ownership of the cache.
+         """
++        runtime = getattr(self, "_ls_prefill_runtime", None)
++        if runtime is not None:
++            runtime.job.generator.clear_queue()
+         self.free_list = deque(range(self.num_slots))
+ 
+ 
+--- a/generator/async_generator.py
++++ b/generator/async_generator.py
+@@ -38,7 +38,10 @@
+ 
+                 # Yield back to the event loop so result consumers and cancellation requests can run between
+                 # generator iterations, even if the synchronous generator immediately has more work available.
+-                await asyncio.sleep(0)
++                # A positive timer lets overdue heartbeat/HTTP timers run before the
++                # next chunk. sleep(0) can place this task ahead of overdue timers
++                # for several ready-queue turns, multiplying the observed gap.
++                await asyncio.sleep(0.000001 if getattr(self.generator, "_ls_prefill_yield", False) else 0)
+ 
+         except asyncio.CancelledError:
+             # Silently return on cancel
+@@ -106,6 +109,10 @@
+             await self.iteration_task
+         except asyncio.CancelledError:
+             pass
++
++        # Suspended lookahead owns captures and live recurrent state on shutdown.
++        if getattr(self.generator, "_ls_prefill_runtime", None) is not None:
++            self.generator.clear_queue()
+ 
+         # Wake any consumers still parked on job queues; no more results will be produced
+         for async_job in self.jobs.values():
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -183,6 +183,14 @@
+         self.tokenizer = tokenizer
+         cfg = self.model.config
+         self.padded_vocab_size = ((cfg.vocab_size + 31) // 32) * 32
++
++        # Drain a suspended old owner BEFORE PageTable resets shared cache state.
++        suspended = getattr(cache, "_ls_prefill_runtime", None)
++        if suspended is not None:
++            old_generator = suspended.job.generator
++            old_generator.clear_queue()
++        self._ls_prefill_runtime = None
++        self._ls_prefill_yield = False
+ 
+         # Paging
+         self.pagetable = PageTable(self, cache)
+@@ -523,6 +531,11 @@
+         Abort all active and pending jobs
+         """
+ 
++        runtime = self._ls_prefill_runtime
++        if runtime is not None:
++            from .prefill_pipeline import close_window
++            close_window(runtime)
++
+         num_jobs = self.num_remaining_jobs()
+         for job in self.active_jobs + self.pending_jobs:
+             self.release_draft_window_slot(job)
+@@ -557,7 +570,15 @@
+                 serials.append(self.enqueue(j))
+             return serials
+ 
+-        job.prepare_for_queue(self, self.job_serial)
++        if self._ls_prefill_runtime is not None:
++            # Queue-time MRoPE/embedding preparation may use GPU state too. Defer
++            # all preparation until the retained lookahead has committed.
++            job.generator = self
++            job.pagetable = self.pagetable
++            job.serial_number = self.job_serial
++            job._ls_deferred_prepare = True
++        else:
++            job.prepare_for_queue(self, self.job_serial)
+         self.job_serial += 1
+         self.pending_jobs.append(job)
+         return job.serial_number
+@@ -575,6 +596,11 @@
+         cancellation drains the generator completely, the page table is defragmented immediately because no active
+         block tables still depend on the current physical page ordering.
+         """
++
++        runtime = self._ls_prefill_runtime
++        if runtime is not None and runtime.job is job:
++            from .prefill_pipeline import close_window
++            close_window(runtime)
+ 
+         num_jobs = self.num_remaining_jobs()
+ 
+@@ -660,6 +686,12 @@
+             }
+         """
+ 
++        self._ls_prefill_yield = False
++        from .prefill_pipeline import resume_window
++        resumed_results = []
++        if resume_window(self, resumed_results):
++            return resumed_results
++
+         assert self.cache.initialized, \
+             "Cache tensors were never allocated. Construct the Cache BEFORE calling model.load()"
+         owner_serial = getattr(self.cache, "owner_serial", None)
+@@ -688,10 +720,14 @@
+                 if os.environ.get("EXL3_LS_PREFILL_PIPELINE", "0") == "1":
+                     from .prefill_pipeline import prefill_job
+                     if prefill_job(job, results):
++                        if self._ls_prefill_yield:
++                            return results
+                         continue
+                 job.prefill(results)
+             except Exception as e:
+                 self.reap_failed_job(job, e, results)
++                if self._ls_prefill_yield:
++                    return results
+ 
+         # Recurrent checkpoints
+         if self.recurrent_cache is not None:
+@@ -754,6 +790,8 @@
+ 
+ 
+     def recurrent_checkpoint(self):
++        if self._ls_prefill_runtime is not None:
++            return  # run_window already publishes captures at committed boundaries
+         for job in self.active_jobs:
+             job.maybe_stash_recurrent(self.recurrent_cache)
+ 
+@@ -1995,6 +2033,10 @@
+         escaping to _run_iteration, which latches AsyncGenerator.error permanently and kills
+         the iteration task for every job.
+         """
++        runtime = self._ls_prefill_runtime
++        if runtime is not None and runtime.job is job:
++            from .prefill_pipeline import close_window
++            close_window(runtime)
+         try:
+             job.deallocate_pages()
+         except Exception:
+@@ -2035,6 +2077,16 @@
+         immediately and emit a "started" event.
+         """
+ 
++        assert self._ls_prefill_runtime is None
++        for job in self.pending_jobs.copy():
++            if getattr(job, "_ls_deferred_prepare", False):
++                del job._ls_deferred_prepare
++                try:
++                    job.prepare_for_queue(self, job.serial_number)
++                except Exception as exc:
++                    self.pending_jobs.remove(job)
++                    self.reap_failed_job(job, exc, results)
++
+         # Get current max batch
+         current_max_batch = 0
+         for job in self.active_jobs:
+--- a/generator/job.py
++++ b/generator/job.py
+@@ -1562,6 +1562,10 @@
+ 
+ 
+     def deallocate_pages(self):
++        runtime = getattr(self, "_ls_prefill_pipeline", None)
++        if runtime is not None:
++            from .prefill_pipeline import close_window
++            close_window(runtime)
+         self.free_recurrent_state()
+         for seq in self.sequences:
+             if seq.allocated_pages is not None:
+--- a/generator/pagetable.py
++++ b/generator/pagetable.py
+@@ -364,6 +364,8 @@
+         """
+         Reset the page table.
+         """
++        if getattr(self.generator, "_ls_prefill_runtime", None) is not None:
++            self.generator.clear_queue()
+         self.referenced_pages = {}
+         self.unreferenced_pages = {}
+         self.all_pages = []
+@@ -892,6 +894,8 @@
+ 
+ 
+     def defrag(self, debug = False):
++        if getattr(self.generator, "_ls_prefill_runtime", None) is not None:
++            raise RuntimeError("Cannot defragment a suspended prefill window")
+ 
+         if not self.generator.enable_defrag:
+             return
+--- a/generator/prefill_pipeline.py
++++ b/generator/prefill_pipeline.py
+@@ -61,36 +61,84 @@
+     return ends
+ 
+ 
++def resumable_enabled():
++    return whole_prompt_enabled() and os.environ.get("EXL3_PREFILL_RESUMABLE", "1") == "1"
++
++
++def close_window(runtime):
++    """Join both stages before releasing descriptors, pages or recurrent slots."""
++    job, gen = runtime.job, runtime.job.generator
++    try:
++        runtime.drain()
++    finally:
++        for split in list(runtime.captures.values()) + list(runtime.merges.values()):
++            split.cap.abandon()
++        runtime.captures.clear()
++        runtime.merges.clear()
++        if getattr(job, "_ls_prefill_pipeline", None) is runtime:
++            del job._ls_prefill_pipeline
++        if getattr(gen, "_ls_prefill_runtime", None) is runtime:
++            gen._ls_prefill_runtime = None
++        cache = getattr(gen, "cache", None)
++        if getattr(cache, "_ls_prefill_runtime", None) is runtime:
++            cache._ls_prefill_runtime = None
++
++
+ def run_window(job, results, runtime, count):
+-    """The real driver, also exercised with a CPU-only fake stage executor."""
++    """Advance at most count chunks; keep a completed lookahead when yielding.
++
++    The MTP scratch join is unchanged: pending retains a completed Future, not
++    CUDA work still racing the draft. Stage overlap happens within each chunk.
++    """
+     job._ls_prefill_pipeline = runtime
++    keep = False
+     try:
+-        # Reservation failure can shorten ends before any lookahead crosses that boundary.
+-        while runtime.index < len(runtime.ends):
++        for _ in range(count):
++            if runtime.index >= len(runtime.ends):
++                break
+             if runtime.whole_prompt:
+-                # Prepare on the owning thread even for the first/fallback chunk.
+-                # Job must use exactly the reserved final split, never reserve twice.
+                 runtime._capture_params(runtime.index, {})
+-            job.prefill(results)  # target, then existing draft, pages and progress
++            job.prefill(results)
+             split = runtime.captures.pop(runtime.index - 1, None)
+             merged = runtime.merges.pop(runtime.index - 1, None)
+             if merged is not None:
+-                # Job has published at last_page using the original stash_split path.
+                 merged.cap.abandon()
+             elif split is not None:
+                 _pm.stash_boundary(job, split)
+             elif job.generator.recurrent_cache is not None:
+                 job.maybe_stash_recurrent(job.generator.recurrent_cache)
+-        assert runtime.pending is None
++        continuing = runtime.resumable and runtime.index < len(runtime.ends)
++        if continuing:
++            assert runtime.pending is not None and runtime.pending.done()
++        else:
++            assert runtime.pending is None
++        keep = continuing
+     finally:
+-        try:
+-            runtime.drain()
+-        finally:
+-            for split in list(runtime.captures.values()) + list(runtime.merges.values()):
+-                split.cap.abandon()
+-            runtime.captures.clear()
+-            runtime.merges.clear()
+-            del job._ls_prefill_pipeline
++        if not keep:
++            close_window(runtime)
++
++
++def resume_window(gen, results):
++    """Run before admission, checkpoints, tier pumping or any decode work."""
++    runtime = getattr(gen, "_ls_prefill_runtime", None)
++    if runtime is None:
++        return False
++    job = runtime.job
++    gen._ls_prefill_yield = True
++    if job not in gen.active_jobs:
++        close_window(runtime)
++        return True
++    # Finish exactly the already issued A_i; do not discard/reissue its state.
++    if gen.pending_jobs or any(peer is not job for peer in gen.active_jobs):
++        del runtime.ends[runtime.index + 1:]
++        split = runtime.captures.get(runtime.index)
++        if split is not None:
++            split.crossed = False
++    try:
++        run_window(job, results, runtime, 1)
++    except Exception as exc:
++        gen.reap_failed_job(job, exc, results)
++    return True
+ 
+ 
+ class _PeerCopy:
+@@ -206,6 +254,7 @@
+         self.merges = {}
+         self.prepared = set()
+         self.whole_prompt = whole_prompt_enabled()
++        self.resumable = resumable_enabled() and len(job.generator.active_jobs) == 1
+ 
+     def _capture_params(self, index, params):
+         # The raw lookahead copy must NEVER inherit the current chunk's descriptor.
+@@ -438,5 +487,10 @@
+         }
+         print(f" -- LS prefill pipeline: {gen.model.ls_prefill_pipeline_layout}")
+     runtime = _Runtime(job, ends, layout, setup[1], setup[2])
+-    run_window(job, results, runtime, len(ends))
++    if runtime.resumable:
++        assert getattr(gen, "_ls_prefill_runtime", None) is None
++        gen._ls_prefill_runtime = runtime
++        gen.cache._ls_prefill_runtime = runtime
++        gen._ls_prefill_yield = True
++    run_window(job, results, runtime, 1 if runtime.resumable else len(ends))
+     return True

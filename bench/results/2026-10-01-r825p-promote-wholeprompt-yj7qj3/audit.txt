@@ -1,0 +1,10 @@
+2026-10-01T15:32:28+00:00 [r825p-promote-wholeprompt] preflight OK: 8b644c17e60049a8069fc901b6f091fa -> 262e9c31f714724409635fbac9df8ac2; image aa04a1cbe94b, NVMe off, trace on; reference R809
+gateway_wait_idle: waiting for flashnext(healthy, 0 in flight) 
+2026-10-01T15:33:29+00:00 [r825p-promote-wholeprompt] lock held; served at entry: qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab; clients stopped: hermes hermes-webui owui-proxy
+2026-10-01T15:34:03+00:00 [r825p-promote-wholeprompt] installed /srv/qwen5090/launch-flashnext-tabby.sh.r825p.new as /srv/qwen5090/launch-flashnext.sh; rollback /srv/qwen5090/launch-flashnext.sh.pre-r825 = 8b644c17e60049a8069fc901b6f091fa
+2026-10-01T15:34:26+00:00 [r825p-promote-wholeprompt] verify: FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-01T15:34:42+00:00 [r825p-promote-wholeprompt] verify: fn_bench c1 code ms/step median + per-run: 9.766 3 9.766 9.792 9.764
+2026-10-01T15:34:54+00:00 [r825p-promote-wholeprompt] verify: GREEDY R825P vs R809: 6 identical, IDENTICAL
+2026-10-01T15:35:14+00:00 [r825p-promote-wholeprompt] verify: CHAT-GREEDY R825P vs R809: 6/6 identical
+2026-10-01T15:37:28+00:00 [r825p-promote-wholeprompt] PROMOTED: OK: served qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab, image aa04a1cbe94b, 46 keys, pool 901120, readbacks 'tokenize-offloop-r2 1 1 1 12000 0 1' / 'prefill-merge-r1 1 1', FASTWARM ok, VRAM free 1099/1667 (ref 1099/1667 - 32), fn c1 code median 9.766 ms/step (<= 9.95), greedy + chat 6/6 identical to R809, needles 10/10, corrected T32 edit policy-exact + immediate HIT >= N-256; frontend cold50 whole window <=0.95 x old daily, decode-first gap <=1.5 x old daily; health zero timeouts/errors and <=1s; late-arrival short TTFT <=old; trace ON, NVMe OFF
+2026-10-01T15:37:29+00:00 [r825p-promote-wholeprompt] restarted: hermes hermes-webui owui-proxy; === r825p-promote-wholeprompt DONE (rc=0) ===

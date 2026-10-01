@@ -1,0 +1,227 @@
+{
+  "verdict": "TIE: inspect timeline/counterfactual before a kernel round",
+  "note": "busy uses Kineto intervals; CUDA-event envelopes include launch starvation and are not kernel busy",
+  "cadence": [
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        3
+      ],
+      "steady_median_ms": 149.42288398742676,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 297.6524829864502
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 302.9980659484863
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 294.5520877838135
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 290.250301361084
+        }
+      ],
+      "excess_ms": 587.761402130127
+    },
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        4
+      ],
+      "steady_median_ms": 149.75714683532715,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 298.58851432800293
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 305.3765296936035
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 294.93021965026855
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 291.1083698272705
+        }
+      ],
+      "excess_ms": 590.9750461578369
+    },
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        5
+      ],
+      "steady_median_ms": 150.4075527191162,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 300.4798889160156
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 304.8865795135498
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 295.3989505767822
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 291.9738292694092
+        }
+      ],
+      "excess_ms": 591.109037399292
+    },
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        6
+      ],
+      "steady_median_ms": 149.9779224395752,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 300.08697509765625
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 304.2337894439697
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 297.9240417480469
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 295.0923442840576
+        }
+      ],
+      "excess_ms": 597.4254608154297
+    },
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        7
+      ],
+      "steady_median_ms": 152.0369052886963,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 304.5628070831299
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 308.34102630615234
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 299.0884780883789
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 295.7923412322998
+        }
+      ],
+      "excess_ms": 599.6370315551758
+    },
+    {
+      "identity": [
+        "ee1b36c8020b4e368c90e4e2fb9e5e34",
+        null,
+        8
+      ],
+      "steady_median_ms": 151.78298950195312,
+      "slow": [
+        {
+          "start": 32768,
+          "end": 34816,
+          "pipeline": true,
+          "ms": 304.3184280395508
+        },
+        {
+          "start": 65536,
+          "end": 67584,
+          "pipeline": true,
+          "ms": 307.4488639831543
+        },
+        {
+          "start": 86016,
+          "end": 88064,
+          "pipeline": false,
+          "ms": 298.67100715637207
+        },
+        {
+          "start": 88064,
+          "end": 90112,
+          "pipeline": false,
+          "ms": 296.21315002441406
+        }
+      ],
+      "excess_ms": 599.5194911956787
+    }
+  ],
+  "provenance": {
+    "probe.log": "91c54d51ef5d816c1afac4209f24d2e939323e0f97057ae7e97798e5502af3b4",
+    "launch-live.sh": "674941494a289a288795a59cc19e7abe5ef04025fe319c1187cfa69eb0a5ca15",
+    "gpu/profile/prefill_b1_d3/ctx90113_cold/cap1/trace.json.gz": "7cc29612af6c8e88ae577d9086aaf1db8b5da7923c5408423b6baf2b8f31a5eb",
+    "gpu/profile/prefill_b1_d3/ctx90113_cold/cap2/trace.json.gz": "02468faea1402d9ae1eda869d4c4f84468667f581e7cc192278c0599db226317"
+  },
+  "captures_files": [
+    "r824-review-evidence-cap1.json",
+    "r824-review-evidence-cap2.json"
+  ],
+  "public_mirror_note": "Complete captures split to retain every record below 2 MB; reconstruct captures in listed order."
+}

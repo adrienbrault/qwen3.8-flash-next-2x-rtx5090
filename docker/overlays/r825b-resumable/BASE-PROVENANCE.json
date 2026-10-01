@@ -1,0 +1,21 @@
+{
+  "parent_image": "sha256:d8a81e276dce0e86b511a243971696a8819012e7c1c2c92b45e055aa305fa0ff",
+  "origins": {
+    "cache/cache.py": "plateau/src/opt/venv/lib/python3.12/site-packages/exllamav3/cache/cache.py",
+    "cache/prefill_merge.py": "r825/src/cache/prefill_merge.py",
+    "generator/job.py": "r825/src/generator/job.py",
+    "generator/async_generator.py": "plateau/src/opt/venv/lib/python3.12/site-packages/exllamav3/generator/async_generator.py",
+    "generator/generator.py": "r823c-cachetail-inforward/tail/SHA256SUMS.exl3.src",
+    "generator/pagetable.py": "r823c-cachetail-inforward/trace/SHA256SUMS.exl3.src",
+    "generator/prefill_pipeline.py": "r825/src/generator/prefill_pipeline.py"
+  },
+  "sha256": {
+    "cache/cache.py": "3a90ea9c76fdbcd12dd1be3dbee5326d65f68a83ec621805c28b7df527970483",
+    "cache/prefill_merge.py": "67cc7758714530647197c477184ca36702e44104bd65b92c1b0b5ec25f7889f9",
+    "generator/job.py": "1b36503d67ff69e19c4f68b8e2bff20fd87d6b5392bfb1fb8119bb6211ac4f42",
+    "generator/async_generator.py": "36af9fe4958745a8d5c3b1baece8dc8f395a2a6a71f08c202ab82c73586fc250",
+    "generator/generator.py": "d99d3b834b49e95ecb21c4acaae8b38e5c5e371124e7323dd564bb0baa11666f",
+    "generator/pagetable.py": "ead9bf823979f3d572eced775499a5e9427d16a14267e7f5eab92b02a9387197",
+    "generator/prefill_pipeline.py": "ec439dba8c56923171652fdc069a2ab67f3705d18ad32a4fd6f4f03499772418"
+  }
+}

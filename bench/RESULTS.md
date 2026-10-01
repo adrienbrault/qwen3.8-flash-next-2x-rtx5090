@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-10-01
 
+- [R824–R825p: a resumable whole-prompt prefill window, served since 2026-10-01 15:37 UTC as `r825c-hostprepare`; cold solo engine time at 20,000 / 50,000 / 90,000 prompt tokens reduced by 14.4 / 8.6 / 7.7 % in R825c ABBA, greedy one output token for timing, checkpoint/logit/output equality 27/27; R825p HTTP health timeouts during cold 90,006-token prefill 21/35 → 0/33, late-arrival TTFT 6.27 → 1.92 s; R824 attention census corrected, frontend preparation repaired; raw records in the five 2026-10-01 R824–R825p directories](results/r825-whole-prompt-window.md)
 - [R823, R823b, R823c, R823p: tail recurrent checkpoints captured inside the LS prefill pipeline; raw T32 edited-turn TTFT 5.68 → 2.08 s at 1 stream, C2 11.24 → 4.34 s at 2 streams, greedy 64 forced tokens, 2026-10-01, results `2026-10-01-r823c-cache-reuse-DUO8ur`; single-stream token identity, concurrent fidelity unresolved; separately gated daily promotion, trace on and NVMe default off](results/r823-tail-checkpoints.md)
 
 ## 2026-09-30

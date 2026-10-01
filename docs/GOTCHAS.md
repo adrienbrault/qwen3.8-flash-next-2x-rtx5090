@@ -383,3 +383,21 @@ Since 2026-09-28 09:49 CEST the served image carries `loop-think-r5` ([R792](../
 **What it looks like:** R823p's first promotion try automatically rolls back after all ten retrievals hit because the checker requires at least 90 % of the requested 131,072 or 240,000 tokens ([R823–R823p](../bench/results/r823-tail-checkpoints.md), promotion record `2026-10-01-r823p-promote-tailckpt-wCuc8r`).
 
 **What it is:** `fn_needle_oai` sizes the filler by words; those requests tokenize to 105,680 and 193,464 prompt tokens, as in R810. The corrected gate checks those tokenized depths and all five insertion fractions at each depth. The second try passes 10/10. A request budget and its actual tokenized depth are separate measurements.
+
+## 44. Health checks time out during big cold prompts (2026-10-01)
+
+**What it looks like:** `/health` times out while a cold prompt runs. R825p's old daily recorded 21/35 timeouts during a 90,006-token solo prefill, polling every 200 ms with a 3 s timeout; R825c recorded 0/33, longest 0.334 s, greedy 32 forced output tokens, results `2026-10-01-r825p-promote-wholeprompt-yj7qj3` ([R824–R825p](../bench/results/r825-whole-prompt-window.md)).
+
+**What it is:** the async wrapper calls `generator.iterate()` synchronously on the server event loop. The old `sleep(0)` continuation can run ahead of overdue timer completion and wakeup across several iterates, starving timers for nearly the whole bulk prompt. A resumable chunk plus a positive timer yield bounds each solo blocking extent; the recorded peer cases have longer gaps, so the solo heartbeat result is not a universal bound.
+
+## 45. A request arriving during a long cold prompt aborts with NoneType page_hashes (2026-10-01, fixed in R825c)
+
+**What it looks like:** a mid-window arrival aborts at trace attachment because its page hashes are absent; the engine later runs the orphaned request. The second R825p attempt rolled back on this sequence ([R824–R825p](../bench/results/r825-whole-prompt-window.md)).
+
+**What it is:** R825b deferred `prepare_for_queue`, but TabbyAPI attached its trace before registering cancellation cleanup. R825c completes CPU-only hashes and MRoPE at enqueue and defers GPU admission until the retained window closes. Trace attachment tolerates unknown digests, and failed enqueue removes the async mapping. This fixes the observed seam; unrelated exceptions after successful enqueue still require broader frontend cleanup.
+
+## 46. Whole-window prefill must yield between chunks (2026-10-01)
+
+**What it looks like:** a direct-engine whole-prompt window passes equality and lowers engine time, while a frontend arrival waits for the prompt to finish. R825 measured cold solo 90,000-token prefill at 6,855.6 ms, 13,128 processed rows/s, greedy one output token for timing, results `2026-10-01-r825-whole-prompt-YhItMe` ([R824–R825p](../bench/results/r825-whole-prompt-window.md)).
+
+**What it is:** one synchronous window makes one synchronous iterate cover the prompt. Resumability must retain current/lookahead ownership, commit one chunk, yield to timers and arrivals, then close at the retained lookahead boundary before admitting pending work. Cancellation and reset drain before releasing pages or slabs. A two-chunk cap chosen before an arrival cannot interrupt an already planned solo window.

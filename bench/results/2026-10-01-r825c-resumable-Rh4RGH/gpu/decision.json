@@ -1,0 +1,42 @@
+{
+  "verdict": "SUPPORTED",
+  "sizes": {
+    "20000": {
+      "median_ms": {
+        "A": 1867.9136037826538,
+        "B": 1598.8328456878662
+      },
+      "saved_pct": 14.40541776396299,
+      "reps_per_arm": 6,
+      "heartbeat_max_gap_ms": {
+        "A": 1921.9131720019504,
+        "B": 280.7366530178115
+      }
+    },
+    "50000": {
+      "median_ms": {
+        "A": 4205.384135246277,
+        "B": 3845.714330673218
+      },
+      "saved_pct": 8.552602877786718,
+      "reps_per_arm": 6,
+      "heartbeat_max_gap_ms": {
+        "A": 4059.43495396059,
+        "B": 281.684480025433
+      }
+    },
+    "90000": {
+      "median_ms": {
+        "A": 7435.419917106628,
+        "B": 6863.288164138794
+      },
+      "saved_pct": 7.694679780647418,
+      "reps_per_arm": 6,
+      "heartbeat_max_gap_ms": {
+        "A": 6874.943203059956,
+        "B": 282.2696230141446
+      }
+    }
+  },
+  "note": "Engine time only; no promotion. Exact checkpoint/logit/token gates are mandatory."
+}

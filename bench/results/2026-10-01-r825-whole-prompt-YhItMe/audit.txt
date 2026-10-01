@@ -1,0 +1,32 @@
+gateway_wait_idle: waiting for flashnext(healthy, 0 in flight) 
+2026-10-01T13:07:16+00:00 [r825-whole-prompt] finish rc=0; results /srv/qwen5090/results/2026-10-01-r825-whole-prompt-YhItMe
+{
+  "verdict": "SUPPORTED",
+  "sizes": {
+    "20000": {
+      "median_ms": {
+        "A": 1853.7561893463135,
+        "B": 1596.503496170044
+      },
+      "saved_pct": 13.877374740795013,
+      "reps_per_arm": 6
+    },
+    "50000": {
+      "median_ms": {
+        "A": 4204.496383666992,
+        "B": 3841.325283050537
+      },
+      "saved_pct": 8.637683743224244,
+      "reps_per_arm": 6
+    },
+    "90000": {
+      "median_ms": {
+        "A": 7422.548294067383,
+        "B": 6855.5978536605835
+      },
+      "saved_pct": 7.638218276867869,
+      "reps_per_arm": 6
+    }
+  },
+  "note": "Engine time only; no promotion. Exact checkpoint/logit/token gates are mandatory."
+}

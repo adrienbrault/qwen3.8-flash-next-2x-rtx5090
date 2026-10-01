@@ -1,0 +1,41 @@
+{
+  "phase": "old",
+  "cold50": {
+    "n": 50001,
+    "cached": 0,
+    "engine_s": 4.06,
+    "trace_engine_s": 4.060987710952759,
+    "sha256": "a063cf53ea75bd944404b5056a5ea53e76b77608b506c4359547b68de6aece74",
+    "whole_window": false
+  },
+  "long90": {
+    "n": 90006,
+    "sha256": "042a8269ef7fb913acebd1496bded892b1ca877a5a493fec3e45d518ddb3da70",
+    "longest_gap_s": 0.4669020175933838,
+    "tokens_during_prefill": 84,
+    "prefill_window_s": 9.797412633895874,
+    "tokens_per_s": 8.573692171480786,
+    "prefill_start_epoch": 1790868816.91822,
+    "prefill_end_epoch": 1790868826.7156327,
+    "note": "SSE delivery timestamps; grouped MTP tokens share a timestamp; boundary-spanning gaps included"
+  },
+  "health90": {
+    "n": 90006,
+    "sha256": "16c595f8daaa9e598611f4c715fc179a068ddb31e8ea41e8e65c9d9dcbaf8c9f",
+    "longest_latency_s": 3.017521054018289,
+    "timeouts": 21,
+    "errors": 0,
+    "samples": 37,
+    "samples_during_prefill": 35,
+    "poll_s": 0.2,
+    "timeout_s": 3.0
+  },
+  "arrival90": {
+    "n": 90006,
+    "sha256": "0b40859ebfde89a35d452cb6980b68dbf672be98023667d89394d18d00b91f2f",
+    "short_n": 203,
+    "short_sha256": "6bc67603a1bf9767886e217b207e6ee7f29103cdb703a0c021fe2d6934dd60f2",
+    "arrival_delay_s": 1.0002648800145835,
+    "short_ttft_s": 6.266897313995287
+  }
+}

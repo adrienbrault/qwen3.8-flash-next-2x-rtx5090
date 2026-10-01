@@ -1,0 +1,1425 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "case": "T35",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 54465,
+        "cached": 2560,
+        "engine_ms": 4385.621786117554,
+        "prompt_sha256": "d815e01bbfdbef0e42dbf8276453a036d92f53764ef9bdc5a8220c3cd476a787",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1269366784
+        ],
+        "allocated": [
+          31188147712,
+          31096446976
+        ],
+        "reserved": [
+          31853641728,
+          31616663552
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 2,
+        "heartbeat_max_gap_ms": 4217.183353030123,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2547.354615991935,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2752,
+        "final_pipeline": false,
+        "crossed": [
+          43520,
+          47616
+        ]
+      },
+      "positions": [
+        2048,
+        2560,
+        35328,
+        43520,
+        47616,
+        51712,
+        53760,
+        54272
+      ]
+    },
+    {
+      "case": "T35",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 54465,
+        "cached": 2560,
+        "engine_ms": 4009.155511856079,
+        "prompt_sha256": "d815e01bbfdbef0e42dbf8276453a036d92f53764ef9bdc5a8220c3cd476a787",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1267269632
+        ],
+        "allocated": [
+          31188147712,
+          31096446976
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 300.78323697671294,
+        "heartbeat_ticks": 27,
+        "iterate_max_ms": 299.87258999608457,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          35328,
+          43520,
+          47616,
+          51712,
+          53760
+        ]
+      },
+      "positions": [
+        2048,
+        2560,
+        35328,
+        43520,
+        47616,
+        51712,
+        53760,
+        54272
+      ]
+    },
+    {
+      "case": "T35",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 54465,
+        "cached": 2560,
+        "engine_ms": 4675.081253051758,
+        "prompt_sha256": "d815e01bbfdbef0e42dbf8276453a036d92f53764ef9bdc5a8220c3cd476a787",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1267269632
+        ],
+        "allocated": [
+          31188147712,
+          31096446976
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 5,
+        "pipeline_windows": 5,
+        "heartbeat_max_gap_ms": 305.9004240203649,
+        "heartbeat_ticks": 26,
+        "iterate_max_ms": 305.84088095929474,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 704,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        2048,
+        2560,
+        35328,
+        43520,
+        47616,
+        51712,
+        53760,
+        54272
+      ]
+    },
+    {
+      "case": "T32",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 67618,
+        "cached": 0,
+        "engine_ms": 5567.39354133606,
+        "prompt_sha256": "2e76ebff747b7272dc880eaa441de0d67a4af4f6a152f7cd6de57131b9aed9cf",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188347392,
+          31096646656
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 2,
+        "heartbeat_max_gap_ms": 5495.5397490412,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2629.0541070047766,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2081,
+        "final_pipeline": false,
+        "crossed": [
+          57344,
+          61440
+        ]
+      },
+      "positions": [
+        32768,
+        57344,
+        61440,
+        65536,
+        67584
+      ]
+    },
+    {
+      "case": "T32",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 67618,
+        "cached": 0,
+        "engine_ms": 5179.340362548828,
+        "prompt_sha256": "2e76ebff747b7272dc880eaa441de0d67a4af4f6a152f7cd6de57131b9aed9cf",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188347392,
+          31096646656
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 281.96687798481435,
+        "heartbeat_ticks": 34,
+        "iterate_max_ms": 280.83518298808485,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          57344,
+          61440,
+          65536,
+          67584
+        ]
+      },
+      "positions": [
+        32768,
+        57344,
+        61440,
+        65536,
+        67584
+      ]
+    },
+    {
+      "case": "T32",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 67618,
+        "cached": 0,
+        "engine_ms": 5783.380508422852,
+        "prompt_sha256": "2e76ebff747b7272dc880eaa441de0d67a4af4f6a152f7cd6de57131b9aed9cf",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188347392,
+          31096646656
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 5,
+        "pipeline_windows": 5,
+        "heartbeat_max_gap_ms": 307.7110620215535,
+        "heartbeat_ticks": 34,
+        "iterate_max_ms": 307.65413492918015,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 33,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        57344,
+        61440,
+        65536,
+        67584
+      ]
+    },
+    {
+      "case": "T65",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 88703,
+        "cached": 0,
+        "engine_ms": 7402.82678604126,
+        "prompt_sha256": "3153e23e31df37a990a69c779921bc6d54373833dd6c58e3e5d844c5baeb974d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188398592,
+          31096697856
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 3,
+        "heartbeat_max_gap_ms": 6939.672518055886,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2600.2447279170156,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2686,
+        "final_pipeline": false,
+        "crossed": [
+          77824,
+          81920
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        88576
+      ]
+    },
+    {
+      "case": "T65",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 88703,
+        "cached": 0,
+        "engine_ms": 6790.058135986328,
+        "prompt_sha256": "3153e23e31df37a990a69c779921bc6d54373833dd6c58e3e5d844c5baeb974d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188398592,
+          31096697856
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 282.80008293222636,
+        "heartbeat_ticks": 45,
+        "iterate_max_ms": 281.3457810552791,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          65536,
+          77824,
+          81920,
+          86016,
+          88064
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        88576
+      ]
+    },
+    {
+      "case": "T65",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 88703,
+        "cached": 0,
+        "engine_ms": 7614.1064167022705,
+        "prompt_sha256": "3153e23e31df37a990a69c779921bc6d54373833dd6c58e3e5d844c5baeb974d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188398592,
+          31096697856
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 6,
+        "pipeline_windows": 6,
+        "heartbeat_max_gap_ms": 310.9422369161621,
+        "heartbeat_ticks": 44,
+        "iterate_max_ms": 310.88632193859667,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 638,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        88576
+      ]
+    },
+    {
+      "case": "20000",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20000,
+        "cached": 0,
+        "engine_ms": 1877.8791427612305,
+        "prompt_sha256": "713e14aa7abf92ad57008037799bdf445f748e64df9a60b8e1182b7598ae9b71",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1265172480
+        ],
+        "allocated": [
+          31188524032,
+          31130377728
+        ],
+        "reserved": [
+          31853641728,
+          31618760704
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 1892.9361590417102,
+        "heartbeat_ticks": 1,
+        "iterate_max_ms": 1351.6941970447078,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 3615,
+        "final_pipeline": false,
+        "crossed": [
+          8192,
+          12288
+        ]
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "20000",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20000,
+        "cached": 0,
+        "engine_ms": 1592.6029682159424,
+        "prompt_sha256": "713e14aa7abf92ad57008037799bdf445f748e64df9a60b8e1182b7598ae9b71",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1223229440
+        ],
+        "allocated": [
+          31188524032,
+          31130377728
+        ],
+        "reserved": [
+          31853641728,
+          31660703744
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 279.3827540008351,
+        "heartbeat_ticks": 11,
+        "iterate_max_ms": 278.9376440923661,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          8192,
+          12288,
+          16384,
+          18432
+        ]
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "20000",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20000,
+        "cached": 0,
+        "engine_ms": 2136.1570358276367,
+        "prompt_sha256": "713e14aa7abf92ad57008037799bdf445f748e64df9a60b8e1182b7598ae9b71",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1038680064,
+          1223229440
+        ],
+        "allocated": [
+          31188524032,
+          31130377728
+        ],
+        "reserved": [
+          31853641728,
+          31660703744
+        ],
+        "fallbacks": 4,
+        "pipeline_windows": 4,
+        "heartbeat_max_gap_ms": 295.41490494739264,
+        "heartbeat_ticks": 10,
+        "iterate_max_ms": 295.36365799140185,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 1567,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "50000",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50000,
+        "cached": 0,
+        "engine_ms": 4222.38302230835,
+        "prompt_sha256": "1b6f589b13fab730d9128d65b76e6fe4b7baaba45cc16e39a25cb6f40eb82661",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188592128,
+          31130445824
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 2,
+        "heartbeat_max_gap_ms": 4052.0475319353864,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2550.3363859606907,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2895,
+        "final_pipeline": false,
+        "crossed": [
+          40960,
+          45056
+        ]
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "50000",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50000,
+        "cached": 0,
+        "engine_ms": 3818.937301635742,
+        "prompt_sha256": "1b6f589b13fab730d9128d65b76e6fe4b7baaba45cc16e39a25cb6f40eb82661",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188592128,
+          31130445824
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 280.3886169567704,
+        "heartbeat_ticks": 26,
+        "iterate_max_ms": 279.4973769923672,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          40960,
+          45056,
+          47104,
+          49152
+        ]
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "50000",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50000,
+        "cached": 0,
+        "engine_ms": 4477.952003479004,
+        "prompt_sha256": "1b6f589b13fab730d9128d65b76e6fe4b7baaba45cc16e39a25cb6f40eb82661",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188592128,
+          31130445824
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 5,
+        "pipeline_windows": 5,
+        "heartbeat_max_gap_ms": 300.46134698204696,
+        "heartbeat_ticks": 25,
+        "iterate_max_ms": 300.40570197161287,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 847,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "90000",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90000,
+        "cached": 0,
+        "engine_ms": 7411.558151245117,
+        "prompt_sha256": "e2fe0e3b55f3dec87f1c16b8ed1647995aaf87aa2f800db9a9515d6543146575",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188747264,
+          31130600960
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 3,
+        "heartbeat_max_gap_ms": 6820.831689983606,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2578.113671974279,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 3983,
+        "final_pipeline": false,
+        "crossed": [
+          77824,
+          81920
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        89856
+      ]
+    },
+    {
+      "case": "90000",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90000,
+        "cached": 0,
+        "engine_ms": 6804.052829742432,
+        "prompt_sha256": "e2fe0e3b55f3dec87f1c16b8ed1647995aaf87aa2f800db9a9515d6543146575",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188747264,
+          31130600960
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 280.7023739442229,
+        "heartbeat_ticks": 45,
+        "iterate_max_ms": 279.2249380145222,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          65536,
+          77824,
+          81920,
+          86016,
+          88064
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        89856
+      ]
+    },
+    {
+      "case": "90000",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90000,
+        "cached": 0,
+        "engine_ms": 7704.166889190674,
+        "prompt_sha256": "e2fe0e3b55f3dec87f1c16b8ed1647995aaf87aa2f800db9a9515d6543146575",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188747264,
+          31130600960
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 6,
+        "pipeline_windows": 6,
+        "heartbeat_max_gap_ms": 326.6687780851498,
+        "heartbeat_ticks": 44,
+        "iterate_max_ms": 306.1209520092234,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 1935,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        89856
+      ]
+    },
+    {
+      "case": "20001",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20001,
+        "cached": 0,
+        "engine_ms": 1882.3542594909668,
+        "prompt_sha256": "25cb0cb13c9ad98221bbafaf6bf7fddb47797ea59fa15fda7888a2a6e00119c5",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188872704,
+          31130726400
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 1897.5127529120073,
+        "heartbeat_ticks": 1,
+        "iterate_max_ms": 1355.596593930386,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 3616,
+        "final_pipeline": false,
+        "crossed": [
+          8192,
+          12288
+        ]
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "20001",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20001,
+        "cached": 0,
+        "engine_ms": 1595.7286357879639,
+        "prompt_sha256": "25cb0cb13c9ad98221bbafaf6bf7fddb47797ea59fa15fda7888a2a6e00119c5",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188872704,
+          31130726400
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 280.01442190725356,
+        "heartbeat_ticks": 11,
+        "iterate_max_ms": 279.5651439810172,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          8192,
+          12288,
+          16384,
+          18432
+        ]
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "20001",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 20001,
+        "cached": 0,
+        "engine_ms": 2142.160654067993,
+        "prompt_sha256": "25cb0cb13c9ad98221bbafaf6bf7fddb47797ea59fa15fda7888a2a6e00119c5",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1221132288
+        ],
+        "allocated": [
+          31188872704,
+          31130726400
+        ],
+        "reserved": [
+          31857836032,
+          31662800896
+        ],
+        "fallbacks": 4,
+        "pipeline_windows": 4,
+        "heartbeat_max_gap_ms": 297.7617169963196,
+        "heartbeat_ticks": 10,
+        "iterate_max_ms": 297.7034570649266,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 1568,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        8192,
+        12288,
+        16384,
+        18432,
+        19968
+      ]
+    },
+    {
+      "case": "50001",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50001,
+        "cached": 0,
+        "engine_ms": 4188.050985336304,
+        "prompt_sha256": "29b7fea5e566ff41daba35e1340debcc38b62d398cba3cf1b2a6579f7b0df36b",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 2,
+        "heartbeat_max_gap_ms": 4017.8456070134416,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2514.5544989500195,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2896,
+        "final_pipeline": false,
+        "crossed": [
+          40960,
+          45056
+        ]
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "50001",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50001,
+        "cached": 0,
+        "engine_ms": 3829.679250717163,
+        "prompt_sha256": "29b7fea5e566ff41daba35e1340debcc38b62d398cba3cf1b2a6579f7b0df36b",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 280.67211899906397,
+        "heartbeat_ticks": 26,
+        "iterate_max_ms": 279.787300969474,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          40960,
+          45056,
+          47104,
+          49152
+        ]
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "50001",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 50001,
+        "cached": 0,
+        "engine_ms": 4486.55104637146,
+        "prompt_sha256": "29b7fea5e566ff41daba35e1340debcc38b62d398cba3cf1b2a6579f7b0df36b",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 5,
+        "pipeline_windows": 5,
+        "heartbeat_max_gap_ms": 300.9005319327116,
+        "heartbeat_ticks": 25,
+        "iterate_max_ms": 300.84606900345534,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 848,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        40960,
+        45056,
+        47104,
+        49152,
+        49920
+      ]
+    },
+    {
+      "case": "90113",
+      "arm": "A",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90113,
+        "cached": 0,
+        "engine_ms": 7409.198999404907,
+        "prompt_sha256": "84521f8a268ab8c321a9e04400c14b6b7547b6cfeaa6a926429616db350b3a4d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 3,
+        "heartbeat_max_gap_ms": 6821.416179067455,
+        "heartbeat_ticks": 2,
+        "iterate_max_ms": 2579.239184036851,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 4096,
+        "final_pipeline": false,
+        "crossed": [
+          77824,
+          81920
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        90112
+      ]
+    },
+    {
+      "case": "90113",
+      "arm": "B",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90113,
+        "cached": 0,
+        "engine_ms": 6829.950332641602,
+        "prompt_sha256": "84521f8a268ab8c321a9e04400c14b6b7547b6cfeaa6a926429616db350b3a4d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 0,
+        "pipeline_windows": 1,
+        "heartbeat_max_gap_ms": 281.12870606128126,
+        "heartbeat_ticks": 45,
+        "iterate_max_ms": 279.6543959993869,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 0,
+        "final_pipeline": true,
+        "crossed": [
+          32768,
+          65536,
+          77824,
+          81920,
+          86016,
+          88064
+        ]
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        90112
+      ]
+    },
+    {
+      "case": "90113",
+      "arm": "NO_SLAB",
+      "equal": true,
+      "differences": [],
+      "record": {
+        "prompt_tokens": 90113,
+        "cached": 0,
+        "engine_ms": 7691.953182220459,
+        "prompt_sha256": "84521f8a268ab8c321a9e04400c14b6b7547b6cfeaa6a926429616db350b3a4d",
+        "alloc_retries": [
+          0,
+          0
+        ],
+        "driver_free": [
+          1034485760,
+          1219035136
+        ],
+        "allocated": [
+          31188940800,
+          31130794496
+        ],
+        "reserved": [
+          31857836032,
+          31664898048
+        ],
+        "fallbacks": 6,
+        "pipeline_windows": 6,
+        "heartbeat_max_gap_ms": 332.84721593372524,
+        "heartbeat_ticks": 44,
+        "iterate_max_ms": 312.346487888135,
+        "peer_boundary": {},
+        "short_output_ids": [],
+        "serial_rows": 2048,
+        "final_pipeline": false,
+        "crossed": []
+      },
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        90112
+      ]
+    }
+  ],
+  "late_peer": {
+    "equal": true,
+    "differences": [],
+    "positions": [
+      32768,
+      65536,
+      77824,
+      81920,
+      86016,
+      88064,
+      89856
+    ],
+    "short_output_count": 32,
+    "record": {
+      "prompt_tokens": 90000,
+      "cached": 0,
+      "engine_ms": 8812.154769897461,
+      "prompt_sha256": "e2fe0e3b55f3dec87f1c16b8ed1647995aaf87aa2f800db9a9515d6543146575",
+      "alloc_retries": [
+        0,
+        0
+      ],
+      "driver_free": [
+        1032388608,
+        1198063616
+      ],
+      "allocated": [
+        31189103104,
+        31135152128
+      ],
+      "reserved": [
+        31857836032,
+        31685869568
+      ],
+      "fallbacks": 0,
+      "pipeline_windows": 13,
+      "heartbeat_max_gap_ms": 1497.690637013875,
+      "heartbeat_ticks": 26,
+      "iterate_max_ms": 588.3216320071369,
+      "peer_boundary": {
+        "arrival_chunk": 3,
+        "finish_chunk": 4
+      },
+      "short_output_ids": [
+        3150,
+        2733,
+        248046,
+        198,
+        248045,
+        74455,
+        198,
+        248068,
+        198,
+        760,
+        1156,
+        369,
+        9859,
+        728,
+        310,
+        3286,
+        264,
+        5638,
+        4560,
+        2790,
+        421,
+        17077,
+        25,
+        198,
+        16,
+        13,
+        9357,
+        95085,
+        8132,
+        318,
+        54,
+        939
+      ],
+      "serial_rows": 0,
+      "final_pipeline": true,
+      "crossed": [
+        65536,
+        77824,
+        81920,
+        86016,
+        88064
+      ]
+    },
+    "arrival_chunk": 3,
+    "finish_chunk": 4
+  }
+}
