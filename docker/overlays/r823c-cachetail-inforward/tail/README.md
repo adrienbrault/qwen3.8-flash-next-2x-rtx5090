@@ -1,0 +1,3 @@
+# Bounded tail checkpoint policy
+
+This is the R823b predecessor bundled for the cumulative [R823c image recipe](../README.md). `EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096` and `EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288` select a 4,096-row grid inside the final 12,288 prompt rows and a 32,768-row grid outside, retaining the existing near-end and prompt-end rules. Job and the LS window planner share the policy helper. R823b still cuts the window at each checkpoint; the final R823c patch adds in-forward capture. Paired cost and fidelity measurements dated 2026-10-01 are in [R823–R823p](../../../../bench/results/r823-tail-checkpoints.md).

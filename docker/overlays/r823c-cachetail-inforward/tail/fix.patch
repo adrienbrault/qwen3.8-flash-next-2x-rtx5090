@@ -1,0 +1,117 @@
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ from exllamav3 import cache_trace as r823_trace
++from ..cache.checkpoint_policy import read_tail as r823b_read_tail
+ import logging
+ import os
+ import time
+@@ -368,6 +369,11 @@
+                 f"pp={recurrent_checkpoint_interval_pp} chunk={self.max_chunk_size} source=env",
+                 flush=True,
+             )
++
++        self.recurrent_checkpoint_tail_pp = r823b_read_tail(self.max_chunk_size)
++        if self.recurrent_checkpoint_tail_pp:
++            print(f" -- R823b checkpoint tail: tokens={self.recurrent_checkpoint_tail_pp} "
++                  f"pp={recurrent_checkpoint_interval_pp} outside=32768", flush=True)
+ 
+         def ceil_span(a, b):
+             return (a + b - 1) // b * b
+--- a/generator/job.py
++++ b/generator/job.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ from exllamav3 import cache_trace as r823_trace
++from ..cache.checkpoint_policy import interval as r823b_interval
+ import os
+ import torch
+ from typing import TYPE_CHECKING
+@@ -1604,10 +1605,9 @@
+         seq_pos = seq.kv_position
+         if override_interval:
+             return seq_pos % override_interval == 0
+-        elif seq_pos >= prompt_len - self.generator.max_chunk_size * 2:
+-            return (seq_pos - self.cached_pages * PAGE_SIZE) % self.generator.recurrent_checkpoint_interval == 0
+         else:
+-            return (seq_pos - self.cached_pages * PAGE_SIZE) % self.generator.recurrent_checkpoint_interval_pp == 0
++            interval = r823b_interval(self.generator, seq_pos, prompt_len)
++            return (seq_pos - self.cached_pages * PAGE_SIZE) % interval == 0
+ 
+ 
+     def mm_exact_spans(self, seq):
+--- a/generator/prefill_pipeline.py
++++ b/generator/prefill_pipeline.py
+@@ -5,6 +5,7 @@
+ allocator arenas would waste the served configuration's small memory margin.
+ """
+ from concurrent.futures import ThreadPoolExecutor
++from ..cache.checkpoint_policy import interval as r823b_interval
+ 
+ import torch
+ 
+@@ -299,8 +300,7 @@
+     # assembly, speculative depth selection and the full target pass remain unchanged.
+     limit = 2 if len(gen.active_jobs) > 1 else (prompt_end - start) // 2048
+     def checkpoint(end):
+-        interval = (gen.recurrent_checkpoint_interval if end >= prompt_end - 4096
+-                    else gen.recurrent_checkpoint_interval_pp)
++        interval = r823b_interval(gen, end, prompt_end)
+         return (end - job.cached_pages * 256) % interval == 0
+     ends = window_ends(start, prompt_end, checkpoint, limit)
+     if len(ends) < 2:
+--- a/cache_trace.py
++++ b/cache_trace.py
+@@ -1,4 +1,5 @@
+ """R823 CPU diagnostics: bounded arrays, existing page digests, keyed output hashes."""
++from .cache.checkpoint_policy import interval as r823b_interval
+ import collections
+ import contextvars
+ import hashlib
+@@ -129,6 +130,7 @@
+         emit('render',**record,serial=job.serial_number,
+              page_digests=[digest(h) for h in job.sequences[0].page_hashes],
+              policy_pp=job.generator.recurrent_checkpoint_interval_pp,
++             policy_tail=getattr(job.generator,"recurrent_checkpoint_tail_pp",0),
+              policy_near=job.generator.recurrent_checkpoint_interval,chunk=job.generator.max_chunk_size)
+ 
+ 
+@@ -213,7 +215,7 @@
+     ready = getattr(st,'_pm_ready',None)
+     emit('save',**owner(job),position=st.get('position',getattr(state,'position',None)),
+          cached_base=getattr(job,'cached_pages',0)*256,reason=reason or 'other',
+-         effective_interval=(job.generator.recurrent_checkpoint_interval_pp if reason == 'interior' else job.generator.recurrent_checkpoint_interval) if job else None,
++         effective_interval=r823b_interval(job.generator,st.get('position',state.position),(getattr(job,'_r823_trace',None) or {}).get('n',len(job.sequences[0].sequence_ids))-1) if job else None,
+          digest=digest(key),inserted=not existing,bytes=st['checkpoint_size'],
+          ready=ready is None or ready.is_set(),**occupancy(rc))
+ 
+--- a/cache/checkpoint_policy.py
++++ b/cache/checkpoint_policy.py
+@@ -0,0 +1,26 @@
++"""R823b opt-in tail density; one policy shared by Job, LS windows, and trace."""
++import os
++
++
++def read_tail(max_chunk_size):
++    value = os.environ.get("EXL3_RECURRENT_CHECKPOINT_TAIL_PP")
++    if value is None:
++        return 0
++    try:
++        tail = int(value)
++    except ValueError as exc:
++        raise ValueError("EXL3_RECURRENT_CHECKPOINT_TAIL_PP must be an integer") from exc
++    if tail <= 0 or tail % max_chunk_size or tail % 256:
++        raise ValueError("EXL3_RECURRENT_CHECKPOINT_TAIL_PP must be a positive chunk/page multiple")
++    if os.environ.get("EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP") is None:
++        raise ValueError("tail density requires EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP")
++    return tail
++
++
++def interval(generator, position, prompt_end):
++    if position >= prompt_end - generator.max_chunk_size * 2:
++        return generator.recurrent_checkpoint_interval
++    tail = getattr(generator, "recurrent_checkpoint_tail_pp", 0)
++    if tail and position < prompt_end - tail:
++        return 32768
++    return generator.recurrent_checkpoint_interval_pp

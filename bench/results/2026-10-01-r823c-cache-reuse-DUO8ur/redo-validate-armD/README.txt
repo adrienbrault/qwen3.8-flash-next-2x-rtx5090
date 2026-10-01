@@ -1,0 +1,1 @@
+Offline re-validation 2026-10-01 ~11:05 UTC: the unit validate step rejected --arm D (argparse choices A,B,C; harness bug) for D1, D2 and the replacement RD. Fixed probe (choices A-D) re-validated all three VALID; decide-originals = the six pre-registered boots A1 C1 D1 D2 C2 A2 (RD excluded: triggered by the harness bug, not by an outcome).

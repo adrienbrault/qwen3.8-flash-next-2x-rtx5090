@@ -1,0 +1,247 @@
+--- a/cache/prefill_merge.py
++++ b/cache/prefill_merge.py
+@@ -289,7 +289,7 @@
+     in GDNState.stash()'s layout ({"position", "checkpoint_size", key: tuple}, get_all_recurrent_layers() order).
+     """
+ 
+-    def __init__(self, lay, slot: int, slab, pool):
++    def __init__(self, lay, slot: int, slab, pool, site_events=False):
+         self.entries, _ = lay
+         self.by_layer = {id(l): (k, kind, parts) for k, l, kind, parts in self.entries}
+         self.slot = slot
+@@ -297,6 +297,7 @@
+         self.pool = pool
+         self.host = {}
+         self.devices = []
++        self.site_events = [] if site_events else None
+         self.done = set()
+         self.consumed = False
+ 
+@@ -329,12 +330,23 @@
+                     self.devices.append(src.device)
+             else:
+                 v.copy_(src)
++        # R823c: record on the layer's issuing stream, including the stage-0 worker.
++        # A later main-thread event must not stand in for this capture's completion.
++        if self.site_events is not None:
++            for device in {src.device for src in srcs if src.is_cuda}:
++                with torch.cuda.device(device):
++                    event = torch.cuda.Event()
++                    event.record(torch.cuda.current_stream(device))
++                    self.site_events.append(event)
+         self.done.add(k)
+ 
+     def complete(self) -> bool:
+         return len(self.done) == len(self.entries)
+ 
+     def _events(self):
++        if self.site_events is not None:
++            return list(self.site_events)
++        # Preserve the original prompt-end / whole-state stash path in A and C.
+         evs = []
+         for d in self.devices:
+             e = torch.cuda.Event()
+@@ -508,3 +520,48 @@
+             metrics["snapshot_skipped"] += 1
+     finally:
+         split.cap.abandon()
++
++
++# R823c: an END-of-chunk capture, without changing any recurrence/kernel partition.
++def tail_capture_enabled():
++    return os.environ.get("EXL3_RECURRENT_CHECKPOINT_INFORWARD", "0") == "1"
++
++
++def try_boundary(job, start, end, alloc=None):
++    """Reserve before stage A, never from the worker. None retains the old window cut."""
++    rs = job.recurrent_state
++    if (not tail_capture_enabled() or _disabled_reason is not None or
++            rs is None or rs.exported or job.generator.model.loaded_tp or
++            len(job.sequences) != 1 or job.embeddings or end - start != 2048):
++        return None
++    lay = stash_layout(rs.cache)
++    if lay is None:
++        return None
++    slab = _pool(rs.cache, lay, alloc).try_acquire()
++    if slab is None:
++        return None
++    return Split(end - start, end, Capture(lay, rs.slot, slab, rs.cache._pm_pool, site_events=True))
++
++
++def stash_boundary(job, split):
++    """Publish only the captured bytes, after both stages and the matching page commit."""
++    try:
++        if not split.cap.complete():
++            metrics["incomplete_snapshots"] += 1
++            raise RuntimeError(f"R823c incomplete chunk snapshot at {split.last_page_b}")
++        pos = split.last_page_b
++        seq = job.sequences[0]
++        assert seq.kv_position == job.recurrent_state.position == pos
++        page = seq.allocated_pages[(pos - 1) // PAGE_SIZE]
++        assert pos % PAGE_SIZE == 0 and page.kv_position == PAGE_SIZE
++        if job.last_recurrent_checkpoint_pos == pos:
++            return
++        job.generator.recurrent_cache.put(
++            page.phash, _SnapshotState(split, job.recurrent_state.checkpoint_size),
++            trace_owner=job, trace_reason=r823_trace.save_reason(job, None))
++        job.last_recurrent_checkpoint_pos = pos
++        r823_trace.emit("tail_capture", **r823_trace.owner(job), position=pos,
++                        stored=split.cap.consumed, layers=len(split.cap.done),
++                        crossed=getattr(split, "crossed", False))
++    finally:
++        split.cap.abandon()
+--- a/cache_trace.py
++++ b/cache_trace.py
+@@ -131,6 +131,7 @@
+              page_digests=[digest(h) for h in job.sequences[0].page_hashes],
+              policy_pp=job.generator.recurrent_checkpoint_interval_pp,
+              policy_tail=getattr(job.generator,"recurrent_checkpoint_tail_pp",0),
++             policy_inforward=os.environ.get("EXL3_RECURRENT_CHECKPOINT_INFORWARD", "0") == "1",
+              policy_near=job.generator.recurrent_checkpoint_interval,chunk=job.generator.max_chunk_size)
+ 
+ 
+--- a/generator/job.py
++++ b/generator/job.py
+@@ -1487,6 +1487,10 @@
+                         page.sequence[:, pfp_a:pfp_b].copy_(seq.sequence_ids.torch_slice(pf_a, pf_b))
+                     page.can_revert = False
+ 
++                r823_trace.emit("prefill_forward", **r823_trace.owner(self),
++                                start=prefill_start, end=prefill_end,
++                                pipeline=getattr(self, "_ls_prefill_pipeline", None) is not None,
++                                prompt_prefill=self.time_first_token is None)
+                 progress += prefill_end - prefill_start
+                 if self.sequences[0].kv_position >= len(seq.sequence_ids) - 1:
+                     seq.prefill_complete = True
+--- a/generator/prefill_pipeline.py
++++ b/generator/prefill_pipeline.py
+@@ -6,6 +6,8 @@
+ """
+ from concurrent.futures import ThreadPoolExecutor
+ from ..cache.checkpoint_policy import interval as r823b_interval
++from ..cache import prefill_merge as _pm
++from .. import cache_trace as r823_trace
+ 
+ import torch
+ 
+@@ -40,15 +42,22 @@
+     """The real driver, also exercised with a CPU-only fake stage executor."""
+     job._ls_prefill_pipeline = runtime
+     try:
+-        for _ in range(count):
++        # Reservation failure can shorten ends before any lookahead crosses that boundary.
++        while runtime.index < len(runtime.ends):
+             job.prefill(results)  # target, then existing draft, pages and progress
+-            if job.generator.recurrent_cache is not None:
++            split = runtime.captures.pop(runtime.index - 1, None)
++            if split is not None:
++                _pm.stash_boundary(job, split)
++            elif job.generator.recurrent_cache is not None:
+                 job.maybe_stash_recurrent(job.generator.recurrent_cache)
+         assert runtime.pending is None
+     finally:
+         try:
+             runtime.drain()
+         finally:
++            for split in runtime.captures.values():
++                split.cap.abandon()
++            runtime.captures.clear()
+             del job._ls_prefill_pipeline
+ 
+ 
+@@ -161,6 +170,26 @@
+         self.executor, self.peer_copy = executor, peer_copy
+         self.index = 0
+         self.pending = None
++        self.captures = {}
++
++    def _capture_params(self, index, params):
++        # The raw lookahead copy must NEVER inherit the current chunk's descriptor.
++        params.pop("_prefill_tail_capture", None)
++        params.pop("_prefill_split", None)
++        end = self.ends[index]
++        interval = r823b_interval(self.job.generator, end, len(self.job.sequences[0].sequence_ids) - 1)
++        checkpoint = (end - self.job.cached_pages * 256) % interval == 0
++        if _pm.tail_capture_enabled() and checkpoint:
++            split = _pm.try_boundary(self.job, end - 2048, end)
++            if split is None:
++                # No capture -> no A_(i+1) before this checkpoint's live stash.
++                del self.ends[index + 1:]
++                r823_trace.emit("tail_fallback", **r823_trace.owner(self.job), position=end)
++            else:
++                split.crossed = index + 1 < len(self.ends)
++                self.captures[index] = split
++                params["_prefill_tail_capture"] = split
++        return params
+ 
+     def _modules(self, x, params, modules):
+         ctx = _LSDeviceContext()
+@@ -236,7 +265,7 @@
+             assert ids.shape == (1, 2048) and start + 2048 == self.ends[self.index]
+             raw = params.copy()
+             if self.pending is None:
+-                descriptor = self._stage0(ids, params)
++                descriptor = self._stage0(ids, self._capture_params(self.index, params))
+             else:
+                 descriptor = self.pending.result()
+                 self.pending = None
+@@ -251,6 +280,7 @@
+                     next_ids = self.job.sequences[0].sequence_ids.torch_slice(
+                         self.ends[self.index], self.ends[self.index + 1])
+                     raw["cache_seqlens"] = torch.tensor([self.ends[self.index]], dtype = torch.int32)
++                    raw = self._capture_params(self.index + 1, raw)
+                     self.pending = self.executor.submit(self._stage0, next_ids, raw)
+                 # Host readbacks in MoE require independent issue of A_(i+1) and B_i.
+                 # The worker touches device 0 only; device 1 remains on this thread.
+@@ -260,7 +290,7 @@
+                     self.pending.result()
+                 # MTP may use either device and the same device-local scratch. Complete
+                 # BOTH stages before Job resumes draft_i, then commit_i. No lookahead
+-                # crosses a checkpoint, so checkpoint snapshots remain coherent.
++                # crosses an uncaptured checkpoint. Captured layers own chunk-i bytes.
+                 if _prefill_nosync_enabled(p):
+                     from ..util.prefill_nosync import join_stages
+                     join_stages(self.devices, self.streams)
+@@ -302,7 +332,13 @@
+     def checkpoint(end):
+         interval = r823b_interval(gen, end, prompt_end)
+         return (end - job.cached_pages * 256) % interval == 0
+-    ends = window_ends(start, prompt_end, checkpoint, limit)
++    def window_checkpoint(end):
++        if not _pm.tail_capture_enabled():
++            return checkpoint(end)
++        # Retain A's coarse/near window ends; only added tail checkpoints are crossed.
++        served_interval = gen.recurrent_checkpoint_interval if end >= prompt_end - gen.max_chunk_size * 2 else 32768
++        return (end - job.cached_pages * 256) % served_interval == 0
++    ends = window_ends(start, prompt_end, window_checkpoint, limit)
+     if len(ends) < 2:
+         return False
+     pages = seq.allocated_pages[start // 256:ends[-1] // 256]
+--- a/modules/gated_delta_net.py
++++ b/modules/gated_delta_net.py
+@@ -1323,6 +1323,11 @@
+                 params = params,
+                 channelwise_g = self.kda,
+             )
++        # R823c end hook: both served conv and delta-rule stores are already queued.
++        tail = params.get("_prefill_tail_capture")
++        if tail is not None:
++            assert save_state and not save_history and bsz == 1 and tail.at == seqlen
++            tail.capture(rsl)
+         del mixed_qkv, beta, g
+ 
+         # Norm
+--- a/modules/ple.py
++++ b/modules/ple.py
+@@ -593,6 +593,11 @@
+                     id_state[s, :ctx].copy_(history[i, -ctx:])
+         else:
+             delta, _ = self.forward_streams(x, history, params)
++        # R823c: copy the conv slot and clone the host ID history before A_(i+1).
++        tail = params.get("_prefill_tail_capture")
++        if tail is not None:
++            assert rsl is not None and not save_history and bsz == 1 and tail.at == seq
++            tail.capture(rsl)
+         out = x if delta is None else x + delta
+         if self.tp_owner is not None:
+             self.tp_collect(params["backend"], out)

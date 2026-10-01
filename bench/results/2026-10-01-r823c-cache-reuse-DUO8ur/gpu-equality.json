@@ -1,0 +1,100 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "case": "T35",
+      "positions": [
+        2048,
+        2560,
+        35328,
+        43520,
+        47616,
+        51712,
+        53760,
+        54272
+      ],
+      "engagement": {
+        "CUT": {
+          "captures": 0,
+          "fallbacks": 0,
+          "pipeline": 24
+        },
+        "INFORWARD": {
+          "captures": 4,
+          "fallbacks": 0,
+          "pipeline": 24
+        },
+        "NO_SLAB": {
+          "captures": 0,
+          "fallbacks": 4,
+          "pipeline": 24
+        }
+      },
+      "equal": true,
+      "engaged": true,
+      "differences": []
+    },
+    {
+      "case": "T32",
+      "positions": [
+        32768,
+        57344,
+        61440,
+        65536,
+        67584
+      ],
+      "engagement": {
+        "CUT": {
+          "captures": 0,
+          "fallbacks": 0,
+          "pipeline": 32
+        },
+        "INFORWARD": {
+          "captures": 4,
+          "fallbacks": 0,
+          "pipeline": 32
+        },
+        "NO_SLAB": {
+          "captures": 0,
+          "fallbacks": 4,
+          "pipeline": 32
+        }
+      },
+      "equal": true,
+      "engaged": true,
+      "differences": []
+    },
+    {
+      "case": "T65",
+      "positions": [
+        32768,
+        65536,
+        77824,
+        81920,
+        86016,
+        88064,
+        88576
+      ],
+      "engagement": {
+        "CUT": {
+          "captures": 0,
+          "fallbacks": 0,
+          "pipeline": 42
+        },
+        "INFORWARD": {
+          "captures": 5,
+          "fallbacks": 0,
+          "pipeline": 42
+        },
+        "NO_SLAB": {
+          "captures": 0,
+          "fallbacks": 5,
+          "pipeline": 42
+        }
+      },
+      "equal": true,
+      "engaged": true,
+      "differences": []
+    }
+  ]
+}

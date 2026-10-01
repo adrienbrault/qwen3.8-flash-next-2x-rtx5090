@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-10-01
+
+- [R823, R823b, R823c, R823p: tail recurrent checkpoints captured inside the LS prefill pipeline; raw T32 edited-turn TTFT 5.68 → 2.08 s at 1 stream, C2 11.24 → 4.34 s at 2 streams, greedy 64 forced tokens, 2026-10-01, results `2026-10-01-r823c-cache-reuse-DUO8ur`; single-stream token identity, concurrent fidelity unresolved; separately gated daily promotion, trace on and NVMe default off](results/r823-tail-checkpoints.md)
+
 ## 2026-09-30
 
 - [R811, R811b, R812b, R813: the served `tabbyapi:merge-tok-r1` re-measured with the README's instruments. Decode curve: 104.5 / 106.7 t/s per stream and 838 / 857 decode aggregate at 8 streams, 255.9 / 278.1 at 1 stream (code / prose), time per decode step 0.979 to 0.999× R787a's on the base image. `vllm bench serve` against the previous image in one session: output tok/s 0.987 to 1.086×, mean TTFT 7.4 to 15.4 % lower; the ShareGPT 4-stream cell is the mean of four boots, 433.0 tok/s (419.4 to 438.6), after R811 read a 4.22 % A/B spread there. At 1 and 2 streams the previous image's decode step falls 2.1 to 3.6 % at one ~786-token request and stays lower, and with the prefill merge on it does not fall (R812b: the merge key, not the asynchronous stash or the image); mechanism not known](results/r811-r813-std-bench-merge.md)

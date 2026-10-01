@@ -1,0 +1,58 @@
+diff -ruN a/backends/exllamav3/model.py b/backends/exllamav3/model.py
+--- a/backends/exllamav3/model.py	2026-10-01 09:35:23
++++ b/backends/exllamav3/model.py	2026-10-01 09:35:23
+@@ -992,6 +992,8 @@
+         once = encode_once_enabled() and not (mm_embeddings and mm_embeddings.content)
+         if once:
+             ids = self.tokenizer.encode(prompt, add_bos=add_bos, encode_special_tokens=True, embeddings=[])
++            from exllamav3 import cache_trace as r823_trace
++            r823_trace.encoded(ids, path="validate_context_length")
+             context_len = ids.shape[-1]
+         else:
+             context_len = len(
+@@ -1534,6 +1536,8 @@
+             },
+         )
+ 
++        from exllamav3 import cache_trace as r823_trace
++        trace_record = r823_trace.render(request_id, input_ids[0], self.tokenizer, params, sampler=sampler)
+         generation = {}
+         job = AsyncJob(
+             self.generator,
+@@ -1552,6 +1556,7 @@
+             stop_on_loop=params.get_stop_on_loop(),
+             filters=grammar_handler.filters,
+         )
++        r823_trace.attach(job.job, trace_record)
+         self.active_job_ids[request_id] = job
+         await disconnect_handler.add_cleanup_task(id(job), job.cancel, ())
+         job_status = status_display.add_job(request_id, label, context_len)
+@@ -1641,6 +1646,7 @@
+                     finish_chunk = self.handle_finish_chunk(
+                         result, request_id, full_response, label
+                     )
++                    r823_trace.finished(job.job, result, finish_chunk)
+                     await disconnect_handler.finish(id(job))
+ 
+                     # Save the final result for metrics logging
+diff -ruN a/endpoints/OAI/router.py b/endpoints/OAI/router.py
+--- a/endpoints/OAI/router.py	2026-10-01 09:35:23
++++ b/endpoints/OAI/router.py	2026-10-01 09:35:23
+@@ -67,6 +67,8 @@
+     If stream = true, this returns an SSE stream.
+     """
+ 
++    from exllamav3 import cache_trace as r823_trace
++    r823_trace.request_context(request, data)
+     raw_json = await request.json()
+     xlogger.debug("[ENDPOINT] /v1/completions", {"raw": raw_json})
+ 
+@@ -122,6 +124,8 @@
+     If stream = true, this returns an SSE stream.
+     """
+ 
++    from exllamav3 import cache_trace as r823_trace
++    r823_trace.request_context(request, data)
+     raw_json = await request.json()
+     xlogger.debug("[ENDPOINT] /v1/chat/completions", {"raw": raw_json})
+ 

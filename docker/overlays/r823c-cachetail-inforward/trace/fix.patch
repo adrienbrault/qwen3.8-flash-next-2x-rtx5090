@@ -1,0 +1,30 @@
+diff -ruN a/generator/generator.py b/generator/generator.py
+--- a/generator/generator.py
++++ b/generator/generator.py
+@@ -348,6 +348,26 @@
+ 
+         assert recurrent_checkpoint_interval % PAGE_SIZE == 0 and recurrent_checkpoint_interval % PAGE_SIZE == 0, \
+             "checkpoint interval must be a multiple of the page size (256)"
++        # R823: opt-in interior checkpoint density; absent, preserve the served constructor policy.
++        cp_pp_override = os.environ.get("EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP")
++        if cp_pp_override is not None:
++            try:
++                cp_pp_interval = int(cp_pp_override)
++            except ValueError as exc:
++                raise ValueError("EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP must be an integer") from exc
++            if cp_pp_interval < self.max_chunk_size or cp_pp_interval % self.max_chunk_size:
++                raise ValueError(
++                    "EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP must be a positive multiple of max_chunk_size"
++                )
++            if cp_pp_interval % PAGE_SIZE:
++                raise ValueError("EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP must be page aligned")
++            recurrent_checkpoint_interval_pp = cp_pp_interval
++            print(
++                f" -- R823 checkpoint policy: near={recurrent_checkpoint_interval} "
++                f"pp={recurrent_checkpoint_interval_pp} chunk={self.max_chunk_size} source=env",
++                flush=True,
++            )
++
+         def ceil_span(a, b):
+             return (a + b - 1) // b * b
+         recurrent_checkpoint_interval = recurrent_checkpoint_interval
