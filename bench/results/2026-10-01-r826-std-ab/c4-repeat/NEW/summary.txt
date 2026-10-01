@@ -1,0 +1,40 @@
+== configuration (first boot; FLAGS list any boot that differs) ==
+  image          tabbyapi:r825c-hostprepare
+  image_id       sha256:aa04a1cbe94b60bbd91e3d69d15f5e1b6eb679f14885e599404de218d8a897c9
+  launcher_md5   262e9c31f714724409635fbac9df8ac2
+  env_n          49
+  env_sha        b80407c61365
+  keys_n         46
+  window         0
+  slots          8
+  cache          901120
+  policy         [[4, 3], [8, 2]]
+  gpc_boot       0 0
+  mem_boot       4500 4500
+  power_limit_w  600 575
+  vram_free      1099/1667/
+  pwr_line       power policy stock, core offset 0: readback limit W 600 575 | core offset 0 0
+  boots          2
+
+== sharegpt, pass A ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 4 | 400 | 420.5 | 2.00 | 254 / 546 | 7.61 / 17.88 | 131 | 1.28 | 2.64 | 3.00 |
+
+== sharegpt, pass B ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 4 | 400 | 433.0 | 2.06 | 246 / 612 | 7.41 / 17.57 | 135 | 1.27 | 2.64 | 3.00 |
+
+== sharegpt: pass A vs B (spread = |A - B| / mean) ==
+conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+   4    420.5    433.0    426.7   2.93%     7.61   7.41      254    246   2.64  2.64
+
+== diagnostics (not for the README) ==
+tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+A-sharegpt-c4             200     272   210     964.8    17.74  2.64    2.67    0.547     0.00    0   400
+B-sharegpt-c4             194     272   210     993.6    17.42  2.64    2.67    0.547     0.00    0   400
+
+FLAGS: none
+
+DECISION: PUBLISHABLE (max A/B spread 2.93 % at sharegpt c4; every cell cached <= 1 %)

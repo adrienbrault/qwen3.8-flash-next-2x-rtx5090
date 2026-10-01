@@ -1,0 +1,260 @@
+R826 paired standard instruments: NEW launch-flashnext.sh (262e9c31, tabbyapi:r825c-hostprepare aa04a1cbe94b, 46 keys) vs OLD launch-flashnext.sh.pre-r818 (6429dfa2, tabbyapi:merge-tok-r1 ac16920f72cf, 41 keys); passes A B (A: NEW then OLD, B: OLD then NEW); datasets sharegpt specbench; concs 1 2 4 8; SG_N 400 seed 7310; SB_N 480 out 256; want core 0 0 / memory 4500 4500 / power 600 575 W; results 2026-10-01-r826-std-ab
+R826 report only: every ratio NEW/OLD. VOID runs are partial evidence only.
+A/B = std passes; decode A/B = boots 1/2. c4 repeat is shown separately; all four form the composite.
+| instrument | c | metric | A NEW/OLD | B NEW/OLD | pooled NEW/OLD |
+|---|---|---|---|---|---|
+| sharegpt | 1 | output tok/s | 1.0290 | 1.0259 | 1.0275 |
+| sharegpt | 1 | TTFT mean ms | 0.9872 | 0.9909 | 0.9890 |
+| sharegpt | 1 | TTFT median ms | 0.9882 | 0.9786 | 0.9834 |
+| sharegpt | 1 | TTFT p99 ms | 0.9028 | 1.0391 | 0.9655 |
+| sharegpt | 1 | TPOT mean ms | 0.9732 | 0.9674 | 0.9703 |
+| sharegpt | 1 | ITL p50 ms | 0.9681 | 0.9707 | 0.9694 |
+| sharegpt | 2 | output tok/s | 1.0236 | 1.0209 | 1.0222 |
+| sharegpt | 2 | TTFT mean ms | 0.9862 | 0.9889 | 0.9875 |
+| sharegpt | 2 | TTFT median ms | 0.9781 | 1.0056 | 0.9914 |
+| sharegpt | 2 | TTFT p99 ms | 1.0455 | 0.9905 | 1.0193 |
+| sharegpt | 2 | TPOT mean ms | 0.9738 | 0.9769 | 0.9753 |
+| sharegpt | 2 | ITL p50 ms | 0.9747 | 0.9758 | 0.9753 |
+| sharegpt | 4 | output tok/s | 0.9996 | 0.9986 | 0.9991 |
+| sharegpt | 4 | TTFT mean ms | 0.9974 | 1.0102 | 1.0036 |
+| sharegpt | 4 | TTFT median ms | 1.0053 | 1.0007 | 1.0031 |
+| sharegpt | 4 | TTFT p99 ms | 1.0320 | 1.0270 | 1.0297 |
+| sharegpt | 4 | TPOT mean ms | 1.0029 | 1.0032 | 1.0030 |
+| sharegpt | 4 | ITL p50 ms | 1.0009 | 0.9974 | 0.9992 |
+| sharegpt | 8 | output tok/s | 1.0203 | 0.9910 | 1.0054 |
+| sharegpt | 8 | TTFT mean ms | 0.9942 | 0.9983 | 0.9962 |
+| sharegpt | 8 | TTFT median ms | 0.9671 | 0.9883 | 0.9775 |
+| sharegpt | 8 | TTFT p99 ms | 1.0855 | 0.9641 | 1.0266 |
+| sharegpt | 8 | TPOT mean ms | 0.9819 | 1.0302 | 1.0056 |
+| sharegpt | 8 | ITL p50 ms | 0.9928 | 1.0005 | 0.9966 |
+| specbench | 1 | output tok/s | 1.0263 | 1.0402 | 1.0333 |
+| specbench | 1 | TTFT mean ms | 0.9889 | 0.9399 | 0.9648 |
+| specbench | 1 | TTFT median ms | 0.9848 | 0.9701 | 0.9775 |
+| specbench | 1 | TTFT p99 ms | 0.9862 | 0.8267 | 0.9094 |
+| specbench | 1 | TPOT mean ms | 0.9718 | 0.9651 | 0.9684 |
+| specbench | 1 | ITL p50 ms | 0.9709 | 0.9671 | 0.9690 |
+| specbench | 2 | output tok/s | 1.0499 | 1.0262 | 1.0379 |
+| specbench | 2 | TTFT mean ms | 0.9276 | 0.9808 | 0.9536 |
+| specbench | 2 | TTFT median ms | 0.9626 | 0.9828 | 0.9726 |
+| specbench | 2 | TTFT p99 ms | 0.8965 | 0.9507 | 0.9232 |
+| specbench | 2 | TPOT mean ms | 0.9570 | 0.9734 | 0.9651 |
+| specbench | 2 | ITL p50 ms | 0.9647 | 0.9735 | 0.9691 |
+| specbench | 4 | output tok/s | 0.9950 | 0.9822 | 0.9885 |
+| specbench | 4 | TTFT mean ms | 0.9634 | 1.0292 | 0.9951 |
+| specbench | 4 | TTFT median ms | 0.9003 | 1.0585 | 0.9763 |
+| specbench | 4 | TTFT p99 ms | 0.9077 | 1.0554 | 0.9794 |
+| specbench | 4 | TPOT mean ms | 1.0096 | 1.0161 | 1.0128 |
+| specbench | 4 | ITL p50 ms | 1.0009 | 1.0059 | 1.0033 |
+| specbench | 8 | output tok/s | 0.9961 | 1.0232 | 1.0098 |
+| specbench | 8 | TTFT mean ms | 0.9898 | 0.9480 | 0.9693 |
+| specbench | 8 | TTFT median ms | 0.9704 | 0.9525 | 0.9617 |
+| specbench | 8 | TTFT p99 ms | 1.0781 | 0.9358 | 1.0101 |
+| specbench | 8 | TPOT mean ms | 1.0034 | 0.9808 | 0.9923 |
+| specbench | 8 | ITL p50 ms | 1.0012 | 0.9914 | 0.9963 |
+| c4-repeat sharegpt | 4 | output tok/s | 0.9604 | 0.9817 | 0.9711 |
+| c4-repeat sharegpt | 4 | TTFT mean ms | 1.0530 | 1.0289 | 1.0410 |
+| c4-repeat sharegpt | 4 | TTFT median ms | 1.0349 | 1.0085 | 1.0218 |
+| c4-repeat sharegpt | 4 | TTFT p99 ms | 0.9873 | 1.1963 | 1.0877 |
+| c4-repeat sharegpt | 4 | TPOT mean ms | 1.0537 | 1.0187 | 1.0361 |
+| c4-repeat sharegpt | 4 | ITL p50 ms | 1.0227 | 1.0100 | 1.0163 |
+| fn code | 1 | per_stream | 1.0260 | 1.0324 | 1.0307 |
+| fn code | 1 | decode_agg | 1.0278 | 1.0338 | 1.0308 |
+| fn code | 1 | ms_step | 0.9748 | 0.9689 | 0.9704 |
+| fn code | 1 | tok_step | 1.0000 | 1.0000 | 1.0000 |
+| fn code | 1 | ttft | 0.9848 | 0.9848 | 0.9848 |
+| fn code | 1 | wall_agg | 1.0273 | 1.0330 | 1.0301 |
+| fn code | 2 | per_stream | 1.0362 | 1.0226 | 1.0307 |
+| fn code | 2 | decode_agg | 1.0345 | 1.0233 | 1.0289 |
+| fn code | 2 | ms_step | 0.9690 | 0.9722 | 0.9703 |
+| fn code | 2 | tok_step | 1.0000 | 1.0000 | 1.0000 |
+| fn code | 2 | ttft | 0.9895 | 0.9895 | 0.9916 |
+| fn code | 2 | wall_agg | 1.0350 | 1.0228 | 1.0289 |
+| fn code | 3 | per_stream | 1.0066 | 0.9984 | 1.0009 |
+| fn code | 3 | decode_agg | 1.0118 | 1.0039 | 1.0079 |
+| fn code | 3 | ms_step | 0.9972 | 1.0060 | 1.0015 |
+| fn code | 3 | tok_step | 1.0057 | 1.0140 | 1.0098 |
+| fn code | 3 | ttft | 0.9942 | 0.9971 | 0.9942 |
+| fn code | 3 | wall_agg | 1.0081 | 1.0180 | 1.0131 |
+| fn code | 4 | per_stream | 0.9855 | 1.0024 | 0.9896 |
+| fn code | 4 | decode_agg | 0.9934 | 0.9966 | 0.9950 |
+| fn code | 4 | ms_step | 1.0125 | 0.9960 | 1.0035 |
+| fn code | 4 | tok_step | 1.0004 | 0.9906 | 0.9954 |
+| fn code | 4 | ttft | 1.0033 | 0.9595 | 0.9858 |
+| fn code | 4 | wall_agg | 0.9879 | 0.9973 | 0.9926 |
+| fn code | 5 | per_stream | 1.0105 | 0.9962 | 1.0042 |
+| fn code | 5 | decode_agg | 1.0037 | 0.9969 | 1.0003 |
+| fn code | 5 | ms_step | 0.9977 | 0.9990 | 0.9964 |
+| fn code | 5 | tok_step | 1.0019 | 0.9948 | 0.9983 |
+| fn code | 5 | ttft | 1.0018 | 0.9749 | 0.9892 |
+| fn code | 5 | wall_agg | 0.9991 | 0.9963 | 0.9977 |
+| fn code | 6 | per_stream | 1.0059 | 0.9870 | 0.9945 |
+| fn code | 6 | decode_agg | 1.0155 | 0.9753 | 0.9953 |
+| fn code | 6 | ms_step | 0.9875 | 1.0160 | 1.0058 |
+| fn code | 6 | tok_step | 1.0018 | 0.9880 | 0.9949 |
+| fn code | 6 | ttft | 0.9673 | 0.9633 | 0.9657 |
+| fn code | 6 | wall_agg | 1.0062 | 0.9958 | 1.0010 |
+| fn code | 7 | per_stream | 0.9956 | 0.9910 | 0.9952 |
+| fn code | 7 | decode_agg | 0.9932 | 0.9929 | 0.9930 |
+| fn code | 7 | ms_step | 0.9975 | 0.9979 | 0.9980 |
+| fn code | 7 | tok_step | 0.9874 | 1.0002 | 0.9937 |
+| fn code | 7 | ttft | 1.0242 | 0.8947 | 0.9150 |
+| fn code | 7 | wall_agg | 0.9989 | 0.9951 | 0.9970 |
+| fn code | 8 | per_stream | 0.9846 | 1.0025 | 0.9945 |
+| fn code | 8 | decode_agg | 0.9853 | 1.0078 | 0.9965 |
+| fn code | 8 | ms_step | 0.9999 | 1.0035 | 1.0005 |
+| fn code | 8 | tok_step | 0.9907 | 1.0114 | 1.0010 |
+| fn code | 8 | ttft | 1.0089 | 0.8816 | 0.9344 |
+| fn code | 8 | wall_agg | 0.9916 | 1.0056 | 0.9986 |
+| fn prose | 1 | per_stream | 1.0287 | 1.0324 | 1.0307 |
+| fn prose | 1 | decode_agg | 1.0278 | 1.0323 | 1.0300 |
+| fn prose | 1 | ms_step | 0.9722 | 0.9686 | 0.9703 |
+| fn prose | 1 | tok_step | 1.0000 | 1.0000 | 1.0000 |
+| fn prose | 1 | ttft | 0.9843 | 0.9921 | 0.9921 |
+| fn prose | 1 | wall_agg | 1.0272 | 1.0321 | 1.0297 |
+| fn prose | 2 | per_stream | 1.0273 | 1.0282 | 1.0275 |
+| fn prose | 2 | decode_agg | 1.0265 | 1.0278 | 1.0271 |
+| fn prose | 2 | ms_step | 0.9731 | 0.9730 | 0.9731 |
+| fn prose | 2 | tok_step | 1.0000 | 1.0000 | 1.0000 |
+| fn prose | 2 | ttft | 0.9890 | 0.9978 | 0.9912 |
+| fn prose | 2 | wall_agg | 1.0260 | 1.0268 | 1.0264 |
+| fn prose | 3 | per_stream | 1.0190 | 0.9807 | 1.0003 |
+| fn prose | 3 | decode_agg | 1.0185 | 0.9806 | 0.9993 |
+| fn prose | 3 | ms_step | 0.9902 | 1.0037 | 0.9991 |
+| fn prose | 3 | tok_step | 1.0089 | 0.9921 | 1.0005 |
+| fn prose | 3 | ttft | 0.9969 | 1.0000 | 0.9985 |
+| fn prose | 3 | wall_agg | 1.0136 | 0.9973 | 1.0054 |
+| fn prose | 4 | per_stream | 1.0116 | 0.9942 | 0.9955 |
+| fn prose | 4 | decode_agg | 1.0091 | 0.9952 | 1.0021 |
+| fn prose | 4 | ms_step | 0.9876 | 1.0066 | 0.9983 |
+| fn prose | 4 | tok_step | 0.9943 | 1.0000 | 0.9972 |
+| fn prose | 4 | ttft | 1.0000 | 1.0385 | 1.0186 |
+| fn prose | 4 | wall_agg | 1.0105 | 0.9926 | 1.0015 |
+| fn prose | 5 | per_stream | 1.0053 | 0.9858 | 0.9963 |
+| fn prose | 5 | decode_agg | 1.0064 | 0.9893 | 0.9978 |
+| fn prose | 5 | ms_step | 0.9922 | 1.0024 | 0.9936 |
+| fn prose | 5 | tok_step | 1.0000 | 0.9973 | 0.9986 |
+| fn prose | 5 | ttft | 1.0038 | 1.0000 | 1.0000 |
+| fn prose | 5 | wall_agg | 1.0060 | 0.9905 | 0.9982 |
+| fn prose | 6 | per_stream | 0.9780 | 0.9965 | 0.9857 |
+| fn prose | 6 | decode_agg | 0.9852 | 0.9954 | 0.9903 |
+| fn prose | 6 | ms_step | 1.0051 | 0.9936 | 1.0036 |
+| fn prose | 6 | tok_step | 0.9952 | 0.9906 | 0.9929 |
+| fn prose | 6 | ttft | 0.9991 | 1.0034 | 0.9966 |
+| fn prose | 6 | wall_agg | 0.9860 | 0.9938 | 0.9899 |
+| fn prose | 7 | per_stream | 1.0098 | 1.0086 | 1.0083 |
+| fn prose | 7 | decode_agg | 1.0089 | 1.0107 | 1.0098 |
+| fn prose | 7 | ms_step | 0.9859 | 0.9896 | 0.9878 |
+| fn prose | 7 | tok_step | 1.0020 | 1.0013 | 1.0016 |
+| fn prose | 7 | ttft | 0.9753 | 0.9829 | 0.9768 |
+| fn prose | 7 | wall_agg | 1.0065 | 1.0126 | 1.0095 |
+| fn prose | 8 | per_stream | 1.0040 | 0.9969 | 1.0010 |
+| fn prose | 8 | decode_agg | 1.0034 | 0.9959 | 0.9996 |
+| fn prose | 8 | ms_step | 0.9965 | 0.9946 | 0.9944 |
+| fn prose | 8 | tok_step | 0.9960 | 0.9949 | 0.9955 |
+| fn prose | 8 | ttft | 1.0094 | 1.0057 | 1.0094 |
+| fn prose | 8 | wall_agg | 1.0065 | 0.9957 | 1.0011 |
+
+ShareGPT c4 composite (all four boots per arm):
+  NEW: values [417.73216760752615, 435.2439845534987, 420.4834385429386, 432.9974756553394]; mean 426.6143; range [417.73216760752615, 435.2439845534987]
+  OLD: values [417.88118248488865, 435.85998753080924, 437.83319440105555, 441.0627736165247]; mean 433.1593; range [417.88118248488865, 441.0627736165247]
+  NEW/OLD ratio of four-boot means: 0.9849
+  Repeat spread NEW/OLD (%): 2.9325 / 0.7349
+  R811b eligibility reference: repeat spread <=3%, zero failed/foreign, identity checks pass; no publication action.
+
+== R826 paired comparison: NEW vs OLD (ratio = NEW / OLD; output tok/s > 1 = NEW faster; TTFT / TPOT < 1 = NEW faster) ==
+pooled = mean over the passes both arms have; agree = both passes on the same side of 1; noise = larger within-arm A/B spread (%); >noise = |pooled - 1| above it
+
+== sharegpt ==
+| c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | output tok/s | 230.2 | 223.7 | 1.029 | 232.7 | 226.8 | 1.026 | 1.027 | yes | 1.36 | yes |
+| 1 | TTFT mean ms | 152.8 | 154.7 | 0.987 | 147.9 | 149.3 | 0.991 | 0.989 | yes | 3.59 | no |
+| 1 | TTFT median ms | 137.9 | 139.5 | 0.988 | 134.8 | 137.8 | 0.979 | 0.983 | yes | 2.23 | no |
+| 1 | TTFT p99 ms | 254.8 | 282.2 | 0.903 | 249.7 | 240.3 | 1.039 | 0.966 | no | 16.06 | no |
+| 1 | TPOT mean ms | 2.94 | 3.02 | 0.973 | 2.91 | 3.01 | 0.967 | 0.970 | yes | 0.96 | yes |
+| 1 | ITL p50 ms | 9.88 | 10.21 | 0.968 | 9.85 | 10.15 | 0.971 | 0.969 | yes | 0.55 | yes |
+| 2 | output tok/s | 321.1 | 313.7 | 1.024 | 328.5 | 321.8 | 1.021 | 1.022 | yes | 2.54 | no |
+| 2 | TTFT mean ms | 211.5 | 214.5 | 0.986 | 201.9 | 204.2 | 0.989 | 0.988 | yes | 4.90 | no |
+| 2 | TTFT median ms | 196.5 | 200.9 | 0.978 | 190.1 | 189.1 | 1.006 | 0.991 | no | 6.06 | no |
+| 2 | TTFT p99 ms | 383.2 | 366.6 | 1.045 | 331.3 | 334.5 | 0.991 | 1.019 | no | 14.53 | no |
+| 2 | TPOT mean ms | 4.60 | 4.73 | 0.974 | 4.52 | 4.63 | 0.977 | 0.975 | yes | 2.12 | yes |
+| 2 | ITL p50 ms | 12.55 | 12.87 | 0.975 | 12.41 | 12.72 | 0.976 | 0.975 | yes | 1.19 | yes |
+| 4 | output tok/s | 417.7 | 417.9 | 1.000 | 435.2 | 435.9 | 0.999 | 0.999 | yes | 4.21 | no |
+| 4 | TTFT mean ms | 271.5 | 272.2 | 0.997 | 258.4 | 255.8 | 1.010 | 1.004 | no | 6.22 | no |
+| 4 | TTFT median ms | 257.4 | 256.0 | 1.005 | 245.0 | 244.8 | 1.001 | 1.003 | yes | 4.93 | no |
+| 4 | TTFT p99 ms | 652.2 | 631.9 | 1.032 | 542.0 | 527.7 | 1.027 | 1.030 | yes | 18.45 | no |
+| 4 | TPOT mean ms | 7.69 | 7.67 | 1.003 | 7.40 | 7.38 | 1.003 | 1.003 | yes | 3.87 | no |
+| 4 | ITL p50 ms | 17.81 | 17.79 | 1.001 | 17.34 | 17.38 | 0.997 | 0.999 | no | 2.68 | no |
+| 8 | output tok/s | 521.9 | 511.5 | 1.020 | 526.0 | 530.7 | 0.991 | 1.005 | no | 3.69 | no |
+| 8 | TTFT mean ms | 343.8 | 345.8 | 0.994 | 334.3 | 334.9 | 0.998 | 0.996 | yes | 3.22 | no |
+| 8 | TTFT median ms | 309.6 | 320.1 | 0.967 | 304.9 | 308.5 | 0.988 | 0.978 | yes | 3.69 | no |
+| 8 | TTFT p99 ms | 1096.2 | 1009.9 | 1.085 | 918.1 | 952.3 | 0.964 | 1.027 | no | 17.69 | no |
+| 8 | TPOT mean ms | 12.61 | 12.85 | 0.982 | 12.73 | 12.35 | 1.030 | 1.006 | no | 3.91 | no |
+| 8 | ITL p50 ms | 23.54 | 23.71 | 0.993 | 23.37 | 23.36 | 1.001 | 0.997 | no | 1.48 | no |
+
+== specbench ==
+| c | metric | A NEW | A OLD | A ratio | B NEW | B OLD | B ratio | pooled | agree | noise % | >noise |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | output tok/s | 250.5 | 244.1 | 1.026 | 256.0 | 246.1 | 1.040 | 1.033 | yes | 2.17 | yes |
+| 1 | TTFT mean ms | 158.8 | 160.5 | 0.989 | 146.5 | 155.8 | 0.940 | 0.965 | yes | 8.05 | no |
+| 1 | TTFT median ms | 131.1 | 133.1 | 0.985 | 128.1 | 132.0 | 0.970 | 0.977 | yes | 2.29 | no |
+| 1 | TTFT p99 ms | 322.9 | 327.5 | 0.986 | 250.9 | 303.5 | 0.827 | 0.909 | yes | 25.10 | no |
+| 1 | TPOT mean ms | 3.38 | 3.48 | 0.972 | 3.34 | 3.46 | 0.965 | 0.968 | yes | 1.13 | yes |
+| 1 | ITL p50 ms | 9.91 | 10.21 | 0.971 | 9.85 | 10.19 | 0.967 | 0.969 | yes | 0.63 | yes |
+| 2 | output tok/s | 364.8 | 347.5 | 1.050 | 364.9 | 355.6 | 1.026 | 1.038 | yes | 2.31 | yes |
+| 2 | TTFT mean ms | 203.9 | 219.8 | 0.928 | 206.4 | 210.5 | 0.981 | 0.954 | yes | 4.36 | yes |
+| 2 | TTFT median ms | 179.3 | 186.2 | 0.963 | 179.9 | 183.1 | 0.983 | 0.973 | yes | 1.69 | yes |
+| 2 | TTFT p99 ms | 382.2 | 426.3 | 0.897 | 393.5 | 413.9 | 0.951 | 0.923 | yes | 2.94 | yes |
+| 2 | TPOT mean ms | 4.66 | 4.87 | 0.957 | 4.65 | 4.77 | 0.973 | 0.965 | yes | 1.94 | yes |
+| 2 | ITL p50 ms | 12.43 | 12.89 | 0.965 | 12.40 | 12.74 | 0.974 | 0.969 | yes | 1.15 | yes |
+| 4 | output tok/s | 463.8 | 466.1 | 0.995 | 479.1 | 487.8 | 0.982 | 0.988 | yes | 4.55 | no |
+| 4 | TTFT mean ms | 266.9 | 277.1 | 0.963 | 265.5 | 258.0 | 1.029 | 0.995 | no | 7.12 | no |
+| 4 | TTFT median ms | 230.1 | 255.6 | 0.900 | 250.1 | 236.2 | 1.059 | 0.976 | no | 8.31 | no |
+| 4 | TTFT p99 ms | 564.7 | 622.1 | 0.908 | 618.1 | 585.6 | 1.055 | 0.979 | no | 9.03 | no |
+| 4 | TPOT mean ms | 7.51 | 7.44 | 1.010 | 7.25 | 7.13 | 1.016 | 1.013 | yes | 4.18 | no |
+| 4 | ITL p50 ms | 17.80 | 17.78 | 1.001 | 17.55 | 17.45 | 1.006 | 1.003 | yes | 1.90 | no |
+| 8 | output tok/s | 553.1 | 555.3 | 0.996 | 583.6 | 570.3 | 1.023 | 1.010 | no | 5.36 | no |
+| 8 | TTFT mean ms | 366.8 | 370.5 | 0.990 | 336.0 | 354.5 | 0.948 | 0.969 | yes | 8.74 | no |
+| 8 | TTFT median ms | 332.5 | 342.7 | 0.970 | 311.4 | 326.9 | 0.953 | 0.962 | yes | 6.56 | no |
+| 8 | TTFT p99 ms | 959.3 | 889.8 | 1.078 | 762.6 | 814.9 | 0.936 | 1.010 | no | 22.85 | no |
+| 8 | TPOT mean ms | 12.88 | 12.84 | 1.003 | 12.26 | 12.50 | 0.981 | 0.992 | no | 4.92 | no |
+| 8 | ITL p50 ms | 24.10 | 24.08 | 1.001 | 23.50 | 23.70 | 0.991 | 0.996 | no | 2.55 | no |
+
+== specbench TTFT per task group (ms; both passes pooled; paired = median over prompts of NEW / OLD TTFT, same prompt, same pass) ==
+| c | group | n | mean prompt tok | NEW mean | OLD mean | NEW median | OLD median | A ratio | B ratio | pooled mean ratio | paired median ratio |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | mt_bench | 80 | 121 | 128 | 131 | 122 | 124 | 0.979 | 0.973 | 0.976 | 0.984 |
+| 1 | translation | 80 | 87 | 123 | 125 | 121 | 123 | 0.988 | 0.978 | 0.983 | 0.985 |
+| 1 | summarization | 80 | 779 | 215 | 224 | 200 | 209 | 1.009 | 0.913 | 0.963 | 0.957 |
+| 1 | qa | 80 | 63 | 109 | 118 | 108 | 109 | 0.923 | 0.919 | 0.921 | 0.987 |
+| 1 | math_reasoning | 80 | 111 | 138 | 136 | 129 | 131 | 1.020 | 1.004 | 1.012 | 0.986 |
+| 1 | rag | 80 | 770 | 203 | 215 | 201 | 214 | 0.989 | 0.895 | 0.944 | 0.937 |
+| 2 | mt_bench | 80 | 121 | 176 | 184 | 168 | 171 | 0.938 | 0.974 | 0.956 | 0.979 |
+| 2 | translation | 80 | 87 | 177 | 184 | 169 | 172 | 0.946 | 0.970 | 0.958 | 0.981 |
+| 2 | summarization | 80 | 779 | 261 | 280 | 246 | 264 | 0.896 | 0.976 | 0.934 | 0.932 |
+| 2 | qa | 80 | 63 | 171 | 175 | 156 | 159 | 0.974 | 0.981 | 0.978 | 0.982 |
+| 2 | math_reasoning | 80 | 111 | 192 | 196 | 176 | 181 | 0.957 | 0.998 | 0.977 | 0.977 |
+| 2 | rag | 80 | 770 | 254 | 271 | 242 | 262 | 0.892 | 0.985 | 0.936 | 0.942 |
+| 4 | mt_bench | 80 | 121 | 237 | 236 | 214 | 214 | 0.996 | 1.014 | 1.005 | 1.005 |
+| 4 | translation | 80 | 87 | 250 | 256 | 210 | 211 | 0.919 | 1.035 | 0.976 | 1.006 |
+| 4 | summarization | 80 | 779 | 328 | 328 | 304 | 296 | 0.968 | 1.041 | 1.002 | 1.023 |
+| 4 | qa | 80 | 63 | 217 | 225 | 194 | 194 | 0.938 | 0.991 | 0.964 | 1.005 |
+| 4 | math_reasoning | 80 | 111 | 242 | 237 | 218 | 215 | 1.011 | 1.032 | 1.022 | 1.005 |
+| 4 | rag | 80 | 770 | 323 | 324 | 301 | 296 | 0.954 | 1.049 | 0.998 | 1.023 |
+| 8 | mt_bench | 80 | 121 | 351 | 350 | 282 | 309 | 1.037 | 0.965 | 1.001 | 0.996 |
+| 8 | translation | 80 | 87 | 334 | 337 | 260 | 268 | 1.040 | 0.942 | 0.991 | 0.996 |
+| 8 | summarization | 80 | 779 | 400 | 421 | 365 | 383 | 0.973 | 0.927 | 0.950 | 0.970 |
+| 8 | qa | 80 | 63 | 297 | 301 | 245 | 246 | 0.965 | 1.010 | 0.987 | 0.998 |
+| 8 | math_reasoning | 80 | 111 | 327 | 354 | 268 | 276 | 0.931 | 0.917 | 0.924 | 0.991 |
+| 8 | rag | 80 | 770 | 400 | 413 | 355 | 389 | 0.997 | 0.942 | 0.970 | 0.963 |
+
+FLAGS: none
+2026-10-01-r826-std-ab/NEW: FLAGS: none
+2026-10-01-r826-std-ab/NEW: DECISION: NOT-PUBLISHABLE sharegpt c4: A/B spread 4.11 % > 3 % (417.7 vs 435.2 tok/s); specbench c4: A/B spread 3.26 % > 3 % (463.8 vs 479.1 tok/s); specbench c8: A/B spread 5.36 % > 3 % (553.1 vs 583.6 tok/s)
+2026-10-01-r826-std-ab/OLD: FLAGS: none
+2026-10-01-r826-std-ab/OLD: DECISION: NOT-PUBLISHABLE sharegpt c4: A/B spread 4.21 % > 3 % (417.9 vs 435.9 tok/s); sharegpt c8: A/B spread 3.69 % > 3 % (511.5 vs 530.7 tok/s); specbench c4: A/B spread 4.55 % > 3 % (466.1 vs 487.8 tok/s)
+c4-repeat/NEW: FLAGS: none
+c4-repeat/NEW: DECISION: PUBLISHABLE (max A/B spread 2.93 % at sharegpt c4; every cell cached <= 1 %)
+c4-repeat/OLD: FLAGS: none
+c4-repeat/OLD: DECISION: PUBLISHABLE (max A/B spread 0.73 % at sharegpt c4; every cell cached <= 1 %)
+DECISION: DONE report only; no promotion or gate

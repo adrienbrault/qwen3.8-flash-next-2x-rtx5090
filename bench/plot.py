@@ -115,14 +115,17 @@ R787C_DEPTH = RESULTS / "2026-09-27-r787c-depth-decode" / "depth.jsonl"
 # R813 (2026-09-30): R787a's decode curve (same driver, prompts, forced length and two boots) on the served image,
 # tabbyapi:merge-tok-r1 with 41 env keys (the prefill merge and the asynchronous stash on).
 R813A = RESULTS / "2026-09-30-r813-decode-curve" / "records.jsonl"
+# R826 (2026-10-01): current served image, two NEW decode boots and a four-boot ShareGPT c4 composite.
+R826 = RESULTS / "2026-10-01-r826-std-ab"
+R826A = R826 / "records.jsonl"
 
 
 def figure_decode_scaling():
-    """The served configuration's decode curve: R813 (tabbyapi:merge-tok-r1 at a 901,120-token pool, 41 env keys,
+    """The served configuration's decode curve: R826 (tabbyapi:r825c-hostprepare at a 901,120-token pool, 46 selectors,
     memory clock +4500, core offset 0, stock power; two boots, 1 to 8 streams, each stream on its own prompt; R787a's
     driver). The chart draws the decode metrics only; the round-wall aggregate, TTFT and the overlap are printed for the
     write-up's table."""
-    new = decode_rates(R813A, "NEW")
+    new = decode_rates(R826A, "NEW")
     conc = [c for c in range(1, 9) if f"c{c}-code" in new]
     agg = {k: [new[f"c{c}-{k}"]["decode_agg"] for c in conc] for k in ("code", "prose")}
     per = {k: [new[f"c{c}-{k}"]["per_stream"] for c in conc] for k in ("code", "prose")}
@@ -150,7 +153,7 @@ def figure_decode_scaling():
         a.legend(frameon=False, fontsize=9, loc="lower right" if a is ax else "upper right")
     fig.suptitle("Decode rate after the first token against concurrency, served configuration", fontsize=11,
                  fontweight="bold")
-    print(f"decode scaling (R813, 2 boots x 3 rounds) at {conc}")
+    print(f"decode scaling (R826, 2 boots x 3 rounds) at {conc}")
     print("  shape      per-stream   decode agg   round-wall agg   TTFT     overlap")
     for kind in ("code", "prose"):
         for c in conc:
@@ -345,8 +348,8 @@ def std_bench_runs(path):
     return runs
 
 
-def std_bench_served_runs(arm="NEW"):
-    """The served image's standard benchmark, one arm: R811's cells, with the ShareGPT 4-stream cell replaced by the four
+def std_bench_r811_runs(arm="NEW"):
+    """The historical R811 standard benchmark, one arm: R811's cells, with the ShareGPT 4-stream cell replaced by the four
     boots of R811 and R811b together. Both directories are read explicitly; either one missing, or R811b holding
     anything but that cell's two passes, raises."""
     runs = std_bench_runs(R811 / arm / "results")
@@ -356,6 +359,20 @@ def std_bench_served_runs(arm="NEW"):
     if len(runs) != 8 or any(len(v) != 2 for v in runs.values()):
         raise ValueError(f"{R811 / arm}: expected 8 cells of 2 passes")
     runs[R811B_CELL] = runs[R811B_CELL] + extra[R811B_CELL]
+    return runs
+
+
+def std_bench_served_runs(arm="NEW"):
+    """R826 standard cells, with all four ShareGPT c4 boots (main A/B plus c4-repeat A/B).
+    Missing inputs, incomplete matrices or unexpected repeat cells raise; no historical cells enter the mean."""
+    runs = std_bench_runs(R826 / arm / "results")
+    extra = std_bench_runs(R826 / "c4-repeat" / arm / "results")
+    expected = {(dataset, c) for dataset in ("sharegpt", "specbench") for c in (1, 2, 4, 8)}
+    if set(runs) != expected or any([d["pass"] for d in v] != ["A", "B"] for v in runs.values()):
+        raise ValueError(f"{R826 / arm}: expected 8 cells with passes A and B")
+    if set(extra) != {R811B_CELL} or [d["pass"] for d in extra[R811B_CELL]] != ["A", "B"]:
+        raise ValueError(f"{R826 / 'c4-repeat' / arm}: expected ShareGPT c4 passes A and B only")
+    runs[R811B_CELL] += extra[R811B_CELL]
     return runs
 
 
@@ -380,12 +397,12 @@ def std_bench(path):
 
 
 def figure_std_bench():
-    """The decode curve (R813: steady-state decode after the first token, all streams starting together, no prefill
-    in the window) against the standard benchmark (R811 + R811b, arm NEW: closed loop, requests arriving as others
+    """The decode curve (R826: steady-state decode after the first token, all streams starting together, no prefill
+    in the window) against the standard benchmark (R826, arm NEW: closed loop, requests arriving as others
     finish, so their prefill chunks interleave with the running streams' decode). The two also differ in output length
     (1,024 forced tokens against ~210-256), which puts more of each request's life in TTFT and turnover in the standard
     benchmark."""
-    fn = decode_rates(R813A, "NEW")
+    fn = decode_rates(R826A, "NEW")
     fn_conc = [c for c in range(1, 9) if f"c{c}-code" in fn]
     sb = std_bench_cells(std_bench_served_runs())
     datasets = (("sharegpt", "ShareGPT V3", SHAREGPT), ("specbench", "Spec-Bench", SPECBENCH))
@@ -395,13 +412,13 @@ def figure_std_bench():
     for a, idx, fn_key, title in ((ax, 0, "decode_agg", "Aggregate over streams"), (ax2, 1, "per_stream", "Per stream")):
         for kind, color in (("code", CODE), ("prose", PROSE)):
             ys = [fn[f"c{c}-{kind}"][fn_key] for c in fn_conc]
-            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (R813)")
+            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (R826)")
             if kind == "code":
                 annotate(a, fn_conc, ys, color, dy=7)
         for key, name, color in datasets:
             ys = [sb[(key, c)][idx] for c in sb_conc]
             a.plot(sb_conc, ys, marker="s", markersize=4, color=color, linewidth=2, linestyle="--",
-                   label=f"{name}, prefill interleaved (R811)")
+                   label=f"{name}, prefill interleaved (R826)")
             # Labels only from 2 streams on the aggregate panel and from 4 on the per-stream panel (the values are in
             # the README tables): below that the dashed and solid series lie within a few label heights of each other.
             # On the per-stream panel both datasets label below their markers, ShareGPT one line lower, because the
@@ -422,7 +439,7 @@ def figure_std_bench():
     ax.set_ylabel("tokens per second, sum over streams\n(standard benchmark: output tok/s, wall clock)")
     ax2.set_ylabel("tokens per second, one stream\n(standard benchmark: 1000 / TPOT p50)")
     fig.suptitle("Decode alone against the standard benchmark, served configuration", fontsize=11, fontweight="bold")
-    print(f"standard benchmark (R811 arm NEW, passes A/B mean; ShareGPT c4 the mean of R811's and R811b's four boots)"
+    print(f"standard benchmark (R826 arm NEW, passes A/B mean; ShareGPT c4 the mean of the main and c4-repeat four boots)"
           f" at {sb_conc}")
     for key, name, _ in datasets:
         print(f"  {name:11}  output tok/s {[round(sb[(key, c)][0], 1) for c in sb_conc]}"
@@ -477,7 +494,7 @@ def print_std_bench_tables(runs, name):
 def print_r811():
     """R811 (+ R811b at ShareGPT 4 streams): the served image (NEW) against the previous one (OLD), alternating boots in
     one session. Per cell the mean over the boot pairs of NEW / OLD for output tok/s and for the mean TTFT."""
-    new, old = std_bench_served_runs("NEW"), std_bench_served_runs("OLD")
+    new, old = std_bench_r811_runs("NEW"), std_bench_r811_runs("OLD")
     print("R811 NEW / OLD, mean of the per-pair ratios (ShareGPT c4: four pairs, R811 and R811b)")
     for key in ("sharegpt", "specbench"):
         for c in sorted(c for (k, c) in new if k == key):
@@ -509,7 +526,7 @@ def print_depth_compare():
 if __name__ == "__main__":
     figure_decode_scaling()
     figure_std_bench()
-    print_std_bench_tables(std_bench_served_runs(), "R811 arm NEW, ShareGPT c4 from R811 and R811b")
+    print_std_bench_tables(std_bench_served_runs(), "R826 arm NEW, ShareGPT c4 from main and c4-repeat")
     print_r811()
     print_r813()
     print_r787a()
