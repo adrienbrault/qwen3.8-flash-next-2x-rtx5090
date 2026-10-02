@@ -1,0 +1,18 @@
+.....................................................
+----------------------------------------------------------------------
+Ran 53 tests in 3.515s
+
+OK
+{"0": {"path": "/var/folders/fn/rrwkyvd547x24qzhl11x44d00000gn/T/tmp4wg6zn6g/launch-lookup-0.sh", "md5": "a3b7a3af872a2115477f9ac68b45a137"}, "1": {"path": "/var/folders/fn/rrwkyvd547x24qzhl11x44d00000gn/T/tmp4wg6zn6g/launch-lookup-1.sh", "md5": "2980ccba580b6c8959c065da13ff0539"}}
+R828 GATE REPLAY PASS: synthetic eligibility, both-boot speed, -1% floor, identity flip, inactive lookup, missing data
+R828 CPU SELFTEST PASS (helpers + real SSE/R813/log replay)
+
+2026-10-02 final checks:
+PASS: all Python ASTs; unit and repo launcher bash -n.
+PASS: exact base + unchanged SHA checks against supplied served tree.
+PASS: install and --check on a temporary copy of that served tree.
+PASS: overlay SHA manifest and captured live environment bytes.
+PASS: original r2 overlay hashes unchanged.
+GPU/image build/real preboot/post-promotion execution: NOT RUN.
+No SSH, git or Docker daemon commands executed; launcher tests use a fake sudo executable.
+Replay balanced proxy: agent ON 95.198%, c1 prose ON 0%; raw totals have no chronological step trace.

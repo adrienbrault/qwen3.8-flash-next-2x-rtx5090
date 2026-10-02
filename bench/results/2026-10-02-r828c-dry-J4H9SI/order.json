@@ -1,0 +1,41 @@
+{
+  "order": [
+    [
+      "P01_OFF",
+      "P01_ON"
+    ],
+    [
+      "P02_ON",
+      "P02_OFF"
+    ],
+    [
+      "P03_OFF",
+      "P03_ON"
+    ],
+    [
+      "P04_ON",
+      "P04_OFF"
+    ],
+    [
+      "P05_OFF",
+      "P05_ON"
+    ],
+    [
+      "P06_ON",
+      "P06_OFF"
+    ],
+    [
+      "P07_OFF",
+      "P07_ON"
+    ],
+    [
+      "P08_ON",
+      "P08_OFF"
+    ]
+  ],
+  "n": 8,
+  "t": 1.8946,
+  "floor": -0.01005033585350145,
+  "rule": "mean(log(ON/OFF))-1.8946*sample_sd/sqrt(8) > log(0.99)",
+  "assumption": "One-sided 95% paired-t bound assumes independent, approximately normal boot-pair log gains; small-sample power is not established."
+}

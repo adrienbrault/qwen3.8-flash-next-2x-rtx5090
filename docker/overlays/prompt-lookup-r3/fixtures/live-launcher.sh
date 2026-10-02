@@ -1,0 +1,773 @@
+#!/usr/bin/env bash
+# R825p (2026-10-01): gated R825c frontend-safe resumable whole-prompt prefill on the R823c daily.
+# See r825p-promote-wholeprompt.sh; 46 selectors, trace ON, NVMe OFF.
+# R825c image pin (operator-recorded build ID of tabbyapi:r825c-hostprepare).
+R825C_IMAGE_ID=sha256:aa04a1cbe94b60bbd91e3d69d15f5e1b6eb679f14885e599404de218d8a897c9
+# R823p (2026-10-01): R823c arm D; trace ON from the pinned image (EXL3_CACHE_TRACE=1).
+# Base: f3975d68e7c4042ad50e89d9109640d8, including R818 FASTWARM. Only image,
+# the three measured D selectors, and an explicit NVMe-off default change.
+# NVMe is OFF as in every R823c D boot; disk restore is not covered by that experiment.
+# Rollback: /srv/qwen5090/launch-flashnext.sh.pre-r823 (= f3975d68).
+# See r823p-promote-tailckpt.sh for gates. FIDELITY-UNRESOLVED remains the round verdict.
+# R818 (2026-09-30): FAST-STATE WARM-UP over the R809 daily (one block between the "Warmup." request and the UP line;
+# nothing else changed). WHY: R815-R817 (FINDINGS; REVIEW-R817 §3/§5; results 2026-09-30-r817-fast-state-rule-0531):
+# the served process runs its decode verify ~0.25 ms/step slower until the decode-class (<= 32-row) HC-mix path has run
+# at two row classes the boot has not created yet (classes {1} {2-3} {4-6} {7-12} {13-25} {26-32}; the boot creates
+# {2-3} and {4-6}; offset does not matter, a repeated class does nothing). The merge daily never runs such a forward on
+# its own (the merge folds every tail; no chat prompt is <= 33 tokens). R817 boot M: raw prompts of 20 + 29 server
+# tokens (19 and 28 rows @0) put this launcher's daily in a PERSISTENT faster state: fn_bench c1 10.150 -> 9.840
+# ms/step (x0.9695), still x0.9665 after 2,048-token prompts. This block sends those two prompts plus N_p 11 (the 7-12
+# class, REVIEW-R817 §5's robustness margin) at every boot and checks the server lines; the UP line's VRAM free is now
+# read after it. Gate: flan/r818-warmfast-gate.sh (greedy vs R809 + slow-vs-fast chat, fn_bench curve, persistence
+# after merged prefills / a 30k stash / idle / a c8 burst, R811 ShareGPT, VRAM headroom; ABBA vs 6429dfa2).
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r818 (= the R809 launcher, md5 6429dfa2): cp it over
+# /srv/qwen5090/launch-flashnext.sh and run it; or FASTWARM=0 on this launcher (skips the block). Numerics unchanged.
+# R809 (2026-09-29; r809-merge-quality-gate.sh printed R809 PROMOTABLE, results 2026-09-29-r809-merge-quality-gate-1703;
+# fidelity CAND 34/80 vs NULL 29/80 diverging (all near-ties), 0 confident flips, first-token KL median 0.0031 vs NULL 0.0037;
+# tool-eval 85.0; GSM8K c8 0.978; tier write + restore from disk confirmed, restored-state output equality re-checked by R809t): prefill-merge r1 ON over the R808 daily. Image tabbyapi:merge-tok-r1
+# (r809b-merge-tok-build.sh; built on flan as ac16920f72cf) = the R808 image tabbyapi:tokenize-offloop-r2 contents
+# (rebase-dev-r3-loopthink5 + tokenize-offloop r2, pin b961eb83) + patches/exllamav3/prefill-merge-r1 fix.patch a5102079
+# (Python only). EXL3_PREFILL_MERGE=1 runs the sub-page leftover of a prefill in the same forward as its bulk rows and
+# snapshots the last-page stash inside it (numerics change, bounded: R803 + the R809 partition-null fidelity gate);
+# EXL3_STASH_ASYNC=1 copies recurrent stashes through pinned staging slabs on a worker thread (bitwise vs MERGE). R803:
+# agent-turn prefill -13 % / -17 % with ASYNC, client TTFT -10 %, decode ~+3 % acceptance-stripped, peak VRAM 70-110 MiB
+# lower. Derived from launch-flashnext-r808-tokoffloop.sh (md5 04e347cc): only DAILY_IMG and the two EXTRA_ENV keys
+# differ (41 keys). IMG == DAILY_IMG keeps the daily NVMe tier default on. The R809 run's gated image id (printed in its
+# promotion steps) goes here before installing: GATED IMAGE ID = sha256:ac16920f72cf41864ed7f4151bd18bc4ce593015dc0bc263284a8fde8c111454.
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r809 (= the R808 launcher, image tabbyapi:tokenize-offloop-r2,
+# md5 04e347cc): cp it over /srv/qwen5090/launch-flashnext.sh and run it. Greedy fingerprints roll over (numerics change).
+# R808 (2026-09-29): tokenize-offloop r2 (patches/tabbyapi/tokenize-offloop-r2): image tabbyapi:tokenize-offloop-r2 =
+# rebase-dev-r3-loopthink5 + app.patch (TabbyAPI: the prompt is encoded ONCE per request -- check_context_length's ids are
+# reused by generate_gen, keyed by (prompt, add_bos, weakref(tokenizer)) -- and prompts > 12,000 chars are encoded on a
+# one-thread worker off the asyncio loop) + exl3.patch (exllamav3 encode_part_base: encode_batch([t])[0].ids, which releases
+# the GIL, under a per-Tokenizer lock that also covers the encode_special_tokens flag). Knobs TABBY_ENCODE_ONCE,
+# EXL3_TOKENIZE_OFFLOOP (default ON), EXL3_TOKENIZE_OFFLOOP_MIN_CHARS (12000); none set here, so the 39 keys are unchanged.
+# R808 gates (flan/r808-tokenize-offloop-r2.sh, 5 ABBA boot pairs, results 2026-09-29-r808-tokenize-offloop-r2-*): peer
+# stall per 30k-token arrival 53.1 -> 2.8 ms; steady-state ms/step +0.01 % [-0.25, +0.27] (no cost; mean gap incl. stalls
+# -0.54 % at R808's synthetic arrival rate); short-prompt TTFT -2.9 ms; greedy
+# byte-identical (BOTH == knobs-off 12/12 + 14/14 streamed, == R792). Engine, pool 901,120, split [30, 30], TUNEDIR unchanged.
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r808 (= R792's launcher, image tabbyapi:rebase-dev-r3-loopthink5, md5 44f55af3).
+# R792 (2026-09-28): TabbyAPI loop-think r5 (patches/tabbyapi/loop-think-r5): image tabbyapi:rebase-dev-r3-loopthink5 =
+# rebase-dev-r3 + r4-to-r5.patch (TabbyAPI /app only: long-period reasoning-loop rungs (6000, 2000) + (12000, 4000) beside
+# r4's (3000, 1000), and finish_reason "length" instead of "tool_calls" when max_tokens cuts an unparsed tool call).
+# Engine, the 39 keys, pool 901,120, split [30, 30] and TUNEDIR unchanged; greedy byte-identical to R785c's reference is a
+# promotion gate (flan/r792-promote-loopthink5.sh). ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r792 (= R789's launcher,
+# image tabbyapi:rebase-dev-r3, md5 e5028372).
+# R789 (2026-09-27): EXTRA_ENV 42 -> 39 keys (EXL3_HOST_GAP_REWIND, EXL3_GR_STATE_REGRID, EXL3_HC_MIX_V3_PDL removed; see the
+# comment above EXTRA_ENV). Same image tabbyapi:rebase-dev-r3, pool 901,120, split [30, 30], TUNEDIR; greedy byte-identical to
+# R785c's reference is the promotion gate. ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r789 (= R785's launcher + temperature 1.0, md5 fddd4152).
+# R517 (2026-09-19): R514 (decode r4 group I) + E3 grouped MoE prefill round 2 (R513: cold prefill +16 / +21 / +19 % at 30k / 60k / 120k, decode
+# flat, GSM8K 0.985 = OFF, needles 5/5) on the stacked image tabbyapi:stack-r4-e3r2 (patches/exllamav3/stack/r4-e3r2: decode r4
+# + E3 r2, bindings.cpp merged with fuzz 0), EXL3_MOE_PREFILL_E3=1. Greedy c1 fingerprint unchanged (ae890c45d1000582); the 30k
+# fingerprint becomes 4a255910dee2d9c5 (E3's prefill accumulation order). ROLLBACK: launch-flashnext-r514.sh.
+# launch-flashnext.sh -- serve Qwen3.8-Flash-Next (EXL3 2.50bpw, r0b0tlab) on 2x RTX 5090 via TabbyAPI + ExLlamaV3.
+#
+# R514 (2026-09-19): R511 + codex decode round 4 group I on image tabbyapi:decode-kernels-r4 (= decode-kernels-r2 + r4 overlay,
+# every r4 flag default-off = r2 bytes): EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536. R499: greedy
+# fingerprints canonical on every arm; code c1 +3.3 %, prose c1 +2.0 %, c4 +1.9-2.8 %; +120 MiB on cuda:1. Batched verify keeps
+# the sampled distribution but changes the RNG stream (one Philox seed for the q rows); penalty/ban samplers fall back to the
+# served serial path. ROLLBACK: launch-flashnext-r511.sh (or IMG=tabbyapi:decode-kernels-r2 and the R511 EXTRA_ENV).
+#
+# R511 (2026-09-18, user: "Alright lets do 2.5 bpw"): the daily checkpoint is r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw at a
+# 786,432-token pool (2.18x the 3.05bpw daily's 360,448; R495b found 786,432 the largest that boots). Evidence: R495b (decode
+# +3-8 % except prose c4 flat, needles 5/5 at 131k / 240k, 4 x 141.6k in flight, tool-eval 85.5 +- 1.3 = control band) and R509
+# (GSM8K without lm-eval's stop strings 0.978 vs 3.05's 0.980; the earlier 0.815 was the "Question:" stop string cutting the
+# reasoning, R503). Everything else is launcher-r491/r498 unchanged. ROLLBACK: launch-flashnext-r491.sh (3.05bpw, 360,448).
+#
+# This is the "daily" for the Flash-Next track. Every setting below is either a measured choice or the
+# engine's default; the reasons are in docs/CONFIG.md and the raw numbers in docs/MEASUREMENTS.md.
+#
+#   VARIANTS
+#     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022 (the Mac reaches it at 127.0.0.1:8022)
+#     DRAFT=1 ./launch-flashnext.sh         # draft depth 1 at EVERY concurrency, by deriving the policy (see below)
+#     PORT=8023 ./launch-flashnext.sh
+#     STOP=1 ./launch-flashnext.sh          # stop the server
+#
+#   MEASURED ON 2026-09-16 (2x RTX 5090, stock power 600/575 W, EXL3 3.05bpw, 8-bit KV)
+#     decode, 1 stream      191 t/s        (draft depth 3)
+#     decode, 8 streams     299 t/s aggregate, 43 per stream
+#     boot to serving       33 s load + <1 s warm kernels (both caches warm)
+#     agent TTFT, warm      0.31-0.48 s on a 20k-token conversation, flat as it grows
+#
+# WHY THE CACHES MATTER. The first inference after a load costs 34-50 s on a cold box -- Triton compiling
+# kernels plus exllamav3's own coop autotuner exploring GEMM shapes. Both persist to disk if told where:
+#   TRITON_CACHE_DIR        -> Triton's kernel cache (the vendored FLA kernels set cache_results=True)
+#   EXLLAMAV3_TUNE_CACHE    -> coop_autotune_v1.bin (exllamav3/exllamav3_ext/quant/coop_autotune.cu:75-77)
+# With an empty cache the warmup measured 21.5 s; warm, 0.85 s. That is the difference between a 80 s and a
+# 31 s start, and it is why the caches are mounted rather than left inside the container.
+#
+# WHY THERE IS A SAMPLER PRESET. TabbyAPI has no sampling fallbacks unless `sampling.override_preset` names
+# one, and it says so at boot: "Requests that omit them run untruncated: temperature 1.0, top_k 0, top_p 1.0,
+# min_p 0". A client that sends no sampler (DSH sends none) then samples this 3.05 bpw checkpoint at raw
+# T=1.0 with no truncation and no penalty, and the reasoning spirals: 2026-09-16 a DSH request degenerated
+# into multilingual word salad after ~10k tokens and the model emitted an end-of-thinking tag inside the
+# debris, so the tag closed the reasoning channel mid-thought and the rest of the spiral arrived as the
+# visible answer. The same request with a sampler runs coherent and calls its tool (see R338). The preset
+# below supplies FALLBACKS only (force: false), so a client that sends its own sampler keeps it.
+set -uo pipefail
+# systemd-run and other minimal environments do not set HOME; `set -u` then dies on the next line
+# before anything has run (r399, 2026-09-16). Default it rather than requiring every caller to.
+export HOME=${HOME:-/srv/qwen5090/operator-home}
+export PATH="$HOME/.local/bin:$PATH"
+
+NAME=flashnext
+PORT=${PORT:-8022}
+# TWO SEPARATE NUMBERS, and conflating them is a mistake:
+#   MAXLEN caps ONE request -- set it to the model's native window (max_position_embeddings 262,144).
+#   CACHE  is the page pool SHARED across requests -- it should exceed MAXLEN so several long sessions can
+#          coexist. It is a load-time allocation, not a VRAM-derived value.
+# The first version of this launcher copied 131,072 into both from a TEST config, halving the served window for
+# no reason. Measured cost at q8 KV (from the checkpoint geometry: 12 full-attention layers, 12.00 KiB/token KV
+# plus 3.75 KiB/token of always-fp16 QSA planes = 15.75 KiB/token):
+#     131,072 -> 1.79 GiB      262,144 -> 3.58 GiB      393,216 -> 5.38 GiB
+# MEASURED, not inferred: cache_size 393,216 FAILS the boot with
+#     "RuntimeError: Insufficient VRAM in split for model and cache"  (R337, 2026-09-16)
+# The earlier "~6.08 GiB budget / 444k tokens" figure was derived from FREE VRAM and was wrong -- free VRAM is
+# not allocatable VRAM. The split is pinned BY HAND below (`gpu_split: [30, 30]`, `gpu_split_auto: false`), and the
+# weights plus the whole cache have to fit inside that split, so the ceiling is well below the arithmetic. (An
+# earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
+# when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
+MAXLEN=${MAXLEN:-262144}
+CACHE=${CACHE:-901120}   # R785 (rebase-dev r3, tiled HC prefill on): the pool R784 found, floor 884,736 (user 2026-09-27); was 983040. R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+# log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
+# EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
+# warning never reached the launcher log.
+LOG=/srv/qwen5090/logs/flashnext-$PORT.log
+log(){ echo "$(date -Is) [flashnext] $*" | tee -a "$LOG"; }
+DRAFT=${DRAFT:-3}
+# PROMOTED 2026-09-17 02:20 CEST (R414, user: "you dont need me to promote for this qwen next"): the MoE decode tier
+# admits 16 flattened rows (MAX_BSZN 16, flan/patches/exllamav3/bszn/bszn16.patch) so c8 with depth-1 drafts stays on the
+# fused path. Paired on the same day: c1/c4/c8 = 203/375/443 t/s vs 204/339/313 served (R412); c1 greedy fingerprint
+# identical; agent replay, needle 5/5 at 131k, GSM8K c8 0.935, tool-eval 86.2 +- 1.3 all PASS (R414); 40k-depth c8 +13 %,
+# 20-round c4 soak +6 % with no drift (R416). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337 DRAFT_POLICY='[[2, 3], [8, 1]]'
+# (= flan/launch-flashnext-r340.sh). The previous default line is kept below for the record.
+# PROMOTED 2026-09-17 03:20 CEST (R421 v2): fused-MoE coop kernel stage-B wide tile at >= 128 slots (flan/docker/coopwide.patch
+# over the bszn16 image). Clean paired A/B (re-archive job stopped): c1 205-210 vs 206-209 (greedy byte-identical), c4 372-383 vs
+# 369-376 (noise), c8 434-449 vs 469-478 (+7.5 %); GSM8K c8 0.935 = control with the same kernels forced (R420).
+# ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16 (= flan/launch-flashnext-r414-bszn16.sh).
+# PROMOTED 2026-09-17 04:20 CEST (R425): + the host-gap overlay (GDN rewind descriptors from strides, Python-only,
+# flan/patches/exllamav3/hostgap, image = coopwide + flan/docker/Dockerfile.tabbyapi-pyfile). Needs EXL3_HOST_GAP_REWIND=1 in the
+# container (EXTRA_ENV default below). Paired vs coopwide: c1 203-211 vs 204-211, c4 373-382 vs 366-380, c8 480-503 vs 468-483,
+# greedy byte-identical (R422 on bszn16: +1.5/+2/+2.5 %). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide EXTRA_ENV=
+# (= flan/launch-flashnext-r421-coopwide.sh).
+# PROMOTED 2026-09-17 05:05 CEST (R428): + the hyper-connection mixer V2 (codex, native gr_mix_v2 kernel, flan/patches/exllamav3/hcmix
+# r1+r2, image = coopwide + hc-mix-v2 + hc-mix-v2-r2 + hostgap overlay). Bit-exact vs the V1 mixer (unit test on both cards, R423/R426)
+# and byte-identical c1 greedy in serving (R428, MIN_R 1 arm). Opt-in inside the image: EXL3_HC_MIX_V2=1 and EXL3_HC_MIX_V2_MIN_R=1
+# (V2 at every row count; the default gate 8 kept V1 at c1) are in the EXTRA_ENV default below. R428 paired on this stack:
+# c1 213-218 vs 209-212 (base), c4 422-434 vs ~388, c8 537-548 vs 481-522. ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hostgap
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1' (= flan/launch-flashnext-r425-stack.sh).
+# PROMOTED 2026-09-17 (R442): + the prefill-only stage pipeline (codex, Python-only, flan/patches/exllamav3/ppipe: round-2 pipeline +
+# round-3 no-sync (inert, off) + round-4 MTP eligibility (time_first_token) + the R441 free-VRAM guard fix flan/docker/ppipe-memfix).
+# Chunked prefill of one job runs stage A (cuda:0) of chunk i+1 while stage B (cuda:1) runs chunk i; decode untouched. Harness:
+# 30k prefill 6.4 -> 4.3 s with the draft loaded, both cards busy at once 43 % (R441); serving numbers in FINDINGS R442. Needs
+# EXL3_LS_PREFILL_PIPELINE=1 (EXTRA_ENV default below). ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1' (= flan/launch-flashnext-r428-hcmix2.sh).
+# R460 (2026-09-17 12:45 CEST): codex MoE coop V2 decode kernel (flan/patches/exllamav3/moecoop, overlay image …-moecoopv2 = the
+# R442 image + exl3_moe_coop_v2_kernel.cuh, extension rebuilt in-image; opt-in EXL3_MOE_COOP_V2=1 in EXTRA_ENV below). R460: c1 + 30k
+# greedy fingerprints byte-identical (1474eee2f5945248 / 4a255910dee2d9c5), GPU test bit-exact at R=1..16 for every routing pattern,
+# ladder OFF 207-216 / 403-434 / 526-557 vs ON 207-214 / 425-450 / 550-604 (c4 +4 %, c8 +8 %), GSM8K c8 n=200 0.935 (= daily).
+# ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2
+# EXTRA_ENV='EXL3_HOST_GAP_REWIND=1 EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1' (= flan/launch-flashnext-r442-ppipe.sh).
+# CANDIDATE 2026-09-18 (R480/R481, user: "vision must stay on. then let's do 4 slots to optimize for c4"): 4 slots
+# (MAXBS 4) and a 360,448-token pool at 8,8 (+37.5 %; 393,216 does not boot). Four slots free ~1.7 GiB of fp32 GDN recurrent
+# state. R480 paired against the served daily: c1 greedy and 30k greedy byte-identical (1474eee2f5945248 / 4a255910dee2d9c5),
+# code c1/c4 214-217 / 429-444 vs 214-217 / 435-442, prose 167-172 / 422-436 vs 168-172 / 428-436, cold prefill 22.6k 3.12 s
+# vs 3.06 s and 90.1k 8.19 vs 8.13 s, needle 5/5 at 131k and 240k, GSM8K n=200 c4 0.925 = 0.925. c5..c8 now queue.
+# ROLLBACK: MAXBS=8 CACHE=262144 (= flan/launch-flashnext-r460-moecoop.sh).
+# R491 (2026-09-18): + shared expert on a side CUDA stream (codex decode-kernels r2, flan/patches/exllamav3/decode-kernels/r2,
+# image = moecoopv2 + blocksparse_mlp.cpp/.h + exl3_moe_coop.cu/.cuh overlay, extension JIT-rebuilt; opt-in
+# EXL3_SHARED_EXPERT_OVERLAP=1 in EXTRA_ENV below). R490 at the served config: c1 + 30k greedy fingerprints canonical on
+# OFF/ON/OFF2/ON2; parity torch.equal on the real checkpoint (both cards, rows 1..16); one MoE layer −9 % (16 rows) to −16 %
+# (4 rows); multi-prompt paired ON/OFF code c1 +6.3 %, code c4 +5.5 %, prose c1 +2.7 %, prose c4 +6.9 %.
+# ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 and drop the flag
+# (= flan/launch-flashnext-r481-s4.sh).
+# R587 2026-09-20: Prometheus /metrics (patches/tabbyapi/metrics/r1), two added lines in gen_logging and an
+# unauthenticated route beside /health. No math changed: c1 and 30k greedy fingerprints canonical on the
+# candidate. ROLLBACK: IMG=tabbyapi:mtpwin-r2 (= launch-flashnext.sh.pre-r587).
+# DAILY_IMG is the promoted image, and the NVMe tier condition below tests against it rather than against a
+# literal. R587 moved IMG here and left that condition naming the previous image, which silently served the
+# daily with no prefix tier: nothing in the promotion gates looks at the tier, so it passed clean. Promotions
+# edit this one line now and the tier follows.
+# PROMOTED 2026-09-22 (R646): + the verifybatch overlay (flan/patches/exllamav3/verifybatch,
+#   image = mtpwin-r2-metrics1 + a 3-file Python patch). R645 py-spy found the EXL3_BATCH_VERIFY
+#   round-4 verifier had never run under TabbyAPI: reqs_past_ids was OR-ed over pre-alt() input
+#   steps, so the unconditionally-appended neutral SS_RepP/SS_PresFreqP poisoned it, and the
+#   device_logit_mask veto rejected every min_tokens request. The fix aggregates the flags over
+#   the surviving steps and forwards the per-iterate mask into the batched sampler call.
+#   Canonical gate vs metrics1, same salt/shapes: c1 +3.4%, c4/4k +0.8%, c8 +3.9%, c4/26k +3.5%;
+#   acceptance unchanged; py-spy mechanism check: job.py:622 leaf 43.3% -> ~0, one batched
+#   readback sync per iterate (streams.py:231 = 49.4%). Sampled+min_tokens and greedy smoke
+#   tests clean. ROLLBACK: IMG=tabbyapi:mtpwin-r2-metrics1
+# R653 (2026-09-22): stack-r1 = bverify-r1 + mtpnorm (MTP input-norm chain -> fused rms_norm) + mixstate
+#   (gr_v2_up_i8_state_kernel folds the state row into the up kernel: 3->2 launches x ~107 sites/step,
+#   EXL3_GR_STATE_IN_UP=1 below) + prefbatch (per-job MTP accept-prefills grouped by accepted length into
+#   one call per group, ~140 fewer launches/step at c8). Greedy byte-identical on all 6 prompts vs
+#   bverify-r1; canonical gate: c1 +1.2%, c4/4k +3.8%, c8 +4.4%, c4/26k -0.1%; acceptance parity.
+#   ROLLBACK: IMG=tabbyapi:bverify-r1 and drop EXL3_GR_STATE_IN_UP from EXTRA_ENV below.
+# R701 (2026-09-24, first stack promotion under OPERATIONS §16): image tabbyapi:stack-r2 = slotfix-r1 + hcfast r1
+#   (patches/exllamav3/hcfast-r1, EXL3_HC_MIX_V3=1 DOTS_B=2 UP_B=8: HC boundary mixer, each int8 weight converted once, batched
+#   loads, 35-SHFL reduce-scatter) + moefast r1 (patches/exllamav3/moefast-r1, EXL3_MOE_COOP_V3=2: cp.async weight ring, nc
+#   activation prefetch, acq_rel counter handoff, merged narrow B). Both bitwise identical (hashes + greedy). Served canonical
+#   gate, 3 ABAB pairs: leg A c1 1.093, c4 1.057, c8 1.051, leg B 1.064; 0 OOM; cuda:0 free after the gate 193-199 MiB (was
+#   121-131). Rollback: /srv/qwen5090/launch-flashnext.sh.pre-r701 (slotfix-r1, the 23 keys without the 4 stack flags).
+# R694 (2026-09-24): the MTP draft component loads on cuda:1 (DRAFT_GPU_SPLIT "0, 32" -> draft_gpu_split: [0, 32]). Card 1 idles
+# 74-75 % of the decode step (R680); the draft chain no longer queues behind the target's front on cuda:0. Canonical gate, 3
+# alternating pairs, same session: leg A c1 +2.9 %, c4 +2.2 %, c8 +2.0 % (mean ON/OFF; 8 of 9 cells > 1), leg B (26k c4) +2.2 %
+# (3/3 > 1); greedy 6/6 identical in every boot; 0 OOM; cuda:0 free after the gate 125-139 MiB vs the old placement's 19-33.
+# ROLLBACK: DRAFT_GPU_SPLIT= (empty), or launch-flashnext.sh.pre-r694.
+# R676 (2026-09-23): slotfix-r1 = stack-r1 + the recurrent-state slot fix (exllamav3/cache/cache.py: every alloc
+#   path took a slot off free_list before constructing the state, so a throwing constructor leaked the slot;
+#   8 leaks = "no available slots" 503s with a live server, R586c). The slot now returns to the pool on
+#   failure, and a double release is refused. Greedy byte-identical on all 6 prompts; 6 injected constructor
+#   faults -> 6 slots returned; 18 min churn with ~25 % mid-stream cancels, 1,497 requests, 0 errors; c8 8/8
+#   after. ROLLBACK: IMG=tabbyapi:stack-r1
+# R716b/R716c (2026-09-24, stack-r3 batch promotion under OPERATIONS §16): image tabbyapi:stack-r3 = stack-r2 + one
+#   series (patches/exllamav3/stack-r3, INCLUDE "mf3 dg2"): hcfast r2, latchain-r1b, moefast r3, densegemm r2, dense-lcguard.
+#   Flags: HC2 (EXL3_HC_MIX_V3=2 + R702 P0 tables, replacing HC1's DOTS_B=2 UP_B=8), RR (EXL3_LC_GDN_RR=1), QT (QSA split
+#   2 / combine 1 / div16), QF (EXL3_LC_QSA_FORK=1), DG (EXL3_DENSE_V2=1, every r2 twin), MF3 (EXL3_MOE_COOP_V3=3,
+#   MAP 2-4:2, EXL3_SHARED_EXPERT_EARLY=1). Bitwise identical: kernel parity, P1 hashes (7 rounds, every leave-one-out),
+#   fn_greedy 0/7 boots, and logits-level model parity OFF = U = OFF2 = stack-r2 at every served decode shape (b1d3 b2d3
+#   b3d3 b4d3 b5d2 b6d1 b7d1 b8d1, R716c). R716b's own "DECISION UNION: REJECT" came only from greedy_streams' max-of-3
+#   rule at c4/c8, where the daily diverges from itself on 60-76 % of streams (review: 64 % false alarms; the rule is
+#   replaced). Served canonical gate, 3 ABAB pairs: leg A c1 1.149, c4 1.088, c8 1.087, leg B c4 1.104, aggregate 1.107;
+#   UP-line free -8/-10 MiB vs A. ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-stack-r3 (IMG=tabbyapi:stack-r2, the
+#   27 stack-r2 keys).
+# R717/R717b/R717c (2026-09-25, rows32-r4 on stack-r3; pool trade approved by the user): image tabbyapi:stack-r3-rows32
+#   = stack-r3 + patches/exllamav3/rows32-r4 (host-only, SASS unchanged); flags EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1
+#   EXL3_SHARED_EXPERT_ROWS32=1, MAP 2-4:2,17-32:2; policy [[4, 3], [8, 2]] (MTP depth 2 at c6-c8: 18/21/24 verify rows);
+#   pool 983,040 (-16,384 tokens, -1.6 %). Bitwise at every shape (c6/c7/c8 depth 2 deterministic, flags inert at <= 16
+#   rows); greedy_conc c8-vs-c1 rate 89.1 % vs the daily's own 92.2 %. Per-stream decode vs stack-r3, 3 ABAB pairs, unique
+#   prompts (R717c): c6 4k +16.0 / +20.8 % (code / prose), 16k +0.5 / +6.0 %, 32k +5.4 / +2.5 %; c8 4k +1.7 / +5.1 %, 16k
+#   +2.3 / +5.6 %, 32k +4.0 / +0.4 %; c1-c5 unchanged (R717). Free at boot 1125 / 2513 MiB (stack-r3 at 999,424: 1033 / 2421).
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-rows32 (stack-r3, 999,424, [[4, 3], [5, 2], [8, 1]]).
+# R728 (2026-09-25, user OK): the MTP draft-KV window is OFF (EXL3_MTP_KV_WINDOW=16384 dropped from EXTRA_ENV below); image,
+#   the other keys, policy and pool 983,040 unchanged. The draft K/V returns to the page-indexed draft cache, which revives
+#   with the prefix. R721: under the window a prompt revived from the prompt cache in a later request group drafts 0.655
+#   accepted/proposed vs 0.868 without it (fresh 0.911 in both); c8 4k code per-stream +12.5 %. R722 (agent-shaped replay,
+#   2 pairs): +2.0 % per-stream decode. R723 (fit at 983,040): cuda:0 identical (1,125 MiB free at boot, 229 after the heavy
+#   sequence), layout byte-identical, fn_greedy 6/6 identical, 0 errors; ramp c7/c8 per-stream +16-19 %. Cost: cuda:1
+#   -940 MiB (the draft cache grows from 133,120 to 983,040 tokens, ~1.13 KiB/token; free 1,573 at boot, 763 after).
+#   Promotion gates: flan/r728-promote-window-off.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r728 (rows32 with the window, 983,040).
+# R747 (2026-09-26): image stack-r3-rows32-tokcount = stack-r3-rows32 + the requeue token-count fix (R737 PASS: one line
+#   of reporting in exllamav3 generator/job.py; server counts exact at 9,000/13,000/20,000 where the old image logged
+#   2,969/2,888/3,714; fn_greedy 6/6 identical). Engine behaviour unchanged; only per-request token counts and T/s in the
+#   log and in usage change. Promotion gates: flan/r747-promote-tokcount.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r747 (stack-r3-rows32).
+# R783 (2026-09-27): image stack-r3-rows32-tokcount-loopthink3 = stack-r3-rows32-tokcount + loop-think r3
+#   (patches/tabbyapi/loop-think-r3, TabbyAPI only). A loop inside the thinking used to end the request as
+#   finish_reason "stop" with no content, which Hermes shows as the reply (daily 2026-09-26, Tinfield 2026-09-27); now
+#   it forces </think> after W=800 looping tokens and the model answers. R782 on Tinfield: the #107 loop recovers 4/4
+#   into a tool call. Non-looping greedy output unchanged. Promotion gates: flan/r783-promote-loopthink.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r783 (stack-r3-rows32-tokcount).
+# R785 (2026-09-27, plan flan/rebase-dev-r3-PLAN.md; user: "goal is to promote", "it's ok to loose 100kv pool"): image
+#   tabbyapi:rebase-dev-r3 = the served ExLlamaV3 stack (the 41 keys below) ported onto upstream exllamav3 dev 5783a93
+#   (v1.5.2) + tokcount-r1, on tabbyapi:stack-r3-rows32-tokcount-loopthink4 (the served TabbyAPI + loop-think r4: a
+#   collector-only LoopDetector(3L, L), L = 1.25W = 1,000, catches reasoning loops with periods up to 1,000 tokens).
+#   EXL3_GR_MIX_TILED=1 (42nd key, upstream's tiled HC prefill, explicit so the env-keys line records it). Pool 901120
+#   [30, 30] = the largest that fits with per-card boot free >= S1 - 32 MiB (R784; was 983,040; floor 884,736). Own
+#   kernel cache TUNEDIR=/srv/qwen5090/.exl3cache-rebase-dev-r3 (the port's autotune keys differ from the served ones).
+#   Numerics change by design (GDN fp16 prefill projections, deterministic router GEMM, tiled HC prefill, PLE in-place
+#   add): greedy fingerprints roll over to R785's greedy.jsonl / chat-greedy.jsonl. Rendered from the repo template
+#   flan/launch-flashnext-r785-rebase-r3.sh by flan/r785-promote-rebase-r3.sh under the GPU lock (901120 / 30, 30 from
+#   R784's promote.env). Promotion gates: flan/r785-promote-rebase-r3.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r785 (stack-r3-rows32-tokcount-loopthink3, 983,040, 41 keys).
+DAILY_IMG=tabbyapi:r825c-hostprepare
+IMG=${IMG:-$DAILY_IMG}
+# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
+# CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
+# [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
+# the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
+#   DRAFT_POLICY='[[2, 3], [8, 1]]' ./launch-flashnext.sh
+# Why it is on: against the same engine with the policy unset, +35 % aggregate at c4 on short contexts
+# (252-258 -> 338-347 t/s), no change at c1 or c8, and greedy output byte-identical (sha256 95726ace17d5...).
+# The parity arm -- patched engine, policy unset -- matched the unpatched control, so the patch alone changes nothing.
+# Disable: DRAFT_POLICY='' .
+# `${VAR-...}` and not `${VAR:-...}`: the colon form also fires on an EMPTY value, which would make the
+# documented `DRAFT_POLICY=''` silently keep the policy on and quietly corrupt any future A/B that tried to
+# disable it. Without the colon, empty means empty and the config line is omitted.
+# R414 promotion: depth 3 up to 4 requests (16 rows = MAX_BSZN 16), depth 1 up to 8. Served before: [[2, 3], [8, 1]].
+# R497 (2026-09-18, user: draft confidence 0.6 "still worth trying"): DYN=true turns on exllamav3 dynamic draft (num_draft_tokens
+# and the policy act as the ceiling); the confidence target comes from EXL3_DRAFT_CONFIDENCE in EXTRA_ENV (image tabbyapi:draftconf).
+DYN=${DYN:-false}
+case "$DYN" in true|false) ;; *) echo "DYN must be true|false"; exit 3;; esac
+# DRAFT_MODE is the SCHEMA literal, one of model|disabled|mtp|ngram. `disabled` boots the engine with
+# no draft at all — the arm r397 claimed and never ran: its launcher copy wrote `none` (rejected by
+# pydantic) and, once that was fixed, would still have been rejected for keeping the policy line, which
+# the schema forbids when drafting is off. The block below is emitted consistently from this one knob so
+# the illegal combination cannot be written. Anything not in the case list fails before docker is touched.
+DRAFT_MODE=${DRAFT_MODE:-mtp}
+case "$DRAFT_MODE" in model|disabled|mtp|ngram) ;; *) echo "ABORT: DRAFT_MODE must be model|disabled|mtp|ngram (got $DRAFT_MODE)"; exit 3;; esac
+DRAFT_POLICY_SET=${DRAFT_POLICY+set}
+DRAFT_POLICY=${DRAFT_POLICY-[[4, 3], [8, 2]]}   # R717c: rows32 (depth 2 at c6-c8, 18-24 verify rows); was [[4, 3], [5, 2], [8, 1]]
+# DRAFT MUST NOT BE A SILENT NO-OP, and by default it was. The generator's `_get_draft_depth(batch_size)` returns
+# the first policy depth whose ceiling is >= the number of decode-ready jobs, and reads `draft_num_tokens` only
+# ABOVE the last ceiling (8). That branch is unreachable here because the generator clamps max_batch_size to
+# cache.num_slots, which is 8 (MAXBS), so with the policy on, `DRAFT=1` changed nothing observable: c1/c2 still
+# drafted 3, c3-c8 already selected 1 by policy, and even the cache's max_history and the generator's capacity are
+# max(DRAFT, policy depths) = 3 either way.
+# So a caller who sets DRAFT explicitly and leaves the policy alone gets that depth at EVERY concurrency, which is
+# what the header's "DRAFT=1 ... better at 4 concurrent requests" has always meant. Setting the policy explicitly
+# still wins -- that is the knob for non-uniform depth.
+# The derive used to compare DRAFT_POLICY against the literal '[[2, 3], [8, 1]]' — when the default moved
+# to [[4, 3], [5, 2], [8, 1]] the comparison stopped matching, so DRAFT=1 silently fell into the
+# "overridden" note and changed nothing. "Was it set" is a question about the variable, not its value.
+if [ -n "${DRAFT+set}" ] && [ "${DRAFT:-3}" != 3 ]; then
+  if [ -z "$DRAFT_POLICY_SET" ]; then
+    DRAFT_POLICY="[[8, $DRAFT]]"
+    DRAFT_DERIVED=1
+  else
+    # Caller set both: say so rather than letting one silently beat the other.
+    log "NOTE: DRAFT=$DRAFT is overridden by the explicit DRAFT_POLICY=$DRAFT_POLICY"
+  fi
+fi
+# Drafting off means no policy, anywhere — applied AFTER the derive so a stray DRAFT= cannot put one
+# back: the schema rejects draft_num_tokens_by_batch under `disabled`, and a surviving policy in the
+# log line would report a draft the engine does not run.
+[ "$DRAFT_MODE" = disabled ] && DRAFT_POLICY=
+# HOST KV TIER (R358). 0 keeps every page in VRAM. A nonzero value puts a second-tier KV cache in host RAM, which
+# can only matter once VRAM has evicted or when a long prefix would otherwise be recomputed; the deep-context
+# admission test is the one to read it against. Same units as the config: MiB.
+SYS_KV=${SYS_KV:-0}
+# R480 (2026-09-18, user: "4 slots to optimize for c4", "K8V4 let's def try this", "offload 1 MoE layer ... worth trying?"):
+# three knobs whose defaults are the R460 served values, so an unset environment boots the R460 daily byte for byte.
+#   CACHE_MODE   exllamav3 K,V bits ("8,8" served; "8,4" = K8V4). TabbyAPI accepts ^[2-8],[2-8]$ (backends/exllamav3/model.py:619).
+#   MOE_OFFLOAD  routed experts of the FIRST N MoE layers run on the CPU (exllamav3 moe_cpu_offload; frees VRAM on cuda:0).
+#   GPU_SPLIT    the manual split in GB, a YAML list body ("30, 30" served).
+#   DRAFT_GPU_SPLIT  the MTP draft component's split, a YAML list body. SERVED "0, 32" since R694 (2026-09-24): the draft
+#                component loads on cuda:1 (decode-push track B M4); leg A +2.0..+2.9 % mean over 3 ABAB pairs, leg B +2.2 %,
+#                greedy identical. DRAFT_GPU_SPLIT= (empty) restores the pre-R694 loader placement (no key emitted).
+# R483 (2026-09-18, user: "Keep experimenting and pushing the setup. Decode speed and kv pool size. Prefill speed seems
+# more than enough"): the loader's budget check runs every module on a dummy chunk of chunk_size tokens and keeps headroom
+# for the largest transient it measured (exllamav3 model/model_ls.py:230-270), so a smaller chunk trades prefill speed for
+# pool. CHUNK defaults to the served 2048. AUTOSPLIT_MARGIN_MB, when set, overrides the loader's physical margin
+# (EXL3_AUTOSPLIT_MARGIN_MB, 256 by default); unset = not passed.
+CHUNK=${CHUNK:-2048}
+AUTOSPLIT_MARGIN_MB=${AUTOSPLIT_MARGIN_MB:-}
+case "$CHUNK" in 256|512|768|1024|1536|2048|4096) ;; *) echo "ABORT: CHUNK must be one of 256 512 768 1024 1536 2048 4096 (got $CHUNK)"; exit 3;; esac
+# R484 (2026-09-18): NGRAM_RAM=1 holds the n-gram (PLE) table in host RAM (TabbyAPI `ngram_ram`, exllamav3 trellis_ram:
+# one index_select per step) instead of the default threaded pread of every unique row from the checkpoint file (trellis_disk,
+# exllamav3_ext/ngram.cu). R465 measured the pread gather at 0.72 ms/step mean at c4 depth 3 (p90 1.66) with a heavy tail.
+# Costs ~30.5 GiB of anonymous host memory (the file's page cache becomes reclaimable). Default 0 = served.
+NGRAM_RAM=${NGRAM_RAM:-0}
+case "$NGRAM_RAM" in 0) NGRAM_RAM_BOOL=false;; 1) NGRAM_RAM_BOOL=true;; *) echo "ABORT: NGRAM_RAM must be 0 or 1 (got $NGRAM_RAM)"; exit 3;; esac
+CACHE_MODE=${CACHE_MODE:-8,8}
+MOE_OFFLOAD=${MOE_OFFLOAD:-0}
+GPU_SPLIT=${GPU_SPLIT:-30, 30}   # R785: the split R784 found with the pool (was 30, 30)
+# R741 (2026-09-26): tensor parallel knobs for the upstream-EP arms. Defaults = served (layer split; the served image's
+# v1.5.0 engine refuses TP for qwen4_exp). Upstream dev 9d18a7f enables TP for Flash-Next + MTP; TabbyAPI then passes
+# tensor_p / tp_backend to load_gen and NOT tp_options, so MoE layers run upstream's default under TP: expert parallel.
+#   TP=true|false         tensor_parallel (served false)
+#   TP_BACKEND=native|nccl  tensor_parallel_backend (TabbyAPI default native; its doc and upstream model_init: "native is
+#                         recommended for PCIe GPUs, NCCL for NVLink" -- flan is 2 cards on PCIe with P2P, no NVLink).
+#                         R617/R618 (our tp-r3) ran nccl, so a native TP number is not directly comparable to R618's.
+TP=${TP:-false}
+TP_BACKEND=${TP_BACKEND:-native}
+case "$TP" in true|false) ;; *) echo "ABORT: TP must be true|false (got $TP)"; exit 3;; esac
+case "$TP_BACKEND" in native|nccl) ;; *) echo "ABORT: TP_BACKEND must be native|nccl (got $TP_BACKEND)"; exit 3;; esac
+DRAFT_GPU_SPLIT=${DRAFT_GPU_SPLIT-0, 32}   # R694 served value; set empty to drop the key
+# R660 (2026-09-23): the nvfp4kv-r1 image adds NVFP4 sides (exllamav3/cache/nvfp4.py parse_cache_mode: "nvfp4",
+# "nvfp4+s2", "8,nvfp4", ...). Any other image rejects them at load, so the launcher only lets the forms through.
+case "$CACHE_MODE" in [2-8],[2-8]|nvfp4*|[2-8],nvfp4*) ;; *) echo "ABORT: CACHE_MODE must be K,V bits 2-8 or an nvfp4 form (got $CACHE_MODE)"; exit 3;; esac
+case "$MOE_OFFLOAD" in [0-9]|[0-9][0-9]) ;; *) echo "ABORT: MOE_OFFLOAD must be a layer count (got $MOE_OFFLOAD)"; exit 3;; esac
+# DECODE SLOTS (R367). TabbyAPI derives 4 for a recurrent model and 128 otherwise; 8 is what has been served. More
+# slots means more concurrent jobs inside the fast decode path, at the cost of recurrent-state VRAM. This is the last
+# untested *config* lever on the box's weakest axis (aggregate throughput at c4/c8).
+MAXBS=${MAXBS:-8}
+# MTP HOT VOCABULARY (upstream PR #303, ported to this checkpoint's qwen4_exp_mtp). Empty means the feature is off,
+# which is also the control arm: the patched engine's disabled path must be byte-identical to the unpatched one.
+# Point it at a map built by /opt/hotvocab/build_mtp_hot_blocks.py to enable it, e.g.
+#   HOTVOCAB_MAP=/srv/qwen5090/mtp-hot-blocks.txt
+HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
+# GENERIC ENV PASSTHROUGH for engine features that are switched by environment rather than by config, e.g. upstream's
+# route-packed MoE schedule (EXL3_MOE_ROUTE_PACKED=1). Space-separated KEY=VALUE pairs. Empty means no extra env.
+#   EXTRA_ENV='EXL3_MOE_ROUTE_PACKED=1' ./launch-flashnext.sh
+# R425: the host-gap overlay is opt-in inside the image; the daily turns it on. Experiments that override EXTRA_ENV must
+# include EXL3_HOST_GAP_REWIND=1 themselves if they want the daily's behaviour (r427 does; the OFF arm of an A/B may not).
+# R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
+# R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
+# R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
+# R789 (2026-09-27): three keys removed (42 -> 39), bitwise and same pool: EXL3_HOST_GAP_REWIND=1 (R788a R0 DROP: the flag-off
+# path builds the same rewind descriptors; it serves our _state_words bf16 word count, NOT upstream's raw stride: keep that hunk
+# at every rebase, REVIEW-R788a §2), EXL3_GR_STATE_REGRID=1 (unreachable with HC_MIX_V2_INT8=1 + MIX_V3 + STATE_IN_UP) and
+# EXL3_HC_MIX_V3_PDL=0 (the literal default). The image bakes none of the three. The R425 note above about re-adding
+# EXL3_HOST_GAP_REWIND=1 is historical since R789.
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1}
+EV=()
+# EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
+# been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
+# which silently dropped all 22 tuned keys (`:-` only expands when EXTRA_ENV is unset) and produced a
+# fictional 74 % pool cut. A warning in a comment is not a guard. Turning one flag on is EXTRA_ENV_ADD;
+# EXTRA_ENV stays the full override for an arm that really wants a different set.
+[ -n "${EXTRA_ENV_ADD:-}" ] && EXTRA_ENV="$EXTRA_ENV $EXTRA_ENV_ADD"
+[ -n "$AUTOSPLIT_MARGIN_MB" ] && EXTRA_ENV="$EXTRA_ENV EXL3_AUTOSPLIT_MARGIN_MB=$AUTOSPLIT_MARGIN_MB"
+# NVMe prefix tier (nvme-tier-r4, opt-in): NVME_TIER=<host directory on the dedicated fast filesystem> mounts it at
+# /nvme-tier and sets EXL3_NVME_TIER=/nvme-tier; NVME_TIER_GB caps the bytes the tier keeps there (default 128).
+# The directory survives `docker rm -f`: a restart serves the same prefixes from disk. Unset = no tier, no mount.
+# Daily default (R534): the tier below when IMG is the served tier image and NVME_TIER is unset. Any other image, or an
+# explicit NVME_TIER= (empty), gets no tier, so experiment boots reusing this launcher never open the daily's directory.
+# R823p: keep the measured D policy; do not implicitly enable the daily disk tier.
+NVME_TIER=${NVME_TIER-}
+if [ -z "${NVME_TIER+x}" ]; then
+  if [ "$IMG" = "$DAILY_IMG" ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
+fi
+NT=()
+if [ -n "$NVME_TIER" ]; then
+  sudo mkdir -p "$NVME_TIER" || { log "ABORT: cannot create NVME_TIER $NVME_TIER"; exit 3; }
+  NT=(-v "$NVME_TIER":/nvme-tier -e EXL3_NVME_TIER=/nvme-tier)
+  [ -n "${NVME_TIER_GB:-}" ] && NT+=(-e EXL3_NVME_TIER_GB="$NVME_TIER_GB")
+fi
+for kv in $EXTRA_ENV; do
+  case "$kv" in *=*) EV+=(-e "$kv");; *) log "WARN: ignoring EXTRA_ENV entry without '=': $kv";; esac
+done
+# Log the RESOLVED set, not what was passed in. R614's audit log recorded the caller's EXTRA_ENV and
+# so agreed with a wrong boot; the count here is what the container actually gets.
+log "env keys ($(echo $EXTRA_ENV | wc -w)): $EXTRA_ENV"
+# R498 (2026-09-18): CKPT_NAME selects another checkpoint directory under /srv/qwen5090/models (the served model id follows it),
+# e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 3.05bpw.
+CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab}   # R511 (was qwen3.8-flash-next-exl3-3.05bpw)
+CKPT=/srv/qwen5090/models/$CKPT_NAME
+MODEL=$CKPT_NAME
+TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-rebase-dev-r3}   # kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
+# R741: overridable so an experiment image with other kernels (e.g. upstream's half_k autotune keys) warms its own
+# directory and never writes into the daily's; default = the daily's.
+CFG=/srv/qwen5090/flashnext-config.yml
+SAMP_PRESET=qwen38_thinking
+SAMP_DIR=/srv/qwen5090/sampler_overrides   # mounted into the container's cwd-relative sampler_overrides/
+mkdir -p /srv/qwen5090/logs "$TUNEDIR" "$SAMP_DIR"
+
+if [ "${STOP:-0}" = 1 ]; then
+  sudo docker rm -f "$NAME" >/dev/null 2>&1 && log "stopped" || log "was not running"
+  exit 0
+fi
+
+[ -d "$CKPT" ] || { log "ABORT: checkpoint missing at $CKPT"; exit 3; }
+sudo docker image inspect "$IMG" >/dev/null 2>&1 || { log "ABORT: image $IMG missing"; exit 3; }
+[ "$(sudo docker image inspect -f '{{.Id}}' "$IMG")" = "$R825C_IMAGE_ID" ] || { log 'ABORT: R825c image differs from operator pin'; exit 3; }
+
+# --- sampler fallbacks ------------------------------------------------------------------------------
+# Quoted heredoc: this file is pure data, so nothing in it may be expanded. Values are the Qwen3.8-Flash-Next
+# model card's thinking-mode recommendation (temperature 1.0, top_p 0.95, top_k 20, presence_penalty 0 = TabbyAPI's
+# default). Temperature was 0.6 until 2026-09-27 (the 27B's triple); the user switched it to the card's 1.0. `force: false` on every entry: these apply only to requests
+# that omit the parameter, so a client that samples deliberately is never overridden.
+cat > "$SAMP_DIR/$SAMP_PRESET.yml" <<'YML'
+# Fallback sampler for Qwen3.8-Flash-Next thinking mode. Measured 2026-09-16: without it, DSH's requests
+# (which send max_tokens only) sample at temperature 1.0 with no truncation and degenerate.
+temperature:
+  override: 1.0
+  force: false
+top_k:
+  override: 20
+  force: false
+top_p:
+  override: 0.95
+  force: false
+YML
+
+# --- config -----------------------------------------------------------------------------------------
+# The draft block is built HERE, from DRAFT_MODE, so the emitted combination is always schema-legal:
+# `draft_num_tokens_by_batch` is REJECTED when drafting is disabled (pydantic, verified 2026-09-22 —
+# r407 v2 crash-looped on exactly that), and the mode literal itself must be one of
+# model|disabled|mtp|ngram (r407 v1 wrote `none`). Emitting both from one knob makes the illegal
+# combination unwritable rather than merely warned about.
+#   THE SCHEMA FIELD IS `draft_num_tokens`. `num_draft_tokens` is not a schema field and is silently
+#   ignored, which would run the default depth while the config appeared to say otherwise.
+#   draft_cache_mode accepts only FP16/Q8/Q6/Q4 -- pair syntax like "8,8" is rejected by the draft schema.
+DRAFT_BLOCK="  draft_mode: $DRAFT_MODE"
+case "$DRAFT_MODE" in
+  disabled) ;;  # nothing else: the policy line is a validation error here, and the rest is inert
+  model) [ -n "${DRAFT_MODEL_DIR:-}" ] || { echo "ABORT: DRAFT_MODE=model needs DRAFT_MODEL_DIR=<name under /srv/qwen5090/models>"; exit 3; }
+    [ -d "/srv/qwen5090/models/$DRAFT_MODEL_DIR" ] || { echo "ABORT: DRAFT_MODEL_DIR /srv/qwen5090/models/$DRAFT_MODEL_DIR missing"; exit 3; }
+    DRAFT_BLOCK="$DRAFT_BLOCK
+  draft_model_dir: /models/$DRAFT_MODEL_DIR
+  draft_num_tokens: $DRAFT
+  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
+  draft_cache_mode: Q8
+  dynamic_draft: $DYN";;
+  *) DRAFT_BLOCK="$DRAFT_BLOCK
+  draft_num_tokens: $DRAFT
+  ${DRAFT_POLICY:+draft_num_tokens_by_batch: $DRAFT_POLICY}
+  ${DRAFT_GPU_SPLIT:+draft_gpu_split: [$DRAFT_GPU_SPLIT]}
+  draft_cache_mode: Q8
+  dynamic_draft: $DYN";;
+esac
+
+# CTX = 262,144 tokens (the model's max_position_embeddings). At 256-token pages that is 1024 pages. Sizing note
+# for a seeded page pool: a 32k-token prompt costs 131 pages and a 256-token output a couple more, so roughly
+# seven such jobs coexist; short agent turns cost ~2 pages each and the page count is not the binding limit.
+cat > "$CFG" <<YML
+model:
+  model_dir: /models
+  model_name: $MODEL
+  backend: exllamav3
+  max_seq_len: $MAXLEN
+  cache_size: $CACHE
+  cache_mode: $CACHE_MODE
+  # 8 slots. exllamav3 clamps the generator's max_batch_size to cache.num_slots, and TABBY DERIVES 4 FOR A
+  # RECURRENT MODEL (128 otherwise). This checkpoint carries GDN recurrent state, so it takes the 4 path and a
+  # c8 test would silently measure c4 without this line. (backends/exllamav3/model.py:400)
+  max_batch_size: ${MAXBS:-8}
+  # qwen4_exp FORBIDS tensor parallel in this engine:
+  #   NotImplementedError: Tensor-parallel is not currently implemented for Qwen4ExpForConditionalGeneration
+  # Layer split is the only mode, and it SERIALIZES the two cards: measured alternating 100%/0% utilisation,
+  # so only one GPU computes at a time. That is the ceiling on aggregate throughput here.
+  # R741: TP / TP_BACKEND (default false / native = served). Upstream dev 9d18a7f lifts the qwen4_exp TP refusal;
+  # the served image (v1.5.0 engine) still refuses it.
+  tensor_parallel: $TP
+  tensor_parallel_backend: $TP_BACKEND
+  gpu_split: [$GPU_SPLIT]        # a YAML LIST, not "30,30" -- a string fails pydantic with type=list_type
+  gpu_split_auto: false      # explicit rather than autosplit: TabbyAPI #405 applies autosplit_reserve to device 0 only
+  cpu_moe_offload_layers: $MOE_OFFLOAD  # zero offload is the point; offloading experts costs decode rate (see docs/CONFIG.md)
+  cpu_moe_split_experts: 0   # set explicitly: a stale nonzero elsewhere would silently change the baseline
+  ngram_ram: $NGRAM_RAM_BOOL
+  chunk_size: $CHUNK
+  output_chunking: true
+  # VISION IS AVAILABLE IN THIS CHECKPOINT and TabbyAPI defaults it OFF. The weight index carries 987
+  # vision tensors (model.visual.patch_embed.proj.weight, model.visual.blocks.N.attn.{k,v,o}_proj.{mul1,
+  # trellis,suh,svh}) plus a vision_config, image_token_id, vision_start/end_token_id, and the checkpoint
+  # ships preprocessor_config.json and video_preprocessor_config.json. The weights live inside the main
+  # shards rather than a separate vision_*.safetensors, so their absence from a file listing is not evidence
+  # that vision is missing. Verified present 2026-09-16.
+  vision: true
+  # REASONING PARSER. Without this the model's thinking arrives INLINE in \`content\` with its ends
+  # delimited by tags, and \`reasoning_content\` is null -- verified 2026-09-16, a reply came back as
+  # 'We need to respond to user: ... \n\nMAC REACHES FLAN'. Harnesses render the two fields separately, so
+  # leaving this off leaks the reasoning into the visible answer.
+  # The default start/end tokens are \` thinking\` and \` response\` (common/config_models.py), and this
+  # checkpoint's chat_template.jinja emits exactly those, so they are deliberately not overridden here. Pin them
+  # only if a template change makes the parser stop splitting -- the config as served does not pin them, and the
+  # 2026-09-16 verification that reasoning_content arrives separately is what checks the assumption.
+  reasoning: true
+  # thinking_token_budget is a REQUEST-BODY alias for reasoning_budget_tokens (AliasChoices in
+  # endpoints/OAI/types/chat_completion.py) -- it is NOT a config-file alias. ModelConfig has no validation_alias and
+  # TabbyConfigModel.model_validate SILENTLY IGNORES unknown keys, so an editor who follows an earlier version of
+  # this comment and puts thinking_token_budget here would get no budget at all and no warning. This file uses
+  # reasoning_budget_tokens, which is the field the model actually has. PROVENANCE CORRECTED 2026-09-16:
+  # this cap did NOT come from the vLLM daily, which has no server-side reasoning budget at all. The only
+  # 32768 in that stack is CLIENT-side -- scripts/miniswe/qwen38-local.yaml sets \`max_tokens: 32768\` so a
+  # runaway thinking loop releases its slot and the harness recovers from finish_reason=length. That is a
+  # different mechanism: it ends the request, where this budget forces the end-of-thinking tag INTO the
+  # stream mid-thought. Keep the cap (it bounds a spiral), but do not read it as the daily's behaviour.
+  # Not the cause of the 2026-09-16 DSH breakage: that request produced ~17k reasoning tokens and the cap is
+  # 32768, so it never fired -- the sampler did it (R338).
+  reasoning_budget_tokens: 32768
+  # TOOL-CALL PARSER. Without this the model's tool calls are NOT parsed into the OpenAI \`tool_calls\` field:
+  # they arrive as raw text in \`content\` and the response finishes with \`finish_reason: "stop"\` instead of
+  # \`"tool_calls"\`. Verified 2026-09-16: a request carrying a \`tools\` array came back as
+  # \`tool_calls: null\`, finish_reason "stop", content "\n\n<tool_call>\n<function=bash>\n<parameter=command>\n
+  # ls -la\n</parameter>\n</function>\n</tool_call>". An agent harness that expects structured calls cannot
+  # execute that, which is what surfaced as "the bash call failed with a generic transport error".
+  # qwen3_coder matches this checkpoint's chat template byte for byte -- the template itself specifies
+  # <tool_call><function=NAME><parameter=K>V</parameter></function></tool_call>, and the parser in
+  # endpoints/OAI/utils/toolcall_formats/qwen3_coder.py consumes exactly that.
+  tool_format: qwen3_coder
+  # vision_offload stays false: the tower is small enough to sit in VRAM. Set true only if free VRAM gets
+  # tight, at the cost of streaming vision weights from host RAM on every image.
+draft_model:
+$DRAFT_BLOCK
+  # dynamic_draft: R497 knob (default false). measured loss at confidence 0.4: 184 vs 191 t/s at c1, 229 vs 258 at c4
+memory:
+  sysmem_recurrent_cache: 4096
+  sysmem_kv_cache: $SYS_KV
+sampling:
+  # Fallbacks for clients that send no sampler at all -- see the header. Without this line TabbyAPI warns at
+  # boot and serves every such request at temperature 1.0 with no truncation (R338).
+  override_preset: $SAMP_PRESET
+YML
+
+# --- config preflight, BEFORE anything is destroyed -------------------------------------------------
+# Validate the generated file inside the image that will run it, while the old container still serves.
+# `config.load()` is the same code path boot uses (file -> merge -> model_validate), so a rejection here
+# is the rejection that otherwise becomes a crash-loop under `--restart unless-stopped`: the container
+# then shows "Restarting" in `docker ps` for the whole health wait and looks alive, which is how r407f
+# held :8022 down on 2026-09-16 while the session moved on. ~0.4 s, measured. Two failure modes it makes
+# impossible: a wrong literal (`draft_mode: none`, r407 v1 / r397) and a legal literal with an illegal
+# combination (the policy line under `disabled`, r407 v2).
+# The capture goes to a mktemp file, not $LOG.preflight: a root-owned stale file in the logs dir once
+# made a healthy boot read as a validation failure (r643, 2026-09-22). Diagnostic-only output does not
+# belong to the served log's ownership rules.
+PFLOG=$(mktemp /tmp/flashnext-preflight.XXXXXX.log) || { log "ABORT: cannot create preflight log"; exit 3; }
+if ! sudo docker run --rm -v "$CFG":/app/config.yml:ro -w /app --entrypoint python3 "$IMG" \
+    -c "from common.tabby_config import config; config.load({})" > "$PFLOG" 2>&1; then
+  log "ABORT: config failed validation inside $IMG — served container untouched:"
+  tail -8 "$PFLOG" | cut -c1-200 | sed 's/^/  /' | tee -a "$LOG"
+  exit 3
+fi
+rm -f "$PFLOG"
+
+# --- memory hygiene ---------------------------------------------------------------------------------
+# A killed vLLM leaves a multi-GB /dev/shm/vllm_offload_*.mmap behind. On 2026-09-15 one 16 GB orphan left the box
+# with 40 GB of 60 GB and earlyoom SIGKILLed a 32.6 GB ngram_ram load -- no traceback, no dmesg line, and it read
+# as an engine bug for a day. Sweep orphans (never live segments) before allocating anything.
+for f in /dev/shm/vllm_offload_*.mmap /dev/shm/psm_*; do
+  [ -e "$f" ] || continue
+  sudo fuser -s "$f" 2>/dev/null || sudo rm -f "$f"
+done
+
+# --- start ------------------------------------------------------------------------------------------
+# The vLLM 27B daily and this model CANNOT coexist: the 27B daily is TP=2 across both cards and Flash-Next
+# needs both cards resident. Whichever is being served owns the box.
+if sudo docker ps --format '{{.Names}}' | grep -qx vllm-27b; then
+  log "stopping the vLLM 27B daily -- it holds both GPUs and cannot coexist with this model"
+  sudo docker rm -f vllm-27b >/dev/null 2>&1
+fi
+sudo docker rm -f "$NAME" >/dev/null 2>&1
+for i in $(seq 24); do busy=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | awk '$1>1024{c++} END{print c+0}'); [ "$busy" = 0 ] && break; sleep 5; done
+# The wait used to just end: after 120 s the script ran `docker run` over GPUs that were still occupied,
+# which fails on VRAM anyway — or worse, boots alongside a unit that still owns them. Refuse unless the
+# caller explicitly accepts it (ALLOW_BUSY=1, e.g. a deliberate co-residency experiment).
+if [ "${busy:-1}" != 0 ]; then
+  used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | tr '\n' '/')
+  [ "${ALLOW_BUSY:-0}" = 1 ] && log "ALLOW_BUSY=1: booting over occupied GPUs (${used} MiB used)" \
+    || { log "ABORT: GPUs still busy after 120s (${used} MiB used) — refusing to boot over another unit. ALLOW_BUSY=1 overrides."; exit 3; }
+fi
+# R726 (2026-09-25): the +4500 memory offset that gpu-tune.service applies once at host boot had silently reset to 0
+# (between 2026-09-03 and 09-19, no reboot; suspect R208b's -lgc/-rgc on 09-07), so every Flash-Next number from then
+# to R726 ran at stock memory clock. Re-apply it on every daily boot and log the readback. MEMOC= skips it.
+MEMOC=${MEMOC-4500}
+if [ -n "$MEMOC" ]; then
+  moc=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetMemClkVfOffset(h, $MEMOC) for h in hs]; print(*[N.nvmlDeviceGetMemClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
+  log "memory clock offset: set +$MEMOC on every GPU, readback $moc"
+fi
+# 2026-09-25: the power limit and core offset are per card and shared with the 27B daily, whose launcher caps both cards
+# at 400 W (daily-power.sh cap). After a 27B -> Flash-Next switch nothing restored stock, so R731 and part of R732 ran at
+# 400 W. Flash-Next serves and publishes at stock (600 / 575 W) with core offset 0 (R730: core OC dropped, user):
+# set both on every boot. POWER=cap keeps the 27B policy, POWER= skips.
+POWER=${POWER-stock}
+if [ -n "$POWER" ]; then
+  bash /srv/qwen5090/daily-power.sh "$POWER" > /dev/null 2>&1
+  pwr=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetGpcClkVfOffset(h, 0) for h in hs]; print('limit W', *[N.nvmlDeviceGetPowerManagementLimit(h) // 1000 for h in hs], '| core offset', *[N.nvmlDeviceGetGpcClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
+  log "power policy $POWER, core offset 0: readback $pwr"
+fi
+log "starting on 0.0.0.0:$PORT, slots $MAXBS, cache $CACHE @ $CACHE_MODE, moe offload $MOE_OFFLOAD, split [$GPU_SPLIT], tp $TP ($TP_BACKEND), tunedir $TUNEDIR, draft_mode $DRAFT_MODE, draft depth $DRAFT, policy '${DRAFT_POLICY:-none}'${DRAFT_DERIVED:+ (derived from DRAFT)}"
+# Extra mounts/env for the hot-vocab experiment, only when a map is given. The dtype and the sub-head validation are
+# the plan's initial settings: fp16 embedding, validation off (it is a diagnostic, never a timed arm).
+HV=()
+if [ -n "$HOTVOCAB_MAP" ]; then
+  [ -f "$HOTVOCAB_MAP" ] || { log "ABORT: HOTVOCAB_MAP $HOTVOCAB_MAP not found"; exit 3; }
+  # NOT under /models: that tree is mounted READ-ONLY, so docker cannot create the mountpoint for a file mount inside
+  # it -- "create mountpoint for /models/mtp-hot-blocks.txt mount: ... read-only file system", which surfaced only as
+  # "docker run FAILED" until the error was captured. A file mount needs a point in the container's writable rootfs.
+  HV=(-v "$HOTVOCAB_MAP":/hotvocab/mtp-hot-blocks.txt:ro
+      -e EXL3_MTP_HOT_BLOCKS=/hotvocab/mtp-hot-blocks.txt
+      -e EXL3_MTP_HOT_EMBED_DTYPE=fp16
+      -e EXL3_MTP_VALIDATE_SUBHEAD=0)
+fi
+sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart unless-stopped "${EV[@]}" "${HV[@]}" "${NT[@]}" \
+  -v "$TUNEDIR":/exl3-cache -e TRITON_CACHE_DIR=/exl3-cache -e EXLLAMAV3_TUNE_CACHE=/exl3-cache \
+  -p 0.0.0.0:$PORT:$PORT \
+  -v /srv/qwen5090/models:/models:ro -v "$CFG":/app/config.yml:ro \
+  -v "$SAMP_DIR/$SAMP_PRESET.yml":/app/sampler_overrides/$SAMP_PRESET.yml:ro \
+  --entrypoint python3 "$IMG" main.py --host 0.0.0.0 --port $PORT --disable-auth true >"$LOG.docker" 2>&1 \
+  || { log "docker run FAILED — docker said:"; tail -5 "$LOG.docker" | tee -a "$LOG"; exit 1; }
+
+up=0
+st=""
+for i in $(seq 225); do
+  curl -sf -m 3 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 && { up=1; break; }
+  # `docker ps` lists a restart-looping container as present, so the old name-grep kept the wait alive
+  # for the whole 450 s on a config the schema had already rejected (r407f). .State.Status is the
+  # field that can actually fail: a container that is Restarting/Exited/Dead/stuck-Created is not
+  # "coming up", it is dead — fail in seconds, with its log. (Inspecting a stopped container is only
+  # wrong when you read .Config from it as a liveness check, GOTCHAS 14; .State is exactly what it is for.)
+  st=$(sudo docker inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null || echo gone)
+  case "$st" in running) ;; *) break ;; esac
+  sleep 2
+done
+sudo docker logs "$NAME" > "$LOG.docker" 2>&1
+[ "$up" = 1 ] || { log "NO BOOT (container state: ${st:-gone}) -- tail:"; tail -15 "$LOG.docker" | cut -c1-180 | sed 's/^/  /' | tee -a "$LOG"; exit 1; }
+
+# /health answering is not the serve contract. Assert the API reports THE model this launcher was told
+# to serve — a boot that comes up on a stale checkpoint, or with the draft absent when one was asked
+# for, is a wrong serving at full apparent health (the draft-less engine serves happily at half rate).
+SID=$(curl -s -m 8 "http://127.0.0.1:$PORT/v1/model" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])' 2>/dev/null)
+[ "$SID" = "$MODEL" ] || { log "NO BOOT: /v1/model reports '$SID', expected '$MODEL'"; exit 1; }
+if [ "$DRAFT_MODE" != disabled ]; then
+  # The draft lines ("Using main model MTP component for drafting", the "Loading draft modules"
+  # progress) are emitted during model load, which can land within a second of /health answering --
+  # and stdout under docker may be block-buffered, so poll rather than grep once.
+  # Never `docker logs | grep -q` here: under `set -o pipefail`, grep -q exits on the first match, docker logs
+  # takes SIGPIPE on the rest of a long log and the pipeline returns 141, so a boot whose draft DID load reads as
+  # NO BOOT on every poll (R742 run 1, 2026-09-26: EXL3_AUTOSPLIT_REPORT=1 puts 16.5 KB after the draft line; the
+  # R643 2026-09-22 false NO BOOT, then blamed on buffering, was most likely the same bug). Grep a file instead.
+  ok=0
+  for i in $(seq 30); do
+    sudo docker logs "$NAME" > "$LOG.docker" 2>&1; grep -aqiE "draft" "$LOG.docker" && { ok=1; break; }
+    sleep 2
+  done
+  [ "$ok" = 1 ] || { log "NO BOOT: draft_mode=$DRAFT_MODE but nothing about a draft in the engine log after 60s — serving undrafted"; exit 1; }
+fi
+
+# Warm the kernels OUTSIDE any measurement: the first inference is the expensive one, and a client that
+# happens to be first would otherwise pay it. Logged so the cost is visible rather than folklore.
+W=$(curl -s -m 300 "http://127.0.0.1:$PORT/v1/completions" -H "Content-Type: application/json" \
+  -d "{\"model\":\"$MODEL\",\"prompt\":\"Warmup.\",\"max_tokens\":16,\"temperature\":0}" \
+  -o /dev/null -w "%{time_total}" 2>/dev/null || echo "?")
+# ---- R818 FAST-STATE WARM-UP (begin) ----
+# Three raw /v1/completions requests (no chat template, so a template change cannot move the counts; add_bos_token
+# false, a no-op for this tokenizer; temperature 0, max_tokens 8), sent in this order, each ONE prefill forward at offset
+# 0 of N_p - 1 rows: N_p 20 (19 rows, class 13-25) and N_p 29 (28 rows, class 26-32) = R817 boot M's validated M-S1 /
+# M-S2, then N_p 11 (10 rows, class 7-12). Texts calibrated against the served tokenizer: 20 and 29 are R817's strings,
+# verified on the server by R817's own lines ("prompt 20 tokens, none cached", "prompt 29 tokens, none cached",
+# container-M.log #11 / #12); all three are < 1 page (256 tokens), so neither the GPU prefix cache nor the NVMe tier can
+# ever serve them. FASTWARM_PIN = sha256[:16] of "20<TAB><text>\n29<TAB><text>\n11<TAB><text>\n": change a text only
+# with its count and the pin; r818-warmfast-gate.sh recounts the texts with the served tokenizer before its lock.
+# The check reads the SERVER's prompt counts from the container log (a file, never `docker logs | grep -q`: pipefail,
+# R742): the three non-stream completions lines with serials above the pre-warm-up maximum, in send order, must each
+# say "none cached" with a count inside its class window (N_p 14-26 / 27-33 / 8-13). It logs `FASTWARM ok (...)` or
+# `FASTWARM FAILED (<why>)`. A failure NEVER blocks serving: the daily then serves in the slow state it served in before
+# R818. FASTWARM=0 skips the block; FASTWARM_WAIT = seconds to wait for the lines (docker's stdout is block-buffered).
+FASTWARM=${FASTWARM-1}
+FASTWARM_WAIT=${FASTWARM_WAIT:-30}
+FASTWARM_TEXT_20='Note 04560: train fire door sand square fire snow ocean wind house cloud.'
+FASTWARM_TEXT_29='Note 12479: number fish metal horse bridge copper castle apple leaf music island square rain chair copper snow seed corner floor village.'
+FASTWARM_TEXT_11='Note 07311: bridge music.'
+FASTWARM_PIN=d424997ca703a08f
+if [ "$FASTWARM" = 1 ]; then
+  fw_why= fw_ok=0 fw_chk="no server line read"
+  fw_pin=$(printf '20\t%s\n29\t%s\n11\t%s\n' "$FASTWARM_TEXT_20" "$FASTWARM_TEXT_29" "$FASTWARM_TEXT_11" | sha256sum | cut -c1-16)
+  [ "$fw_pin" = "$FASTWARM_PIN" ] || fw_why="$fw_why pin $fw_pin != $FASTWARM_PIN (a text changed without recalibration);"
+  sudo docker logs "$NAME" > "$LOG.docker" 2>&1
+  fw_lo=$(grep -aoE '#[0-9]+ (chat/)?completions' "$LOG.docker" | grep -oE '[0-9]+' | sort -n | tail -1)
+  fw_lo=${fw_lo:-0}
+  for fw_n in 20 29 11; do
+    fw_var=FASTWARM_TEXT_$fw_n
+    fw_body=$(python3 -c 'import json, sys; print(json.dumps({"model": sys.argv[1], "prompt": sys.argv[2], "max_tokens": 8, "temperature": 0, "stream": False, "add_bos_token": False}))' "$MODEL" "${!fw_var}")
+    fw_code=$(curl -s -m 60 "http://127.0.0.1:$PORT/v1/completions" -H "Content-Type: application/json" -d "$fw_body" -o /dev/null -w '%{http_code}' 2>/dev/null)
+    [ "${fw_code:-000}" = 200 ] || fw_why="$fw_why N_p $fw_n request HTTP ${fw_code:-000};"
+  done
+  for fw_i in $(seq "$FASTWARM_WAIT"); do
+    sudo docker logs "$NAME" > "$LOG.docker" 2>&1
+    fw_chk=$(python3 - "$LOG.docker" "$fw_lo" <<'PY'
+import re, sys
+path, lo = sys.argv[1], int(sys.argv[2])
+want = [(20, 14, 26), (29, 27, 33), (11, 8, 13)]        # (target N_p, class window lo, hi) in send order
+# TabbyAPI wraps its request lines: continuation lines are indented >= 10 spaces
+text = re.sub(r"\n {10,}", " ", open(path, encoding="utf-8", errors="replace").read())
+got = sorted((int(m.group(1)), int(m.group(2).replace(",", "")), m.group(3).startswith("none cached"))
+             for m in re.finditer(r"#(\d+) completions: [\d,]+ tokens generated at [^\n]*? prompt ([\d,]+) tokens, ([^\n]*?) new in",
+                                  text) if int(m.group(1)) > lo)
+if len(got) < len(want):
+    print(f"{len(got)} of {len(want)} completions lines above serial {lo}"); sys.exit(1)
+if len(got) > len(want):
+    print(f"{len(got)} completions lines above serial {lo}, want {len(want)} (a foreign request?)"); sys.exit(2)
+bad = [f"#{s} N_p {n}{'' if c else ' CACHED'} (want {t}, window {a}-{b})" for (s, n, c), (t, a, b) in zip(got, want)
+       if not (c and a <= n <= b)]
+cal = all(n == t for (_, n, _), (t, _, _) in zip(got, want))
+print("; ".join(bad) if bad else ", ".join(f"N_p {n} #{s}" for s, n, _ in got) + ", none cached" +
+      ("" if cal else " (in-window, not the calibrated 20 / 29 / 11: recalibrate the texts)"))
+sys.exit(1 if bad else 0)
+PY
+)
+    fw_rc=$?
+    [ "$fw_rc" = 0 ] && { fw_ok=1; break; }
+    [ "$fw_rc" = 2 ] && break                              # more lines than requests: waiting cannot fix it
+    sleep 1
+  done
+  [ "$fw_ok" = 1 ] || fw_why="$fw_why server lines: $fw_chk;"
+  if [ -z "$fw_why" ]; then log "FASTWARM ok ($fw_chk; pin $FASTWARM_PIN)"
+  else log "FASTWARM FAILED (${fw_why# }) -- serving continues, possibly WITHOUT the fast decode state (R817: c1 decode ~3 % slower)"; fi
+fi
+# ---- R818 FAST-STATE WARM-UP (end) ----
+log "UP on $PORT | warmup ${W}s | VRAM free MiB $(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | tr '\n' '/')"
+log "OpenAI-compatible base URL: http://$(hostname -I | awk '{print $1}'):$PORT/v1"

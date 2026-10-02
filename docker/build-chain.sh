@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 46 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 47 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -27,7 +27,8 @@
 #                                                                      pipelined prefill forward; the rollback tag)
 #   r825-whole-prompt                         overlays/r825-whole-prompt (one solo LS window, including final merged work)
 #   r825b-resumable                           overlays/r825b-resumable (one chunk per iterate, retained lookahead, timer yield)
-#   r825c-hostprepare                         overlays/r825c-hostprepare (CPU preparation at enqueue; GPU admission deferred) <- the served tag
+#   r825c-hostprepare                         overlays/r825c-hostprepare (CPU preparation at enqueue; GPU admission deferred)
+#   r828-prompt-lookup-r3                     overlays/prompt-lookup-r3 (batch-one adaptive lookup beside MTP) <- the served tag
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -234,6 +235,10 @@ build "$R:r825-whole-prompt" $O/r825-whole-prompt/Dockerfile $O/r825-whole-promp
 build "$R:r825b-resumable" $O/r825b-resumable/Dockerfile $O/r825b-resumable --build-arg BASE="$R:r825-whole-prompt"
 FINAL=$R:r825c-hostprepare
 build "$FINAL" $O/r825c-hostprepare/Dockerfile $O/r825c-hostprepare --build-arg BASE="$R:r825b-resumable"
+
+# R828c: adaptive prompt lookup beside fixed-depth MTP, installed on R825c directly.
+FINAL=$R:r828-prompt-lookup-r3
+build "$FINAL" $O/prompt-lookup-r3/Dockerfile $O/prompt-lookup-r3 --build-arg BASE="$R:r825c-hostprepare"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

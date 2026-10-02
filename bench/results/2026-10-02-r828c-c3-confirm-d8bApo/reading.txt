@@ -1,0 +1,14 @@
+| Pair | Order | ON t/s | OFF t/s | g | Checks ON/OFF | Opener reads ON/OFF | Ineligible ON/OFF | ms/step ON/OFF | tokens/step ON/OFF |
+|---|---|---:|---:|---:|---|---|---|---|---|
+| 1 | P01_OFF -> P01_ON | 179.470000 | 178.770000 | 0.003908000 | 69/0 | 6/0 | 3411/3480 | 15.055745/15.117841 | 2.648276/2.648276 |
+| 2 | P02_ON -> P02_OFF | 177.690000 | 177.440000 | 0.001407935 | 69/0 | 6/0 | 3411/3455 | 15.223008/15.267452 | 2.648276/2.667438 |
+| 3 | P03_OFF -> P03_ON | 178.610000 | 180.050000 | -0.008029932 | 31/0 | 7/0 | 3444/3475 | 15.234779/15.123100 | 2.652086/2.652086 |
+| 4 | P04_ON -> P04_OFF | 178.780000 | 178.940000 | -0.000894554 | 48/0 | 5/0 | 3452/3455 | 15.188591/15.176842 | 2.633143/2.667438 |
+| 5 | P05_OFF -> P05_ON | 179.490000 | 178.040000 | 0.008111252 | 69/0 | 6/0 | 3411/3500 | 15.121002/15.150135 | 2.648276/2.633143 |
+| 6 | P06_ON -> P06_OFF | 177.680000 | 178.670000 | -0.005556349 | 31/0 | 7/0 | 3444/3500 | 15.308047/15.174213 | 2.652086/2.633143 |
+| 7 | P07_OFF -> P07_ON | 181.440000 | 178.920000 | 0.013986242 | 18/0 | 12/0 | 3387/3500 | 15.141435/15.149060 | 2.706608/2.633143 |
+| 8 | P08_ON -> P08_OFF | 173.030000 | 177.630000 | -0.026237745 | 27/0 | 4/0 | 3493/3455 | 15.177385/15.250789 | 2.618182/2.667438 |
+mean(g)=-0.00166314405927; sample sd(g)=0.0121954679366; lower bound=-0.00983218378827; log(0.99)=-0.0100503358535
+One-sided 95% paired-t bound assumes independent, approximately normal boot-pair log gains; small-sample power is not established.
+Opener reads are inferred valid-match readbacks; intervals exclude unseparated OFF sparse matches. All counters use nine measured streams, ratios of sums.
+DECISION PASS; original R828 REJECT unchanged

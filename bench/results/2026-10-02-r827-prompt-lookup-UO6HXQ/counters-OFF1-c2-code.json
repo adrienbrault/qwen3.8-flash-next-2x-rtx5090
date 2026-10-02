@@ -1,0 +1,134 @@
+{
+  "n": 10,
+  "measured_n": 6,
+  "serials": [
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    63,
+    64
+  ],
+  "measured_serials": [
+    58,
+    59,
+    60,
+    61,
+    63,
+    64
+  ],
+  "counters": [
+    {
+      "decode_steps": 396,
+      "gen_time": 4.810210227966309,
+      "gen_tokens": 1024,
+      "label": "#58 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 384,
+      "gen_time": 4.6902971267700195,
+      "gen_tokens": 1024,
+      "label": "#59 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 384,
+      "gen_time": 4.672097444534302,
+      "gen_tokens": 1024,
+      "label": "#60 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 396,
+      "gen_time": 4.792593240737915,
+      "gen_tokens": 1024,
+      "label": "#61 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 396,
+      "gen_time": 4.956580400466919,
+      "gen_tokens": 1024,
+      "label": "#63 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 384,
+      "gen_time": 4.835200786590576,
+      "gen_tokens": 1024,
+      "label": "#64 chat/completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    }
+  ],
+  "stream_metrics": [
+    {
+      "label": "#58 chat/completions (stream)",
+      "ms_step": 12.146995525167446,
+      "tokens_step": 2.585858585858586,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#59 chat/completions (stream)",
+      "ms_step": 12.214315434296926,
+      "tokens_step": 2.6666666666666665,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#60 chat/completions (stream)",
+      "ms_step": 12.166920428474745,
+      "tokens_step": 2.6666666666666665,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#61 chat/completions (stream)",
+      "ms_step": 12.102508183681604,
+      "tokens_step": 2.585858585858586,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#63 chat/completions (stream)",
+      "ms_step": 12.51661717289626,
+      "tokens_step": 2.585858585858586,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#64 chat/completions (stream)",
+      "ms_step": 12.591668715079626,
+      "tokens_step": 2.6666666666666665,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    }
+  ],
+  "ms_step": 12.289307361994034,
+  "tokens_step": 2.6256410256410256,
+  "proposal_hit_rate": 0,
+  "accepted_lookup_tokens_step": 0.0
+}

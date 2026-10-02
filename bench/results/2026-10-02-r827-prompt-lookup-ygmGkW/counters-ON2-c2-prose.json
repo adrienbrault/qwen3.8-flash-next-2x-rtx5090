@@ -1,0 +1,134 @@
+{
+  "n": 10,
+  "measured_n": 6,
+  "serials": [
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    73,
+    74
+  ],
+  "measured_serials": [
+    68,
+    69,
+    70,
+    71,
+    73,
+    74
+  ],
+  "counters": [
+    {
+      "decode_steps": 421,
+      "gen_time": 5.090877056121826,
+      "gen_tokens": 1024,
+      "label": "#68 chat/completions (stream)",
+      "lookup_accepted": 36,
+      "lookup_checks": 421,
+      "lookup_hits": 41,
+      "lookup_proposed": 82
+    },
+    {
+      "decode_steps": 394,
+      "gen_time": 4.828831911087036,
+      "gen_tokens": 1024,
+      "label": "#69 chat/completions (stream)",
+      "lookup_accepted": 40,
+      "lookup_checks": 394,
+      "lookup_hits": 46,
+      "lookup_proposed": 92
+    },
+    {
+      "decode_steps": 394,
+      "gen_time": 4.830944538116455,
+      "gen_tokens": 1024,
+      "label": "#70 chat/completions (stream)",
+      "lookup_accepted": 40,
+      "lookup_checks": 394,
+      "lookup_hits": 46,
+      "lookup_proposed": 92
+    },
+    {
+      "decode_steps": 421,
+      "gen_time": 5.093999147415161,
+      "gen_tokens": 1024,
+      "label": "#71 chat/completions (stream)",
+      "lookup_accepted": 36,
+      "lookup_checks": 421,
+      "lookup_hits": 41,
+      "lookup_proposed": 82
+    },
+    {
+      "decode_steps": 421,
+      "gen_time": 5.247097492218018,
+      "gen_tokens": 1024,
+      "label": "#73 chat/completions (stream)",
+      "lookup_accepted": 36,
+      "lookup_checks": 421,
+      "lookup_hits": 41,
+      "lookup_proposed": 82
+    },
+    {
+      "decode_steps": 394,
+      "gen_time": 4.984311819076538,
+      "gen_tokens": 1024,
+      "label": "#74 chat/completions (stream)",
+      "lookup_accepted": 40,
+      "lookup_checks": 394,
+      "lookup_hits": 46,
+      "lookup_proposed": 92
+    }
+  ],
+  "stream_metrics": [
+    {
+      "label": "#68 chat/completions (stream)",
+      "ms_step": 12.092344551358257,
+      "tokens_step": 2.4323040380047507,
+      "proposal_hit_rate": 0.09738717339667459,
+      "accepted_lookup_tokens_step": 0.0855106888361045
+    },
+    {
+      "label": "#69 chat/completions (stream)",
+      "ms_step": 12.255918556058468,
+      "tokens_step": 2.598984771573604,
+      "proposal_hit_rate": 0.116751269035533,
+      "accepted_lookup_tokens_step": 0.10152284263959391
+    },
+    {
+      "label": "#70 chat/completions (stream)",
+      "ms_step": 12.261280553595064,
+      "tokens_step": 2.598984771573604,
+      "proposal_hit_rate": 0.116751269035533,
+      "accepted_lookup_tokens_step": 0.10152284263959391
+    },
+    {
+      "label": "#71 chat/completions (stream)",
+      "ms_step": 12.099760445166654,
+      "tokens_step": 2.4323040380047507,
+      "proposal_hit_rate": 0.09738717339667459,
+      "accepted_lookup_tokens_step": 0.0855106888361045
+    },
+    {
+      "label": "#73 chat/completions (stream)",
+      "ms_step": 12.463414470826645,
+      "tokens_step": 2.4323040380047507,
+      "proposal_hit_rate": 0.09738717339667459,
+      "accepted_lookup_tokens_step": 0.0855106888361045
+    },
+    {
+      "label": "#74 chat/completions (stream)",
+      "ms_step": 12.650537611869385,
+      "tokens_step": 2.598984771573604,
+      "proposal_hit_rate": 0.116751269035533,
+      "accepted_lookup_tokens_step": 0.10152284263959391
+    }
+  ],
+  "ms_step": 12.301047838051138,
+  "tokens_step": 2.5128834355828222,
+  "proposal_hit_rate": 0.1067484662576687,
+  "accepted_lookup_tokens_step": 0.09325153374233129
+}

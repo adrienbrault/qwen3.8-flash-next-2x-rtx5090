@@ -1,0 +1,13 @@
+R827 local validation, 2026-10-02
+
+PASS: 35 CPU tests via unittest (the same classes are pytest-collectable).
+PASS: actual served/ported MTP loops on CPU tensor doubles: OFF identity, all-hit/mixed, host/device, depth 2/3.
+PASS: real served rejection helper across page boundaries, proposal and acceptance tests.
+PASS: real SSE, wrapped completion logs and R813 JSONL replay.
+PASS: strict fn_bench wire audit rejects malformed/truncated SSE; one-frame identity remains valid.
+PASS: synthetic gate eligible/reject/missing-data/inactive-lookup/OFF-OFF divergence regressions.
+PASS: every packet Python source parses; overlay hashes match; unit bash syntax passes.
+PASS: live launcher file remains pinned at 262e9c31f714724409635fbac9df8ac2.
+
+NOT RUN: pytest CLI (pytest is absent locally), Docker build/install, endpoint dry-run, CUDA/served identity, GPU speed gate.
+No ssh, git or docker commands were executed. Operator owns build/deploy/run.

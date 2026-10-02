@@ -1,0 +1,130 @@
+{
+  "n": 6,
+  "measured_n": 6,
+  "serials": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "measured_serials": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "counters": [
+    {
+      "decode_steps": 81,
+      "gen_time": 0.8261611461639404,
+      "gen_tokens": 256,
+      "label": "#8 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 68,
+      "gen_time": 0.6755626201629639,
+      "gen_tokens": 256,
+      "label": "#9 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 36,
+      "gen_time": 0.3694922924041748,
+      "gen_tokens": 132,
+      "label": "#10 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 10,
+      "gen_time": 0.0959465503692627,
+      "gen_tokens": 32,
+      "label": "#11 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 47,
+      "gen_time": 0.46209096908569336,
+      "gen_tokens": 130,
+      "label": "#12 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    },
+    {
+      "decode_steps": 71,
+      "gen_time": 0.7580029964447021,
+      "gen_tokens": 256,
+      "label": "#13 completions (stream)",
+      "lookup_accepted": 0,
+      "lookup_checks": 0,
+      "lookup_hits": 0,
+      "lookup_proposed": 0
+    }
+  ],
+  "stream_metrics": [
+    {
+      "label": "#8 completions (stream)",
+      "ms_step": 10.19952032301161,
+      "tokens_step": 3.1604938271604937,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#9 completions (stream)",
+      "ms_step": 9.934744414161234,
+      "tokens_step": 3.764705882352941,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#10 completions (stream)",
+      "ms_step": 10.263674789004856,
+      "tokens_step": 3.6666666666666665,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#11 completions (stream)",
+      "ms_step": 9.59465503692627,
+      "tokens_step": 3.2,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#12 completions (stream)",
+      "ms_step": 9.831722746504115,
+      "tokens_step": 2.765957446808511,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    },
+    {
+      "label": "#13 completions (stream)",
+      "ms_step": 10.676098541474678,
+      "tokens_step": 3.6056338028169015,
+      "proposal_hit_rate": 0,
+      "accepted_lookup_tokens_step": 0.0
+    }
+  ],
+  "ms_step": 10.182928353452835,
+  "tokens_step": 3.3929712460063897,
+  "proposal_hit_rate": 0,
+  "accepted_lookup_tokens_step": 0.0
+}

@@ -1,0 +1,310 @@
+{
+  "g": [
+    0.003907999614187862,
+    0.0014079353549265555,
+    -0.008029932178491985,
+    -0.0008945544597433431,
+    0.008111251922396577,
+    -0.0055563493589037135,
+    0.01398624197473987,
+    -0.026237745343237435
+  ],
+  "mean": -0.0016631440592657014,
+  "sd": 0.01219546793658044,
+  "lower_bound": -0.009832183788270098,
+  "floor": -0.01005033585350145,
+  "n": 8,
+  "t": 1.8946,
+  "DECISION": "PASS",
+  "assumption": "One-sided 95% paired-t bound assumes independent, approximately normal boot-pair log gains; small-sample power is not established.",
+  "pairs": [
+    {
+      "pair": 1,
+      "order": [
+        "P01_OFF",
+        "P01_ON"
+      ],
+      "OFF": {
+        "median": 178.77,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3480,
+        "ms_step": 15.117841273888775,
+        "tokens_step": 2.6482758620689655,
+        "steps": 3480,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "ON": {
+        "median": 179.47,
+        "checks": 69,
+        "opener_reads": [
+          6,
+          6
+        ],
+        "ineligible_steps": 3411,
+        "ms_step": 15.055745497517202,
+        "tokens_step": 2.6482758620689655,
+        "steps": 3480,
+        "matches": 6,
+        "reprobe_checks": 0
+      },
+      "g": 0.003907999614187862
+    },
+    {
+      "pair": 2,
+      "order": [
+        "P02_ON",
+        "P02_OFF"
+      ],
+      "ON": {
+        "median": 177.69,
+        "checks": 69,
+        "opener_reads": [
+          6,
+          6
+        ],
+        "ineligible_steps": 3411,
+        "ms_step": 15.223008120196988,
+        "tokens_step": 2.6482758620689655,
+        "steps": 3480,
+        "matches": 6,
+        "reprobe_checks": 0
+      },
+      "OFF": {
+        "median": 177.44,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3455,
+        "ms_step": 15.26745204125058,
+        "tokens_step": 2.667438494934877,
+        "steps": 3455,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "g": 0.0014079353549265555
+    },
+    {
+      "pair": 3,
+      "order": [
+        "P03_OFF",
+        "P03_ON"
+      ],
+      "OFF": {
+        "median": 180.05,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3475,
+        "ms_step": 15.123100349371382,
+        "tokens_step": 2.652086330935252,
+        "steps": 3475,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "ON": {
+        "median": 178.61,
+        "checks": 31,
+        "opener_reads": [
+          7,
+          7
+        ],
+        "ineligible_steps": 3444,
+        "ms_step": 15.23477869925739,
+        "tokens_step": 2.652086330935252,
+        "steps": 3475,
+        "matches": 7,
+        "reprobe_checks": 0
+      },
+      "g": -0.008029932178491985
+    },
+    {
+      "pair": 4,
+      "order": [
+        "P04_ON",
+        "P04_OFF"
+      ],
+      "ON": {
+        "median": 178.78,
+        "checks": 48,
+        "opener_reads": [
+          5,
+          5
+        ],
+        "ineligible_steps": 3452,
+        "ms_step": 15.188590935298375,
+        "tokens_step": 2.633142857142857,
+        "steps": 3500,
+        "matches": 5,
+        "reprobe_checks": 0
+      },
+      "OFF": {
+        "median": 178.94,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3455,
+        "ms_step": 15.176842423147818,
+        "tokens_step": 2.667438494934877,
+        "steps": 3455,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "g": -0.0008945544597433431
+    },
+    {
+      "pair": 5,
+      "order": [
+        "P05_OFF",
+        "P05_ON"
+      ],
+      "OFF": {
+        "median": 178.04,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3500,
+        "ms_step": 15.150134631565638,
+        "tokens_step": 2.633142857142857,
+        "steps": 3500,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "ON": {
+        "median": 179.49,
+        "checks": 69,
+        "opener_reads": [
+          6,
+          6
+        ],
+        "ineligible_steps": 3411,
+        "ms_step": 15.121002443905535,
+        "tokens_step": 2.6482758620689655,
+        "steps": 3480,
+        "matches": 6,
+        "reprobe_checks": 0
+      },
+      "g": 0.008111251922396577
+    },
+    {
+      "pair": 6,
+      "order": [
+        "P06_ON",
+        "P06_OFF"
+      ],
+      "ON": {
+        "median": 177.68,
+        "checks": 31,
+        "opener_reads": [
+          7,
+          7
+        ],
+        "ineligible_steps": 3444,
+        "ms_step": 15.308047438696992,
+        "tokens_step": 2.652086330935252,
+        "steps": 3475,
+        "matches": 7,
+        "reprobe_checks": 0
+      },
+      "OFF": {
+        "median": 178.67,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3500,
+        "ms_step": 15.174212660108294,
+        "tokens_step": 2.633142857142857,
+        "steps": 3500,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "g": -0.0055563493589037135
+    },
+    {
+      "pair": 7,
+      "order": [
+        "P07_OFF",
+        "P07_ON"
+      ],
+      "OFF": {
+        "median": 178.92,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3500,
+        "ms_step": 15.149060385567802,
+        "tokens_step": 2.633142857142857,
+        "steps": 3500,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "ON": {
+        "median": 181.44,
+        "checks": 18,
+        "opener_reads": [
+          12,
+          12
+        ],
+        "ineligible_steps": 3387,
+        "ms_step": 15.141434886557064,
+        "tokens_step": 2.7066079295154184,
+        "steps": 3405,
+        "matches": 12,
+        "reprobe_checks": 0
+      },
+      "g": 0.01398624197473987
+    },
+    {
+      "pair": 8,
+      "order": [
+        "P08_ON",
+        "P08_OFF"
+      ],
+      "ON": {
+        "median": 173.03,
+        "checks": 27,
+        "opener_reads": [
+          4,
+          4
+        ],
+        "ineligible_steps": 3493,
+        "ms_step": 15.177385373549027,
+        "tokens_step": 2.618181818181818,
+        "steps": 3520,
+        "matches": 4,
+        "reprobe_checks": 0
+      },
+      "OFF": {
+        "median": 177.63,
+        "checks": 0,
+        "opener_reads": [
+          0,
+          0
+        ],
+        "ineligible_steps": 3455,
+        "ms_step": 15.250789377347777,
+        "tokens_step": 2.667438494934877,
+        "steps": 3455,
+        "matches": 0,
+        "reprobe_checks": 0
+      },
+      "g": -0.026237745343237435
+    }
+  ]
+}

@@ -403,3 +403,15 @@ R826 (2026-10-01, [write-up](../bench/results/r826-std-ab.md), results `2026-10-
 **What it looks like:** a direct-engine whole-prompt window passes equality and lowers engine time, while a frontend arrival waits for the prompt to finish. R825 measured cold solo 90,000-token prefill at 6,855.6 ms, 13,128 processed rows/s, greedy one output token for timing, results `2026-10-01-r825-whole-prompt-YhItMe` ([R824–R825p](../bench/results/r825-whole-prompt-window.md)).
 
 **What it is:** one synchronous window makes one synchronous iterate cover the prompt. Resumability must retain current/lookahead ownership, commit one chunk, yield to timers and arrivals, then close at the retained lookahead boundary before admitting pending work. Cancellation and reset drain before releasing pages or slabs. A two-chunk cap chosen before an arrival cannot interrupt an already planned solo window.
+
+## 47. Nominal concurrency does not remove singleton lookup work (2026-10-02)
+
+**What it looks like:** R828 c3-code has no active lookup proposals, so its ON boot appears lookup-free; the original ON2/OFF2 median is −1.220%, greedy, 118-token code prompts, 1,024 forced output tokens, nine measured streams per boot, results `2026-10-02-r828-prompt-lookup-r3-em6iO4` ([R827–R828c](../bench/results/r827-r828-prompt-lookup.md)).
+
+**What it is:** the gate checks actual decode-ready batch size. Late singleton tails perform 69/52 checks and 6/8 inferred opener reads in ON1/ON2, although neither activates copying. Probation preserves MTP tails; sparse OFF re-probes add CPU matching without extra device synchronization. Copied acceptance is not net wall-time benefit. R828c separately confirms c3 non-inferiority with eight fresh boot pairs and leaves the original rejection intact.
+
+## 48. A no-restart dry run does not execute candidate serving code (2026-10-02)
+
+**What it looks like:** candidate image/config guards pass during a dry run, then every candidate request fails even with lookup off ([R827–R828c](../bench/results/r827-r828-prompt-lookup.md), diagnostic `2026-10-02-r828-diag`).
+
+**What it is:** TabbyAPI constructs a Job before attaching its generator in `prepare_for_queue`. Reading `generator.prompt_lookup_config` in `Job.__init__` raises AttributeError; adaptive initialization belongs after generator attachment. Dry guards execute the launcher and validate YAML through the existing parent's schema, so the first candidate boot still tests candidate-only serving behavior. The source regression check covers the repaired construction seam.

@@ -1,0 +1,130 @@
+{
+  "n": 6,
+  "measured_n": 6,
+  "serials": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "measured_serials": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "counters": [
+    {
+      "decode_steps": 61,
+      "gen_time": 0.6154310703277588,
+      "gen_tokens": 197,
+      "label": "#15 chat/completions (stream)",
+      "lookup_accepted": 6,
+      "lookup_checks": 61,
+      "lookup_hits": 3,
+      "lookup_proposed": 6
+    },
+    {
+      "decode_steps": 86,
+      "gen_time": 0.8343446254730225,
+      "gen_tokens": 267,
+      "label": "#16 chat/completions (stream)",
+      "lookup_accepted": 22,
+      "lookup_checks": 86,
+      "lookup_hits": 25,
+      "lookup_proposed": 50
+    },
+    {
+      "decode_steps": 91,
+      "gen_time": 0.8934404850006104,
+      "gen_tokens": 256,
+      "label": "#17 chat/completions (stream)",
+      "lookup_accepted": 37,
+      "lookup_checks": 91,
+      "lookup_hits": 20,
+      "lookup_proposed": 40
+    },
+    {
+      "decode_steps": 51,
+      "gen_time": 0.49963903427124023,
+      "gen_tokens": 151,
+      "label": "#18 chat/completions (stream)",
+      "lookup_accepted": 11,
+      "lookup_checks": 51,
+      "lookup_hits": 8,
+      "lookup_proposed": 16
+    },
+    {
+      "decode_steps": 31,
+      "gen_time": 0.30141282081604004,
+      "gen_tokens": 101,
+      "label": "#19 chat/completions (stream)",
+      "lookup_accepted": 12,
+      "lookup_checks": 31,
+      "lookup_hits": 7,
+      "lookup_proposed": 14
+    },
+    {
+      "decode_steps": 1684,
+      "gen_time": 16.778436422348022,
+      "gen_tokens": 5000,
+      "label": "#20 chat/completions (stream)",
+      "lookup_accepted": 411,
+      "lookup_checks": 1684,
+      "lookup_hits": 364,
+      "lookup_proposed": 728
+    }
+  ],
+  "stream_metrics": [
+    {
+      "label": "#15 chat/completions (stream)",
+      "ms_step": 10.089033939799325,
+      "tokens_step": 3.2295081967213113,
+      "proposal_hit_rate": 0.04918032786885246,
+      "accepted_lookup_tokens_step": 0.09836065573770492
+    },
+    {
+      "label": "#16 chat/completions (stream)",
+      "ms_step": 9.701681691546773,
+      "tokens_step": 3.104651162790698,
+      "proposal_hit_rate": 0.29069767441860467,
+      "accepted_lookup_tokens_step": 0.2558139534883721
+    },
+    {
+      "label": "#17 chat/completions (stream)",
+      "ms_step": 9.818027307699015,
+      "tokens_step": 2.8131868131868134,
+      "proposal_hit_rate": 0.21978021978021978,
+      "accepted_lookup_tokens_step": 0.4065934065934066
+    },
+    {
+      "label": "#18 chat/completions (stream)",
+      "ms_step": 9.796843809240004,
+      "tokens_step": 2.9607843137254903,
+      "proposal_hit_rate": 0.1568627450980392,
+      "accepted_lookup_tokens_step": 0.21568627450980393
+    },
+    {
+      "label": "#19 chat/completions (stream)",
+      "ms_step": 9.722994219872259,
+      "tokens_step": 3.2580645161290325,
+      "proposal_hit_rate": 0.22580645161290322,
+      "accepted_lookup_tokens_step": 0.3870967741935484
+    },
+    {
+      "label": "#20 chat/completions (stream)",
+      "ms_step": 9.96344205602614,
+      "tokens_step": 2.969121140142518,
+      "proposal_hit_rate": 0.2161520190023753,
+      "accepted_lookup_tokens_step": 0.24406175771971497
+    }
+  ],
+  "ms_step": 9.941469290537272,
+  "tokens_step": 2.9800399201596806,
+  "proposal_hit_rate": 0.21307385229540918,
+  "accepted_lookup_tokens_step": 0.24900199600798403
+}

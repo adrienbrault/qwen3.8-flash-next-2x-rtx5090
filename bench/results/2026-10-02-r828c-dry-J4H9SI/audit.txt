@@ -1,0 +1,5 @@
+DECLARED ORDER: P01_OFF -> P01_ON ; P02_ON -> P02_OFF ; P03_OFF -> P03_ON ; P04_ON -> P04_OFF ; P05_OFF -> P05_ON ; P06_ON -> P06_OFF ; P07_OFF -> P07_ON ; P08_ON -> P08_OFF
+gateway_wait_idle: waiting for flan-flashnext(healthy, 0 in flight) 
+2026-10-02T18:55:21+00:00 [r828c-dry] DRY-RUN started: no restart; real raw c3 replay and both preboot guards PASS; 120s target after drain
+2026-10-02T18:57:22+00:00 [r828c-dry] DRY PASS; DRY_RUN_RESULT=/srv/qwen5090/results/2026-10-02-r828c-dry-J4H9SI
+2026-10-02T18:57:22+00:00 [r828c-dry] finish rc=0; results /srv/qwen5090/results/2026-10-02-r828c-dry-J4H9SI

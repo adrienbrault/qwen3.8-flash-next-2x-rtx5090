@@ -1,0 +1,19 @@
+{
+  "real-sse.json": {
+    "source": "prefill-throughput/r825c/fixtures/frontend-candidate-client.json cold50.frames[*].event",
+    "original_sha256": "b61325659426b5e4d3e19e8c18777a7d536cf49427373deea827f42245011c2a"
+  },
+  "r813-records.jsonl": {
+    "source": "probes/r826-fixtures/r813-records.jsonl"
+  },
+  "live-container-env.txt": {
+    "source": "operator R827 live-container-env.txt, verbatim"
+  },
+  "parent-container.log": {
+    "source": "probes/r825p-fixtures/smoke-container.log",
+    "sha256": "fb6e926d48c5bc6fe9ebbc07f3da009e8976e77bad94138184cc56f4babbc34a"
+  },
+  "candidate-counter.log": {
+    "source": "synthetic R827 counters extending actual Tabby labels, not GPU measurements"
+  }
+}
