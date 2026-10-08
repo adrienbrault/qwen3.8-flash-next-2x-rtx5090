@@ -2,6 +2,8 @@
 
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards.
 
+**Goal**: serve coding agents from one desktop box. Several agent sessions run at once against it, their prompts grow with every tool call up to the 262k window, and each session waits on decode. The 8 slots, the KV pool size, the draft policy and the benchmarks below (an 8-agent SWE-bench replay, agent traffic with prompts arriving during decode) follow from that workload.
+
 - **Checkpoint**: [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250].
 - **Engine**: [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) plus a chain of 19 patch sets carried on top, one of them upstream PR #337 and the rest written for this repository (sources in [`THIRD_PARTY.md`](THIRD_PARTY.md)): MoE decode kernels, the hyper-connection mixer, MTP drafting and verify, prompt lookup, prefill, and recurrent-state and KV memory ([What the stack is](#what-the-stack-is), [`docker/`][docker-readme]).
 - **Server**: [TabbyAPI][tabby] `53da7919` with patches written here for tokenization and loop detection; image `tabbyapi:r828-prompt-lookup-r3`, 47 launcher selectors.
