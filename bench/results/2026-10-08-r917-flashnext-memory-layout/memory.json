@@ -1,0 +1,53 @@
+{
+  "gpu_used_bytes": {
+    "0": 32661045248,
+    "1": 32059162624
+  },
+  "gpu_total_bytes": {
+    "0": 34190917632,
+    "1": 34190917632
+  },
+  "gpu_categories_bytes": {
+    "routed experts on GPU": 39174445056.0,
+    "attention, norms, other weights": 2843166112,
+    "shared experts": 119132736,
+    "lm_head": 477276164,
+    "KV pool (901,120 tokens, 8-bit)": 13729464320,
+    "vision tower": 561281424,
+    "MTP layer (attention, shared expert, norms)": 92359208,
+    "other: CUDA contexts, graph pools, scratch, recurrent state, allocator": 7723082852.0
+  },
+  "host_total_bytes": 64828252160,
+  "host_cgroup_bytes": {
+    "anon": 4139667456,
+    "file": 9949724672,
+    "shmem": 43982848,
+    "kernel": 29523968
+  },
+  "host_categories_bytes": {
+    "embedding table": 1271398400,
+    "other: runtime, staging, buffers, recurrent-state cache (cap 4096 MB)": 2912251904
+  },
+  "inputs": {
+    "cache_tokens": 901120,
+    "cpu_split_experts": 0,
+    "index_ring": 0,
+    "draft": true,
+    "vision": true,
+    "vision_offload": false,
+    "kv_bytes_per_token_per_layer": 15236,
+    "kv_layers": 1,
+    "routed_experts_per_layer": 512,
+    "sysmem_recurrent_cache_cap_mb": 4096
+  },
+  "checkpoint_bytes_by_category": {
+    "embedding": 1271398400,
+    "routed_experts": 37906317312,
+    "shared_experts": 119132736,
+    "attention_norms_other": 2843166112,
+    "lm_head": 477276164,
+    "mtp_head": 92359208,
+    "mtp_experts": 1268127744,
+    "vision": 561281424
+  }
+}

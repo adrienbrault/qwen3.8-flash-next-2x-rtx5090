@@ -1,0 +1,17 @@
+GPU (both)
+  routed experts on GPU                                                    36.48 GiB
+  attention, norms, other weights                                           2.65 GiB
+  shared experts                                                            0.11 GiB
+  lm_head                                                                   0.44 GiB
+  KV pool (901,120 tokens, 8-bit)                                          12.79 GiB
+  vision tower                                                              0.52 GiB
+  MTP layer (attention, shared expert, norms)                               0.09 GiB
+  other: CUDA contexts, graph pools, scratch, recurrent state, allocator    7.19 GiB
+host
+  embedding table                                                           1.18 GiB
+  recurrent-state cache (configured 4096 MB)                                4.00 GiB
+  other: runtime, staging, buffers                                          0.00 GiB
+GPU used per device: {0: 30.42, 1: 29.86}
+
+Host categories re-derived 2026-10-08 with scripts/memory_layout.py --rederive (the recurrent-state cache is a cap, not resident; memory.json holds the re-derived split):
+  embedding table 1.18 GiB; other: runtime, staging, buffers, recurrent-state cache (cap 4096 MB) 2.71 GiB

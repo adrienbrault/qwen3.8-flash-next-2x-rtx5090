@@ -56,6 +56,12 @@ Also passing: structured output (`json_schema`, `response_format`, `regex_patter
 - **KV precision.** 8-bit KV costs 0.2–0.3 accepted drafts per verify against full precision ([R572][r572]).
 - **Page pool.** The pool is bounded by whichever card holds more of the 12 full-attention layers ([R579][r579]). The `gpu_split` budget does not move the boundary, and the decode graphs take 790 MiB on the bounding card ([R581][r581]).
 
+## Memory
+
+Measured 2026-10-08 on the served configuration after its boot warm-up ([R917](bench/results/r917-flashnext-memory-layout.md)). Weights come from the checkpoint's tensor sizes, the page pool from its measured bytes per token; the VRAM total comes from `nvidia-smi` and the host total from the container's memory cgroup (anonymous plus shared memory, without the page cache); "other" is the measured total minus the listed items.
+
+![VRAM: 60.3 of 63.7 GiB used, of which routed experts 36.5, other weights 3.3, KV page pool 12.8, vision tower 0.5, other 7.2; host DRAM: 3.9 of 60.4 GiB used, of which embedding table 1.2, other 2.7](docs/img/memory.svg)
+
 ## Served configuration
 
 - Since 2026-10-02 19:10 UTC ([R828c][r828]): image `tabbyapi:r828-prompt-lookup-r3`, 47 launcher selectors including `EXL3_PROMPT_LOOKUP=1`, the served engine stack on upstream ExLlamaV3 `dev` `5783a93` (v1.5.2) with upstream's tiled hyper-connection prefill mix (`EXL3_GR_MIX_TILED=1`), TabbyAPI's loop patch in its fifth round, one encode per prompt, off the event loop above 12,000 characters ([`tokenize-offloop-r2`](docker/overlays/tokenize-offloop-r2/README.md)), the prefill leftover merged into the last forward with the recurrent stash copied asynchronously (`EXL3_PREFILL_MERGE=1`, `EXL3_STASH_ASYNC=1`, [`prefill-merge-r1`](docker/overlays/prefill-merge-r1/README.md)), and recurrent-state checkpoints every 4,096 tokens within the last 12,288 tokens of each prompt, captured inside the pipelined prefill forward ([`r823c-cachetail-inforward`](docker/overlays/r823c-cachetail-inforward/README.md)), with a resumable whole-prompt prefill window that yields between chunks ([R824–R825p](bench/results/r825-whole-prompt-window.md)). Launcher [`scripts/launch-flashnext.sh`][launcher]. Its patches are listed under [What the stack is](#what-the-stack-is) and in [`docker/`][docker-readme]; each promotion is a row in [`docs/HISTORY.md`](docs/HISTORY.md), and every setting is explained in [`docs/CONFIG.md`](docs/CONFIG.md).
