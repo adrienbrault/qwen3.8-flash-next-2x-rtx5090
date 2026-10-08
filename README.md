@@ -1,8 +1,12 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf], served as [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250] by [TabbyAPI][tabby] on [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) across two RTX 5090 cards. The window is 262,144 tokens, the KV cache is 8-bit, and vision, reasoning, tool calls, structured output and the checkpoint's own MTP draft head are all on.
+Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards.
 
-The served image is `tabbyapi:r828-prompt-lookup-r3` with 47 launcher selectors including `EXL3_PROMPT_LOOKUP=1`; lookup retains the MTP opener and copies a prior-context tail at actual batch one after sustained-copy probation. Code-edit decode at 1 stream reads 414.44 / 414.99 t/s per-stream median, greedy with thinking off, 2,048 forced output tokens on 1,832–8,646-token prompts, measured 2026-10-02 in [R828][r828], results `2026-10-02-r828-prompt-lookup-r3-em6iO4`.
+- **Checkpoint**: [r0b0tlab's 2.50 bpw EXL3 pack][ckpt-250].
+- **Server**: [TabbyAPI][tabby] on [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2); image `tabbyapi:r828-prompt-lookup-r3` with 47 launcher selectors, including `EXL3_PROMPT_LOOKUP=1`.
+- **Window**: 262,144 tokens, 8-bit KV cache.
+- **Enabled**: vision, reasoning, tool calls, structured output, the checkpoint's own MTP draft head, and prompt lookup, which keeps the MTP opener and copies a prior-context tail at actual batch one after sustained-copy probation.
+- **Code edits at 1 stream**: 414.44 / 414.99 t/s per-stream median, greedy with thinking off, 2,048 forced output tokens on 1,832–8,646-token prompts, measured 2026-10-02 in [R828][r828], results `2026-10-02-r828-prompt-lookup-r3-em6iO4`.
 
 Every number here was measured on one machine on the date given, and each links the write-up that names its raw results directory. None is an estimate. The index of experiments is [`bench/RESULTS.md`][results], newest first.
 
