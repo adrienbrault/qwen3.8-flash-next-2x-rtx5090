@@ -291,18 +291,17 @@ def figure_prefill():
     handles = ax.plot(toks, rate, marker="o", color=PREFILL, linewidth=2, label="prefill rate")
     annotate(ax, toks, rate, PREFILL)
     # the series with the higher mean rate labels above its markers, the other below, so the two do not collide
-    # Each point is labelled with its rate and its tokens per decode step: at depth the rate follows how much of the
-    # continuation the MTP draft predicts, so the two numbers are read together.
+    # Each point is labelled with its rate; the tokens per decode step are printed for the write-up, not drawn.
     upper = max(("code", "prose"), key=lambda k: st.mean(v for _, v, _ in depth[k]))
     for kind, color in (("code", CODE), ("prose", PROSE)):
-        dy = 7 if kind == upper else -24
+        dy = 7 if kind == upper else -14
         xs = [t for t, _, _ in depth[kind]]
         ys = [v for _, v, _ in depth[kind]]
         handles += ax2.plot(xs, ys, marker="s", markersize=4, linestyle="--", color=color, linewidth=1.6,
-                            label=f"decode at depth, {kind} (label: t/s, tokens per step)")
+                            label=f"decode at depth, {kind}")
         for i, (x, y, tps) in enumerate(depth[kind]):
             # the first point sits at the left edge: its label starts at the marker instead of centring on it
-            ax2.annotate(f"{y:.0f}, {tps:.2f}/step" if tps else f"{y:.0f}", (x, y), textcoords="offset points",
+            ax2.annotate(f"{y:.0f}", (x, y), textcoords="offset points",
                          xytext=(-4 if i == 0 else 0, dy), ha="left" if i == 0 else "center", fontsize=8, color=color)
     ax.set_title("Prompt length costs prefill time; the decode step time stays flat")
     ax.set_xlabel("prompt tokens")
