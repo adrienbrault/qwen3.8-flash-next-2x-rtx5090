@@ -1,0 +1,28 @@
+2026-10-01T11:40:42.071104896Z 11:40:42.070 INFO:     #51 chat/completions (stream): 64 tokens generated at
+2026-10-01T11:40:42.071114945Z                        260.4 T/s · prompt 193,464 tokens, 68% cached, 62,392 new
+2026-10-01T11:40:42.071117099Z                        in 6.80 s (9,175 T/s) · first token 6.81 s, total 7.06 s
+2026-10-01T11:40:42.071127709Z                        · draft 40/72 accepted (56%) · max_tokens reached
+2026-10-01T11:40:43.006947380Z 11:40:43.006 INFO:     #54 completions (stream): 67,618 prompt tokens ·
+2026-10-01T11:40:43.006960034Z                        temperature: 0, greedy (req), max_tokens: 64 (req),
+2026-10-01T11:40:43.006961547Z                        min_tokens: 64 (req), logprobs: 5 (req),
+2026-10-01T11:40:43.006962549Z                        loop_detect_window: 0 (req)
+2026-10-01T11:40:48.791342126Z 11:40:48.790 INFO:     #54 completions (stream): 64 tokens generated at 242.3
+2026-10-01T11:40:48.791344440Z                        T/s · prompt 67,618 tokens, none cached, 67,618 new in
+2026-10-01T11:40:48.791345763Z                        5.50 s (12,294 T/s) · first token 5.51 s, total 5.77 s ·
+2026-10-01T11:40:48.791346604Z                        draft 39/75 accepted (52%) · max_tokens reached
+2026-10-01T11:40:48.851781486Z 11:40:48.850 INFO:     #56 completions (stream): 67,618 prompt tokens ·
+2026-10-01T11:40:48.851790984Z                        temperature: 0, greedy (req), max_tokens: 64 (req),
+2026-10-01T11:40:48.851792887Z                        min_tokens: 64 (req), logprobs: 5 (req),
+2026-10-01T11:40:48.851794240Z                        loop_detect_window: 0 (req)
+2026-10-01T11:40:50.571444548Z 11:40:50.570 INFO:     #56 completions (stream): 64 tokens generated at 219.1
+2026-10-01T11:40:50.571448365Z                        T/s · prompt 67,618 tokens, 85% cached, 10,274 new in
+2026-10-01T11:40:50.571449727Z                        1.41 s (7,287 T/s) · first token 1.42 s, total 1.71 s ·
+2026-10-01T11:40:50.571450589Z                        draft 36/84 accepted (43%) · max_tokens reached
+2026-10-01T11:40:50.648272591Z 11:40:50.647 INFO:     #57 completions (stream): 67,618 prompt tokens ·
+2026-10-01T11:40:50.648282149Z                        temperature: 0, greedy (req), max_tokens: 64 (req),
+2026-10-01T11:40:50.648283702Z                        min_tokens: 64 (req), logprobs: 5 (req),
+2026-10-01T11:40:50.648284683Z                        loop_detect_window: 0 (req)
+2026-10-01T11:40:51.014050778Z 11:40:51.013 INFO:     #57 completions (stream): 64 tokens generated at 219.1
+2026-10-01T11:40:51.014059815Z                        T/s · prompt 67,618 tokens, 100% cached, 34 new in 0.05 s
+2026-10-01T11:40:51.014061418Z                        · first token 0.06 s, total 0.35 s · draft 36/84 accepted
+2026-10-01T11:40:51.014062380Z                        (43%) · max_tokens reached
