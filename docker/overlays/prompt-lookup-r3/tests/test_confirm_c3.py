@@ -46,7 +46,7 @@ class TestRule(unittest.TestCase):
             with self.assertRaises(AssertionError): c3.rule([value] + [1.] * 7, [1.] * 8)
 
     def test_order_and_verbatim_machinery(self):
-        path = gate.P.parents[2] / 'scripts/r828c-c3-confirm.sh'
+        path = _REPO / 'scripts/r828c-c3-confirm.sh'
         if not path.exists(): path = gate.P.parent / 'unit.sh'
         if not path.exists(): self.skipTest('unit not included in image selftest')
         unit = path.read_text()
@@ -61,7 +61,7 @@ class TestRule(unittest.TestCase):
         self.assertIn('fn_shape "$tag" 3 code "$flag"', loop)
         self.assertNotIn('identity_suite', loop)
         self.assertNotIn('DECISION', loop)
-        original = gate.P.parents[2] / 'scripts/r828-prompt-lookup-r3.sh'
+        original = _REPO / 'scripts/r828-prompt-lookup-r3.sh'
         if not original.exists(): original = gate.P / 'fixtures/r828-unit.sh'
         base = original.read_text()
         for name in ('run', 'snapshot', 'clocks', 'cell_capture', 'identity_suite', 'fn_shape'):
