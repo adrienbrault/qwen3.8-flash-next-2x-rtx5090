@@ -13,7 +13,9 @@ import unittest
 import confirm_c3 as c3
 import gate
 
-RAW = Path(os.environ.get('R828_RAW_RESULTS', str(gate.P.parents[2] / 'bench/results/2026-10-02-r828-prompt-lookup-r3-em6iO4')))
+# In the image the overlay sits at /opt/r828, which has no parents[2]: the replay below then skips instead of failing import.
+_REPO = gate.P.parents[2] if len(gate.P.parents) > 2 else gate.P
+RAW = Path(os.environ.get('R828_RAW_RESULTS', str(_REPO / 'bench/results/2026-10-02-r828-prompt-lookup-r3-em6iO4')))
 
 
 class TestRule(unittest.TestCase):
