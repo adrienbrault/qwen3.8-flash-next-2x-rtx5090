@@ -33,3 +33,14 @@ Same original checkpoint and full 901120-token KV pool. Source-built 1.6.4 image
 |+ pruned draft head|211.24|130.39|87.22|76.570|
 
 This recovers much of the decode regression, but remains below the old stack’s 156.24 tok/s c4 and 42.30-second replay control. It does not establish full target-logit parity or qualify a promotion. The original image remains served.
+
+## Native prefill scheduling, 2026-10-21
+
+Same source-native image `sha256:144ae9a34e458388d32cfba2a7e1444878225415fbe48c5ae0cf066adddd6683`, original checkpoint, full901120pool and all recovered kernel/head flags. Six sessions,20 forced-length complete requests per arm, seed20261021. [Raw summary](2026-10-21-flashnext-rebase-repair/prefill-policy-summary.json).
+
+| Native scheduler | Replay seconds | Median TTFT seconds |
+|---|---:|---:|
+| Defaults: shared chunk1024, cooldown4 |76.838|2.587|
+| Shared chunk2048, cooldown0 |65.626|0.774|
+
+The opt-in policy reduces replay time14.6% in this screen; the old stack’s42.296-second control remains faster. Larger sequential prefill bursts can increase individual decode gaps. This is not the old two-device prefill pipeline. No serving change.

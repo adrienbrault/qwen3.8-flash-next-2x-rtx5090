@@ -1,0 +1,9 @@
+ARG BASE=tabbyapi:flashnext-v164-native
+FROM ${BASE}
+COPY repair/recovery-policy.patch /tmp/recovery-policy.patch
+RUN cd /opt/flashnext-native-src && git apply --unsafe-paths /tmp/recovery-policy.patch && \
+    cp exllamav3/modules/hyperconnections.py exllamav3/modules/legacy_gr.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+COPY repair/test_tiled_cache.py /opt/flashnext-v164/test-tiled-cache.py
+RUN python3 /opt/flashnext-v164/test-tiled-cache.py && python3 /opt/flashnext-v164/cpu-check.py && \
+    python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py
