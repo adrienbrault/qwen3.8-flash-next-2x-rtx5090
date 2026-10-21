@@ -4,7 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-10-21
 
-- [Flash-Next 1.6.4 rebase screen: completed A/B/C throughput and six-agent replay; candidate not promoted, checkpoint accuracy pending](results/flashnext-v164-screen.md).
+- [Flash-Next 1.6.4 rebase screen: completed A/B/C/D throughput and six-agent replay; candidate not promoted, checkpoint accuracy pending](results/flashnext-v164-screen.md).
 
 ## 2026-10-08
 
