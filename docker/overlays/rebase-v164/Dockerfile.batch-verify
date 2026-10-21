@@ -1,0 +1,13 @@
+ARG BASE=tabbyapi:flashnext-v164-prefill-pipeline
+FROM ${BASE}
+COPY repair/batch-verify.patch /tmp/batch-verify.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /tmp/batch-verify.patch && \
+    cp exllamav3/generator/generator.py exllamav3/generator/batch_verify.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/ && \
+    cp exllamav3/generator/sampler/custom.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/sampler/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+COPY repair/test_batch_verify.py /opt/flashnext-v164/test-batch-verify.py
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/test-batch-verify.py && python3 /opt/flashnext-v164/test-pipeline.py && \
+    python3 /opt/flashnext-v164/cpu-check.py && python3 /opt/flashnext-v164/test-prefix.py && \
+    python3 /opt/flashnext-v164/test-decode-chunks.py && python3 /opt/flashnext-v164/test-tiled-cache.py

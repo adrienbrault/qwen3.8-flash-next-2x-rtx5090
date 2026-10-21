@@ -1,0 +1,86 @@
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -1698,6 +1698,27 @@
+         # position n gates position n+1, and constrained-decoding masks and sampling past IDs
+         # must advance between positions.
+         else:
++            batched_rows = {}
++            if (os.environ.get("EXL3_BATCH_VERIFY", "0") == "1" and self.mtp_draft and
++                draft_tokens is not None and batch_logits.shape[1] > 1):
++                from .batch_verify import mode_for
++                entries=[]
++                for job,a,b in zip(self.active_jobs,logit_mapping[:-1],logit_mapping[1:]):
++                    mode=mode_for(job,batch_logits.shape[1]) if a!=b else None
++                    if mode is not None:entries.append((job,a,b,mode))
++                if entries:
++                    if not getattr(self,"_batch_verify_notified",False):
++                        print("[batch-verify] stateless MTP windows active",flush=True)
++                        self._batch_verify_notified=True
++                    q=batch_logits.shape[1]
++                    readback=self._staging("mtp_verify_batch",len(entries),q,torch.long)
++                    for row,(job,a,b,mode) in enumerate(entries):
++                        sampled=job.sampler.forward(batch_logits[a:b],None,job.rng.randint(0,(1<<32)-1),
++                            self.tokenizer,logit_mask=job.device_logit_mask).reshape(-1)
++                        readback[row].copy_(sampled,non_blocking=True)
++                    # One stream-ordered readback for all eligible jobs/windows.
++                    ready=torch.cuda.Event();ready.record(torch.cuda.current_stream(batch_logits.device));ready.synchronize()
++                    for row,(job,a,b,mode) in enumerate(entries):batched_rows[id(job)]=(readback[row],mode)
+             for idx, (job, a, b) in enumerate(zip(self.active_jobs, logit_mapping[:-1], logit_mapping[1:])):
+                 if a == b: continue
+                 job_logits = batch_logits[a:b, :, :]
+@@ -1706,9 +1724,16 @@
+ 
+                 for i in range(batch_logits.shape[1]):
+                     token_logits = job_logits[:, i:i + 1, :]
+-                    next_token, next_k_tokens, next_k_probs, next_prob = job.receive_logits(
+-                        token_logits,
+-                    )
++                    batched = batched_rows.get(id(job))
++                    if batched is not None:
++                        row,mode = batched
++                        if i and mode == "greedy":job.rng.randint(0,(1<<32)-1)
++                        next_token = row[i:i+1].view(1,1)
++                        next_k_tokens,next_k_probs,next_prob = None,None,None
++                    else:
++                        next_token, next_k_tokens, next_k_probs, next_prob = job.receive_logits(
++                            token_logits,
++                        )
+                     eos, sampled_token, rq = job.receive_sample(
+                         token_logits,
+                         next_token,
+--- a/exllamav3/generator/sampler/custom.py
++++ b/exllamav3/generator/sampler/custom.py
+@@ -1183,6 +1183,20 @@
+                         self.steps.append(prep_step())
+                 self.steps.append(step)
+ 
++        # Identity steps do not require history; classify only the simplified,
++        # actually executed sampler, as in the served batch verifier.
++        self.reqs_past_ids = any(step.reqs_past_ids() for step in self.steps)
++        self.reqs_torch_seed = any(step.reqs_torch_seed() for step in self.steps)
++        if len(self.steps) == 1:
++            step = self.steps[0]
++            if type(step) is SS_Argmax or (type(step) is SS_Fused and step.mode == SS_Fused.MODE_GREEDY):
++                self.batch_verify_mode = "greedy"
++            elif type(step) is SS_Fused:
++                # One seed with independent Philox row subsequences. Same row
++                # distributions as serial sampling; intentionally different
++                # sampled trajectories/RNG consumption, matching the old daily.
++                self.batch_verify_mode = "sampled"
++
+ 
+     @override
+     @torch.inference_mode
+--- /dev/null
++++ b/exllamav3/generator/batch_verify.py
+@@ -0,0 +1,10 @@
++"""Eligibility for stateless per-job MTP verification; no torch dependency."""
++def mode_for(job,window):
++    mode=getattr(job.sampler,'batch_verify_mode',None)
++    if mode not in ('greedy','sampled') or getattr(job.sampler,'reqs_past_ids',True):return None
++    if job.new_tokens<1 or job.forced_ids is not None or job.filters or job.checkpoint is not None:return None
++    if job.return_probs or job.return_top_tokens>0 or len(job.sequences)!=1:return None
++    # The EOS mask can change after crossing min_new_tokens. Keep those windows
++    # serial rather than sampling later rows with the opener's mask.
++    if job.new_tokens<job.min_new_tokens<=job.new_tokens+window-1:return None
++    return mode

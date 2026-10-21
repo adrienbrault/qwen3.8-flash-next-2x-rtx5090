@@ -1,0 +1,32 @@
+{
+  "4097": {
+    "result": "PASS",
+    "windows": 1,
+    "chunks": 2,
+    "continuation": 32,
+    "compared": [
+      "target exports",
+      "MTP carries",
+      "paired active recurrent stash",
+      "target/draft valid KV",
+      "page bytes and hashes",
+      "native checkpoint keys and bytes",
+      "greedy continuation"
+    ]
+  },
+  "12289": {
+    "result": "PASS",
+    "windows": 3,
+    "chunks": 6,
+    "continuation": 32,
+    "compared": [
+      "target exports",
+      "MTP carries",
+      "paired active recurrent stash",
+      "target/draft valid KV",
+      "page bytes and hashes",
+      "native checkpoint keys and bytes",
+      "greedy continuation"
+    ]
+  }
+}
