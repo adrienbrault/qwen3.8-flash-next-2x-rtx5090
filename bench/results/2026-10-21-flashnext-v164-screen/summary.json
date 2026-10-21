@@ -382,5 +382,133 @@
     "model": "qwen3.8-flash-next-exl3-2.18bpw-selfcal",
     "pool": 901120,
     "window": 262144
+  },
+  "D": {
+    "complete": true,
+    "decode": {
+      "code": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 170.47,
+                "median_decode_tps": 170.47,
+                "median_ttft_s": 0.144
+              },
+              {
+                "decode_aggregate_tps": 170.97,
+                "median_decode_tps": 170.97,
+                "median_ttft_s": 0.144
+              }
+            ],
+            "median_decode_aggregate_tps": 170.72,
+            "median_per_stream_decode_tps": 170.72
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 272.95,
+                "median_decode_tps": 67.605,
+                "median_ttft_s": 0.392
+              },
+              {
+                "decode_aggregate_tps": 268.61,
+                "median_decode_tps": 66.72,
+                "median_ttft_s": 0.402
+              }
+            ],
+            "median_decode_aggregate_tps": 270.78,
+            "median_per_stream_decode_tps": 67.1625
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 409.31,
+                "median_decode_tps": 50.78,
+                "median_ttft_s": 0.839
+              },
+              {
+                "decode_aggregate_tps": 408.84000000000003,
+                "median_decode_tps": 50.71,
+                "median_ttft_s": 0.845
+              }
+            ],
+            "median_decode_aggregate_tps": 409.07500000000005,
+            "median_per_stream_decode_tps": 50.745000000000005
+          }
+        }
+      },
+      "prose": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 172.29,
+                "median_decode_tps": 172.29,
+                "median_ttft_s": 0.144
+              },
+              {
+                "decode_aggregate_tps": 172.17,
+                "median_decode_tps": 172.17,
+                "median_ttft_s": 0.142
+              }
+            ],
+            "median_decode_aggregate_tps": 172.23,
+            "median_per_stream_decode_tps": 172.23
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 260.56,
+                "median_decode_tps": 65.11,
+                "median_ttft_s": 0.388
+              },
+              {
+                "decode_aggregate_tps": 263.81,
+                "median_decode_tps": 65.86,
+                "median_ttft_s": 0.472
+              }
+            ],
+            "median_decode_aggregate_tps": 262.185,
+            "median_per_stream_decode_tps": 65.485
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 392.8,
+                "median_decode_tps": 48.915,
+                "median_ttft_s": 0.6635
+              },
+              {
+                "decode_aggregate_tps": 386.6,
+                "median_decode_tps": 48.425,
+                "median_ttft_s": 0.9575
+              }
+            ],
+            "median_decode_aggregate_tps": 389.70000000000005,
+            "median_per_stream_decode_tps": 48.67
+          }
+        }
+      }
+    },
+    "greedy": {
+      "records": 5,
+      "complete": true
+    },
+    "agents": {
+      "complete": true,
+      "requests": 20,
+      "wall_span_s": 91.73566555976868,
+      "wall_output_tps": 102.30481179520496,
+      "median_ttft_s": 3.5183699131011963,
+      "max_sse_gap_s": 1.7162952423095703
+    },
+    "model": "qwen3.8-flash-next-exl3-2.68bpw-selfcal",
+    "pool": 901120,
+    "window": 262144
   }
 }
