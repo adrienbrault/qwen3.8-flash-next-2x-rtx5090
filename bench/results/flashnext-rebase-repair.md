@@ -44,3 +44,13 @@ Same source-native image `sha256:144ae9a34e458388d32cfba2a7e1444878225415fbe48c5
 | Shared chunk2048, cooldown0 |65.626|0.774|
 
 The opt-in policy reduces replay time14.6% in this screen; the old stack’s42.296-second control remains faster. Larger sequential prefill bursts can increase individual decode gaps. This is not the old two-device prefill pipeline. No serving change.
+
+## Remaining prefill costs and E3 recovery, 2026-10-21
+
+Direct-generator profiles used original weights, cache655360, target split30,30, draft split0,32 and MTP3. Cold32768-token prefill took2705ms on the old runtime and5600ms on the repaired runtime before E3/pipeline recovery (two unprofiled repetitions). Summed CUDA kernel times were4285ms and5352ms in the captures; the old two-device pipeline overlaps work, so summed kernel time is not elapsed time. Native weight-table quantization accounts for only35.7ms of the latter capture. The first capture attempt failed because the probe imported an old optional pipeline module; its timed prefills survived but its capture was rerun with module discovery fixed.
+
+The persistent native table cache passed56 internal kernel/output checks, including exact native512/2048-row outputs, but could not place the model with the full901120-token pool. That arm was stopped and the original daily restored. Table caching remains off; no reduced-pool speed comparison is substituted.
+
+The E3 port builds the three original deterministic E3 native files against1.6.4 and preserves native fallback for fractional K or unsupported shapes. On layers3/20 and rows512/2048, the probe observed one E3 dispatch per case; routing IDs, routing weights and full real-layer output tensors matched the old runtime exactly. [Layer receipts](2026-10-21-flashnext-rebase-repair/e3-real-layer-parity.json). This is scoped layer parity, not full-model target-logit fidelity.
+
+With the original checkpoint and full901120pool, image `sha256:94d8fbce504a8e74892fd64b4f3519240141f14b3243e32d827cb80813aaf47c` completed the same20-request/six-session replay in57.964seconds, versus64.101seconds immediately before E3. All planned outputs and steps completed. [Replay summary](2026-10-21-flashnext-rebase-repair/e3-summary.json). The carried mixer’s row-dependent tile settings were also corrected before these two arms; all160 values match the original five launch tables for rows1–32. The original runtime remains faster; no promotion occurred.

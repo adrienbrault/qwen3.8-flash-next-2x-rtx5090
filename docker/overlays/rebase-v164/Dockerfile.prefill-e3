@@ -1,0 +1,13 @@
+ARG BASE=tabbyapi:flashnext-v164-repair-source
+FROM ${BASE}
+COPY repair/prefill-e3.patch /tmp/prefill-e3.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /tmp/prefill-e3.patch && \
+    TORCH_CUDA_ARCH_LIST=12.0 MAX_JOBS=4 python3 setup.py build_ext --inplace && \
+    cp exllamav3_ext*.so /opt/venv/lib/python3.12/site-packages/ && \
+    cp exllamav3/modules/block_sparse_mlp.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/test-tiled-cache.py && python3 /opt/flashnext-v164/cpu-check.py && \
+    python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py && \
+    python3 -c 'import torch; import exllamav3_ext as e; assert hasattr(e,"exl3_moe_prefill_e3_det_reduce"); print("E3 bindings PASS")'

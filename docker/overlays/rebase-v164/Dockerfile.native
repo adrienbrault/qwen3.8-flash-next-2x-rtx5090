@@ -10,11 +10,12 @@ RUN python3 -m pip uninstall -y exllamav3 && rm -rf /opt/venv/lib/python3.12/sit
 COPY out/tabby /app
 COPY manifest.json /opt/flashnext-v164/manifest.json
 COPY cpu-check.py /opt/flashnext-v164/cpu-check.py
+COPY repair/test_pipeline.py /opt/flashnext-v164/test-pipeline.py
 COPY repair/test_tiled_cache.py /opt/flashnext-v164/test-tiled-cache.py
 COPY repair/test_prefix.py /opt/flashnext-v164/test-prefix.py
 COPY repair/test_decode_chunks.py /opt/flashnext-v164/test-decode-chunks.py
 ENV EXL3_CACHE_TRACE=0
 WORKDIR /app
-RUN python3 /opt/flashnext-v164/test-tiled-cache.py && python3 /opt/flashnext-v164/cpu-check.py && python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py && \
+RUN python3 /opt/flashnext-v164/test-pipeline.py && python3 /opt/flashnext-v164/test-tiled-cache.py && python3 /opt/flashnext-v164/cpu-check.py && python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py && \
     python3 -c 'from exllamav3.modules.mlp import MAX_BSZN as a; from exllamav3.modules.block_sparse_mlp import MAX_BSZN as b; assert a == b == 32; print("Python/native row capacities PASS")'
 LABEL local.flashnext.engine="da68d57de61781e5b74ad68698ac4caf36408d7a" local.flashnext.native="source-build-5090-recovery"

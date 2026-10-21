@@ -1,0 +1,12 @@
+ARG BASE=tabbyapi:flashnext-v164-prefill-e3
+FROM ${BASE}
+COPY repair/prefill-pipeline.patch /tmp/prefill-pipeline.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /tmp/prefill-pipeline.patch && \
+    cp exllamav3/generator/job.py exllamav3/generator/generator.py exllamav3/generator/native_prefill_pipeline.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/ && \
+    cp exllamav3/model/model.py /opt/venv/lib/python3.12/site-packages/exllamav3/model/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+COPY repair/test_pipeline.py /opt/flashnext-v164/test-pipeline.py
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/test-pipeline.py && python3 /opt/flashnext-v164/cpu-check.py && \
+    python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py && python3 /opt/flashnext-v164/test-tiled-cache.py

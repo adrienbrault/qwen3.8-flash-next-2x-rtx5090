@@ -1,0 +1,271 @@
+--- a/exllamav3/generator/job.py
++++ b/exllamav3/generator/job.py
+@@ -1590,6 +1590,10 @@
+                     # MTP needs the target's post-final-norm state for every prompt token.
+                     # Normal prefill stops at the last cache-writing layer, before final norm.
+                     params["last_tokens_only"] = 1
++                runtime = getattr(self, "_native_prefill_pipeline", None)
++                if runtime is not None:
++                    runtime.forward(prefill_ids, params)
++                elif self.generator.mtp_draft:
+                     self.generator.model.forward(input_ids = prefill_ids, params = params)
+                 else:
+                     self.generator.model.prefill(input_ids = prefill_ids, params = params)
+@@ -1769,7 +1773,7 @@
+                 f.is_active = f.trigger_token is None and not self.filters_suspended
+ 
+ 
+-    def is_checkpoint_boundary(self, override_interval = None):
++    def is_checkpoint_boundary(self, override_interval = None, *, position = None):
+         """
+         Return whether the current sequence position should stash a recurrent checkpoint.
+ 
+@@ -1781,7 +1785,7 @@
+         the normal recurrent checkpoint interval.
+         """
+         seq = self.sequences[0]
+-        seq_pos = seq.kv_position
++        seq_pos = seq.kv_position if position is None else position
+         if seq_pos % PAGE_SIZE:
+             return False
+         if override_interval:
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -778,7 +778,12 @@
+             if any(job is d for d in deferred):
+                 continue
+             try:
+-                job.prefill(results, chunk_size)
++                if chunk_size is None and os.environ.get("EXL3_NATIVE_PREFILL_PIPELINE", "0") == "1":
++                    from .native_prefill_pipeline import prefill_job
++                    if not prefill_job(job, results):
++                        job.prefill(results, chunk_size)
++                else:
++                    job.prefill(results, chunk_size)
+             except Exception as e:
+                 self.reap_failed_job(job, e, results)
+ 
+--- a/exllamav3/model/model.py
++++ b/exllamav3/model/model.py
+@@ -442,6 +442,10 @@
+ 
+ 
+     def unload(self):
++        setup = getattr(self, "_native_prefill_setup", None)
++        if setup is not None:
++            setup[1].shutdown(wait = True)
++            self._native_prefill_setup = None
+         for module in self.modules:
+             module.unload()
+         # The loader's open slab blocks must not outlive the tensors sliced from them
+--- /dev/null
++++ b/exllamav3/generator/native_prefill_pipeline.py
+@@ -0,0 +1,208 @@
++"""Opt-in two-chunk lookahead on disjoint Qwen layer-split devices.
++
++All native Job commit/draft/checkpoint work remains on its ordinary path. No
++lookahead crosses the native checkpoint predicate or the last full prompt page.
++"""
++import os
++from concurrent.futures import ThreadPoolExecutor
++import torch
++from ..cache.recurrent_util import advance_recurrent_states
++from ..util.device_copy import needs_bounce
++
++
++def window_ends(job):
++    seq=job.sequences[0]
++    start=seq.kv_position
++    last_page=(len(seq.sequence_ids)-1)//256*256
++    ends=[]
++    for _ in range(2):
++        end=start+2048
++        if end>last_page:break
++        ends.append(end)
++        if job.is_checkpoint_boundary(position=end):break
++        start=end
++    return ends
++
++
++class _PeerCopy:
++    def __init__(self,devices):
++        import ctypes
++        self.driver=ctypes.CDLL('libcuda.so.1')
++        self.copy=self.driver.cuMemcpyAsync
++        self.copy.argtypes=[ctypes.c_uint64,ctypes.c_uint64,ctypes.c_size_t,ctypes.c_void_p]
++        self.copy.restype=ctypes.c_int
++        current=self.driver.cuCtxGetCurrent
++        current.argtypes=[ctypes.POINTER(ctypes.c_void_p)]
++        current.restype=ctypes.c_int
++        enable=self.driver.cuCtxEnablePeerAccess
++        enable.argtypes=[ctypes.c_void_p,ctypes.c_uint]
++        enable.restype=ctypes.c_int
++        bootstrap=torch.zeros(1,device=devices[0]).to(devices[1])
++        bootstrap.to(devices[0])
++        contexts=[]
++        for d in devices:
++            with torch.cuda.device(d):
++                torch.cuda.current_stream(d)
++                ctx=ctypes.c_void_p();self.check(current(ctypes.byref(ctx)))
++                if not ctx.value:raise RuntimeError('Prefill pipeline: missing CUDA context')
++                contexts.append(ctx)
++        for i,d in enumerate(devices):
++            with torch.cuda.device(d):
++                rc=enable(contexts[1-i],0)
++                if rc!=704:self.check(rc)
++    @staticmethod
++    def check(rc):
++        if rc:raise RuntimeError(f'Prefill pipeline CUDA error: {rc}')
++    def __call__(self,source,device,stream):
++        dest=torch.empty_like(source,device=device)
++        self.check(self.copy(dest.data_ptr(),source.data_ptr(),source.numel()*source.element_size(),stream.cuda_stream))
++        source.record_stream(stream)
++        return dest
++
++
++def _layout(model):
++    if (type(model).__name__!='Qwen4ExpModel' or model.loaded_tp or
++        getattr(model,'component','text')!='text' or model.config.hc_mult!=4 or
++        model.config.hidden_size!=2560 or getattr(model.config,'moe_cpu_hosts',{}) or
++        model.config.infer_params.no_reconstruct):return None
++    modules=model.fwd_modules
++    if len({id(m) for m,_,_ in modules})!=len(modules):return None
++    prefix=0
++    while prefix<len(modules) and modules[prefix][0].device.type=='cpu':
++        if type(modules[prefix][0]).__name__!='Embedding':return None
++        prefix+=1
++    gpu=modules[prefix:]
++    if not gpu or any(m.device.type!='cuda' for m,_,_ in gpu):return None
++    d0=gpu[0][0].device
++    boundary=next((i for i,(m,_,_) in enumerate(gpu) if m.device!=d0),None)
++    if boundary is None:return None
++    d1=gpu[boundary][0].device
++    if model.output_device!=d1 or any(m.device!=d1 for m,_,_ in gpu[boundary:]):return None
++    stages=(gpu[:boundary],gpu[boundary:])
++    signature=tuple((id(m),m.device,instance,idx) for m,instance,idx in modules)
++    for stage,device in zip(stages,(d0,d1)):
++        for module,_,_ in stage:
++            for sub in module:
++                if sub.device!=device:return None
++                if type(sub).__name__=='BlockSparseMLP' and (sub.cpu_offload or sub.cpu_split_first is not None):return None
++            if type(module).__name__=='PLELayer' and device!=d0:return None
++    if model.last_kv_module_idx_instance not in [(idx,instance) for _,instance,idx in stages[1]]:return None
++    if (not torch.cuda.can_device_access_peer(d0,d1) or not torch.cuda.can_device_access_peer(d1,d0) or
++        needs_bounce(d0,d1) or needs_bounce(d1,d0)):return None
++    return modules[:prefix],stages,(d0,d1),signature
++
++
++class _Runtime:
++    def __init__(self,job,ends,layout,executor,peer_copy):
++        self.job,self.ends,self.model=job,ends,job.generator.model
++        self.mtp=job.generator.mtp_draft
++        self.prefix,self.stages,self.devices,_=layout
++        self.streams=tuple(torch.cuda.current_stream(d) for d in self.devices)
++        self.executor,self.peer_copy=executor,peer_copy
++        self.index=0;self.pending=None
++    def modules(self,x,params,modules):
++        for module,instance,idx in modules:
++            params['layer_instance']=instance
++            last=(idx,instance)==self.model.last_kv_module_idx_instance
++            if not self.mtp:params['prefill']=last
++            if module.caps.get('logits_output') and (n:=params.get('last_tokens_only')):
++                x=x[...,-n:,:].contiguous()
++            x=module.forward(module.prepare_for_device(x,params),params)
++            if not self.mtp and last:break
++        return x
++    def stage0(self,ids,params):
++        with torch.inference_mode(),torch.cuda.device(self.devices[0]),torch.cuda.stream(self.streams[0]):
++            params['dev_cache']={};params['pinned_staging']=False
++            params.pop('export_states',None)
++            x=self.model.prepare_inputs(ids,params)
++            # Own every prepared CPU tensor (including aliased positions and scan
++            # slots); native per-tensor device caches are local to this descriptor.
++            for key,value in list(params.items()):
++                if isinstance(value,torch.Tensor) and value.device.type=='cpu':
++                    params[key]=value.clone().pin_memory()
++            for module in self.model._get_prefetch_layers:module.prefetch(x,params)
++            x=self.modules(x,params,self.prefix)
++            if x.device.type=='cpu' and not x.is_pinned():x=x.pin_memory()
++            x=self.modules(x,params,self.stages[0]).clone(memory_format=torch.contiguous_format)
++            ready=torch.cuda.Event();ready.record(self.streams[0])
++            return ids,params,x,ready
++    def join(self):
++        error=None
++        try:
++            if self.pending is not None:self.pending.result()
++        except BaseException as exc:error=exc
++        for device,stream in zip(self.devices,self.streams):
++            try:
++                with torch.cuda.device(device):stream.synchronize()
++            except BaseException as exc:
++                if error is None:error=exc
++        if error is not None:raise error
++    def drain(self):
++        try:self.join()
++        finally:self.pending=None
++    def forward(self,ids,params):
++        # Params here are the fresh native Job dictionary, never prepared/output
++        # metadata from another chunk. Shallow shared objects are immutable config
++        # or the intentionally per-job live cache/state handles.
++        raw=params.copy();start=int(params['cache_seqlens'][0])
++        assert ids.shape==(1,2048) and start+2048==self.ends[self.index]
++        if self.pending is None:descriptor=self.stage0(ids,params)
++        else:
++            descriptor=self.pending.result();self.pending=None
++            assert torch.equal(ids,descriptor[0]) and int(descriptor[1]['cache_seqlens'][0])==start
++        _,p,source,ready=descriptor
++        try:
++            with torch.cuda.device(self.devices[1]),torch.cuda.stream(self.streams[1]):
++                self.streams[1].wait_event(ready)
++                x=self.peer_copy(source,self.devices[1],self.streams[1])
++            if self.index+1<len(self.ends):
++                raw['cache_seqlens']=torch.tensor([self.ends[self.index]],dtype=torch.int32)
++                next_ids=self.job.sequences[0].sequence_ids.torch_slice(self.ends[self.index],self.ends[self.index+1])
++                self.pending=self.executor.submit(self.stage0,next_ids,raw)
++            with torch.cuda.device(self.devices[1]),torch.cuda.stream(self.streams[1]):
++                self.modules(x,p,self.stages[1])
++            # Native draft prefill may use either device and all shared scratch.
++            # Join both stages before returning to that unchanged Job continuation.
++            self.join()
++        except BaseException:
++            self.drain();raise
++        if not self.mtp:p.pop('prefill',None)
++        params.update(p)
++        advance_recurrent_states(ids,params,self.model)
++        self.index+=1
++
++
++def prefill_job(job,results):
++    gen=job.generator
++    target=getattr(job.recurrent_state,'target',None)
++    if (gen.max_chunk_size!=2048 or len(job.sequences)!=1 or job.embeddings or
++        job.alt_rope_freqs is not None or job.is_requeued or target is None or
++        getattr(target,'exported',False) or
++        (gen.draft_model is not None and (not gen.mtp_draft or type(gen.draft_model).__name__!='Qwen4ExpMTPModel'))):return False
++    seq=job.sequences[0]
++    if (job.time_first_token is not None or seq.prefill_complete or seq.kv_position%256 or
++        target.position!=seq.kv_position):return False
++    ends=window_ends(job)
++    if len(ends)<2:return False
++    pages=seq.allocated_pages[seq.kv_position//256:ends[-1]//256]
++    if (len(pages)!=(ends[-1]-seq.kv_position)//256 or any(p.kv_position!=0 or p.ref_count!=1 for p in pages) or
++        len({p.page_index for p in pages})!=len(pages)):return False
++    layout=_layout(gen.model)
++    if layout is None:return False
++    if any(torch.cuda.mem_get_info(d)[0]+torch.cuda.memory_reserved(d)-torch.cuda.memory_allocated(d)<320*1024**2 for d in layout[2]):return False
++    setup=getattr(gen.model,'_native_prefill_setup',None)
++    if setup is None or setup[0]!=layout[3]:
++        if setup is not None:setup[1].shutdown(wait=True)
++        peer_copy=_PeerCopy(layout[2]);executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='native_prefill')
++        setup=gen.model._native_prefill_setup=(layout[3],executor,peer_copy)
++        print('[native-prefill-pipeline] two-chunk layer split active',flush=True)
++    runtime=_Runtime(job,ends,layout,setup[1],setup[2])
++    job._native_prefill_pipeline=runtime
++    try:
++        for _ in ends:
++            job.prefill(results)
++            if gen.recurrent_cache is not None:job.maybe_stash_recurrent(gen.recurrent_cache)
++    finally:
++        try:runtime.drain()
++        finally:del job._native_prefill_pipeline
++    return True
