@@ -1,0 +1,288 @@
+--- a/exllamav3/architecture/qwen4_exp_mtp.py
++++ b/exllamav3/architecture/qwen4_exp_mtp.py
+@@ -128,10 +128,27 @@
+         self.target_lm_head = None
+         self.attached_model = None
+         self._head_prefix = None
++        self._mtp_device_mirror = None
++        self._mtp_device_signature = None
+ 
+     @override
+     def prepare_inputs(self, input_ids: torch.Tensor, params: dict) -> torch.Tensor:
+         return prepare_for_attn(input_ids, params)
++
++    def device_draft_mirror(self):
++        from ..modules.draft_head_prefix import tensor_version
++        if self._mtp_device_mirror is None or self._head_prefix is None:return None
++        target=self.attached_model()
++        lm=target.modules[target.logit_layer_idx]
++        weight=self.target_embed().embedding.weight
++        self._head_prefix.prepare(lm,target.config.vocab_size)
++        signature=(self._head_prefix.key,id(weight),weight.data_ptr(),tensor_version(weight))
++        return self._mtp_device_mirror if signature==self._mtp_device_signature else None
++
++    def unload(self):
++        self._mtp_device_mirror=None
++        self._mtp_device_signature=None
++        super().unload()
+ 
+     @override
+     def default_chat_prompt(self, prompt: str, system_prompt: str = None) -> str:
+@@ -163,14 +180,29 @@
+             "export_state_norm_keys": {target_mixer.key},
+         })
+         self._head_prefix = None
++        self._mtp_device_mirror = None
++        self._mtp_device_signature = None
+         if _MTP_HEAD_N > 0 and not target.loaded_tp:
+             self._head_prefix = DraftHeadPrefix(_MTP_HEAD_N)
+             self._head_prefix.prepare(target.modules[target.logit_layer_idx], target.config.vocab_size)
++            table = target_embed.embedding
++            if (os.environ.get("EXL3_MTP_DEVICE_DRAFT", "0") == "1" and self._head_prefix.cache is not None and
++                type(table) is torch.nn.Embedding and table.weight.device.type == "cpu" and
++                table.weight.dtype in (torch.half,torch.bfloat16) and not target_embed.normalize and target_embed.multiplier == 1.0):
++                from ..modules.embedding_pruned import PrunedEmbeddingMirror
++                from ..modules.draft_head_prefix import tensor_version
++                n = self._head_prefix.cache[2]
++                self._mtp_device_mirror = PrunedEmbeddingMirror(table.weight,torch.arange(n,dtype=torch.long),self._head_prefix.cache[0].device)
++                self._mtp_device_signature = (self._head_prefix.key,id(table.weight),table.weight.data_ptr(),tensor_version(table.weight))
++                print(f"[mtp-device-draft] exact embedding mirror rows={n}",flush=True)
++
+ 
+ 
+     @override
+     def unload(self):
+         self._head_prefix = None
++        self._mtp_device_mirror = None
++        self._mtp_device_signature = None
+         return super().unload()
+ 
+     def default_load_shape_dtype(self, chunk_size):
+--- a/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
++++ b/exllamav3/modules/arch_specific/qwen4_exp_mtp.py
+@@ -152,7 +152,11 @@
+         h = self.fc_hidden.forward(normed.half().contiguous(), params)         # (b, s, H, D)
+ 
+         # Token embedding via the attached model (in the TP output worker when the target is TP)
+-        if not self.attached_model().loaded_tp:
++        mirror_args = params.get("mtp_device_embedding")
++        if mirror_args is not None:
++            mirror,weight,host_ids = mirror_args
++            emb = mirror.lookup(weight,x,host_ids).half()
++        elif not self.attached_model().loaded_tp:
+             emb = self.attached_model().modules[0].forward(x, params, out_dtype = torch.half)
+         else:
+             emb = self.attached_model().tp_producer.send(x)
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -1214,6 +1214,16 @@
+         # below the confidence target, keeping the first low-confidence token as the label probe
+         window = self.num_draft_tokens
+         cal = self.draft_calibrator
++        mirror = None
++        if (os.environ.get("EXL3_MTP_DEVICE_DRAFT", "0") == "1" and cal is None and
++            callable(getattr(self.draft_model,"device_draft_mirror",None)) and
++            not any(job.embeddings for job in self.active_jobs if job.is_prefill_done())):
++            mirror = self.draft_model.device_draft_mirror()
++        if mirror is not None and mirror.device != temp_hidden.device:mirror = None
++        host_ids0 = batch_ids
++        if mirror is not None:
++            batch_ids = batch_ids.to(mirror.device,non_blocking=True)
++            device_ids = torch.empty((batch_size,window),dtype=torch.long,device=mirror.device)
+         conf_cols = []
+         reach = None
+         for idx in range(window):
+@@ -1222,17 +1232,23 @@
+                 "attn_mode": "flash_attn",
+                 "block_table": block_index,
+                 "cache": self.draft_cache,
+-                "cache_seqlens": cache_seqlens,
++                "cache_seqlens": cache_seqlens.clone().pin_memory() if mirror is not None else cache_seqlens,
+                 "draft_step": idx,   # heads specialized per depth pick their head from this
+             }
+             if cal is not None:
+                 params["export_draft_conf"] = True
++            if mirror is not None:
++                params["mtp_device_embedding"] = (mirror,self.draft_model.target_embed().embedding.weight,host_ids0 if idx==0 else None)
+             batch_state = self.draft_model.forward(batch_ids, params)
+             lm_head = self.model.modules[self.model.logit_layer_idx]
+             batch_state = lm_head.prepare_for_device(batch_state, params)
+             new_ids = self.draft_model.sample_from_state(batch_state, params)
+-            self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
+-            batch_ids.copy_(new_ids)
++            if mirror is not None:
++                device_ids[:,idx:idx+1].copy_(new_ids)
++                batch_ids = new_ids
++            else:
++                self.draft_ids_pinned[:batch_size, idx:idx+1].copy_(new_ids)
++                batch_ids.copy_(new_ids)
+             cache_seqlens += 1
+             temp_hidden = batch_state
+             draft_conf = params.get("draft_conf")
+@@ -1245,6 +1261,8 @@
+                     window = idx + 1
+                     break
+ 
++        if mirror is not None:
++            self.draft_ids_pinned[:batch_size,:window].copy_(device_ids[:,:window])
+         if conf_cols and len(conf_cols) == window:
+             self._draft_conf_round = {
+                 "ids": self.draft_ids_pinned[:batch_size, :window],
+--- /dev/null
++++ b/exllamav3/modules/embedding_pruned.py
+@@ -0,0 +1,155 @@
++from __future__ import annotations
++import torch
++
++"""
++Pruned device mirror of a host embedding table (EXL3_EMBED_GPU_PRUNED=1).
++
++The MTP device-resident draft chain (EXL3_MTP_DEVICE_DRAFT=1 + EXL3_EMBED_GPU=1) needs the token
++embedding of device-resident IDs without a host round-trip. The full fp16 mirror is 1.27 GB, but with
++a pruned draft head (EXL3_MTP_HEAD_N) every drafted ID is an argmax column of that head, so only the
++head's vocabulary rows can ever be looked up from the device. This module keeps exact copies of just
++those rows on the device, plus a vocab -> mirror-row remap (-1 = not mirrored).
++
++Only the first chain position can carry an ID outside the set (the verified target token). Its IDs
++originate on the host, so the caller hands the host copy along; the out-of-set decision is a host
++operation (no device sync), and an out-of-set batch is gathered from the exact host table into
++pinned memory and uploaded asynchronously. Every path returns exact copies of rows of the same table,
++so the result is bit-identical to a gather from the full mirror.
++
++Torch-only on purpose (no extension import) so the logic is testable on a CPU-only machine.
++"""
++
++stats = {
++    "builds": 0,            # mirror (re)builds
++    "device_calls": 0,      # lookups served from the device mirror
++    "host_calls": 0,        # lookups served from the host table (an out-of-set ID in the batch)
++    "host_rows": 0,         # rows uploaded by those host lookups
++}
++
++
++def build_remap(keep_ids: torch.Tensor, num_rows: int) -> torch.Tensor:
++    """int32 (num_rows,) table: vocab ID -> row in the mirror, -1 when the ID is not mirrored."""
++    keep = keep_ids.to("cpu", torch.long).view(-1)
++    if keep.numel() == 0:
++        raise ValueError("pruned embedding: empty keep set")
++    if int(keep.min()) < 0 or int(keep.max()) >= num_rows:
++        raise ValueError(f"pruned embedding: keep IDs outside [0, {num_rows})")
++    if torch.unique(keep).numel() != keep.numel():
++        raise ValueError("pruned embedding: duplicate keep IDs")
++    remap = torch.full((num_rows,), -1, dtype = torch.int32)
++    remap[keep] = torch.arange(keep.numel(), dtype = torch.int32)
++    return remap
++
++
++def stage_rows(weight: torch.Tensor, flat_ids: torch.Tensor, buf: torch.Tensor) -> torch.Tensor:
++    """
++    Exact rows ``weight[flat_ids]`` written into ``buf`` (the reused pinned staging buffer). The table is an
++    nn.Parameter with requires_grad=True (embedding.py load: nn.Parameter(weight)); ops with out= refuse
++    grad-requiring inputs outside no_grad/inference_mode, so the gather reads a detached view. detach() is a
++    metadata-only alias (no copy, no sync), making this independent of the caller's grad mode.
++    """
++    return torch.index_select(weight.detach(), 0, flat_ids, out = buf)
++
++
++def is_prefix(keep_ids: torch.Tensor) -> bool:
++    keep = keep_ids.to("cpu", torch.long).view(-1)
++    return torch.equal(keep, torch.arange(keep.numel(), dtype = torch.long))
++
++
++class PrunedEmbeddingMirror:
++    """
++    Device copy of rows ``keep_ids`` of a host table ``weight`` (num_rows, dim).
++
++    prefix keep set [0, n) (the served pruned head, qwen4_exp_mtp.py _pruned_head): the mirror is
++        weight[:n] and a mirrored ID is its own row, so the device lookup is one gather on the IDs;
++        no device remap table is allocated
++    general keep set: mirror = weight[keep_ids], device lookup = gather(remap[ids])
++    """
++
++    def __init__(self, weight: torch.Tensor, keep_ids: torch.Tensor, device: torch.device | str):
++        device = torch.device(device)
++        self.device = device
++        self.keep_ids = keep_ids
++        self.num_rows, self.dim = weight.shape
++        self.n = keep_ids.numel()
++        self.prefix = is_prefix(keep_ids)
++        self.remap_host = build_remap(keep_ids, self.num_rows)
++        w = weight.detach()
++        if self.prefix:
++            self.mirror = w[:self.n].to(device).contiguous()
++            self.remap = None
++        else:
++            keep = keep_ids.to("cpu", torch.long).view(-1)
++            self.mirror = w.index_select(0, keep).to(device).contiguous()
++            self.remap = self.remap_host.to(device)
++        self._staging = {}
++        self._staging_event = None
++        stats["builds"] += 1
++
++    def nbytes(self) -> int:
++        n = self.mirror.numel() * self.mirror.element_size()
++        if self.remap is not None:
++            n += self.remap.numel() * self.remap.element_size()
++        return n
++
++    def matches(self, weight: torch.Tensor, keep_ids: torch.Tensor, device) -> bool:
++        return (
++            self.keep_ids is keep_ids and self.device == torch.device(device) and
++            (self.num_rows, self.dim) == tuple(weight.shape) and self.mirror.dtype == weight.dtype
++        )
++
++    def host_ids_in_set(self, host_ids: torch.Tensor) -> bool:
++        """Host-side membership test for a CPU ID tensor (no device work)."""
++        h = host_ids.view(-1)
++        if h.numel() == 0:
++            return True
++        if self.prefix:
++            return int(h.min()) >= 0 and int(h.max()) < self.n
++        if int(h.min()) < 0 or int(h.max()) >= self.num_rows:
++            return False
++        return bool((self.remap_host[h] >= 0).all())
++
++    def gather_device(self, ids: torch.Tensor) -> torch.Tensor:
++        """Rows for device IDs that are all in the keep set (guaranteed by the caller)."""
++        stats["device_calls"] += 1
++        rows = ids if self.remap is None else self.remap[ids]
++        return torch.nn.functional.embedding(rows, self.mirror)
++
++    def gather_host(self, weight: torch.Tensor, host_ids: torch.Tensor) -> torch.Tensor:
++        """
++        Exact rows of the host table for host IDs (any ID), placed on the mirror's device. CUDA: gathered
++        into a reused pinned buffer and uploaded non-blocking; the buffer is only rewritten after the
++        previous upload's event completed.
++        """
++        stats["host_calls"] += 1
++        stats["host_rows"] += host_ids.numel()
++        out_shape = (*host_ids.shape, self.dim)
++        flat = host_ids.reshape(-1).to(torch.long)
++        if self.device.type != "cuda":
++            return torch.index_select(weight.detach(), 0, flat).view(out_shape)
++        key = (flat.numel(), weight.dtype)
++        buf = self._staging.get(key)
++        if buf is None:
++            if len(self._staging) > 8:
++                if self._staging_event is not None:
++                    self._staging_event.synchronize()
++                self._staging.clear()
++            buf = torch.empty((flat.numel(), self.dim), dtype = weight.dtype, pin_memory = True)
++            self._staging[key] = buf
++        if self._staging_event is not None:
++            self._staging_event.synchronize()
++        stage_rows(weight, flat, buf)
++        dev = buf.to(self.device, non_blocking = True)
++        ev = torch.cuda.Event()
++        ev.record(torch.cuda.current_stream(self.device))
++        self._staging_event = ev
++        return dev.view(out_shape)
++
++    def lookup(self, weight: torch.Tensor, ids: torch.Tensor, host_ids: torch.Tensor | None) -> torch.Tensor:
++        """
++        ids: IDs on self.device. host_ids: None when every ID is in the keep set by provenance (argmax of the
++        pruned head), else a host tensor with the same values as ``ids``.
++        """
++        if host_ids is not None and not self.host_ids_in_set(host_ids):
++            return self.gather_host(weight, host_ids)
++        return self.gather_device(ids)

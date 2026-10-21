@@ -1,0 +1,15 @@
+ARG BASE=tabbyapi:flashnext-v164-batch-verify
+FROM ${BASE}
+COPY repair/device-draft.patch /tmp/device-draft.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /tmp/device-draft.patch && \
+    cp exllamav3/architecture/qwen4_exp_mtp.py /opt/venv/lib/python3.12/site-packages/exllamav3/architecture/ && \
+    cp exllamav3/modules/arch_specific/qwen4_exp_mtp.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/arch_specific/ && \
+    cp exllamav3/generator/generator.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/ && \
+    cp exllamav3/modules/embedding_pruned.py /opt/venv/lib/python3.12/site-packages/exllamav3/modules/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+COPY repair/test_device_draft.py /opt/flashnext-v164/test-device-draft.py
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/test-device-draft.py && python3 /opt/flashnext-v164/test-batch-verify.py && \
+    python3 /opt/flashnext-v164/test-pipeline.py && python3 /opt/flashnext-v164/cpu-check.py && \
+    python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py
