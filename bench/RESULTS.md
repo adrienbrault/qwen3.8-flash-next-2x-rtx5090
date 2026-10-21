@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-10-21
+
+- [Flash-Next 1.6.4 rebase screen: completed A/B/C throughput and six-agent replay; candidate not promoted, checkpoint accuracy pending](results/flashnext-v164-screen.md).
+
 ## 2026-10-08
 
 - [R917: memory of the served configuration](results/r917-flashnext-memory-layout.md): VRAM 60.3 of 63.7 GiB (routed experts 36.5, other weights 3.3, KV page pool 12.8, vision tower 0.5, other 7.2); host DRAM 3.9 of 60.4 GiB without the page cache (embedding table 1.2, other 2.7).

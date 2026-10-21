@@ -12,6 +12,7 @@ Audit date: 2026-10-21. Baseline is the installed `r828-prompt-lookup-r3` image,
 | Dense recurrent checkpoints | Replaced by upstream | Native recurrent checkpoint interval fields; custom 12K tail policy is not enabled. Cache-reuse evaluation pending. |
 | Whole-prompt/resumable prefill | Replaced by upstream scheduler | Native shared chunk size, cooldown and prefill rotation. No old scheduler flags are claimed active. |
 | Adaptive prompt lookup | Native alternative, disabled for first comparison | Native hybrid_draft_tokens exists; old R828 adaptive gate/counters are not part of the native generator. The carried result handler must not import or fabricate old lookup counters. |
+| Pruned MTP vocabulary and GPU embedding mirror | Not enabled in native baseline | Old EXL3_MTP_HEAD_N=65536, device draft loop and pruned embedding mirror are absent. This is another configuration difference, not proof that native kernels alone explain the regression. A default-off Python-only vocabulary cap is feasible; its native fallback and half-bit head representation require review/tests before any experiment. |
 | GDN recurrent state | Changed | Upstream fp16 store with fp32 scans replaces the local bf16 store. This changes numerics and requires qualification. |
 | QSA, MoE, HC, shared expert and rows32 CUDA overlays | Replaced for initial comparison | New upstream implementations run; old extensions are not blindly replayed. This is a whole-stack comparison, not attribution to version alone. Retain/port old kernels only if the comparison establishes a need. |
 

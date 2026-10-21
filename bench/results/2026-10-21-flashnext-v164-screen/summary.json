@@ -1,0 +1,386 @@
+{
+  "A": {
+    "complete": true,
+    "decode": {
+      "code": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 266.37,
+                "median_decode_tps": 266.37,
+                "median_ttft_s": 0.131
+              },
+              {
+                "decode_aggregate_tps": 265.32,
+                "median_decode_tps": 265.32,
+                "median_ttft_s": 0.131
+              }
+            ],
+            "median_decode_aggregate_tps": 265.845,
+            "median_per_stream_decode_tps": 265.845
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 633.42,
+                "median_decode_tps": 157.485,
+                "median_ttft_s": 0.4475
+              },
+              {
+                "decode_aggregate_tps": 630.29,
+                "median_decode_tps": 157.02499999999998,
+                "median_ttft_s": 0.441
+              }
+            ],
+            "median_decode_aggregate_tps": 631.855,
+            "median_per_stream_decode_tps": 157.255
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 840.63,
+                "median_decode_tps": 105.705,
+                "median_ttft_s": 0.74
+              },
+              {
+                "decode_aggregate_tps": 838.0799999999999,
+                "median_decode_tps": 105.66499999999999,
+                "median_ttft_s": 0.7355
+              }
+            ],
+            "median_decode_aggregate_tps": 839.355,
+            "median_per_stream_decode_tps": 105.685
+          }
+        }
+      },
+      "prose": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 287.78,
+                "median_decode_tps": 287.78,
+                "median_ttft_s": 0.128
+              },
+              {
+                "decode_aggregate_tps": 288.23,
+                "median_decode_tps": 288.23,
+                "median_ttft_s": 0.127
+              }
+            ],
+            "median_decode_aggregate_tps": 288.005,
+            "median_per_stream_decode_tps": 288.005
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 612.32,
+                "median_decode_tps": 152.91500000000002,
+                "median_ttft_s": 0.4305
+              },
+              {
+                "decode_aggregate_tps": 619.11,
+                "median_decode_tps": 153.345,
+                "median_ttft_s": 0.433
+              }
+            ],
+            "median_decode_aggregate_tps": 615.715,
+            "median_per_stream_decode_tps": 153.13
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 857.42,
+                "median_decode_tps": 105.99,
+                "median_ttft_s": 0.7005
+              },
+              {
+                "decode_aggregate_tps": 861.23,
+                "median_decode_tps": 106.88,
+                "median_ttft_s": 1.018
+              }
+            ],
+            "median_decode_aggregate_tps": 859.325,
+            "median_per_stream_decode_tps": 106.435
+          }
+        }
+      }
+    },
+    "greedy": {
+      "records": 5,
+      "complete": true
+    },
+    "agents": {
+      "complete": true,
+      "requests": 20,
+      "wall_span_s": 43.43172764778137,
+      "wall_output_tps": 216.0862693768392,
+      "median_ttft_s": 0.7585272789001465,
+      "max_sse_gap_s": 1.7239069938659668
+    },
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "pool": 901120,
+    "window": 262144
+  },
+  "B": {
+    "complete": true,
+    "decode": {
+      "code": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 179.08,
+                "median_decode_tps": 179.08,
+                "median_ttft_s": 0.141
+              },
+              {
+                "decode_aggregate_tps": 179.51,
+                "median_decode_tps": 179.51,
+                "median_ttft_s": 0.141
+              }
+            ],
+            "median_decode_aggregate_tps": 179.29500000000002,
+            "median_per_stream_decode_tps": 179.29500000000002
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 263.74,
+                "median_decode_tps": 65.595,
+                "median_ttft_s": 0.385
+              },
+              {
+                "decode_aggregate_tps": 279.35,
+                "median_decode_tps": 68.405,
+                "median_ttft_s": 0.4695
+              }
+            ],
+            "median_decode_aggregate_tps": 271.545,
+            "median_per_stream_decode_tps": 67.0
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 400.8,
+                "median_decode_tps": 49.475,
+                "median_ttft_s": 0.666
+              },
+              {
+                "decode_aggregate_tps": 407.44,
+                "median_decode_tps": 50.7,
+                "median_ttft_s": 0.6695
+              }
+            ],
+            "median_decode_aggregate_tps": 404.12,
+            "median_per_stream_decode_tps": 50.087500000000006
+          }
+        }
+      },
+      "prose": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 172.89,
+                "median_decode_tps": 172.89,
+                "median_ttft_s": 0.138
+              },
+              {
+                "decode_aggregate_tps": 172.62,
+                "median_decode_tps": 172.62,
+                "median_ttft_s": 0.138
+              }
+            ],
+            "median_decode_aggregate_tps": 172.755,
+            "median_per_stream_decode_tps": 172.755
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 281.52,
+                "median_decode_tps": 69.735,
+                "median_ttft_s": 0.388
+              },
+              {
+                "decode_aggregate_tps": 286.17,
+                "median_decode_tps": 70.58500000000001,
+                "median_ttft_s": 0.385
+              }
+            ],
+            "median_decode_aggregate_tps": 283.845,
+            "median_per_stream_decode_tps": 70.16
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 401.01,
+                "median_decode_tps": 50.11,
+                "median_ttft_s": 0.828
+              },
+              {
+                "decode_aggregate_tps": 403.98,
+                "median_decode_tps": 50.68,
+                "median_ttft_s": 0.647
+              }
+            ],
+            "median_decode_aggregate_tps": 402.495,
+            "median_per_stream_decode_tps": 50.394999999999996
+          }
+        }
+      }
+    },
+    "greedy": {
+      "records": 5,
+      "complete": true
+    },
+    "agents": {
+      "complete": true,
+      "requests": 20,
+      "wall_span_s": 90.62479972839355,
+      "wall_output_tps": 103.5588495436928,
+      "median_ttft_s": 3.3624393939971924,
+      "max_sse_gap_s": 1.6947095394134521
+    },
+    "model": "qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab",
+    "pool": 901120,
+    "window": 262144
+  },
+  "C": {
+    "complete": true,
+    "decode": {
+      "code": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 169.84,
+                "median_decode_tps": 169.84,
+                "median_ttft_s": 0.141
+              },
+              {
+                "decode_aggregate_tps": 170.45,
+                "median_decode_tps": 170.45,
+                "median_ttft_s": 0.142
+              }
+            ],
+            "median_decode_aggregate_tps": 170.14499999999998,
+            "median_per_stream_decode_tps": 170.14499999999998
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 274.34,
+                "median_decode_tps": 67.875,
+                "median_ttft_s": 0.39
+              },
+              {
+                "decode_aggregate_tps": 276.59,
+                "median_decode_tps": 68.50999999999999,
+                "median_ttft_s": 0.3845
+              }
+            ],
+            "median_decode_aggregate_tps": 275.465,
+            "median_per_stream_decode_tps": 68.1925
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 409.39,
+                "median_decode_tps": 50.85,
+                "median_ttft_s": 0.654
+              },
+              {
+                "decode_aggregate_tps": 403.28,
+                "median_decode_tps": 50.46,
+                "median_ttft_s": 0.6505000000000001
+              }
+            ],
+            "median_decode_aggregate_tps": 406.335,
+            "median_per_stream_decode_tps": 50.655
+          }
+        }
+      },
+      "prose": {
+        "complete": true,
+        "requests": 26,
+        "by_concurrency": {
+          "1": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 174.16,
+                "median_decode_tps": 174.16,
+                "median_ttft_s": 0.139
+              },
+              {
+                "decode_aggregate_tps": 174.55,
+                "median_decode_tps": 174.55,
+                "median_ttft_s": 0.139
+              }
+            ],
+            "median_decode_aggregate_tps": 174.35500000000002,
+            "median_per_stream_decode_tps": 174.35500000000002
+          },
+          "4": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 272.13,
+                "median_decode_tps": 68.265,
+                "median_ttft_s": 0.38
+              },
+              {
+                "decode_aggregate_tps": 273.87,
+                "median_decode_tps": 68.61500000000001,
+                "median_ttft_s": 0.3795
+              }
+            ],
+            "median_decode_aggregate_tps": 273.0,
+            "median_per_stream_decode_tps": 68.44
+          },
+          "8": {
+            "runs": [
+              {
+                "decode_aggregate_tps": 392.86,
+                "median_decode_tps": 48.875,
+                "median_ttft_s": 0.8089999999999999
+              },
+              {
+                "decode_aggregate_tps": 399.55,
+                "median_decode_tps": 49.89,
+                "median_ttft_s": 0.8135
+              }
+            ],
+            "median_decode_aggregate_tps": 396.20500000000004,
+            "median_per_stream_decode_tps": 49.3825
+          }
+        }
+      }
+    },
+    "greedy": {
+      "records": 5,
+      "complete": true
+    },
+    "agents": {
+      "complete": true,
+      "requests": 20,
+      "wall_span_s": 90.93039035797119,
+      "wall_output_tps": 103.21081833096174,
+      "median_ttft_s": 2.7774614095687866,
+      "max_sse_gap_s": 1.5290307998657227
+    },
+    "model": "qwen3.8-flash-next-exl3-2.18bpw-selfcal",
+    "pool": 901120,
+    "window": 262144
+  }
+}
