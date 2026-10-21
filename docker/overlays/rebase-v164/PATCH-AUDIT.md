@@ -6,7 +6,7 @@ Audit date: 2026-10-21. Baseline is the installed `r828-prompt-lookup-r3` image,
 |---|---|---|
 | Batch-indexed MTP | Retained and adapted | Draft config validation, generator capacity maximum and per-ready-batch depth selection in the patches. |
 | Reasoning loop recovery | Retained in Tabby | Loop-think ladder and forced end-of-thinking retained; new reasoning/content phase plumbing preserved. Runtime checks pending. |
-| Automatic and constrained tool calls | Retained / adapted | Old forcing helper uses the new phase API; automatic parsed tools are smoke-tested. Full tool evaluation pending. |
+| Automatic and constrained tool calls | Retained / adapted | Old forcing helper uses the new phase API; automatic parsed tools pass smoke. The 69-scenario native-engine tool screen is complete; old-engine updated-checkpoint accuracy remains unqualified. |
 | Prompt encode once / off event loop | Retained | Ported request ID cache and long-tokenization worker; native encode cache also retained. |
 | Prefix KV disk tier | Replaced by upstream | 1.6.4 DiskPageCache and Tabby memory.disk_cache_* fields. Never opens the daily tier during screens. |
 | Dense recurrent checkpoints | Replaced by upstream | Native recurrent checkpoint interval fields; custom 12K tail policy is not enabled. Cache-reuse evaluation pending. |
