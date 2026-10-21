@@ -1,16 +1,18 @@
 --- a/exllamav3/exllamav3_ext/libtorch/blocksparse_mlp.cpp
 +++ b/exllamav3/exllamav3_ext/libtorch/blocksparse_mlp.cpp
-@@ -1,6 +1,9 @@
+@@ -1,6 +1,11 @@
  #include <Python.h>
  #include "blocksparse_mlp.h"
  #include <c10/cuda/CUDAGuard.h>
 +#include <c10/cuda/CUDAException.h>
 +#include <cstdlib>
 +#include <cstring>
++#include <mutex>
++#include <unordered_map>
  #include <ATen/cuda/CUDAContext.h>
  #include <torch/extension.h>
  #include "../util.h"
-@@ -15,6 +18,85 @@
+@@ -15,6 +20,95 @@
      #include "../rocm/quant/exl3_gemv_multirow_rdna.cuh"
  #endif
  
@@ -24,7 +26,18 @@
 +    c10::cuda::CUDAGuard guard(yh.device());
 +    try
 +    {
-+        C10_CUDA_CHECK(cudaStreamCreateWithFlags(&shared_stream, cudaStreamNonBlocking));
++        // Reuse one process-lifetime Torch stream per device, including its
++        // allocator/cuBLAS workspaces, rather than warming a pool stream per layer.
++        static std::mutex mutex;
++        static std::unordered_map<int, cudaStream_t> streams;
++        {
++            std::lock_guard<std::mutex> lock(mutex);
++            auto it = streams.find(shared_overlap_device);
++            if (it == streams.end())
++                it = streams.emplace(shared_overlap_device,
++                    c10::cuda::getStreamFromPool(false, shared_overlap_device).stream()).first;
++            shared_stream = it->second;
++        }
 +        C10_CUDA_CHECK(cudaEventCreateWithFlags(&shared_input_ready, cudaEventDisableTiming));
 +        C10_CUDA_CHECK(cudaEventCreateWithFlags(&shared_done, cudaEventDisableTiming));
 +        shared_early = true;
@@ -33,7 +46,7 @@
 +    {
 +        if (shared_done) cudaEventDestroy(shared_done);
 +        if (shared_input_ready) cudaEventDestroy(shared_input_ready);
-+        if (shared_stream) cudaStreamDestroy(shared_stream);
++
 +        shared_done = shared_input_ready = nullptr;
 +        shared_stream = nullptr;
 +        throw;
@@ -53,9 +66,8 @@
 +    shared_input = y;
 +    shared_started = true;
 +    auto side = c10::cuda::getStreamFromExternal(shared_stream, shared_overlap_device);
-+    // B waits on shared_done on the producer stream before scratch reuse.
-+    // Do not record a short-lived external stream on input storage: callers may
-+    // retain that storage past this BC's unload and stream destruction.
++    // Retain input until B queues its producer-stream wait before scratch reuse.
++    // No additional input allocator stream record is needed for this native path.
 +    C10_CUDA_CHECK(cudaEventRecord(shared_input_ready, at::cuda::getCurrentCUDAStream().stream()));
 +    C10_CUDA_CHECK(cudaStreamWaitEvent(shared_stream, shared_input_ready, 0));
 +    {
@@ -89,14 +101,14 @@
 +    cudaStreamSynchronize(shared_stream);
 +    if (shared_done) cudaEventDestroy(shared_done);
 +    if (shared_input_ready) cudaEventDestroy(shared_input_ready);
-+    cudaStreamDestroy(shared_stream);
++    // The Torch pool owns shared_stream; allocator references may outlive this BC.
 +    if (previous != shared_overlap_device) cudaSetDevice(previous);
 +}
 +
  std::tuple<at::Tensor, at::Tensor> blocksparse_mlp_routing(
      int bsz,
      const py::object& cfg,
-@@ -92,7 +174,13 @@
+@@ -92,7 +186,13 @@
      // Shared experts run through their own multi-row graph first (same stream); the kernel adds
      // the result into the routed sum, through the sigmoid gate when there is one
      c10::optional<at::Tensor> sh_o;
@@ -111,7 +123,7 @@
      {
          // One-expert fused launch at the shared expert's own bit width (expert 0, weight 1);
          // the sigmoid gate, if any, is applied by the routed launch when it merges the result
-@@ -107,7 +195,9 @@
+@@ -107,7 +207,12 @@
          shared_experts->run_bszN(x_dense, out_d_sh_n);
          sh_o = out_d_sh_n;
      }
@@ -119,10 +131,13 @@
 +    exl3_moe_coop_run(coop_p, coop_K_gu, coop_K_d, coop_cb, y, selected_experts, routing_weights, sh_o,
 +                      shared_started ? shared_done : nullptr);
 +    shared_started = false;
++    // The caller still owns y on the producer stream, behind the queued B wait.
++    // Do not retain a view's potentially large backing allocation between calls.
++    shared_input = at::Tensor();
  }
  
  #if defined(USE_ROCM)
-@@ -432,6 +522,7 @@
+@@ -432,6 +537,7 @@
      TORCH_CHECK(max_expert <= MAX_EXPERTS, "BC_BlockSparseMLP: Too many experts");
  
      use_mgemm = gate_K == up_K;

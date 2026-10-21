@@ -10,7 +10,9 @@ The recovery keeps upstream architecture interfaces, native Job lifecycle, cache
 - An optional65536-column MTP draft head. Same-prefix native LinearEXL3 outputs match; full-vocabulary-prefix logits differ with width-dependent native dispatch. This is not full-vocabulary fidelity qualification.
 - Native full-chunk/no-cooldown scheduling with `EXL3_PREFILL_COMPAT=1`.
 - Deterministic E3 prefill via `EXL3_MOE_PREFILL_E3_DET=1`; scoped real-layer routing and output parity pass against the original runtime.
-- At most two full chunks of target lookahead on disjoint GPUs via `EXL3_NATIVE_PREFILL_PIPELINE=1`. Native checkpoint predicates and Job draft/carry/page continuation remain in charge. Scoped same-native recurrent state, logical KV, checkpoint, export/carry and continuation differentials pass.
+- Bounded target lookahead on disjoint GPUs via `EXL3_NATIVE_PREFILL_PIPELINE=1`: default two full chunks, optional eight with `EXL3_NATIVE_PREFILL_WINDOW=8`, always only one chunk in flight ahead. Native checkpoint predicates and Job draft/carry/page continuation remain in charge. Scoped same-native recurrent state, logical KV, checkpoint, export/carry and continuation differentials pass.
+
+Optional early shared-expert overlap uses one process-lifetime PyTorch stream per GPU and releases its input after the routed dependency is queued. Real-layer output/unload and full-pool residency checks distinguish this path from the rejected private-stream attempts.
 
 Optional performance selectors default off. `repair/candidate.env` records the experimental screen configuration. It is not the served launcher. Full-pool residency is measured with the original901120-token KV pool rather than substituted with a smaller cache.
 

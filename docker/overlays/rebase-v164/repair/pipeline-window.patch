@@ -1,0 +1,29 @@
+--- a/exllamav3/generator/native_prefill_pipeline.py
++++ b/exllamav3/generator/native_prefill_pipeline.py
+@@ -1,4 +1,4 @@
+-"""Opt-in two-chunk lookahead on disjoint Qwen layer-split devices.
++"""Opt-in bounded lookahead on disjoint Qwen layer-split devices.
+ 
+ All native Job commit/draft/checkpoint work remains on its ordinary path. No
+ lookahead crosses the native checkpoint predicate or the last full prompt page.
+@@ -15,7 +15,10 @@
+     start=seq.kv_position
+     last_page=(len(seq.sequence_ids)-1)//256*256
+     ends=[]
+-    for _ in range(2):
++    limit = int(os.environ.get("EXL3_NATIVE_PREFILL_WINDOW", "2"))
++    if limit not in (2, 8):
++        raise ValueError("EXL3_NATIVE_PREFILL_WINDOW must be 2 or 8")
++    for _ in range(limit):
+         end=start+2048
+         if end>last_page:break
+         ends.append(end)
+@@ -196,6 +199,8 @@
+         peer_copy=_PeerCopy(layout[2]);executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='native_prefill')
+         setup=gen.model._native_prefill_setup=(layout[3],executor,peer_copy)
+         print('[native-prefill-pipeline] two-chunk layer split active',flush=True)
++        if os.environ.get('EXL3_NATIVE_PREFILL_WINDOW','2')=='8':
++            print('[native-prefill-window] max_chunks=8, one future',flush=True)
+     runtime=_Runtime(job,ends,layout,setup[1],setup[2])
+     job._native_prefill_pipeline=runtime
+     try:

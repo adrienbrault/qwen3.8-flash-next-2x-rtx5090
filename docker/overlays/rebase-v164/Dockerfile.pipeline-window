@@ -1,0 +1,9 @@
+ARG BASE=tabbyapi:flashnext-v164-shared-overlap
+FROM ${BASE}
+COPY repair/pipeline-window.patch /tmp/pipeline-window.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /tmp/pipeline-window.patch && cp exllamav3/generator/native_prefill_pipeline.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/
+COPY manifest.json /opt/flashnext-v164/manifest.json
+COPY repair/test_pipeline_window.py /opt/flashnext-v164/test-pipeline-window.py
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/test-pipeline-window.py && python3 /opt/flashnext-v164/test-pipeline.py && python3 /opt/flashnext-v164/cpu-check.py
