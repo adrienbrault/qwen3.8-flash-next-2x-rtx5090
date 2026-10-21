@@ -1,0 +1,22 @@
+{
+  "2.18": {
+    "code_c4_per_stream_tps": 148.71749999999997,
+    "code_c4_aggregate_tps": 599.5999999999999,
+    "pool": 901120,
+    "agent_requests": 20,
+    "agent_complete": true,
+    "agent_requested_tokens": 9385,
+    "agent_returned_tokens": 9385,
+    "agent_span_s": 47.687174558639526
+  },
+  "2.68": {
+    "code_c4_per_stream_tps": 136.225,
+    "code_c4_aggregate_tps": 546.675,
+    "pool": 901120,
+    "agent_requests": 20,
+    "agent_complete": false,
+    "agent_requested_tokens": 9385,
+    "agent_returned_tokens": 0,
+    "failure": "CUDA out of memory during long-prompt prefill; no valid replay time"
+  }
+}
