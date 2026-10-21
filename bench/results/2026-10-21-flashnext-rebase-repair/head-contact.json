@@ -1,0 +1,73 @@
+{
+  "result_dir": "2026-10-21-173600-flashnext-repair-features",
+  "image": "sha256:163cd7bc30061f98f957b0d3cbc361c377434c63692e4bae388339edef76214f",
+  "forced_tokens": 128,
+  "arithmetic_tool_smoke": "PASS",
+  "receipts": [
+    {
+      "rows": 1,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.1455078125,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 3,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 4,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 2,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.10888671875,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 5,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 6,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 7,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    },
+    {
+      "rows": 8,
+      "cap": 65536,
+      "bits": 6.0,
+      "native_prefix_exact": true,
+      "full_forward_prefix_max_abs": 0.015625,
+      "full_forward_prefix_argmax_changes": 0
+    }
+  ],
+  "scope": "same-prefix native API; not full-vocabulary identity or throughput measurement"
+}

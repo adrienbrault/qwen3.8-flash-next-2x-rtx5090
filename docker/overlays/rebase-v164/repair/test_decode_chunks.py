@@ -3,7 +3,7 @@ import types
 import torch
 from exllamav3.modules.block_sparse_mlp import BlockSparseMLP, MAX_BSZN
 
-for rows in (9,16,23,32):
+for rows in (MAX_BSZN+1,2*MAX_BSZN,3*MAX_BSZN-1,4*MAX_BSZN):
     owner=types.SimpleNamespace(expert_size=5)
     owner.experts_cfg=types.SimpleNamespace(out_bszn=torch.empty((MAX_BSZN,5)))
     calls=[]

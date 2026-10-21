@@ -1,0 +1,11 @@
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -548,7 +548,7 @@
+     check_scratch(act_out, p.I);
+     check_scratch(d_out, p.Ho);
+     TORCH_CHECK(out.dim() >= 2 && out.stride(-1) == 1, "exl3_moe_coop: out shape");
+-    TORCH_CHECK(slots_max >= 1 && slots_max <= 256, "exl3_moe_coop: scratch must hold 1..256 slots");
++    TORCH_CHECK(slots_max >= 1 && slots_max <= exl3_moe_coop_ns::MAX_SLOTS, "exl3_moe_coop: scratch exceeds native slot capacity");
+ 
+     // Counters: the gate/up stage's block covers every slot the scratch can hold, the down
+     // stage's every token row the output can hold

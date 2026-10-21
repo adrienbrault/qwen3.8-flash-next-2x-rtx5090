@@ -1,0 +1,43 @@
+{
+  "kind": "source-built-sm120",
+  "engine_version": "1.6.4",
+  "torch": "2.9.0+cu128",
+  "torch_cuda": "12.8",
+  "native_filename": "exllamav3_ext.cpython-312-x86_64-linux-gnu.so",
+  "native_sha256": "20feb6733f5930f3d23606a1fc39de6c181f08ee6fc9d9e26bed9d9f9e32eed2",
+  "decode_capacity": 32,
+  "manifest": {
+    "engine": {
+      "repo": "turboderp-org/exllamav3",
+      "commit": "da68d57de61781e5b74ad68698ac4caf36408d7a",
+      "archive_sha256": "c846b2d470ada2b9e6b03f9b80f17b4945b3be8c6be888db4e739f7557f361e6"
+    },
+    "tabby": {
+      "repo": "theroyallab/tabbyAPI",
+      "commit": "a270c555db91a5178d72f7dee7bdd34951ac1dad",
+      "archive_sha256": "12f76c8d02a8926920f0fbc99ec5aa74d711e1854fd0626186ed48510d93031c"
+    },
+    "engine_old": {
+      "repo": "turboderp-org/exllamav3",
+      "commit": "5783a9360b749a1d5bde6862dc35e7766e542ca1",
+      "archive_sha256": "3cbb124ea02db208286a9a61546b75d3f1a17eab9049fc481f02603212fbf039"
+    },
+    "tabby_old": {
+      "repo": "theroyallab/tabbyAPI",
+      "commit": "53da7919d4e45c63f4acbcbbc00cbe0f60a1ce65",
+      "archive_sha256": "f6f8303698ec2089f50f262ec26b7cb352d49c9a9e9dad9f74b6523f96c93735"
+    },
+    "wheel": {
+      "url": "https://github.com/turboderp-org/exllamav3/releases/download/v1.6.4/exllamav3-1.6.4%2Bcu128.torch2.9.0-cp312-cp312-linux_x86_64.whl",
+      "filename": "exllamav3-1.6.4+cu128.torch2.9.0-cp312-cp312-linux_x86_64.whl",
+      "sha256": "a30b8e8c67c5a2bbc81c00aa63617398653df0719f2118eb2981aea9e32ba37b"
+    },
+    "parent_image": "tabbyapi:r828-prompt-lookup-r3",
+    "parent_image_id": "sha256:dfaed2cba56f353a99589549b6ccb971fe137f5e7d11cbeed522f207fb8b8724",
+    "patch_sha256": {
+      "engine.patch": "92a7ade73199df8b7a9c13f5d1eff2be99a19b004d2d46fc3c072a08db91f45e",
+      "tabby.patch": "08b25e003dacaca90c67d1e42eaaf1f5df17a6ffc3cc88f1e549e1259ac07f60",
+      "native.patch": "cdfe4a298f1ffc508192688af999d024914843a6b5a5feea1b37f12dc74f3d24"
+    }
+  }
+}

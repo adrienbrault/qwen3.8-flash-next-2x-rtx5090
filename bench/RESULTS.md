@@ -1,9 +1,10 @@
-- [Flash-Next rebase performance repair](results/flashnext-rebase-repair.md) — 2026-10-21: original-checkpoint MTP controls and native kernel profiles; experimental ports remain unpromoted.
 # Results
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
 ## 2026-10-21
+
+- [Flash-Next rebase performance repair](results/flashnext-rebase-repair.md) — 2026-10-21: original-checkpoint MTP controls and native kernel profiles; experimental ports remain unpromoted.
 
 - [New self-calibrated packs on the served engine:2.18 completes at the full pool;2.68 completes with a smaller pool after prefill OOM](results/flashnext-old-engine.md).
 - [Self-calibrated 2.18/2.68 bpw accuracy screen on one rebased engine: GSM8K100,69 tool scenarios and105680-token retrieval; no accuracy gain established](results/flashnext-v164-quality.md).
