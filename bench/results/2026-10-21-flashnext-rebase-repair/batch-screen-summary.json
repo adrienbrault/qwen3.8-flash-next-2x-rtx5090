@@ -1,0 +1,26 @@
+{
+  "native-batch": {
+    "4": {
+      "per_stream_median_tps": 137.095,
+      "run_medians": [
+        140.25,
+        133.94
+      ],
+      "aggregate_median_tps": 548.3050000000001
+    },
+    "agent_span_s": 53.294185400009155,
+    "agent_ttft_median_s": 0.8275083303451538
+  },
+  "native-pipeline": {
+    "4": {
+      "per_stream_median_tps": 132.02750000000003,
+      "run_medians": [
+        131.33,
+        132.72500000000002
+      ],
+      "aggregate_median_tps": 529.745
+    },
+    "agent_span_s": 52.42395067214966,
+    "agent_ttft_median_s": 0.7585576772689819
+  }
+}
