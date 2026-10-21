@@ -115,3 +115,7 @@ Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of t
 | ShareGPT V3 (`ShareGPT_V3_unfiltered_cleaned_split.json`) | anon8231489123 — https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered | Apache-2.0 (dataset card) | prompts and reference output lengths for the standard benchmark; not redistributed here |
 | Spec-Bench (`data/spec_bench/question.jsonl`) | **hemingkx** — https://github.com/hemingkx/Spec-Bench | Apache-2.0 | the 480 prompts of the standard benchmark; not redistributed here |
 | `bench/*.py` probes (`probe.py` = `fn_bench`, `needle.py`, `capabilities.py`, `summarize.py`, `multiprompt.py`, `agentic-edit.py`, `nostop_proxy.py`, `agent_replay.py`, `revisit.py`, `std_bench_summary.py`) | this repository | MIT | original |
+
+## ExLlamaV3 1.6.4 candidate (2026-10-21)
+
+The experimental [rebase-v164 packet](docker/overlays/rebase-v164/) pins turboderp-org/exllamav3 `da68d57de61781e5b74ad68698ac4caf36408d7a` (MIT), the official 1.6.4 wheel and theroyallab/tabbyAPI `a270c555db91a5178d72f7dee7bdd34951ac1dad` (AGPL-3.0). The packet carries the existing local server fixes, batch-indexed drafting and tokenizer mode-isolation corrections; the native kernels come from upstream. It does not change the served configuration.
