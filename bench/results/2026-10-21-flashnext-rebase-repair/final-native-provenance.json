@@ -1,0 +1,53 @@
+{
+  "kind": "source-built-sm120",
+  "engine_version": "1.6.4",
+  "torch": "2.9.0+cu128",
+  "torch_cuda": "12.8",
+  "native_filename": "exllamav3_ext.cpython-312-x86_64-linux-gnu.so",
+  "native_sha256": "4cfc456d6654e8b6c0d2434f888009f98a335fdb52296c14ba4c1f88cfb9ad10",
+  "decode_capacity": 32,
+  "manifest": {
+    "engine": {
+      "repo": "turboderp-org/exllamav3",
+      "commit": "da68d57de61781e5b74ad68698ac4caf36408d7a",
+      "archive_sha256": "c846b2d470ada2b9e6b03f9b80f17b4945b3be8c6be888db4e739f7557f361e6"
+    },
+    "tabby": {
+      "repo": "theroyallab/tabbyAPI",
+      "commit": "a270c555db91a5178d72f7dee7bdd34951ac1dad",
+      "archive_sha256": "12f76c8d02a8926920f0fbc99ec5aa74d711e1854fd0626186ed48510d93031c"
+    },
+    "engine_old": {
+      "repo": "turboderp-org/exllamav3",
+      "commit": "5783a9360b749a1d5bde6862dc35e7766e542ca1",
+      "archive_sha256": "3cbb124ea02db208286a9a61546b75d3f1a17eab9049fc481f02603212fbf039"
+    },
+    "tabby_old": {
+      "repo": "theroyallab/tabbyAPI",
+      "commit": "53da7919d4e45c63f4acbcbbc00cbe0f60a1ce65",
+      "archive_sha256": "f6f8303698ec2089f50f262ec26b7cb352d49c9a9e9dad9f74b6523f96c93735"
+    },
+    "wheel": {
+      "url": "https://github.com/turboderp-org/exllamav3/releases/download/v1.6.4/exllamav3-1.6.4%2Bcu128.torch2.9.0-cp312-cp312-linux_x86_64.whl",
+      "filename": "exllamav3-1.6.4+cu128.torch2.9.0-cp312-cp312-linux_x86_64.whl",
+      "sha256": "a30b8e8c67c5a2bbc81c00aa63617398653df0719f2118eb2981aea9e32ba37b"
+    },
+    "parent_image": "tabbyapi:r828-prompt-lookup-r3",
+    "parent_image_id": "sha256:dfaed2cba56f353a99589549b6ccb971fe137f5e7d11cbeed522f207fb8b8724",
+    "patch_sha256": {
+      "engine.patch": "34a00d1f9ff0bb0ae56dfa07730f535a85d5f9e3481b4e66c0b21d53aa161264",
+      "tabby.patch": "08b25e003dacaca90c67d1e42eaaf1f5df17a6ffc3cc88f1e549e1259ac07f60",
+      "native.patch": "73f7f96e82d3ced744f0141f2abe4af3579eec9a8e14c93c2a8b9faf1318395f",
+      "repair/native-guard.patch": "f630340d9718482ad197fd43e11d32b305f444240fa6370da2a288fad117b0d0",
+      "repair/prefill-policy.patch": "8ebc9c14ed633b59061add72cd5424303be5b26408b2531d39ce99f788b8a6fe",
+      "repair/recovery-policy.patch": "63bc0d1f0f8884e453157c8dfbc9400678e7083d8e8c0a4a47dfe13b9650a63b",
+      "repair/prefill-e3.patch": "e16c8e41f1f59b1b0cf085e82d81ae5ff0ade0bd98aca9e7c74611ebaadc4743",
+      "repair/prefill-pipeline.patch": "eeb3e057c7a27476dc49ea25fdb6ee411d66ecc833965da52f4f717d712c4860",
+      "repair/batch-verify.patch": "a39cb6b82aa36a88db4efbd0f6f78744008d776b00880cffa308d9428c18fcb2",
+      "repair/device-draft.patch": "2b911a8012b539ee3bd6e39e3c9b1f13bd8fabae4936bc736657847b6eb74c41",
+      "repair/shared-overlap.patch": "cbca9752adcab33bc56535e05e1aab14c3289a9d99e03e7c359408a97505c05e",
+      "repair/pipeline-window.patch": "b25b367262610f0f1188870ea9e2f4538f1ab0f22bfad3ae8a94c77b00209b83"
+    }
+  },
+  "image_id": "sha256:d55fa318984e099e27cef44ab9caffb5e8b511d1c1d1be59a9120a962116bb61"
+}

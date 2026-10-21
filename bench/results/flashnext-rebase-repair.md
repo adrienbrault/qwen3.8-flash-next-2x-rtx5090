@@ -71,3 +71,12 @@ Same-image full-pool screen with the recovered native prefill pipeline: batch ve
 The existing upstream separate shared-expert path (`EXL3_MOE_SHARED_COOP=0`) gives c4 136.305tokens/s and replay53.670785seconds, with all20requests completed. [Records](2026-10-21-flashnext-rebase-repair/shared-screen-summary.json). It also remains out of the candidate. These are exploratory screens, not final alternating comparisons.
 
 Device-resident drafting also passed exact four-job128-token greedy sequences, RNG and acceptance counters, plus exact prefix/outside-prefix embedding rows. [Differential](2026-10-21-flashnext-rebase-repair/device-parity.json). At full901120pool it gives c4 135.33tokens/s and replay52.109340seconds. [Records](2026-10-21-flashnext-rebase-repair/device-summary.json). This does not establish a useful replay gain over52.128seconds; it remains OFF. No target-model computation changes with this flag.
+
+
+## Longer prefill window
+
+The default two-chunk pipeline limits overlap even when the next native checkpoint is farther away. Optional `EXL3_NATIVE_PREFILL_WINDOW=8` keeps only one chunk processed ahead and stops at the unchanged native checkpoint or last-full-page barrier. Same-native differential at12289/32769tokens observes4/8chunk windows and compares every chunk's logical KV/pages, exports and MTP carry; full paired recurrent state and checkpoints match at drained boundaries, as do32greedy continuation tokens. [Receipts](2026-10-21-flashnext-rebase-repair/window-parity.json).
+
+With overlap OFF and full901120pool, the longer window completes20replay requests in48.011139seconds, medianTTFT0.697082seconds, versus52.128210seconds with the two-chunk pipeline. [Records](2026-10-21-flashnext-rebase-repair/window-only-summary.json). The original runtime remains the control.
+
+Early shared-expert overlap matches the serial shared graph on layers3/20 at rows1/4/16/32/33, with actual launch-count assertions and real unload/reallocation. [Layer receipts](2026-10-21-flashnext-rebase-repair/shared-real-layer-parity.json). Private external streams failed allocator lifetime checks; a first pooled-stream version still exhausted full-pool memory. Those replay results are invalid. The revised resource implementation shares one borrowed stream perGPU and releases its retained input after routed submission. Full-pool comparison is pending.
