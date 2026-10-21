@@ -1,4 +1,62 @@
---- a/exllamav3/cache/checkpoint_policy.py
+--- a/exllamav3/architecture/qwen4_exp_mtp.py
++++ b/exllamav3/architecture/qwen4_exp_mtp.py
+@@ -3,6 +3,10 @@
+ import torch
+ from ..util.device_copy import to_device
+ import weakref
++import os
++from ..modules.draft_head_prefix import DraftHeadPrefix
++
++_MTP_HEAD_N = int(os.environ.get("EXL3_MTP_HEAD_N", "0"))
+ 
+ from ..model.config import Config
+ from ..model.model import Model
+@@ -123,6 +127,7 @@
+         self.target_embed = None
+         self.target_lm_head = None
+         self.attached_model = None
++        self._head_prefix = None
+ 
+     @override
+     def prepare_inputs(self, input_ids: torch.Tensor, params: dict) -> torch.Tensor:
+@@ -157,6 +162,16 @@
+         self.draft_verifier_params.update({
+             "export_state_norm_keys": {target_mixer.key},
+         })
++        self._head_prefix = None
++        if _MTP_HEAD_N > 0 and not target.loaded_tp:
++            self._head_prefix = DraftHeadPrefix(_MTP_HEAD_N)
++            self._head_prefix.prepare(target.modules[target.logit_layer_idx], target.config.vocab_size)
++
++
++    @override
++    def unload(self):
++        self._head_prefix = None
++        return super().unload()
+ 
+     def default_load_shape_dtype(self, chunk_size):
+         return (1, 1), torch.long
+@@ -174,5 +189,17 @@
+         bsz, seq, _ = state.shape
+         stack = to_device(state, mixer.device).view(bsz, seq, mixer.hc_mult, mixer.hidden_size)
+         state = mixer.forward(stack, params)
+-        # The target's head, TP-aware; exports draft confidence when the generator asks
+-        return self.attached_model().lm_head_argmax(state, params)
++        target = self.attached_model()
++        if self._head_prefix is not None and not target.loaded_tp:
++            lm = target.modules[target.logit_layer_idx]
++            state_on_head = lm.prepare_for_device(state, params)
++            logits = self._head_prefix.logits(lm, state_on_head, target.config.vocab_size, params)
++            if logits is not None:
++                logits = logits.view(bsz, seq, -1)
++                if params.get("export_draft_conf"):
++                    conf, ids = logits.max(-1)
++                    params["draft_conf"] = conf
++                    return ids
++                return logits.argmax(-1)
++        # Unsupported/off/TP paths retain native vocabulary cropping and confidence export.
++        return target.lm_head_argmax(state, params)
+--- /dev/null
 +++ b/exllamav3/cache/checkpoint_policy.py
 @@ -0,0 +1,26 @@
 +"""R823b opt-in tail density; one policy shared by Job, LS windows, and trace."""
@@ -27,7 +85,7 @@
 +    if tail and position < prompt_end - tail:
 +        return 32768
 +    return generator.recurrent_checkpoint_interval_pp
---- a/exllamav3/cache_trace.py
+--- /dev/null
 +++ b/exllamav3/cache_trace.py
 @@ -0,0 +1,255 @@
 +"""R823 CPU diagnostics: bounded arrays, existing page digests, keyed output hashes."""
@@ -363,6 +421,156 @@
          # Generation with draft model
          if self.draft_model:
              if self.dflash_draft:
+--- a/exllamav3/modules/block_sparse_mlp.py
++++ b/exllamav3/modules/block_sparse_mlp.py
+@@ -1035,7 +1035,15 @@
+         # f_threshold-1 instead of MAX_BSZN). Expert-range shards (CPU split, TP) are masked
+         # inside the kernel (out-of-range picks contribute exact zeros). Shared experts run
+         # through BC_GatedMLP's own multi-row graph ahead of the kernel (see mlp.py)
+-        bszn_eligible = self.bc is not None and bsz <= MAX_BSZN
++        # The official BC ABI holds eight rows. Verification batches above that
++        # can still use it as ordered microbatches; each output is copied before
++        # the next call overwrites the shared BC scratch. No C++ capacity changes.
++        chunk_decode = (
++            os.environ.get("EXL3_MOE_DECODE_CHUNKS", "0") == "1" and
++            MAX_BSZN < bsz <= 32 and y.is_cuda and not self.tp_reduce and
++            not self.alt_residual_channel and self.latent_in is None
++        )
++        bszn_eligible = self.bc is not None and (bsz <= MAX_BSZN or chunk_decode)
+ 
+         # Routing
+         if self.router_pre_norm:
+@@ -1388,8 +1396,11 @@
+         # quantized paths apply), so this is the last tier
+         else:
+             assert bszn_eligible
+-            self.bc.run_bszN(y, selected_experts, routing_weights)
+-            final_hidden_states = self.experts_cfg.out_bszn[:bsz].view(eshape)
++            if chunk_decode:
++                final_hidden_states = self._run_decode_chunks(y, selected_experts, routing_weights).view(eshape)
++            else:
++                self.bc.run_bszN(y, selected_experts, routing_weights)
++                final_hidden_states = self.experts_cfg.out_bszn[:bsz].view(eshape)
+             bc_sh_exp = self.bc_sh_exp
+ 
+         # Independent shared-expert work can cover the CPU job (split tail or whole layer)
+@@ -1457,6 +1468,17 @@
+         if out_dtype is not None:
+             final_hidden_states = final_hidden_states.to(out_dtype)
+         return final_hidden_states
++
++
++    def _run_decode_chunks(self, y, selected_experts, routing_weights):
++        # BC owns one eight-row output scratch, including its shared-expert sum.
++        # Copies and subsequent BC calls stay ordered on the same CUDA stream.
++        result = torch.empty((y.shape[0], self.expert_size), dtype=torch.float, device=y.device)
++        for start in range(0, y.shape[0], MAX_BSZN):
++            end = min(start + MAX_BSZN, y.shape[0])
++            self.bc.run_bszN(y[start:end], selected_experts[start:end], routing_weights[start:end])
++            result[start:end].copy_(self.experts_cfg.out_bszn[:end-start])
++        return result
+ 
+ 
+     @override
+--- /dev/null
++++ b/exllamav3/modules/draft_head_prefix.py
+@@ -0,0 +1,85 @@
++"""Opt-in whole-tile vocabulary prefix for draft proposals only."""
++import os
++import torch
++from .quant.exl3 import LinearEXL3
++from ..ext import exllamav3_ext as ext
++
++def tensor_version(t):
++    try:
++        return t._version
++    except RuntimeError:  # Model loaders may produce inference tensors without version counters.
++        return None
++
++class DraftHeadPrefix:
++    def __init__(self, cap):
++        self.cap = cap
++        self.key = None
++        self.cache = None
++        self.checked = set()
++
++    def clear(self):
++        self.key = None
++        self.cache = None
++        self.checked.clear()
++
++    def prepare(self, lm, vocab_size, params=None):
++        params = params or {}
++        inner = getattr(lm, "inner", None)
++        if (type(inner) is not LinearEXL3 or self.cap <= 0 or
++            type(vocab_size) is not int or vocab_size <= 0 or
++            getattr(inner, "bias", None) is not None or
++            getattr(lm, "lora_a_tensors", None) or
++            getattr(lm, "pre_scale", 1.0) != 1.0 or
++            getattr(lm, "post_scale", 1.0) != 1.0 or
++            getattr(lm, "softcap", 0.0) != 0.0 or
++            params.get("ovr") or "capture" in params or params.get("reconstruct")):
++            self.clear()
++            return None
++        b, su, sv = inner.trellis, inner.suh, inner.svh
++        if (not all(isinstance(t, torch.Tensor) and t.is_cuda and t.is_contiguous() for t in (b, su, sv)) or
++            b.ndim != 3 or b.dtype != torch.int16 or su.dtype != torch.half or sv.dtype != torch.half or
++            su.ndim != 1 or sv.ndim != 1 or su.device != b.device or sv.device != b.device or
++            b.shape[0] * 16 != inner.in_features or su.numel() != inner.in_features or
++            sv.numel() < b.shape[1] * 16 or getattr(lm, "in_features", None) != inner.in_features or
++            self.cap >= min(vocab_size, b.shape[1] * 16) or
++            (b.shape[2] % 16 != 0 and not (b.shape[2] % 16 == 8 and inner.mul1))):
++            self.clear()
++            return None
++        n = min(self.cap, vocab_size, b.shape[1] * 16) // 128 * 128
++        if n <= 0:
++            self.clear()
++            return None
++        key = (id(lm), id(inner), self.cap, vocab_size, n, b.device,
++               id(b), b.data_ptr(), tensor_version(b), tuple(b.shape), id(su), su.data_ptr(), tensor_version(su),
++               id(sv), sv.data_ptr(), tensor_version(sv), inner.mcg, inner.mul1)
++        if key != self.key:
++            self.clear()
++            # Slice only complete output tiles. Keep the complete packed bitrate dimension.
++            self.cache = (b[:, :n // 16, :].contiguous(), sv[:n].contiguous(), n)
++            self.key = key
++        return self.cache
++
++    def logits(self, lm, x, vocab_size, params):
++        cache = self.prepare(lm, vocab_size, params)
++        if cache is None:
++            return None
++        b, sv, n = cache
++        inner = lm.inner
++        if (x.dtype != torch.half or x.device != b.device or x.ndim != 3 or
++            x.shape[-1] != inner.in_features):
++            return None
++        x = x.reshape(-1, x.shape[-1]).contiguous()
++        xh = torch.empty_like(x)
++        out = torch.empty((x.shape[0], n), device=x.device, dtype=torch.half)
++        ext.exl3_gemm(x, b, out, inner.suh, xh, sv, -1, inner.mcg, inner.mul1, 0)
++        if os.environ.get("EXL3_MTP_HEAD_VERIFY", "0") == "1" and x.shape[0] not in self.checked:
++            ref = lm.forward(x.view(-1, 1, x.shape[-1]), params).reshape(x.shape[0], -1)[:, :n]
++            torch.testing.assert_close(out, ref, rtol=0.002, atol=0.04)
++            # An argmax difference is allowed only when both logits are within the comparison tolerance.
++            best, ids = ref.max(-1)
++            got = out.argmax(-1)
++            gaps = best - ref.gather(1, got[:, None]).squeeze(1)
++            assert bool(torch.all((ids == got) | (gaps <= 0.04 + best.abs() * 0.002)))
++            self.checked.add(x.shape[0])
++            print(f"[MTP-prefix-check] rows={x.shape[0]} cap={n} bits={b.shape[2]/16} PASS", flush=True)
++        return out
+--- a/exllamav3/modules/hyperconnections.py
++++ b/exllamav3/modules/hyperconnections.py
+@@ -544,7 +544,7 @@
+         dev = s3.device
+         xw = self._weighted_copy(s3, params)
+ 
+-        if R <= self.FUSED_MAX_R:
++        if R <= (32 if os.environ.get("EXL3_GR_DECODE_ROWS32", "0") == "1" else self.FUSED_MAX_R):
+             # Decode/MTP-class row counts (the fused path's whole domain) take bucketed
+             # workspaces from the per-device static cache, shared by every GatedResidual site
+             # on the device: a site's outputs are consumed (block input, apply_) before the
 --- a/exllamav3/tokenizer/tokenizer.py
 +++ b/exllamav3/tokenizer/tokenizer.py
 @@ -1,6 +1,6 @@

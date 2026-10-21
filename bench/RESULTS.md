@@ -1,3 +1,4 @@
+- [Flash-Next rebase performance repair](results/flashnext-rebase-repair.md) — 2026-10-21: original-checkpoint MTP controls and native kernel profiles; experimental ports remain unpromoted.
 # Results
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).

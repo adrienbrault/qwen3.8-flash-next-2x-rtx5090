@@ -6,8 +6,10 @@ COPY out/engine/exllamav3 /opt/venv/lib/python3.12/site-packages/exllamav3
 COPY out/tabby /app
 COPY manifest.json /opt/flashnext-v164/manifest.json
 COPY cpu-check.py /opt/flashnext-v164/cpu-check.py
+COPY repair/test_prefix.py /opt/flashnext-v164/test-prefix.py
+COPY repair/test_decode_chunks.py /opt/flashnext-v164/test-decode-chunks.py
 ENV EXL3_CACHE_TRACE=0
 RUN python3 -m compileall -q /app/backends /app/common /app/endpoints /opt/venv/lib/python3.12/site-packages/exllamav3 && \
     python3 -c 'import exllamav3; from exllamav3 import Generator; from inspect import signature; assert "num_draft_tokens_by_batch" in signature(Generator.__init__).parameters; import endpoints.OAI.utils.chat_completion; import backends.exllamav3.model; print("actual engine and Tabby imports PASS")'
-RUN python3 /opt/flashnext-v164/cpu-check.py
+RUN python3 /opt/flashnext-v164/cpu-check.py && python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py
 LABEL local.flashnext.engine="da68d57de61781e5b74ad68698ac4caf36408d7a" local.flashnext.tabby="a270c555db91a5178d72f7dee7bdd34951ac1dad"
