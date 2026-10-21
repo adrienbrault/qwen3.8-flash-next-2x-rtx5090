@@ -4,6 +4,7 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-10-21
 
+- [Self-calibrated 2.18/2.68 bpw accuracy screen on one rebased engine: GSM8K100,69 tool scenarios and105680-token retrieval; no accuracy gain established](results/flashnext-v164-quality.md).
 - [Flash-Next 1.6.4 rebase screen: completed A/B/C/D throughput and six-agent replay; candidate not promoted, checkpoint accuracy pending](results/flashnext-v164-screen.md).
 
 ## 2026-10-08

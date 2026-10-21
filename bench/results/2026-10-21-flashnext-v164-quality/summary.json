@@ -1,0 +1,88 @@
+{
+  "B": {
+    "gsm8k_n": 100,
+    "gsm8k_correct": {
+      "strict-match": 98.0,
+      "flexible-extract": 98.0
+    },
+    "tool_scenarios": 69,
+    "tool_points": 121,
+    "tool_max_points": 138,
+    "tool_reported_score": 88,
+    "tool_status_counts": {
+      "pass": 57,
+      "partial": 7,
+      "fail": 5
+    },
+    "needle_hits": 3,
+    "needle_n": 3,
+    "needle_actual_prompt_tokens": [
+      105680
+    ],
+    "needle_length_finishes": 3
+  },
+  "C": {
+    "gsm8k_n": 100,
+    "gsm8k_correct": {
+      "strict-match": 98.0,
+      "flexible-extract": 99.0
+    },
+    "tool_scenarios": 69,
+    "tool_points": 119,
+    "tool_max_points": 138,
+    "tool_reported_score": 86,
+    "tool_status_counts": {
+      "pass": 56,
+      "partial": 7,
+      "fail": 6
+    },
+    "needle_hits": 3,
+    "needle_n": 3,
+    "needle_actual_prompt_tokens": [
+      105680
+    ],
+    "needle_length_finishes": 3,
+    "paired_vs_B": {
+      "strict-match": {
+        "gained": 1,
+        "lost": 1
+      },
+      "flexible-extract": {
+        "gained": 1,
+        "lost": 0
+      }
+    }
+  },
+  "D": {
+    "gsm8k_n": 100,
+    "gsm8k_correct": {
+      "strict-match": 98.0,
+      "flexible-extract": 99.0
+    },
+    "tool_scenarios": 69,
+    "tool_points": 121,
+    "tool_max_points": 138,
+    "tool_reported_score": 88,
+    "tool_status_counts": {
+      "pass": 57,
+      "partial": 7,
+      "fail": 5
+    },
+    "needle_hits": 3,
+    "needle_n": 3,
+    "needle_actual_prompt_tokens": [
+      105680
+    ],
+    "needle_length_finishes": 3,
+    "paired_vs_B": {
+      "strict-match": {
+        "gained": 1,
+        "lost": 1
+      },
+      "flexible-extract": {
+        "gained": 1,
+        "lost": 0
+      }
+    }
+  }
+}
