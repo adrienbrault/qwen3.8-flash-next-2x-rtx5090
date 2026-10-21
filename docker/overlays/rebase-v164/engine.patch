@@ -345,7 +345,14 @@
 +             finish_reason=finish.get('finish_reason'),eos_reason=result.get('eos_reason'))
 --- a/exllamav3/generator/generator.py
 +++ b/exllamav3/generator/generator.py
-@@ -39,6 +39,7 @@
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ import logging
++import os
+ import torch
+ from ..model.model import Model
+ from ..cache.cache import Cache
+@@ -39,6 +40,7 @@
          draft_model: Model | None = None,
          draft_cache: Cache | None = None,
          num_draft_tokens: int | None = None,
@@ -353,7 +360,7 @@
          show_visualizer: bool = False,
          enable_defrag: bool = True,
          cpu_cache_size: int = 0,
-@@ -252,6 +253,42 @@
+@@ -252,6 +254,42 @@
          else:
              self.num_draft_tokens = 0
  
@@ -396,7 +403,7 @@
          self.ngram_corpus = None
          if ngram_corpus is not None:
              if ngram_match_min <= 0:
-@@ -261,7 +298,7 @@
+@@ -261,7 +299,7 @@
          self.ngram_match_min = ngram_match_min
          # The widest verification pass any round can take: the regular drafter's window or a hybrid draft
          self.hybrid_draft_tokens = max(0, hybrid_draft_tokens or 0)
@@ -405,7 +412,19 @@
          self.dynamic_draft = dynamic_draft_tokens and self.num_draft_tokens > 0
          self.record_draft_stats = record_draft_stats
          max_q_size = max(self.max_draft_tokens + 1, max_q_size)
-@@ -743,6 +780,15 @@
+@@ -270,6 +308,11 @@
+         self.max_batch_size = max_batch_size
+         self.max_chunk_size = max_chunk_size
+ 
++        # Explicit multi-agent compatibility policy; OFF retains upstream defaults.
++        if os.environ.get("EXL3_PREFILL_COMPAT", "0") == "1":
++            shared_chunk_size = max_chunk_size
++            prefill_cooldown = 0
++            print(f"[prefill-policy] shared_chunk_size={shared_chunk_size} prefill_cooldown={prefill_cooldown}", flush=True)
+         # Prompt ingestion alongside generating jobs, see iterate()
+         if shared_chunk_size is None:
+             shared_chunk_size = (max_chunk_size // 2 + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE
+@@ -743,6 +786,15 @@
          if self.recurrent_cache is not None:
              self.recurrent_checkpoint()
  

@@ -20,3 +20,16 @@ The pruned-head cross-width comparison failed its proposed atol0.04/rtol0.002 bo
 A [source-built native receipt](2026-10-21-flashnext-rebase-repair/native-provenance.json) pins the experimental32-row capacity and carried kernels. This is separate from the initial official-wheel candidate; it compiles the new source plus both manifest patches. Real-weight kernel checks and the recovery performance screen are pending. The original daily remains selected.
 
 The first source-native contact failed closed on an unchanged256-slot frontend validation bound despite the rebuilt512-slot run table. The corrected native patch binds that check to the table capacity; the [updated source receipt](2026-10-21-flashnext-rebase-repair/native-provenance-fixed.json) records the rebuilt extension. The earlier receipt is retained as failed-contact provenance, not a runnable Flash-Next result. The corrected real-weight contact is pending.
+
+## Source-native ablation, 2026-10-21
+
+Same original checkpoint and full 901120-token KV pool. Source-built 1.6.4 image `sha256:ec2ac7be9ebf809bf8cb56a9d2f1e41f548a8c3c132ca46c94c97a804aed2c2a`. Four successive boots; no CPU compilation during these measurements. Two forced 1024-token decode runs after warmup; six-agent replay has 20 complete requests. Results: [raw records](2026-10-21-flashnext-rebase-repair/native-screen-summary.json).
+
+| Candidate additions | c1 tok/s per stream | c4 | c8 | Replay seconds |
+|---|---:|---:|---:|---:|
+|32-row native capacity|179.62|96.57|66.94|82.076|
+|+ carried integer MoE kernels|191.28|113.12|82.32|78.533|
+|+ carried int8 mixer|204.00|128.96|88.19|76.965|
+|+ pruned draft head|211.24|130.39|87.22|76.570|
+
+This recovers much of the decode regression, but remains below the old stack’s 156.24 tok/s c4 and 42.30-second replay control. It does not establish full target-logit parity or qualify a promotion. The original image remains served.

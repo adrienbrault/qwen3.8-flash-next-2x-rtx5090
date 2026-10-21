@@ -1,0 +1,114 @@
+{
+  "native-base": {
+    "1": {
+      "per_stream_median_tps": 179.625,
+      "run_medians": [
+        179.3,
+        179.95
+      ],
+      "aggregate_median_tps": 179.625
+    },
+    "4": {
+      "per_stream_median_tps": 96.5675,
+      "run_medians": [
+        95.3,
+        97.83500000000001
+      ],
+      "aggregate_median_tps": 386.275
+    },
+    "8": {
+      "per_stream_median_tps": 66.9425,
+      "run_medians": [
+        66.87,
+        67.015
+      ],
+      "aggregate_median_tps": 539.2750000000001
+    },
+    "agent_span_s": 82.07609868049622,
+    "agent_ttft_median_s": 3.7619584798812866
+  },
+  "native-full": {
+    "1": {
+      "per_stream_median_tps": 211.235,
+      "run_medians": [
+        210.8,
+        211.67
+      ],
+      "aggregate_median_tps": 211.235
+    },
+    "4": {
+      "per_stream_median_tps": 130.39249999999998,
+      "run_medians": [
+        131.345,
+        129.44
+      ],
+      "aggregate_median_tps": 520.24
+    },
+    "8": {
+      "per_stream_median_tps": 87.22,
+      "run_medians": [
+        86.755,
+        87.685
+      ],
+      "aggregate_median_tps": 700.255
+    },
+    "agent_span_s": 76.56976962089539,
+    "agent_ttft_median_s": 3.103141665458679
+  },
+  "native-mixer": {
+    "1": {
+      "per_stream_median_tps": 204.005,
+      "run_medians": [
+        203.75,
+        204.26
+      ],
+      "aggregate_median_tps": 204.005
+    },
+    "4": {
+      "per_stream_median_tps": 128.9575,
+      "run_medians": [
+        124.175,
+        133.74
+      ],
+      "aggregate_median_tps": 515.075
+    },
+    "8": {
+      "per_stream_median_tps": 88.185,
+      "run_medians": [
+        87.73500000000001,
+        88.63499999999999
+      ],
+      "aggregate_median_tps": 707.0550000000001
+    },
+    "agent_span_s": 76.96468710899353,
+    "agent_ttft_median_s": 3.0950021743774414
+  },
+  "native-moe": {
+    "1": {
+      "per_stream_median_tps": 191.275,
+      "run_medians": [
+        191.08,
+        191.47
+      ],
+      "aggregate_median_tps": 191.275
+    },
+    "4": {
+      "per_stream_median_tps": 113.12,
+      "run_medians": [
+        112.975,
+        113.265
+      ],
+      "aggregate_median_tps": 448.695
+    },
+    "8": {
+      "per_stream_median_tps": 82.32,
+      "run_medians": [
+        82.535,
+        82.10499999999999
+      ],
+      "aggregate_median_tps": 665.68
+    },
+    "agent_span_s": 78.53330540657043,
+    "agent_ttft_median_s": 3.177785038948059
+  }
+}

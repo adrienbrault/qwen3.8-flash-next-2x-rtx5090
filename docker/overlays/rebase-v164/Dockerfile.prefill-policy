@@ -1,0 +1,8 @@
+FROM tabbyapi:flashnext-v164-native-fixed
+COPY repair/prefill-policy.patch /opt/flashnext-v164/prefill-policy.patch
+WORKDIR /opt/flashnext-native-src
+RUN git apply --unsafe-paths /opt/flashnext-v164/prefill-policy.patch && \
+    cp exllamav3/generator/generator.py /opt/venv/lib/python3.12/site-packages/exllamav3/generator/generator.py
+COPY manifest.json /opt/flashnext-v164/manifest.json
+WORKDIR /app
+RUN python3 /opt/flashnext-v164/cpu-check.py && python3 /opt/flashnext-v164/test-prefix.py && python3 /opt/flashnext-v164/test-decode-chunks.py

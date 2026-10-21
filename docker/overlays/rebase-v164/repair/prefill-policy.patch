@@ -1,0 +1,21 @@
+--- a/exllamav3/generator/generator.py
++++ b/exllamav3/generator/generator.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ import logging
++import os
+ import torch
+ from ..model.model import Model
+ from ..cache.cache import Cache
+@@ -307,6 +308,11 @@
+         self.max_batch_size = max_batch_size
+         self.max_chunk_size = max_chunk_size
+ 
++        # Explicit multi-agent compatibility policy; OFF retains upstream defaults.
++        if os.environ.get("EXL3_PREFILL_COMPAT", "0") == "1":
++            shared_chunk_size = max_chunk_size
++            prefill_cooldown = 0
++            print(f"[prefill-policy] shared_chunk_size={shared_chunk_size} prefill_cooldown={prefill_cooldown}", flush=True)
+         # Prompt ingestion alongside generating jobs, see iterate()
+         if shared_chunk_size is None:
+             shared_chunk_size = (max_chunk_size // 2 + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE

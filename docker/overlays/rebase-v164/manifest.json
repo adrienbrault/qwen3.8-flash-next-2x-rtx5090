@@ -27,9 +27,10 @@
   "parent_image": "tabbyapi:r828-prompt-lookup-r3",
   "parent_image_id": "sha256:dfaed2cba56f353a99589549b6ccb971fe137f5e7d11cbeed522f207fb8b8724",
   "patch_sha256": {
-    "engine.patch": "92a7ade73199df8b7a9c13f5d1eff2be99a19b004d2d46fc3c072a08db91f45e",
+    "engine.patch": "34a00d1f9ff0bb0ae56dfa07730f535a85d5f9e3481b4e66c0b21d53aa161264",
     "tabby.patch": "08b25e003dacaca90c67d1e42eaaf1f5df17a6ffc3cc88f1e549e1259ac07f60",
     "native.patch": "73f7f96e82d3ced744f0141f2abe4af3579eec9a8e14c93c2a8b9faf1318395f",
-    "repair/native-guard.patch": "f630340d9718482ad197fd43e11d32b305f444240fa6370da2a288fad117b0d0"
+    "repair/native-guard.patch": "f630340d9718482ad197fd43e11d32b305f444240fa6370da2a288fad117b0d0",
+    "repair/prefill-policy.patch": "8ebc9c14ed633b59061add72cd5424303be5b26408b2531d39ce99f788b8a6fe"
   }
 }
