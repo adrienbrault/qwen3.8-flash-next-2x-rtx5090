@@ -86,3 +86,9 @@ ssh flan 'bash /srv/qwen5090/daily-restore-retry.sh'            # restore the bo
 ```
 
 Decide per run whether the restore is needed: the two cannot coexist, and whichever is served owns the box.
+
+## Flash-Next as the selected daily (2026-10-21)
+
+The validated `tabbyapi:r828-prompt-lookup-r3` configuration was restored on :8022 on 2026-10-21. Its checkpoint, 262,144-token window, 901,120-token pool and launcher flags are unchanged. Boot warm-up, model identity and an arithmetic chat smoke passed. No new engine or checkpoint was installed.
+
+`scripts/serve-flashnext-daily.sh` runs on the serving host after installing `scripts/launch-flashnext.sh` as `/srv/qwen5090/launch-flashnext.sh`. It pins that published launcher's SHA256, checks the GPU lock and pending queue, boots with a clean environment, and writes `flashnext` to `/srv/qwen5090/default-daily` after a healthy model check. The infrastructure restoration helpers dispatch this selector to the installed wrapper; they no longer select another engine after an experiment. The existing launcher retains its power and memory-clock policy.
