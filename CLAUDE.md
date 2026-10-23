@@ -4,7 +4,7 @@ This file is the working agreement for this repository, for people and coding ag
 
 ## What this repo is
 
-Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for Qwen3.8-Flash-Next, served as `qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab` by **TabbyAPI on top of ExLlamaV3** on the two RTX 5090 cards of the `flan` box, port **8022**. The served image and its tag are in `scripts/launch-flashnext.sh` (`DAILY_IMG`) and in the README's Served configuration.
+Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for Qwen3.8-Flash-Next, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal` by **TabbyAPI on top of ExLlamaV3** on the two RTX 5090 cards of the `flan` box, port **8022**. The served image and its tag are in `scripts/launch-flashnext.sh` (`DAILY_IMG`) and in the README's Served configuration.
 
 The LLM stack on that box has a second home in a private infrastructure repository: its `flan/launch-flashnext-tabby.sh` is the source of `scripts/launch-flashnext.sh` here. The two must never disagree about the served configuration.
 

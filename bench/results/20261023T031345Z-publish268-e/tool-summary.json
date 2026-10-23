@@ -1,0 +1,35 @@
+{
+  "n_scenarios": 69,
+  "trials": 4,
+  "final_score": 88,
+  "scores_by_trial": [
+    88,
+    87,
+    89,
+    88
+  ],
+  "mean": 88,
+  "stddev": 0.8,
+  "ci95": [
+    87.2,
+    88.8
+  ],
+  "points_by_trial": [
+    122,
+    120,
+    123,
+    122
+  ],
+  "api": {
+    "n_ok": 774,
+    "finishes": {
+      "length": 1,
+      "tool_calls": 446,
+      "stop": 327
+    },
+    "n_scenario_requests": 774,
+    "minimum_scenario_requests": 276
+  },
+  "seed": null,
+  "version": "2.1.0"
+}

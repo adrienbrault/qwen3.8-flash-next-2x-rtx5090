@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# 2026-10-23: served turboderp self-calibrated 2.68 bpw, image tabbyapi:tune268-r2.
+# Source launcher SHA256 7e36acd2019ffc21082d8a0d50d8c43ea5403c9b0cba5fe39968810e569288c7;
+# HOME lookup scrubbed as in the previous public launcher. 50 launcher selectors, pool 819,200.
+# tune268 r1: EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1.
+# tune268 r2: EXL3_MOE_PREFILL_E3_HALF=1; HIST, STATIC and UNCAP remain image-default 0.
+# Recipe: docker/overlays/tune268{,-r2}/; results: bench/results/publish268-served-268.md.
+# The following dated promotion comments describe predecessor configurations.
 # R828c (2026-10-02 19:10 UTC): adaptive prompt lookup beside MTP; 47 launcher selectors.
 # Source launcher md5 fb4e9d66; image dfaed2cb; trace on, NVMe off, FASTWARM retained.
 # Records: bench/results/r827-r828-prompt-lookup.md.
@@ -7,7 +14,7 @@
 # Source launcher md5 262e9c31; image tabbyapi:r825c-hostprepare; trace on, NVMe default off.
 # Records and limits: bench/results/r825-whole-prompt-window.md.
 # Rollback: scripts/launchers/launch-flashnext-r823p-tailckpt.sh.
-R825C_IMAGE_ID=sha256:dfaed2cba56f353a99589549b6ccb971fe137f5e7d11cbeed522f207fb8b8724
+R825C_IMAGE_ID=sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd   # tune268r2 2026-10-23: tabbyapi:tune268-r2 (was 48f4ad3a = tune268-r1, before that dfaed2cb)
 # R823p (2026-10-01): tail recurrent checkpoints captured inside the LS prefill pipeline.
 # Image tabbyapi:r823c-cachetail-inforward; 44 launcher keys, image EXL3_CACHE_TRACE=1;
 # EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096, TAIL_PP=12288 and INFORWARD=1; NVMe default off.
@@ -62,7 +69,7 @@ R825C_IMAGE_ID=sha256:dfaed2cba56f353a99589549b6ccb971fe137f5e7d11cbeed522f207fb
 # flat, GSM8K 0.985 = OFF, needles 5/5) on the stacked image tabbyapi:stack-r4-e3r2 (patches/exllamav3/stack/r4-e3r2: decode r4
 # + E3 r2, bindings.cpp merged with fuzz 0), EXL3_MOE_PREFILL_E3=1. Greedy c1 fingerprint unchanged (ae890c45d1000582); the 30k
 # fingerprint becomes 4a255910dee2d9c5 (E3's prefill accumulation order). ROLLBACK: launch-flashnext-r514.sh.
-# launch-flashnext.sh -- serve Qwen3.8-Flash-Next (EXL3 2.50bpw, r0b0tlab) on 2x RTX 5090 via TabbyAPI + ExLlamaV3.
+# launch-flashnext.sh -- serve Qwen3.8-Flash-Next (EXL3 2.68bpw, turboderp self-cal) on 2x RTX 5090 via TabbyAPI + ExLlamaV3.
 #
 # R514 (2026-09-19): R511 + codex decode round 4 group I on image tabbyapi:decode-kernels-r4 (= decode-kernels-r2 + r4 overlay,
 # every r4 flag default-off = r2 bytes): EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536. R499: greedy
@@ -131,7 +138,7 @@ PORT=${PORT:-8022}
 # earlier version of this sentence said exllamav3 "autosplits" -- it does not; the autosplit branch is taken only
 # when `gpu_split` is empty, and the boot log says "(manual GPU split)".) 262,144 boots; treat it as the cap.
 MAXLEN=${MAXLEN:-262144}
-CACHE=${CACHE:-901120}   # R785 (rebase-dev r3, tiled HC prefill on): the pool R784 found, floor 884,736 (user 2026-09-27); was 983040. R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
+CACHE=${CACHE:-819200}   # tune268 (2026-10-23, user: "Serve the 2.6 now"): the 2.68 self-cal pack's largest passing pool (poolfit 201110, ABBA 210133 PB-819200); 2.50 pack was 901120. R785 notes: R785 (rebase-dev r3, tiled HC prefill on): the pool R784 found, floor 884,736 (user 2026-09-27); was 983040. R717c (2026-09-25, user OK): -16,384 tokens pays rows32's 48 MiB on cuda:0 with room to spare (boot 1125/2513 vs 1033/2421 MiB free); was 999424. R561: 8 slots (R558 ladder top at 8 slots); was 1032192 at 4 slots; R548: bf16 GDN state (ladder top 1032192 at normal placement); was 983040; R546: QSA raw-key ring (R544b ladder top 983040 at normal placement); was 819200; R525: int8 mixer weights free 218 / 258 MiB (R516); R511: 786432
 # log() and LOG are defined HERE, above every block that can warn through them. They used to sit below the
 # EXTRA_ENV loop, so `EXTRA_ENV='FOO' ./launch-flashnext.sh` printed "log: command not found" on stderr and the
 # warning never reached the launcher log.
@@ -277,7 +284,7 @@ DRAFT=${DRAFT:-3}
 #   R784's promote.env). Gates: bench/results/r784-rebase-dev-r3.md, bench/results/r785-promote-rebase-r3.md.
 #   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache and
 #   EXTRA_ENV without EXL3_GR_MIX_TILED=1 (the R783 launcher: 983,040, 41 keys).
-DAILY_IMG=tabbyapi:r828-prompt-lookup-r3
+DAILY_IMG=tabbyapi:tune268-r2   # tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -397,7 +404,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # stride, which must survive every rebase), EXL3_GR_STATE_REGRID=1 (unreachable with HC_MIX_V2_INT8=1 + MIX_V3 + STATE_IN_UP)
 # and EXL3_HC_MIX_V3_PDL=0 (the literal default). The image bakes none of the three. The R425 note above about re-adding
 # EXL3_HOST_GAP_REWIND=1 is historical since R789.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1 EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1 EXL3_MOE_PREFILL_E3_HALF=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
@@ -429,11 +436,11 @@ done
 # so agreed with a wrong boot; the count here is what the container actually gets.
 log "env keys ($(echo $EXTRA_ENV | wc -w)): $EXTRA_ENV"
 # R498 (2026-09-18): CKPT_NAME selects another checkpoint directory under /srv/qwen5090/models (the served model id follows it),
-# e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 3.05bpw.
-CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab}   # R511 (was qwen3.8-flash-next-exl3-3.05bpw)
+# e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 2.68bpw self-calibrated pack.
+CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.68bpw-selfcal}   # tune268 2026-10-23: turboderp self-cal 2.68 (rev d660113325); was qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab (R511), before that 3.05bpw
 CKPT=/srv/qwen5090/models/$CKPT_NAME
 MODEL=$CKPT_NAME
-TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-rebase-dev-r3}   # kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
+TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-tune268}   # tune268 2026-10-23: the cache warmed by the tune268 units (was /srv/qwen5090/.exl3cache-rebase-dev-r3). Older notes: kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
 # R741: overridable so an experiment image with other kernels (e.g. upstream's half_k autotune keys) warms its own
 # directory and never writes into the daily's; default = the daily's.
 CFG=${R828_PREFLIGHT_DIR:-/srv/qwen5090}/flashnext-config.yml

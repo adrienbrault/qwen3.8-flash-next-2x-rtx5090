@@ -1,0 +1,455 @@
+diff --git a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh
+index 4195436..2593af8 100644
+--- a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh
++++ b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_instances.cuh
+@@ -251,6 +251,9 @@ EXL3_MOE_COOP_R2_INST_DECL(4)
+     MoeCoopKernel exl3_moe_coop_r2_b_h##K(bool wide);
+ EXL3_MOE_COOP_TUNED_INST_DECL_H(2)
+ 
++// tune268-r2: separate A kernels without the two-CTA register target (bsz=1 only).
++MoeCoopKernel exl3_moe_coop_v2_a_h2_uncap(int Hi, bool wide);
++
+ #define EXL3_MOE_COOP_TUNED_INST_DEF_H(K) \
+     MoeCoopKernel exl3_moe_coop_v2_a_h##K(int Hi, bool wide, bool global) \
+     { \
+diff --git a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_instances.cuh b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_instances.cuh
+index b94c550..34c6ef9 100644
+--- a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_instances.cuh
++++ b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_instances.cuh
+@@ -44,3 +44,7 @@ EXL3_MOE_DECLARE_MTILE_GETTERS(8);
+ extern fp_exl3_moe_kernel exl3_moe_kernel_instances[];
+ extern fp_exl3_moe_kernel exl3_moe_kernel_instances_m32[];   // [K], N = 128
+ extern fp_exl3_moe_kernel exl3_moe_kernel_instances_m64[];   // [K], N = 128
++
++// tune268-r2: private -5 template tag = fixed 2.5 bpw, never an integer bit width.
++// Existing kernel templates and instance tables are unchanged.
++fp_exl3_moe_kernel exl3_moe_prefill_h2_static(int m_tile);
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe.cu b/exllamav3/exllamav3_ext/quant/exl3_moe.cu
+index f8923e9..c4d883e 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe.cu
+@@ -11,6 +11,8 @@ namespace cg = cooperative_groups;
+ #include "bits_k.cuh"
+ #include "exl3_devctx.cuh"
+ #include <set>
++#include <cstdlib>
++#include <cstring>
+ 
+ int exl3_moe_max_concurrency(int device)
+ {
+@@ -303,6 +305,23 @@ void exl3_moe
+         kernel = m_tile >= 64 ? exl3_moe_kernel_instances_m64[K] : exl3_moe_kernel_instances_m32[K];
+     }
+ 
++    // tune268-r2: preserve the exact planner, row tiles, launch shape and slot
++    // arithmetic. Only replace the uniform K2.5 runtime-dispatch kernel. The
++    // deterministic-slot requirement excludes schedule-dependent atomic output.
++    // All cheap exclusions precede the env read; no decode call can enter.
++    if (bsz >= 512 && hidden_dim == 2560 && intermediate_dim == 640 &&
++        num_experts == 512 && num_experts_per_tok == 10 && cc == CC_BLACKWELL &&
++        cb_idx == 1 && act_function == MOE_ACT_SILU &&
++        K2_gate == 5 && K2_up == 5 && K2_down == 5 && _output_scratch)
++    {
++        const char* flag = std::getenv("EXL3_MOE_PREFILL_HALF_STATIC");
++        if (flag && !std::strcmp(flag, "1"))
++        {
++            const auto* prop = at::cuda::getDeviceProperties(device);
++            if (prop->major == 12 && prop->minor == 0) kernel = exl3_moe_prefill_h2_static(m_tile);
++        }
++    }
++
+     if (moe_kernel_attr_set[device].find((void*) kernel) == moe_kernel_attr_set[device].end())
+     {
+         cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_max);
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu b/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
+index 92c0668..b437393 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop.cu
+@@ -154,7 +154,8 @@ static int moe_coop_v2_mode()
+ 
+ // tune268 (EXL3_MOE_COOP_HALF, read per launch like V2 / V3; unset / 0 = off): half-integer rates (K2.5 only, mul1)
+ // take the V2 / V3 / r2 launches below with HALF kernels instead of upstream's V1 launch. V1's arithmetic (staged
+-// dq8_half, same k partition, fold points and sums) on V2's geometry, so the output is V1's bitwise
++// dq8_half, same k partition, fold points and sums) on V2's geometry: bitwise V1 at EXL3_MOE_COOP_V2=1.
++// Mode 2 may choose a different wide-B geometry and is not covered by that identity claim.
+ static bool moe_coop_half_mode()
+ {
+     const char* env = std::getenv("EXL3_MOE_COOP_HALF");
+@@ -164,12 +165,20 @@ static bool moe_coop_half_mode()
+ }
+ 
+ // Ring bytes of a V3 / r2 kernel (= exl3_moe_coop_v3_ns::ring_bytes<K, half>())
+-static int moe_coop_ring_bytes(int K, bool half)
++static constexpr int moe_coop_ring_bytes(int K, bool half)
+ {
+     using namespace exl3_moe_coop_v3_ns;
+     return WK * V3_PF * WNT * (half ? 4 * (2 * K + 1) : 8 * K) * 4;
+ }
+ 
++// Tie the actual host formula to the device layout for every supported ring.
++#define CHECK_RING(K, H) static_assert(moe_coop_ring_bytes(K, H) == \
++    exl3_moe_coop_v3_ns::ring_bytes<K, H>(), "host/device MoE ring size mismatch")
++CHECK_RING(1, false); CHECK_RING(2, false); CHECK_RING(3, false); CHECK_RING(4, false);
++CHECK_RING(5, false); CHECK_RING(6, false); CHECK_RING(7, false); CHECK_RING(8, false);
++CHECK_RING(1, true); CHECK_RING(2, true); CHECK_RING(3, true);
++#undef CHECK_RING
++
+ static MoeCoopKernel moe_coop_v2_kernel(int K, int cb, int Hi, bool wide, bool global, bool a, bool half = false)
+ {
+     if (half)
+@@ -306,6 +315,11 @@ static void moe_coop_v2_launch
+                           : moe_coop_v2_kernel(K_gu, cb, p.Hi, wide_a, p.a_global, true, half_gu);
+     MoeCoopKernel kb = v3 ? moe_coop_v3_kernel(K_d, cb, wide_b, false, merge_b, half_d)
+                           : moe_coop_v2_kernel(K_d, cb, p.Hi, wide_b, p.a_global, false, half_d);
++    if (p.bsz == 1 && !v3 && half_gu && K_gu == 2 && cb == 2)
++    {
++        const char* flag = std::getenv("EXL3_MOE_COOP_HALF_A_UNCAP");
++        if (flag && !std::strcmp(flag, "1")) ka = exl3_moe_coop_v2_a_h2_uncap(p.Hi, wide_a);
++    }
+     moe_coop_smem_optin(ka.kernel, ka.smem);
+     moe_coop_smem_optin(kb.kernel, kb.smem);
+     const int grid_a = moe_coop_v2_grid(ka, slots * nproj * (p.I / (wide_a ? 128 : MOE_COOP_COLS)) * p.ksplit_a, slots, device);
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe_coop_v2_kernel.cuh b/exllamav3/exllamav3_ext/quant/exl3_moe_coop_v2_kernel.cuh
+index cbe144b..43b1ab2 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_coop_v2_kernel.cuh
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_coop_v2_kernel.cuh
+@@ -557,7 +557,7 @@ void exl3_moe_coop_b_kernel(const MoeCoopParams p)
+ // tune268 (EXL3_MOE_COOP_HALF): the same kernels for a half-integer rate bits + 0.5 (mul1). Separate names so the
+ // integer kernels above keep their templates (and SASS); V1's HALF arithmetic (staged dq8_half), V2's schedule
+ template <int bits, bool WIDE>
+-__global__ __launch_bounds__(THREADS, 2)   // <= 64 registers, as V1's HALF kernels (unbounded, ptxas took 79-107)
++__global__ __launch_bounds__(THREADS, 2)   // two-CTA target: 64-reg cap; r1 A spills 44-52 B (V1 is unbounded)
+ void exl3_moe_coop_a_kernel_h(const MoeCoopParams p)
+ {
+     for (int i = blockIdx.x * THREADS + threadIdx.x; i < p.ctr_b_len; i += gridDim.x * THREADS)
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp
+index 3499259..d12bfdc 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3.cpp
+@@ -1,3 +1,5 @@
++#include <cstdlib>
++#include <cstring>
+ #include <torch/extension.h>
+ #include <c10/cuda/CUDAGuard.h>
+ #include <c10/cuda/CUDAException.h>
+@@ -83,7 +85,10 @@ void exl3_moe_prefill_e3(
+                 "E3 r2 is pinned to top_k=10");
+     auto check_bits = [](int64_t bits, const char* name)
+     {
+-        TORCH_CHECK(bits >= 2 && bits <= 4, name, " K must be 2, 3, or 4");
++        const char* half = std::getenv("EXL3_MOE_PREFILL_E3_HALF");
++        TORCH_CHECK((bits >= 2 && bits <= 4) ||
++                    (bits == 5 && half && std::strcmp(half, "1") == 0),
++                    name, " K tag must be 2, 3, 4, or 5 (K2.5 requires E3_HALF=1)");
+     };
+     check_bits(gate_bits, "gate");
+     check_bits(up_bits, "up");
+@@ -193,7 +198,10 @@ void exl3_moe_prefill_e3_det(
+     TORCH_CHECK(token_sorted.numel() == x.size(0) * 10, "E3 det is pinned to top_k=10");
+     auto check_bits = [](int64_t bits, const char* name)
+     {
+-        TORCH_CHECK(bits >= 2 && bits <= 4, name, " K must be 2, 3, or 4");
++        const char* half = std::getenv("EXL3_MOE_PREFILL_E3_HALF");
++        TORCH_CHECK((bits >= 2 && bits <= 4) ||
++                    (bits == 5 && half && std::strcmp(half, "1") == 0),
++                    name, " K tag must be 2, 3, 4, or 5 (K2.5 requires E3_HALF=1)");
+     };
+     check_bits(gate_bits, "gate");
+     check_bits(up_bits, "up");
+diff --git a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3__cuda.cu b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3__cuda.cu
+index 2e3d630..d108b3e 100644
+--- a/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3__cuda.cu
++++ b/exllamav3/exllamav3_ext/quant/exl3_moe_prefill_e3__cuda.cu
+@@ -9,7 +9,7 @@
+ #include "exl3_moe_prefill_e3.cuh"
+ 
+ // MiaAI-Lab E3 transferred to the served EXL3 layout used by Qwen4-Exp:
+-//   * independently dispatched 2-, 3-, or 4-bit trellises, mul1 codebook
++//   * independently dispatched 2-, 2.5-, 3-, or 4-bit trellises, mul1 codebook
+ //   * independent gate/up SUH vectors (the original K4/MCG kernel shared one)
+ //   * served half-precision rounding boundaries around Hadamards/SiLU
+ //   * one device metadata launch before the three grouped compute phases
+@@ -29,13 +29,22 @@ constexpr float E3_HAD_SCALE = 0.088388347648f;
+ constexpr int E3_MB = 4;  // 64 rows
+ constexpr int E3_TILE_M = E3_MB * 16;
+ 
++// Internal tag 5 denotes K2.5; tags 2/3/4 and their kernel identities stay intact.
++// A 16x16 HALF tile contains 40 uint16 (five aligned 16-byte cp_async copies).
++template <int BITS>
++__host__ __device__ constexpr int e3_packed_words()
++{
++    static_assert(BITS == 2 || BITS == 3 || BITS == 4 || BITS == 5, "unsupported E3 K tag");
++    return BITS == 5 ? 40 : BITS * 16;
++}
++
+ template <int MB, int AS, int BITS0, int BITS1>
+ constexpr int e3_smem_bytes()
+ {
+     constexpr int a_stage = AS * MB * 16 * E3_TILE_K * 2;
+     // Each of the two B streams carries both 16-column halves for every warp.
+     // The streams may have different trellis widths.
+-    constexpr int b_stage = 2 * E3_WARPS * 16 * (BITS0 + BITS1) * 2;
++    constexpr int b_stage = 2 * E3_WARPS * (e3_packed_words<BITS0>() + e3_packed_words<BITS1>()) * 2;
+     constexpr int pipe = E3_STAGES * (a_stage + b_stage);
+     constexpr int epi = 16 * 2 * E3_TILE_N * 4;
+     return pipe > epi ? pipe : epi;
+@@ -229,8 +238,8 @@ __device__ __forceinline__ void e3_mainloop(
+     constexpr int A_CHUNKS_ONE = TILE_M * 4;
+     constexpr int A_CHUNKS = AS * A_CHUNKS_ONE;
+     constexpr int A_ITERS = (A_CHUNKS + E3_THREADS - 1) / E3_THREADS;
+-    constexpr int PW0 = BITS0 * 16;
+-    constexpr int PW1 = BITS1 * 16;
++    constexpr int PW0 = e3_packed_words<BITS0>();
++    constexpr int PW1 = e3_packed_words<BITS1>();
+     constexpr int PC0 = PW0 / 8;
+     constexpr int PC1 = PW1 / 8;
+     constexpr int B_STREAM0 = 2 * E3_WARPS * PW0;
+@@ -329,8 +338,14 @@ __device__ __forceinline__ void e3_mainloop(
+                 sb + j * E3_WARPS * PW0 + warp * PW0);
+             const uint32_t* wb1 = reinterpret_cast<const uint32_t*>(
+                 sb + B_STREAM0 + j * E3_WARPS * PW1 + warp * PW1);
+-            dq_dispatch<BITS0, E3_CB>(wb0, lane << 3, fb[0][0], fb[0][1]);
+-            dq_dispatch<BITS1, E3_CB>(wb1, lane << 3, fb[1][0], fb[1][1]);
++            if constexpr (BITS0 == 5)
++                dq_dispatch<2, E3_CB, true>(wb0, lane << 3, fb[0][0], fb[0][1]);
++            else
++                dq_dispatch<BITS0, E3_CB>(wb0, lane << 3, fb[0][0], fb[0][1]);
++            if constexpr (BITS1 == 5)
++                dq_dispatch<2, E3_CB, true>(wb1, lane << 3, fb[1][0], fb[1][1]);
++            else
++                dq_dispatch<BITS1, E3_CB>(wb1, lane << 3, fb[1][0], fb[1][1]);
+             #pragma unroll
+             for (int mb = 0; mb < MB; ++mb)
+             {
+@@ -596,7 +611,8 @@ void e3_dispatch_up(int up_bits, const E3GateUpLaunch& a)
+         case 2: e3_launch_gateup<GATE_BITS, 2>(a); break;
+         case 3: e3_launch_gateup<GATE_BITS, 3>(a); break;
+         case 4: e3_launch_gateup<GATE_BITS, 4>(a); break;
+-        default: TORCH_CHECK(false, "E3 up K must be 2, 3, or 4");
++        case 5: e3_launch_gateup<GATE_BITS, 5>(a); break;
++        default: TORCH_CHECK(false, "E3 up K tag must be 2, 3, 4, or 5 (K2.5)");
+     }
+ }
+ 
+@@ -607,7 +623,8 @@ void e3_dispatch_gateup(int gate_bits, int up_bits, const E3GateUpLaunch& a)
+         case 2: e3_dispatch_up<2>(up_bits, a); break;
+         case 3: e3_dispatch_up<3>(up_bits, a); break;
+         case 4: e3_dispatch_up<4>(up_bits, a); break;
+-        default: TORCH_CHECK(false, "E3 gate K must be 2, 3, or 4");
++        case 5: e3_dispatch_up<5>(up_bits, a); break;
++        default: TORCH_CHECK(false, "E3 gate K tag must be 2, 3, 4, or 5 (K2.5)");
+     }
+ }
+ 
+@@ -649,7 +666,8 @@ void e3_dispatch_down(int down_bits, const E3DownLaunch& a)
+         case 2: e3_launch_down<2>(a); break;
+         case 3: e3_launch_down<3>(a); break;
+         case 4: e3_launch_down<4>(a); break;
+-        default: TORCH_CHECK(false, "E3 down K must be 2, 3, or 4");
++        case 5: e3_launch_down<5>(a); break;
++        default: TORCH_CHECK(false, "E3 down K tag must be 2, 3, 4, or 5 (K2.5)");
+     }
+ }
+ 
+@@ -660,9 +678,8 @@ int e3_grid_y(int64_t capacity)
+ }
+ 
+ // ---------------------------------------------------------------------------------------------
+-// Deterministic E3 (EXL3_MOE_PREFILL_E3_DET=1, e3-det r1). Everything above this line, and the
+-// exl3_moe_prefill_e3_cuda entry point, is unchanged; the default path launches exactly the
+-// kernels it launched before.
++// Deterministic E3 (EXL3_MOE_PREFILL_E3_DET=1, e3-det r1). HALF uses the same
++// sorted slots and ordered reduction; existing integer instances retain their arithmetic.
+ //
+ // Every routed assignment owns one slot in a per-call fp32 scratch [assignments, hidden] whose
+ // row is the assignment's position p in the expert-sorted order (the caller carves the scratch
+@@ -972,7 +989,8 @@ void e3_dispatch_down_det(int down_bits, const E3DownDetLaunch& a)
+         case 2: e3_launch_down_det<2>(a); break;
+         case 3: e3_launch_down_det<3>(a); break;
+         case 4: e3_launch_down_det<4>(a); break;
+-        default: TORCH_CHECK(false, "E3 down K must be 2, 3, or 4");
++        case 5: e3_launch_down_det<5>(a); break;
++        default: TORCH_CHECK(false, "E3 down K tag must be 2, 3, 4, or 5 (K2.5)");
+     }
+ }
+ 
+diff --git a/exllamav3/modules/block_sparse_mlp.py b/exllamav3/modules/block_sparse_mlp.py
+index 9cf59cb..8f11fe5 100644
+--- a/exllamav3/modules/block_sparse_mlp.py
++++ b/exllamav3/modules/block_sparse_mlp.py
+@@ -18,6 +18,7 @@ from ..model.model_tp_alloc import TPAllocation
+ from ..util import profile_opt
+ from ..util.tensor import g_tensor_cache, buffered_interleaved_arange
+ from ..util.prefill_nosync import enabled as _prefill_nosync_enabled
++from ..util.prefill_nosync import half_histogram_enabled as _half_histogram_enabled
+ from .block_sparse_mlp_routing import (
+     RoutingCFG, ROUTING_ACT_SIGMOID, ROUTING_ACT_SQRTSP,
+     routing_std, routing_std_bias, routing_ds3, routing_dots, routing_sqrtsp, routing_sqrtsp_hash,
+@@ -53,6 +54,16 @@ SHARED_EXPERT_OVERLAP = os.environ.get("EXL3_SHARED_EXPERT_OVERLAP", "0") == "1"
+ MOE_PREFILL_E3 = os.environ.get("EXL3_MOE_PREFILL_E3", "0") == "1"
+ MOE_PREFILL_E3_MIN_ROWS = max(512, int(os.environ.get("EXL3_MOE_PREFILL_E3_MIN_ROWS", "512")))
+ MOE_PREFILL_E3_THIN_ROWS = min(256, max(1, int(os.environ.get("EXL3_MOE_PREFILL_E3_THIN_ROWS", "32"))))
++# Default-off K2.5 extension, read per forward for differential gates. Tag 5 is
++# internal to the E3 integer ABI; ordinary fused calls keep the float K=2.5.
++def _e3_k_allowed(k):
++    return k in (2, 3, 4) or (k == 2.5 and os.environ.get("EXL3_MOE_PREFILL_E3_HALF", "0") == "1")
++
++
++def _e3_k_tag(k):
++    return 5 if k == 2.5 else int(k)
++
++
+ # Deterministic E3 (e3-det r1), literal 1 only, read at call time like MOE_PREFILL_E3 (tests flip
+ # the module attribute). Only acts where E3 itself is active: every routed assignment gets its own
+ # slot (fat experts: half pre-Hadamard down output from E3; thin experts: the fused kernel's
+@@ -1165,7 +1176,7 @@ class BlockSparseMLP(BlockSparseMLP_CPU, Module):
+                 weight_sorted = flat_weight[order]
+ 
+                 # E3 is deliberately pinned to the served target geometry and full layer-local
+-                # expert placement. Its fat path is atomic and uses different MMA tiling, so it
++                # expert placement. Its fat path uses different MMA tiling, so it
+                 # is a quality-gated numerical experiment, not an identity-preserving fast path.
+                 e3_active = (
+                     MOE_PREFILL_E3 and num_tokens >= MOE_PREFILL_E3_MIN_ROWS and
+@@ -1174,7 +1185,7 @@ class BlockSparseMLP(BlockSparseMLP_CPU, Module):
+                     self.num_experts == 512 and self.num_local_experts == self.num_experts and
+                     self.num_experts_per_tok == 10 and self.cpu_split_first is None and
+                     y.shape[1] == 2560 and self.intermediate_size_padded == 640 and
+-                    all(k in (2, 3, 4) for k in
++                    all(_e3_k_allowed(k) for k in
+                         (self.multi_gate.K, self.multi_up.K, self.multi_down.K)) and
+                     self.multi_gate.mul1 and self.multi_up.mul1 and self.multi_down.mul1 and
+                     torch.cuda.get_device_capability(y.device) == (12, 0)
+@@ -1183,7 +1194,7 @@ class BlockSparseMLP(BlockSparseMLP_CPU, Module):
+                 # Count how many assignments per expert. With few enough total assignments no
+                 # expert can exceed the fused kernel's row capacity, so the readback (a CPU sync
+                 # per layer, ~33% idle at MTP verify shapes) is skipped and everything is fused
+-                if e3_active or _prefill_nosync_enabled(params):
++                if e3_active or _prefill_nosync_enabled(params) or _half_histogram_enabled(self, num_tokens, top_k, y.shape[1]):
+                     from ..util.prefill_nosync import expert_histogram
+                     expert_count = expert_histogram(flat_expert_local, E)
+                 else:
+@@ -1340,7 +1351,7 @@ class BlockSparseMLP(BlockSparseMLP_CPU, Module):
+                             h13_g, h13_u, h2, row_token, row_weight, row_expert,
+                             row_pos, order, expert_start, inv_order,
+                             seg_expert, seg_row0, seg_rows, live[:1], live[1:], slots,
+-                            self.multi_gate.K, self.multi_up.K, self.multi_down.K,
++                            _e3_k_tag(self.multi_gate.K), _e3_k_tag(self.multi_up.K), _e3_k_tag(self.multi_down.K),
+                             thin, self.act_limit)
+                         # Thin tier into its slots (slot = expert start + row within the expert;
+                         # expert_start and inv_order were filled by the call above)
+@@ -1380,7 +1391,7 @@ class BlockSparseMLP(BlockSparseMLP_CPU, Module):
+                             self.multi_down.ptrs_trellis, self.multi_down.ptrs_suh, self.multi_down.ptrs_svh,
+                             h13_g, h13_u, h2, row_token, row_weight, row_expert,
+                             seg_expert, seg_row0, seg_rows, live[:1], live[1:],
+-                            self.multi_gate.K, self.multi_up.K, self.multi_down.K,
++                            _e3_k_tag(self.multi_gate.K), _e3_k_tag(self.multi_up.K), _e3_k_tag(self.multi_down.K),
+                             thin, self.act_limit)
+                     elif expert_count_list is None:
+                         run_fused(-1)
+diff --git a/exllamav3/util/prefill_nosync.py b/exllamav3/util/prefill_nosync.py
+index 4fe2a85..3115163 100644
+--- a/exllamav3/util/prefill_nosync.py
++++ b/exllamav3/util/prefill_nosync.py
+@@ -13,6 +13,24 @@ def enabled(params):
+             params.get("_prefill_nosync", False))
+ 
+ 
++def half_histogram_enabled(layer, rows, topk, hidden):
++    """tune268-r2: fixed histogram for the full, layer-local K2.5 prefill.
++
++    Read per call; unlike enabled(params), this does not require a pipeline
++    descriptor. Routing guarantees expert ids in [0, E], including the sentinel.
++    Keep the host tier planner and its explicit count readback unchanged.
++    """
++    return (
++        os.environ.get("EXL3_MOE_PREFILL_HALF_HIST", "0") == "1" and
++        rows >= 512 and topk == 10 and hidden == 2560 and
++        layer.num_experts == 512 and layer.num_local_experts == 512 and
++        layer.fused_mode_buffers is not None and layer.gated and
++        layer.intermediate_size_padded == 640 and
++        all(m.K == 2.5 and m.mul1 and not m.mcg for m in
++            (layer.multi_gate, layer.multi_up, layer.multi_down))
++    )
++
++
+ def expert_histogram(flat_expert_local, num_experts):
+     """Fixed-size int64 histogram, including the expert-slice sentinel bin.
+ 
+diff --git a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_h2_uncap.cu b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_h2_uncap.cu
+new file mode 100644
+index 0000000..cb941eb
+--- /dev/null
++++ b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_coop_inst_h2_uncap.cu
+@@ -0,0 +1,31 @@
++#include "exl3_moe_coop_instances.cuh"
++#include "../exl3_moe_coop_v2_kernel.cuh"
++
++namespace exl3_moe_coop_v2_ns {
++
++// EXL3_MOE_COOP_HALF_A_UNCAP=1. Body matches the served A HALF kernel; only
++// the name and launch bound differ. Keep the capped kernel's codegen intact.
++template <bool WIDE>
++__global__ __launch_bounds__(THREADS)
++void exl3_moe_coop_a_kernel_h_uncap(const MoeCoopParams p)
++{
++    for (int i = blockIdx.x * THREADS + threadIdx.x; i < p.ctr_b_len; i += gridDim.x * THREADS)
++        p.ctr_b[i] = 0;
++    const int runs = p.a_global ? p.runs[0] : p.bsz * p.topk;
++    const int count = runs * (p.I / tile_cols<WIDE>()) * p.ksplit_a * (p.gated ? 2 : 1);
++    for (int item = blockIdx.x; item < count; item += gridDim.x)
++    {
++        tile_a<2, 2, WIDE, true>(p, item);
++        __syncthreads();
++    }
++}
++
++} // namespace exl3_moe_coop_v2_ns
++
++MoeCoopKernel exl3_moe_coop_v2_a_h2_uncap(int Hi, bool wide)
++{
++    using namespace exl3_moe_coop_v2_ns;
++    const int smem = smem_a_v2<2, true>(Hi, false);
++    if (wide) return { (void*) exl3_moe_coop_a_kernel_h_uncap<true>, smem };
++    return { (void*) exl3_moe_coop_a_kernel_h_uncap<false>, smem };
++}
+diff --git a/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_prefill_inst_h2_static.cu b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_prefill_inst_h2_static.cu
+new file mode 100644
+index 0000000..066955d
+--- /dev/null
++++ b/exllamav3/exllamav3_ext/quant/comp_units/exl3_moe_prefill_inst_h2_static.cu
+@@ -0,0 +1,34 @@
++#include "exl3_moe_instances.cuh"
++#include "../exl3_moe_kernel.cuh"
++
++// EXL3_MOE_PREFILL_HALF_STATIC=1. Reuse the served outer kernel verbatim, but
++// specialize all of its GEMM calls. -5 is a private tag (negative half-bit units),
++// NOT a value passed as 'bits' to the dequantizer. No served instantiation uses it.
++// Every possible row tile is specialized before the first kernel instantiation.
++// This is the exact K=5 arm of moe_gemm_tile<0, 2, MT, 128>, without the other
++// ten bitrate arms sharing its register allocation and instruction footprint.
++#define H2_TILE(MT_) \
++template <> \
++__device__ __forceinline__ \
++void moe_gemm_tile<-5, 2, MT_, 128>( \
++    const half* __restrict__ in_addr, const uint16_t* __restrict__ trellis, \
++    half* __restrict__ out_addr, const int size_m, const int size_k, \
++    const int size_n, int* __restrict__ locks, const int K) \
++{ \
++    constexpr int FS = (MT_ >= 64) ? 2 : MOE_FRAG_STAGES; \
++    exl3_gemm_kernel_inner<2, true, false, 2, MT_, MOE_TILESIZE_K, 128, \
++        MOE_SH_STAGES, FS, false>(in_addr, trellis, out_addr, MIN(size_m, MT_), \
++                                 size_k, size_n, locks, nullptr); \
++}
++
++H2_TILE(16)
++H2_TILE(32)
++H2_TILE(64)
++#undef H2_TILE
++
++fp_exl3_moe_kernel exl3_moe_prefill_h2_static(int m_tile)
++{
++    if (m_tile <= 16) return exl3_moe_kernel<-5, 128, 2, 16>;
++    if (m_tile >= 64) return exl3_moe_kernel<-5, 128, 2, 64>;
++    return exl3_moe_kernel<-5, 128, 2, 32>;
++}

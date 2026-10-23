@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 47 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 49 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -28,7 +28,7 @@
 #   r825-whole-prompt                         overlays/r825-whole-prompt (one solo LS window, including final merged work)
 #   r825b-resumable                           overlays/r825b-resumable (one chunk per iterate, retained lookahead, timer yield)
 #   r825c-hostprepare                         overlays/r825c-hostprepare (CPU preparation at enqueue; GPU admission deferred)
-#   r828-prompt-lookup-r3                     overlays/prompt-lookup-r3 (batch-one adaptive lookup beside MTP) <- the served tag
+#   r828-prompt-lookup-r3                     overlays/prompt-lookup-r3 (batch-one adaptive lookup beside MTP)
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -239,6 +239,13 @@ build "$FINAL" $O/r825c-hostprepare/Dockerfile $O/r825c-hostprepare --build-arg 
 # R828c: adaptive prompt lookup beside fixed-depth MTP, installed on R825c directly.
 FINAL=$R:r828-prompt-lookup-r3
 build "$FINAL" $O/prompt-lookup-r3/Dockerfile $O/prompt-lookup-r3 --build-arg BASE="$R:r825c-hostprepare"
+
+# 2.68 self-calibrated pack: default-off K6/HALF decode, then HALF E3 prefill.
+build "$R:tune268-r1" $O/tune268/Dockerfile $O/tune268 --build-arg BASE="$R:r828-prompt-lookup-r3" \
+  --network=none --build-arg PATCH_SHA="$(sha $O/tune268/tune268.patch)" ${JOBS[@]+"${JOBS[@]}"}
+FINAL=$R:tune268-r2
+build "$FINAL" $O/tune268-r2/Dockerfile $O/tune268-r2 --build-arg BASE="$R:tune268-r1" \
+  --network=none --build-arg PATCH_SHA="$(sha $O/tune268-r2/tune268-r2.patch)" ${JOBS[@]+"${JOBS[@]}"}
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

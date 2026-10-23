@@ -1,0 +1,116 @@
+Configuration: tabbyapi:tune268-r2, model qwen3.8-flash-next-exl3-2.68bpw-selfcal, pool 819200, selectors 50, window 262144. Allowlisted readbacks: boots.tsv.
+
+== sharegpt, pass A ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 400 | 207.7 | 0.99 | 172 / 294 | 3.65 / 5.03 | 274 | 0.67 | 2.62 | 3.00 |
+| 2 | 400 | 285.2 | 1.36 | 230 / 594 | 5.21 / 10.41 | 192 | 0.98 | 2.60 | 3.00 |
+| 4 | 400 | 371.3 | 1.77 | 297 / 755 | 8.52 / 17.00 | 117 | 1.45 | 2.61 | 3.00 |
+| 8 | 400 | 446.1 | 2.12 | 372 / 1910 | 15.03 / 27.41 | 67 | 2.36 | 2.28 | 2.01 |
+
+== sharegpt, pass B ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 400 | 207.8 | 0.99 | 173 / 294 | 3.66 / 5.03 | 273 | 0.67 | 2.62 | 3.00 |
+| 2 | 400 | 285.8 | 1.36 | 229 / 535 | 5.24 / 10.42 | 191 | 0.97 | 2.60 | 3.00 |
+| 4 | 400 | 370.8 | 1.76 | 310 / 643 | 8.34 / 21.28 | 120 | 1.45 | 2.61 | 3.00 |
+| 8 | 400 | 445.8 | 2.12 | 376 / 1918 | 15.12 / 30.39 | 66 | 2.39 | 2.28 | 2.01 |
+
+== specbench, pass A ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 480 | 226.7 | 0.89 | 163 / 361 | 3.67 / 4.67 | 273 | 1.13 | 2.83 | 3.00 |
+| 2 | 480 | 319.0 | 1.25 | 221 / 506 | 5.21 / 7.15 | 192 | 1.59 | 2.84 | 3.00 |
+| 4 | 480 | 414.9 | 1.62 | 322 / 805 | 8.16 / 10.88 | 123 | 2.42 | 2.83 | 3.00 |
+| 8 | 480 | 493.3 | 1.93 | 392 / 1503 | 14.42 / 18.08 | 69 | 4.09 | 2.41 | 2.00 |
+
+== specbench, pass B ==
+| Concurrency | Requests | Output tok/s | Req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | Per-stream tok/s (1000/TPOT p50) | E2E p50 (s) | tau | depth |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 480 | 226.5 | 0.88 | 163 / 371 | 3.67 / 4.66 | 273 | 1.13 | 2.83 | 3.00 |
+| 2 | 480 | 317.5 | 1.24 | 220 / 532 | 5.23 / 7.05 | 191 | 1.59 | 2.84 | 3.00 |
+| 4 | 480 | 415.0 | 1.62 | 318 / 749 | 8.23 / 10.94 | 121 | 2.43 | 2.84 | 3.00 |
+| 8 | 480 | 492.1 | 1.92 | 395 / 1479 | 14.40 / 17.95 | 69 | 4.12 | 2.42 | 2.01 |
+
+== sharegpt: pass A vs B (spread = |A - B| / mean) ==
+conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+   1    207.7    207.8    207.7   0.04%     3.65   3.66      172    173   2.62  2.62
+   2    285.2    285.8    285.5   0.19%     5.21   5.24      230    229   2.60  2.60
+   4    371.3    370.8    371.0   0.14%     8.52   8.34      297    310   2.61  2.61
+   8    446.1    445.8    445.9   0.06%    15.03  15.12      372    376   2.28  2.28
+
+== specbench: pass A vs B (spread = |A - B| / mean) ==
+conc  tok/s A        B     mean  spread TPOT50 A      B TTFT50 A      B  tau A     B
+   1    226.7    226.5    226.6   0.13%     3.67   3.67      163    163   2.83  2.83
+   2    319.0    317.5    318.2   0.47%     5.21   5.23      221    220   2.84  2.84
+   4    414.9    415.0    415.0   0.02%     8.16   8.23      322    318   2.83  2.84
+   8    493.3    492.1    492.7   0.23%    14.42  14.40      392    395   2.41  2.42
+
+== diagnostics (not for the README) ==
+tag                     dur s mean in   out tot tok/s step p50   tau tau cli acc/prop cached % hits lines
+A-sharegpt-c1             405     272   210     476.6    10.58  2.62    2.65    0.541     0.00    0   400
+A-sharegpt-c2             295     272   210     654.5    13.54  2.60    2.63    0.535     0.00    0   400
+A-sharegpt-c4             227     272   210     852.0    19.07  2.61    2.63    0.536     0.00    0   400
+A-sharegpt-c8             189     272   210    1023.5    25.54  2.28    2.30    0.637     0.00    0   400
+A-specbench-c1            542     322   256     511.9    10.61  2.83    2.88    0.608     0.00    0   480
+A-specbench-c2            385     322   256     720.2    13.52  2.84    2.89    0.612     0.00    0   480
+A-specbench-c4            296     322   256     936.7    19.06  2.83    2.89    0.611     0.00    0   480
+A-specbench-c8            249     322   256    1113.7    25.62  2.41    2.45    0.706     0.00    0   480
+B-sharegpt-c1             405     272   210     476.8    10.57  2.62    2.65    0.541     0.00    0   400
+B-sharegpt-c2             294     272   210     655.7    13.52  2.60    2.63    0.535     0.00    0   400
+B-sharegpt-c4             227     272   210     850.8    19.05  2.61    2.63    0.535     0.00    0   400
+B-sharegpt-c8             189     272   210    1022.9    25.52  2.28    2.30    0.638     0.00    0   400
+B-specbench-c1            543     322   256     511.3    10.61  2.83    2.88    0.608     0.00    0   480
+B-specbench-c2            387     322   256     716.8    13.55  2.84    2.89    0.612     0.00    0   480
+B-specbench-c4            296     322   256     936.9    19.07  2.84    2.89    0.613     0.00    0   480
+B-specbench-c8            250     322   256    1111.1    25.63  2.42    2.45    0.706     0.00    0   480
+
+== A-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+category           n   tau acc/prop     gen
+translation       80  2.83    0.610   20480
+summarization     80  2.66    0.555   20480
+math_reasoning    80  3.20    0.734   20480
+coding            10  2.69    0.565    2560
+qa                80  2.64    0.545   20480
+writing           10  2.50    0.498    2560
+rag               80  2.95    0.649   20480
+extraction        10  2.99    0.665    2560
+stem              10  2.65    0.551    2560
+reasoning         10  2.91    0.635    2560
+roleplay          10  2.65    0.549    2560
+math              10  3.21    0.737    2560
+humanities        10  2.53    0.512    2560
+-- task groups (MT-bench pooled) --
+translation       80  2.83    0.610   20480
+summarization     80  2.66    0.555   20480
+math_reasoning    80  3.20    0.734   20480
+mt_bench          80  2.75    0.583   20480
+qa                80  2.64    0.545   20480
+rag               80  2.95    0.649   20480
+
+== B-specbench-c1: MTP per Spec-Bench category (mapping verified) ==
+category           n   tau acc/prop     gen
+translation       80  2.83    0.610   20480
+summarization     80  2.66    0.555   20480
+math_reasoning    80  3.20    0.734   20480
+coding            10  2.69    0.565    2560
+qa                80  2.64    0.545   20480
+writing           10  2.50    0.498    2560
+rag               80  2.95    0.649   20480
+extraction        10  2.99    0.665    2560
+stem              10  2.65    0.551    2560
+reasoning         10  2.91    0.635    2560
+roleplay          10  2.65    0.549    2560
+math              10  3.21    0.737    2560
+humanities        10  2.53    0.512    2560
+-- task groups (MT-bench pooled) --
+translation       80  2.83    0.610   20480
+summarization     80  2.66    0.555   20480
+math_reasoning    80  3.20    0.734   20480
+mt_bench          80  2.75    0.583   20480
+qa                80  2.64    0.545   20480
+rag               80  2.95    0.649   20480
+
+FLAGS: none
+
+DECISION: PUBLISHABLE (max A/B spread 0.47 % at specbench c2; every cell cached <= 1 %)

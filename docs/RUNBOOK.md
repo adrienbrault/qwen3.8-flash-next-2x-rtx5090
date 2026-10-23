@@ -8,8 +8,8 @@ is the command that produced a results directory named beside it.
 | what | where |
 | --- | --- |
 | the box | `ssh flan` (BatchMode works; `sudo docker` over that ssh) |
-| checkpoint | `/srv/qwen5090/models/qwen3.8-flash-next-exl3-3.05bpw` |
-| images | `tabbyapi:merge-tok-r1` (served since 2026-09-29 22:02 CEST, built by `docker/build-chain.sh`), `tabbyapi:tokenize-offloop-r2` (served 2026-09-29 19:01 to 22:02 CEST, the rollback image: `DAILY_IMG=tabbyapi:tokenize-offloop-r2` and `EXTRA_ENV` without `EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1`, the R808 launcher [`scripts/launchers/launch-flashnext-r808-tokoffloop.sh`](../scripts/launchers/launch-flashnext-r808-tokoffloop.sh)), `tabbyapi:rebase-dev-r3-loopthink5` (served 2026-09-28 09:49 CEST to 2026-09-29 19:01 CEST), `tabbyapi:rebase-dev-r3` (served 2026-09-27 15:01 CEST to 2026-09-28 09:49 CEST), `tabbyapi:stack-r3-rows32-tokcount-loopthink3` (served 2026-09-27 11:49 to 15:01 CEST), `tabbyapi:stack-r3-rows32-tokcount` (served 2026-09-26 to 2026-09-27); `tabbyapi:53da7919-rqcount`, `-rqcount-cid`, `qsa-devel`, `qsa-devel-control`, `qsa-cid` are the 2026-09-16 images |
+| checkpoint | `/srv/qwen5090/models/qwen3.8-flash-next-exl3-2.68bpw-selfcal`, turboderp revision `2.68bpw_h6_ng8` |
+| images | `tabbyapi:tune268-r2`, built by `bash docker/build-chain.sh`; the served launcher pins measured image `2239954c`, so a reconstruction requires a reviewed pin update |
 | probes | flashed from `bench/*.py` to `/srv/qwen5090/probes/` |
 | runners | flashed from `bench/*.sh` to `/srv/qwen5090/` |
 | GPU lock | `/srv/qwen5090/lib/gpu-queue.sh` + `/srv/qwen5090/gpu-exclusive.lock`; every runner takes it |
@@ -62,21 +62,14 @@ python3 /srv/qwen5090/probes/summarize.py /srv/qwen5090/results/<dir>/records-*.
 
 ## 3. Rebuild an image
 
-The Dockerfiles live in the sibling `kubernetes-home` repository (`flan/docker/`), because that is where the box's
-runner scripts live.
+The complete recipe is in this repository's [`docker/`](../docker/README.md). Build the chain on x86_64 Linux with Docker BuildKit; the final two native overlays disable network access and check the patch hashes and predecessor SASS.
 
 ```sh
-# the 2026-09-16 image (TabbyAPI 53da7919 + exllamav3 v1.5.0 + the requeue token-count fix); the served image today is
-# the last tag of docker/build-chain.sh
-scp kubernetes-home/flan/docker/Dockerfile.tabbyapi flan:/srv/qwen5090/docker/ && ssh flan \
-  'cd /srv/qwen5090/docker && sudo docker build -f Dockerfile.tabbyapi -t tabbyapi:53da7919-rqcount .'
-
-# the QSA half needs a CUDA devel base: it changes libtorch/attention.cpp, and the serving image has no nvcc
-scp kubernetes-home/flan/docker/Dockerfile.tabbyapi-qsa{,-cid} flan:/srv/qwen5090/docker/ # plus the patches
+bash docker/build-chain.sh
+DRY_RUN=1 bash docker/build-chain.sh
 ```
 
-Each Dockerfile asserts the engine version and greps for a marker the patch introduces, so a build that silently
-did nothing fails instead of serving.
+The final tag is `tabbyapi:tune268-r2`. Rebuilding changes the image ID; review the installed sources and update the launcher's `R825C_IMAGE_ID` before serving the reconstruction.
 
 ## 4. Hand the box back
 
@@ -92,3 +85,7 @@ Decide per run whether the restore is needed: the two cannot coexist, and whiche
 The validated `tabbyapi:r828-prompt-lookup-r3` configuration was restored on :8022 on 2026-10-21. Its checkpoint, 262,144-token window, 901,120-token pool and launcher flags are unchanged. Boot warm-up, model identity and an arithmetic chat smoke passed. No new engine or checkpoint was installed.
 
 `scripts/serve-flashnext-daily.sh` runs on the serving host after installing `scripts/launch-flashnext.sh` as `/srv/qwen5090/launch-flashnext.sh`. It pins that published launcher's SHA256, checks the GPU lock and pending queue, boots with a clean environment, and writes `flashnext` to `/srv/qwen5090/default-daily` after a healthy model check. The infrastructure restoration helpers dispatch this selector to the installed wrapper; they no longer select another engine after an experiment. The existing launcher retains its power and memory-clock policy.
+
+## Served daily, 2026-10-23
+
+The current daily is `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on `tabbyapi:tune268-r2`, pool 819,200, 50 selectors and the served warm-up. The [publication write-up](../bench/results/publish268-served-268.md) records the three measurement runs and their conditions. Install the public launcher and matching `scripts/serve-flashnext-daily.sh` together; the wrapper pins the scrubbed public launcher's SHA256.

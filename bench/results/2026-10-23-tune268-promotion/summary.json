@@ -1,0 +1,221 @@
+{
+  "round1": {
+    "run": "2026-10-22-210133-flashnext-tune268-abba",
+    "columns": [
+      "shape",
+      "R0_2.50",
+      "A_2.68",
+      "B_2.68_tuned",
+      "B_vs_A",
+      "B_vs_R0"
+    ],
+    "rows": [
+      [
+        "Code c1",
+        "257.5",
+        "220.2",
+        "242.9",
+        "+10.3 %",
+        "\u22125.7 %"
+      ],
+      [
+        "Prose c1",
+        "287.9",
+        "227.1",
+        "252.8",
+        "+11.3 %",
+        "\u221212.2 %"
+      ],
+      [
+        "Code c4 aggregate",
+        "625.8",
+        "558.6",
+        "595.3",
+        "+6.6 %",
+        "\u22124.9 %"
+      ],
+      [
+        "Prose c4 aggregate",
+        "623.2",
+        "554.1",
+        "586.4",
+        "+5.8 %",
+        "\u22125.9 %"
+      ],
+      [
+        "Six-agent replay span",
+        "41.7 s",
+        "51.9 s",
+        "49.2 s",
+        "\u22125.1 %",
+        "+18 %"
+      ]
+    ],
+    "bitwise_checks": 6466,
+    "bitwise_pass": 6466,
+    "fork_prompts": 24,
+    "fork_identical": 24,
+    "pool": 819200,
+    "long_prompt_tokens": 120312
+  },
+  "round2": {
+    "run": "2026-10-22-234824-flashnext-tune268r2-abba",
+    "decode_replay_columns": [
+      "cell",
+      "code_c1_tps",
+      "code_c4_aggregate_tps",
+      "prose_c1_tps",
+      "prose_c4_aggregate_tps",
+      "six_agent_span_s",
+      "agent_decode_tps",
+      "code_c1_ms_per_step",
+      "code_c4_ms_per_step",
+      "code_c1_tokens_per_step",
+      "code_c4_tokens_per_step"
+    ],
+    "decode_replay_rows": [
+      [
+        "A1",
+        243.0,
+        588.2,
+        252.8,
+        578.9,
+        51.6,
+        133.7,
+        10.96,
+        18.58,
+        2.61,
+        2.66
+      ],
+      [
+        "B1",
+        242.9,
+        592.3,
+        251.3,
+        577.7,
+        43.9,
+        134.0,
+        10.87,
+        18.34,
+        2.61,
+        2.66
+      ],
+      [
+        "B2",
+        242.0,
+        599.1,
+        252.2,
+        580.2,
+        45.3,
+        146.7,
+        10.98,
+        18.65,
+        2.61,
+        2.69
+      ],
+      [
+        "A2",
+        242.4,
+        598.8,
+        252.4,
+        577.5,
+        50.2,
+        137.5,
+        10.98,
+        18.51,
+        2.61,
+        2.65
+      ]
+    ],
+    "cold_prefill_columns": [
+      "cell",
+      "samples",
+      "actual_prompt_tokens",
+      "TTFT_samples_s",
+      "median_TTFT_s",
+      "median_prompt_tps"
+    ],
+    "cold_prefill_rows": [
+      [
+        "A1",
+        3,
+        30000,
+        [
+          3.275,
+          3.0,
+          2.959
+        ],
+        3.0,
+        10000.6
+      ],
+      [
+        "B1",
+        3,
+        30000,
+        [
+          2.5,
+          2.406,
+          2.405
+        ],
+        2.406,
+        12469.0
+      ],
+      [
+        "B2",
+        3,
+        30000,
+        [
+          2.979,
+          2.534,
+          2.406
+        ],
+        2.534,
+        11838.8
+      ],
+      [
+        "A2",
+        3,
+        30000,
+        [
+          3.385,
+          2.971,
+          2.951
+        ],
+        2.971,
+        10098.1
+      ]
+    ],
+    "six_agent_mean_span_s": [
+      50.9,
+      44.6
+    ],
+    "six_agent_change_pct": -12.4,
+    "cold_30k_mean_cell_median_ttft_s": [
+      2.985,
+      2.47
+    ],
+    "cold_30k_change_pct": -17.3,
+    "bitwise_checks": 380,
+    "bitwise_pass": 380,
+    "e3half_numerical_checks": 792,
+    "e3half_numerical_pass": 792,
+    "fork_B1_A1": {
+      "prompts": 24,
+      "identical": 24,
+      "near_tie": 0,
+      "failed": 0
+    },
+    "fork_A2_A1": {
+      "prompts": 24,
+      "identical": 24,
+      "near_tie": 0,
+      "failed": 0
+    },
+    "pool": 819200,
+    "pool_agent_requests": 20,
+    "pool_agent_incomplete": 0,
+    "long_prompt_tokens": 120312,
+    "additional_long_prompt_tokens": 120000,
+    "additional_long_prompt_ttft_s": 9.504268436008715
+  }
+}

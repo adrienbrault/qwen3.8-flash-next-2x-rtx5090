@@ -1,0 +1,53 @@
+{
+  "n_ok": 12,
+  "cells": [
+    {
+      "kind": "code",
+      "target": 0,
+      "prompt_tokens": 101,
+      "decode_tps": 295.71500000000003,
+      "tokens_per_step": 3.1411042944785277,
+      "ms_per_step": 10.618865030674847
+    },
+    {
+      "kind": "code",
+      "target": 100000,
+      "prompt_tokens": 100435,
+      "decode_tps": 290.53499999999997,
+      "tokens_per_step": 3.1604938271604937,
+      "ms_per_step": 10.874228395061728
+    },
+    {
+      "kind": "code",
+      "target": 200000,
+      "prompt_tokens": 199822,
+      "decode_tps": 252.815,
+      "tokens_per_step": 2.829754285321962,
+      "ms_per_step": 11.185695377878814
+    },
+    {
+      "kind": "prose",
+      "target": 0,
+      "prompt_tokens": 89,
+      "decode_tps": 244.27499999999998,
+      "tokens_per_step": 2.579345088161209,
+      "ms_per_step": 10.555415617128464
+    },
+    {
+      "kind": "prose",
+      "target": 100000,
+      "prompt_tokens": 99878,
+      "decode_tps": 268.53,
+      "tokens_per_step": 2.9341394876332325,
+      "ms_per_step": 10.917966221807129
+    },
+    {
+      "kind": "prose",
+      "target": 200000,
+      "prompt_tokens": 199915,
+      "decode_tps": 379.975,
+      "tokens_per_step": 3.9460500963391136,
+      "ms_per_step": 10.380539499036608
+    }
+  ]
+}
