@@ -415,3 +415,11 @@ R826 (2026-10-01, [write-up](../bench/results/r826-std-ab.md), results `2026-10-
 **What it looks like:** candidate image/config guards pass during a dry run, then every candidate request fails even with lookup off ([R827–R828c](../bench/results/r827-r828-prompt-lookup.md), diagnostic `2026-10-02-r828-diag`).
 
 **What it is:** TabbyAPI constructs a Job before attaching its generator in `prepare_for_queue`. Reading `generator.prompt_lookup_config` in `Job.__init__` raises AttributeError; adaptive initialization belongs after generator attachment. Dry guards execute the launcher and validate YAML through the existing parent's schema, so the first candidate boot still tests candidate-only serving behavior. The source regression check covers the repaired construction seam.
+
+## 49. `reasoning_effort: "none"` returns HTTP 400 from the chat template (2026-10-27, fixed the same day)
+
+**What it looks like:** a client that turns thinking off with OpenAI's `reasoning_effort: "none"` gets HTTP 400 with `TemplateError: Unexpected reasoning effort none. Supported types are xhigh (default), medium, and low.` prose-ok: quoted error string. Agent clients send this value for short auxiliary calls, such as chat title generation and command-approval verdicts, so those calls fail while normal turns work.
+
+**What it is:** the checkpoint's `chat_template.jinja` accepts `low`, `medium` and `xhigh` and raises on any other value. Its own off switch is `enable_thinking: false`, which these clients do not send.
+
+**Fix:** [`scripts/template-effort-none.sh`](../scripts/template-effort-none.sh), applied to the served checkpoint on 2026-10-27, adds one block before the effort check that sets `enable_thinking = false` when `reasoning_effort` is `"none"`. Every other value renders the same prompt as before. On the served stack, `none` answered a one-line arithmetic prompt with no reasoning text, and `low` and the default still reasoned.
