@@ -1,5 +1,7 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
+![Recipe card: served configuration, decode, prefill, KV pool and power, 2026-10-23](docs/img/recipe-card-8249bc22.png)
+
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal`.
 
 The serving configuration supports concurrent coding-agent sessions with growing contexts. The launcher sets eight slots and a shared KV page pool; the measurements below cover decode, cold prefill, standard serving traffic and quality checks on that configuration.
