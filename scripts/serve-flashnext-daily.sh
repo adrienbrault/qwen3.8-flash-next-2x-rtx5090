@@ -17,9 +17,9 @@ for mark in "$D"/gpu-queue/*; do
     echo "SUMMARY serve-flashnext-daily REFUSED: queued $(basename "$mark")"; exit 1
   fi
 done
-expected=6d5faaa5672f1f643dbe20b1001d7b58b5d1caf43d798d8ff0741a94a3bc1a3a
+expected=49ec4615f005959765c77f99e290d30255270c265bddb04418774d0adfa248c3
 [ "$(sha256sum "$D/launch-flashnext.sh" | cut -d' ' -f1)" = "$expected" ]
-sudo docker image inspect tabbyapi:tune268-r2 >/dev/null
+[ "$(sudo docker image inspect -f '{{.Id}}' tabbyapi:tune268-r2-pf2lock-r3)" = sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021 ]
 test -d "$D/models/qwen3.8-flash-next-exl3-2.68bpw-selfcal"
 # Clean environment prevents experiment selectors leaking into the validated launcher.
 env -i HOME="$HOME" USER="$USER" PATH="$PATH" bash "$D/launch-flashnext.sh"

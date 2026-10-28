@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# 2026-10-23: served turboderp self-calibrated 2.68 bpw, image tabbyapi:tune268-r2.
+# 2026-10-28: served image tabbyapi:tune268-r2-pf2lock-r3 = tune268-r2 + docker/overlays/pf2lock-r3 (lock and set
+# ownership for the EXL3_NGRAM_PREFETCH2 staging sets; Python only, numerics unchanged). Source launcher SHA256
+# 466def5f397cdd36231c4b50c6c3f596624b1d78a1672412712f1e6d50c2c0f8; HOME lookup scrubbed as in the previous public
+# launcher. Same 50 launcher selectors, pool 819,200 and checkpoint. Gates: bench/results/pf2lock-r3-race-fix.md.
+# Rollback: scripts/launchers/launch-flashnext-tune268r2.sh (image tabbyapi:tune268-r2, 2239954c).
+# 2026-10-23 (predecessor): turboderp self-calibrated 2.68 bpw, image tabbyapi:tune268-r2.
 # Source launcher SHA256 7e36acd2019ffc21082d8a0d50d8c43ea5403c9b0cba5fe39968810e569288c7;
 # HOME lookup scrubbed as in the previous public launcher. 50 launcher selectors, pool 819,200.
 # tune268 r1: EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1.
@@ -14,7 +19,7 @@
 # Source launcher md5 262e9c31; image tabbyapi:r825c-hostprepare; trace on, NVMe default off.
 # Records and limits: bench/results/r825-whole-prompt-window.md.
 # Rollback: scripts/launchers/launch-flashnext-r823p-tailckpt.sh.
-R825C_IMAGE_ID=sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd   # tune268r2 2026-10-23: tabbyapi:tune268-r2 (was 48f4ad3a = tune268-r1, before that dfaed2cb)
+R825C_IMAGE_ID=sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021   # pf2lock r3 2026-10-28: tabbyapi:tune268-r2-pf2lock-r3 (was 2239954c = tune268-r2, before that 48f4ad3a)
 # R823p (2026-10-01): tail recurrent checkpoints captured inside the LS prefill pipeline.
 # Image tabbyapi:r823c-cachetail-inforward; 44 launcher keys, image EXL3_CACHE_TRACE=1;
 # EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096, TAIL_PP=12288 and INFORWARD=1; NVMe default off.
@@ -284,7 +289,7 @@ DRAFT=${DRAFT:-3}
 #   R784's promote.env). Gates: bench/results/r784-rebase-dev-r3.md, bench/results/r785-promote-rebase-r3.md.
 #   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache and
 #   EXTRA_ENV without EXL3_GR_MIX_TILED=1 (the R783 launcher: 983,040, 41 keys).
-DAILY_IMG=tabbyapi:tune268-r2   # tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
+DAILY_IMG=tabbyapi:tune268-r2-pf2lock-r3   # pf2lock r3 2026-10-28: tune268-r2 + pf2lock.patch r3 (da386167); rollback scripts/launchers/launch-flashnext-tune268r2.sh. Before: tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of

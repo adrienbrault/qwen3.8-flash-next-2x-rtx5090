@@ -1,0 +1,84 @@
+{
+ "round": "r3",
+ "tag": "tabbyapi:tune268-r2-pf2lock-r3",
+ "image_id": "sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021",
+ "base_image_id": "sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd",
+ "patch_sha256": "13a892c1fda54d4f7fbe68418edeb9fa017303ed3dc8d9eb9006b6c0e7791dde",
+ "module_sha256_before": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+ "module_sha256_after": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+ "so_sha256": "86341e5452e5cfb0ee9593f60a01aed7e4ce8b318fb79b2f02f0b2115823bafa",
+ "stress": {
+  "share": {
+   "pass": true,
+   "prefetch2": true,
+   "module_sha256": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+   "results": {
+    "share": {
+     "iterations": 5000,
+     "failed": 0
+    }
+   }
+  },
+  "steady": {
+   "pass": true,
+   "prefetch2": true,
+   "module_sha256": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+   "results": {
+    "steady": {
+     "iterations": 5000,
+     "failed": 0
+    }
+   }
+  },
+  "long": {
+   "pass": true,
+   "prefetch2": true,
+   "module_sha256": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+   "results": {
+    "long": {
+     "iterations": 5000,
+     "failed": 0
+    }
+   }
+  },
+  "offpath": {
+   "pass": true,
+   "prefetch2": false,
+   "module_sha256": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+   "results": {
+    "offpath": {
+     "iterations": 5000,
+     "failed": 0
+    }
+   }
+  }
+ },
+ "tests": {
+  "ran": 24,
+  "ok": true
+ },
+ "tree_check": {
+  "ok": true,
+  "files": 596,
+  "diff": [
+   "< b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8  exllamav3/modules/ngram_embedding.py",
+   "> e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc  exllamav3/modules/ngram_embedding.py"
+  ]
+ },
+ "env_check": {
+  "ok": true,
+  "identical_to_base": true,
+  "keys": 58
+ },
+ "recipe": {
+  "Dockerfile": "b0c24e1385c2e39755fc6c17f88348259f417b07dcec76fbaef17aa1372c6d47",
+  "build.sh": "d3d2b91767a6bc9929457e916a9a02063890c42b046e51849840de751434d1be",
+  "pf2lock.patch": "13a892c1fda54d4f7fbe68418edeb9fa017303ed3dc8d9eb9006b6c0e7791dde",
+  "cpu_stress.py": "2c23e3192d715cfd09a0f828bb163c44956f5d981253174ab4937f1bc2adebee",
+  "pf2lock_harness.py": "ba6e57399637ceab69fcd2f746fb0dcd0622ae278cc41ba519919f15f6097b05",
+  "pf2lock_tests.py": "a2910150ada11517e265905d716dc282679aabffa7783a219f55b44b471d345f"
+ },
+ "build_log_sha256": "fb5bc58f3fd58d2bbb20ec8e7b29aba50600cb27168f7f2cce431476555725c2",
+ "built_utc": "2026-10-28T15:32:48Z",
+ "host": "flan"
+}

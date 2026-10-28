@@ -9,7 +9,7 @@ is the command that produced a results directory named beside it.
 | --- | --- |
 | the box | `ssh flan` (BatchMode works; `sudo docker` over that ssh) |
 | checkpoint | `/srv/qwen5090/models/qwen3.8-flash-next-exl3-2.68bpw-selfcal`, turboderp revision `2.68bpw_h6_ng8` |
-| images | `tabbyapi:tune268-r2`, built by `bash docker/build-chain.sh`; the served launcher pins measured image `2239954c`, so a reconstruction requires a reviewed pin update |
+| images | `tabbyapi:tune268-r2-pf2lock-r3`, built by `bash docker/build-chain.sh`; the served launcher pins measured image `da386167`, so a reconstruction requires a reviewed pin update |
 | probes | flashed from `bench/*.py` to `/srv/qwen5090/probes/` |
 | runners | flashed from `bench/*.sh` to `/srv/qwen5090/` |
 | GPU lock | `/srv/qwen5090/lib/gpu-queue.sh` + `/srv/qwen5090/gpu-exclusive.lock`; every runner takes it |
@@ -62,14 +62,14 @@ python3 /srv/qwen5090/probes/summarize.py /srv/qwen5090/results/<dir>/records-*.
 
 ## 3. Rebuild an image
 
-The complete recipe is in this repository's [`docker/`](../docker/README.md). Build the chain on x86_64 Linux with Docker BuildKit; the final two native overlays disable network access and check the patch hashes and predecessor SASS.
+The complete recipe is in this repository's [`docker/`](../docker/README.md). Build the chain on x86_64 Linux with Docker BuildKit; the two tune268 native overlays and the final Python overlay, `pf2lock-r3`, disable network access and check their patch hashes; the native ones also check the predecessor SASS, and `pf2lock-r3` runs its CPU stress scenarios and ownership tests.
 
 ```sh
 bash docker/build-chain.sh
 DRY_RUN=1 bash docker/build-chain.sh
 ```
 
-The final tag is `tabbyapi:tune268-r2`. Rebuilding changes the image ID; review the installed sources and update the launcher's `R825C_IMAGE_ID` before serving the reconstruction.
+The final tag is `tabbyapi:tune268-r2-pf2lock-r3`. Rebuilding changes the image ID; review the installed sources and update the launcher's `R825C_IMAGE_ID` before serving the reconstruction.
 
 ## 4. Hand the box back
 
@@ -88,4 +88,4 @@ The validated `tabbyapi:r828-prompt-lookup-r3` configuration was restored on :80
 
 ## Served daily, 2026-10-23
 
-The current daily is `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on `tabbyapi:tune268-r2`, pool 819,200, 50 selectors and the served warm-up. The [publication write-up](../bench/results/publish268-served-268.md) records the three measurement runs and their conditions. Install the public launcher and matching `scripts/serve-flashnext-daily.sh` together; the wrapper pins the scrubbed public launcher's SHA256.
+The current daily is `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on `tabbyapi:tune268-r2-pf2lock-r3`, pool 819,200, 50 selectors and the served warm-up. The [publication write-up](../bench/results/publish268-served-268.md) records the three measurement runs on `tune268-r2` and their conditions; the [pf2lock r3 write-up](../bench/results/pf2lock-r3-race-fix.md) records the 2026-10-28 image change. Install the public launcher and matching `scripts/serve-flashnext-daily.sh` together; the wrapper pins the scrubbed public launcher's SHA256.

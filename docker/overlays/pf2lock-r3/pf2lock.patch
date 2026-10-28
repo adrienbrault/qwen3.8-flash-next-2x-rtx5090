@@ -1,0 +1,409 @@
+--- a/exllamav3/modules/ngram_embedding.py
++++ b/exllamav3/modules/ngram_embedding.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ from typing_extensions import override
+ import os
++import threading
+ from concurrent.futures import ThreadPoolExecutor
+ from contextlib import contextmanager
+ import time
+@@ -60,6 +61,10 @@
+ MAX_PIN_SETS = 2            # staging sets: one with the last forward's uploads in flight, one being staged
+ 
+ 
++def _pinned_empty(shape, dtype: torch.dtype) -> torch.Tensor:
++    return torch.empty(shape, dtype = dtype, pin_memory = True)
++
++
+ class _PinSet:
+     """Pinned staging buffers for one hash + gather: unique row ids, the inverse map, the per-row
+     head index and the packed rows. `held` while a queued prefetch or a running forward owns it;
+@@ -76,10 +81,13 @@
+     def grow(self, n: int, row_words: int, row_dtype: torch.dtype):
+         if self.uids is None or self.uids.numel() < n or self.packed.shape[1] != row_words \
+                 or self.packed.dtype != row_dtype:
+-            self.uids = torch.empty(n, dtype = torch.int64, pin_memory = True)
+-            self.inverse = torch.empty(n, dtype = torch.int64, pin_memory = True)
+-            self.heads = torch.empty(n, dtype = torch.int32, pin_memory = True)
+-            self.packed = torch.empty((n, row_words), dtype = row_dtype, pin_memory = True)
++            # pf2lock: all four buffers are allocated before any is published, so a failed
++            # allocation leaves the set exactly as it was (the capacity check above reads uids)
++            uids = _pinned_empty(n, torch.int64)
++            inverse = _pinned_empty(n, torch.int64)
++            heads = _pinned_empty(n, torch.int32)
++            packed = _pinned_empty((n, row_words), row_dtype)
++            self.uids, self.inverse, self.heads, self.packed = uids, inverse, heads, packed
+ 
+ 
+ class NGramEmbedding(Module):
+@@ -129,8 +137,23 @@
+         self.layer_multipliers = None
+         self.codebook = None
+         self._pins = []             # pinned staging sets for the fast path (see _PinSet)
+-        self._pending = []          # queued prefetches, oldest first: {"history", "pin", "future"}
++        self._pending = []          # queued prefetches, oldest first: {"history", "pin", "future", "gate", "aborted"}
+         self._executor = None
++        # pf2lock: guards _pins selection and _pending membership. With EXL3_NGRAM_PREFETCH2 the worker acquires
++        # staging sets and retires entries concurrently with the issuing thread's forwards; unguarded, both could
++        # pick the same free set (a forward miss then read rows the worker was writing). Never held while waiting
++        # on a future, an event or a sleep, nor while allocating.
++        # Contract: one issuing thread at a time per module (prefetch, prefetch_ids, forward, unload are not
++        # called concurrently with each other); the single prefetch worker is the only concurrent party.
++        # Ownership: a set marked held has exactly one owner, which ends the hold on every path, failures
++        # included: a queued entry's set is released by whoever claims the entry from _pending (forward hit or
++        # retire) once its future has finished; an inline forward releases its own set; a failed grow
++        # releases its reservation (_acquire_pin). pf2lock r3: a submitted task touches no set before its
++        # entry's publication is decided (_publish): commit after the entry is in _pending, abort when any
++        # step of the publication raised, including a submit that queued the task and then raised (a worker
++        # thread that failed to start) without returning its future. An aborted task never acquires or
++        # writes a set, so the issuer, the sole owner of an unpublished entry, releases its set at once
++        self._lock = threading.Lock()
+         self.prefetch_stats = {"hit": 0, "miss": 0, "retired": 0}
+         self._timing = []           # per-forward records when _TIMING (last 4096 calls)
+         self._timing_n = 0          # total forwards seen (reporting coverage)
+@@ -508,55 +531,108 @@
+         }
+ 
+     def _drain_prefetch(self):
+-        for e in list(self._pending):
+-            self._retire(e)
+-        if self._executor is not None:
+-            self._executor.shutdown(wait = True)
+-            self._executor = None
++        # pf2lock: retire every entry and shut the executor down even when a retire raises (a failed
++        # staging re-raises in _retire); the first error is re-raised afterwards
++        err = None
++        try:
++            with self._lock:
++                pending = list(self._pending)
++            for e in pending:
++                try:
++                    self._retire(e)
++                except Exception as ex:
++                    err = err or ex
++        finally:
++            if self._executor is not None:
++                self._executor.shutdown(wait = True)
++                self._executor = None
++        if err is not None:
++            raise err
+ 
+-    def _forget(self, entry: dict):
+-        # by identity: list.remove would compare the entries' history tensors
+-        self._pending = [e for e in self._pending if e is not entry]
++    def _claim(self, entry: dict) -> bool:
++        """Remove entry from the queue (by identity: list.remove would compare the entries' history
++        tensors); False when another thread already took it (a forward hit, or a retire from the
++        other side)"""
++        with self._lock:
++            if not any(e is entry for e in self._pending):
++                return False
++            self._pending = [e for e in self._pending if e is not entry]
++            return True
++
++    def _release(self, pin: _PinSet, discard: bool = False):
++        """End the caller's hold on pin. discard: drop the set from the pool instead of reusing it
++        (an upload from it may still be in flight without a recorded event; the pinned host
++        allocator keeps the memory alive until that copy completes)"""
++        if discard:
++            with self._lock:
++                self._pins = [p for p in self._pins if p is not pin]
++        pin.held = False
++
++    def _abandon(self, entry: dict):
++        """Release a claimed entry's set once its staging can no longer touch it: now when its
++        future has finished (or was cancelled before running), else when the worker finishes it.
++        pf2lock r3: only published entries are claimed, and a published entry has its future
++        (an unpublished one is released by _publish)"""
++        f = entry["future"]
++        if f.cancel() or f.done():
++            if entry["pin"] is not None:        # None: a deferred stage that never acquired
++                self._release(entry["pin"])
++        else:
++            f.add_done_callback(lambda _f: entry["pin"] is not None and self._release(entry["pin"]))
+ 
+     def _retire(self, entry: dict):
+         # Drop a queued prefetch that no forward will take. Its worker may still be writing the
+-        # staging set, so wait it out (a cold gather, at most) unless it hasn't started
+-        self._forget(entry)
++        # staging set, so wait it out (a cold gather, at most) unless it hasn't started.
++        # pf2lock: the set is released whether the staging succeeded or raised (served f.result()
++        # propagation kept)
++        if not self._claim(entry):
++            return
+         self.prefetch_stats["retired"] += 1
+         f = entry["future"]
+-        if not f.cancel():
+-            f.result()
+-        if entry["pin"] is not None:        # None while a deferred stage is still acquiring
+-            entry["pin"].held = False
++        try:
++            if not f.cancel():
++                f.result()
++        finally:
++            self._abandon(entry)
+ 
+     def _acquire_pin(self, n: int, row_words: int, row_dtype: torch.dtype,
+                      skip: dict | None = None) -> _PinSet:
+         """A staging set not held by a queued prefetch, grown to n ids. `skip` excludes one
+         pending entry (the caller's own deferred stage) from the retire candidates below: its
+         future running on this same thread would deadlock in _retire's f.result()."""
+-        free = [p for p in self._pins if not p.held]
+-        if not free and len(self._pins) < MAX_PIN_SETS:
+-            free = [_PinSet()]
+-            self._pins += free
+-        if not free:
+-            # every set is held by a queued prefetch: retire one, preferably one whose staging
+-            # already finished and owns its set (a stale guess), else the oldest other entry
+-            # (whose future is either cancellable before it runs, or joined here — unchanged
+-            # served cost)
+-            done = [e for e in self._pending
+-                    if e is not skip and e["future"].done() and e["pin"] is not None]
+-            others = [e for e in self._pending if e is not skip]
++        while True:
++            with self._lock:
++                # pf2lock: choosing a set and marking it held is one step (the PREFETCH2 worker
++                # acquires too)
++                free = [p for p in self._pins if not p.held]
++                if not free and len(self._pins) < MAX_PIN_SETS:
++                    free = [_PinSet()]
++                    self._pins += free
++                if free:
++                    pin = free[0]
++                    pin.held = True
++                    break
++                # every set is held by a queued prefetch: retire one, preferably one whose staging
++                # already finished and owns its set (a stale guess), else the oldest other entry
++                # (whose future is either cancellable before it runs, or joined here — unchanged
++                # served cost)
++                done = [e for e in self._pending
++                        if e is not skip and e["future"] is not None and e["future"].done()
++                        and e["pin"] is not None]
++                others = [e for e in self._pending if e is not skip]
+             if not others:
+                 # every held set belongs to an inline forward's staging (no queued entry to
+                 # retire): that holder frees its set when its stage ends, so wait it out
+-                while not (free := [p for p in self._pins if not p.held]):
+-                    time.sleep(0.001)
++                time.sleep(0.001)
+             else:
+                 self._retire(done[0] if done else others[0])
+-                free = [p for p in self._pins if not p.held]
+-        pin = free[0]
+-        pin.grow(n, row_words, row_dtype)
+-        pin.held = True
++        try:
++            pin.grow(n, row_words, row_dtype)
++        except BaseException:
++            # pf2lock: grow is transactional (the set keeps its previous buffers), so give the
++            # reservation back
++            self._release(pin)
++            raise
+         return pin
+ 
+     @torch.inference_mode()
+@@ -618,37 +694,80 @@
+         if out_len <= 0 or bsz * out_len < PREFETCH_MIN_TOKENS:
+             return
+         history = history.to("cpu", torch.int64).contiguous().clone()
+-        if self._match(history) is not None:
++        with self._lock:
++            queued = self._match(history) is not None
++        if queued:
+             return
+         trellis = self.mode.startswith("trellis")
++        entry = self._new_entry(history)
+         if not PREFETCH2:
+-            pin = self._acquire_pin(
++            entry["pin"] = self._acquire_pin(
+                 bsz * out_len * self.num_heads,
+                 words_per_row(self.K) if trellis else ROW_DIM,
+                 torch.int16 if trellis else self._row_dtype)
+-        for h in self.handles or []:
+-            h._ensure_open()        # lazy open isn't thread-safe; do it here, not on the worker
+-        if self._executor is None:
+-            self._executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "ngram_prefetch")
+-        if not PREFETCH2:
+-            self._pending.append({
+-                "history": history,
+-                "pin": pin,
+-                "future": self._executor.submit(self._stage, history, pin),
+-            })
++            # pf2lock: the future is set before the entry is visible to the worker's retire scan, and the
++            # task writes the set only once the entry is committed (r3, _publish)
++            self._publish(entry, self._stage_committed)
+         else:
+             # PREFETCH2: _acquire_pin (and the previous set's event wait inside _stage) run on
+             # the worker instead of the issuing thread, so a cold gather or a still-streaming
+             # H2D never stalls the generator / stage-0 thread. The executor is single-worker,
+             # so staging stays ordered exactly as the served path.
+-            entry = {"history": history, "pin": None, "future": None}
+-            self._pending.append(entry)
+-            entry["future"] = self._executor.submit(self._stage_deferred, history, entry)
++            self._publish(entry, self._stage_deferred)
+ 
++    @staticmethod
++    def _new_entry(history: torch.Tensor) -> dict:
++        return {"history": history, "pin": None, "future": None,
++                "gate": threading.Event(), "aborted": False}
++
++    def _committed(self, entry: dict) -> bool:
++        """Worker side: wait for the issuer's publication decision before touching any set (the
++        issuer decides right after submit, so this wait is the submit-to-append window)."""
++        entry["gate"].wait()
++        return not entry["aborted"]
++
++    def _publish(self, entry: dict, fn):
++        """pf2lock r3: submit fn(history, entry) and publish entry, or abort. The decision is made
++        exactly once on every path (gate set in finally), so a queued task never waits forever and
++        drain's shutdown(wait = True) cannot hang on it. On abort the entry is unpublished (the
++        append is the last step that can raise), so the issuer is its sole owner: aborted is
++        written before the gate opens, the task (if one was queued, returned future or not) sees it
++        and skips, and the issuer releases its set (flag off; a deferred entry never acquired). An
++        abort after the append (only an asynchronous exception can land there) withdraws the entry
++        first; if a retire already claimed it, that claimant releases the set (_abandon, the
++        future being set by then)."""
++        ok = appended = False
++        try:
++            for h in self.handles or []:
++                h._ensure_open()        # lazy open isn't thread-safe; do it here, not on the worker
++            if self._executor is None:
++                self._executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "ngram_prefetch")
++            entry["future"] = self._executor.submit(fn, entry["history"], entry)
++            with self._lock:
++                self._pending.append(entry)
++                appended = True
++            ok = True
++        finally:
++            try:
++                if not ok:
++                    entry["aborted"] = True
++            finally:
++                entry["gate"].set()
++            if not ok and (not appended or self._claim(entry)) and entry["pin"] is not None:
++                self._release(entry["pin"])
++
++    def _stage_committed(self, history, entry):
++        """Flag-off worker staging into the set the issuer acquired, once the entry is committed."""
++        if not self._committed(entry):
++            return None
++        return self._stage(history, entry["pin"])
++
+     def _stage_deferred(self, history, entry):
+         """PREFETCH2 worker-side staging: acquire the staging set here (so the issuing thread
+         never waits on a cold gather or on the previous set's CUDA event), then run the normal
+-        _stage."""
++        _stage. pf2lock r3: nothing is acquired before the entry is committed."""
++        if not self._committed(entry):
++            return None
+         trellis = self.mode.startswith("trellis")
+         out_len = history.shape[1] - self.context_len
+         pin = self._acquire_pin(
+@@ -671,19 +790,15 @@
+         if out_len <= 0:
+             return
+         history = history.to("cpu", torch.int64).contiguous().clone()
+-        if self._match(history) is not None:
++        with self._lock:
++            queued = self._match(history) is not None
++        if queued:
+             return
+-        trellis = self.mode.startswith("trellis")
+-        entry = {"history": history, "pin": None, "future": None}
+-        self._pending.append(entry)
+-        for h in self.handles or []:
+-            h._ensure_open()        # lazy open isn't thread-safe; do it here, not on the worker
+-        if self._executor is None:
+-            self._executor = ThreadPoolExecutor(max_workers = 1, thread_name_prefix = "ngram_prefetch")
+         # Same deferred acquisition as prefetch() under the flag (and the only path this hook
+         # runs on): the set is acquired on the worker, so the generator thread only pays the
+-        # submit.
+-        entry["future"] = self._executor.submit(self._stage_deferred, history, entry)
++        # submit. pf2lock: published (future set, then visible to the worker's retire scan) or
++        # aborted by _publish
++        self._publish(self._new_entry(history), self._stage_deferred)
+ 
+     @override
+     def forward(
+@@ -706,30 +821,57 @@
+         row_words = words_per_row(self.K) if trellis else ROW_DIM
+         row_dtype = torch.int16 if trellis else self._row_dtype
+ 
+-        entry = self._match(ids)
+-        if entry is not None:
+-            self._forget(entry)
+-            self.prefetch_stats["hit"] += 1
+-            with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
+-                U = entry["future"].result()      # deferred entries have set entry["pin"] by now
+-            pin = entry["pin"]
+-        else:
+-            self.prefetch_stats["miss"] += 1
+-            with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
+-                pin = self._acquire_pin(n, row_words, row_dtype)
+-                U = self._stage(ids, pin)
++        with self._lock:
++            entry = self._match(ids)
++            if entry is not None:
++                self._pending = [e for e in self._pending if e is not entry]
++        # pf2lock: this forward owns pin (a claimed entry's or its own) from here and releases it
++        # on every path; `uploading` marks uploads that may be in flight with no event recorded
++        pin = None
++        uploading = False
++        try:
++            if entry is not None:
++                self.prefetch_stats["hit"] += 1
++                try:
++                    with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
++                        U = entry["future"].result()      # deferred entries have set entry["pin"] by now
++                except BaseException:
++                    self._abandon(entry)
++                    raise
++                pin = entry["pin"]
++            else:
++                self.prefetch_stats["miss"] += 1
++                with self._timed("prefill" if out_len >= PREFETCH_MIN_TOKENS else "decode", out_len):
++                    pin = self._acquire_pin(n, row_words, row_dtype)
++                    U = self._stage(ids, pin)
+ 
+-        packed_d = pin.packed[:U].to(dev, non_blocking = True)
+-        inv_d = pin.inverse[:n].to(dev, non_blocking = True)
+-        if trellis:
+-            heads_d = pin.heads[:U].to(dev, non_blocking = True)
+-            rows = torch.empty((U, ROW_DIM), dtype = torch.half, device = dev)
+-            ext.ngram_dequant(packed_d, self.K, heads_d, self.head_bias, rows)
+-        else:
+-            rows = packed_d.float()
+-        if rows.is_cuda:
+-            pin.event = torch.cuda.Event()
+-            pin.event.record(torch.cuda.current_stream(rows.device))
++            uploading = True
++            packed_d = pin.packed[:U].to(dev, non_blocking = True)
++            inv_d = pin.inverse[:n].to(dev, non_blocking = True)
++            if trellis:
++                heads_d = pin.heads[:U].to(dev, non_blocking = True)
++                rows = torch.empty((U, ROW_DIM), dtype = torch.half, device = dev)
++                ext.ngram_dequant(packed_d, self.K, heads_d, self.head_bias, rows)
++            else:
++                rows = packed_d.float()
++            if rows.is_cuda:
++                event = torch.cuda.Event()
++                event.record(torch.cuda.current_stream(rows.device))
++                pin.event = event
++            uploading = False
++        except BaseException:
++            if pin is not None:
++                if uploading:
++                    try:
++                        if torch.device(dev).type == "cuda":
++                            event = torch.cuda.Event()
++                            event.record(torch.cuda.current_stream(dev))
++                            pin.event = event   # the next writer waits for this forward's uploads
++                        uploading = False
++                    except BaseException:
++                        pass                    # no event: retire the set instead of reusing it
++                self._release(pin, discard = uploading)
++            raise
+         pin.held = False
+         out = rows.index_select(0, inv_d).view(bsz, out_len, H * ROW_DIM)
+         dt = out_dtype or self.out_dtype or torch.half
