@@ -1,0 +1,59 @@
+{
+  "module": "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py",
+  "module_sha256": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+  "prefetch2": true,
+  "grow_sleep_us": 0,
+  "has_lock": false,
+  "torch": "2.9.0+cu128",
+  "results": [
+    {
+      "scenario": "share",
+      "counts": {
+        "iterations": 5000,
+        "failed": 3430,
+        "wrong_rows": 1512,
+        "exceptions": 1918,
+        "leftover": 0,
+        "hang": 0,
+        "rate": 0.686
+      },
+      "examples": [
+        {
+          "iteration": 1,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'",
+            "Traceback (most recent call last):\n  File \"/work/cpu_stress.py\", line 185, in run\n    m, fails = fn(i)\n               ^^^^^\n  File \"/work/cpu_stress.py\", line 125, in it_share\n    check_rows(m, b, \"miss b\", fails)\n  File \"/work/cpu_stress.py\", line 100, in check_rows\n    out = m.forward(history, {})\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py\", line 719, in forward\n    pin = self._acquire_pin(n, row_words, row_dtype)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'shape'\n"
+          ]
+        },
+        {
+          "iteration": 2,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'",
+            "Traceback (most recent call last):\n  File \"/work/cpu_stress.py\", line 185, in run\n    m, fails = fn(i)\n               ^^^^^\n  File \"/work/cpu_stress.py\", line 125, in it_share\n    check_rows(m, b, \"miss b\", fails)\n  File \"/work/cpu_stress.py\", line 100, in check_rows\n    out = m.forward(history, {})\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py\", line 719, in forward\n    pin = self._acquire_pin(n, row_words, row_dtype)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'shape'\n"
+          ]
+        },
+        {
+          "iteration": 4,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'",
+            "Traceback (most recent call last):\n  File \"/work/cpu_stress.py\", line 185, in run\n    m, fails = fn(i)\n               ^^^^^\n  File \"/work/cpu_stress.py\", line 125, in it_share\n    check_rows(m, b, \"miss b\", fails)\n  File \"/work/cpu_stress.py\", line 100, in check_rows\n    out = m.forward(history, {})\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py\", line 719, in forward\n    pin = self._acquire_pin(n, row_words, row_dtype)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'shape'\n"
+          ]
+        },
+        {
+          "iteration": 6,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'"
+          ]
+        },
+        {
+          "iteration": 9,
+          "fails": [
+            "wrong rows on hit a: want [2, 3, 4] got [6, 7, 8]"
+          ]
+        }
+      ]
+    }
+  ],
+  "seconds": 0.8,
+  "pass": false
+}

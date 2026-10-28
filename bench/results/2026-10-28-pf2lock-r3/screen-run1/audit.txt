@@ -1,0 +1,28 @@
+2026-10-28T15:34:18Z [pf2lock-screen screen] GPU lock held; results=/srv/qwen5090/results/2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598
+2026-10-28T15:34:18Z [pf2lock-screen screen] root free: 437803744 KiB; used: 77% (need 40 GiB and 15% free)
+2026-10-28T15:34:22Z [pf2lock-screen screen] preflight PASS: candidate sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021 (round label r3); preflight PASS: 50 served keys; A 3 hunks, B 4 hunks (extra env []); container flashnext-pf2lock-exp-2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598
+2026-10-28T15:34:22Z [pf2lock-screen screen] work allocation 3555s (deadline 16:33:37Z)
+2026-10-28T15:34:39Z [pf2lock-screen screen] drained; companions stopped: hermes hermes-webui 
+2026-10-28T15:34:39Z [pf2lock-screen screen] boot B0 arm=B image=sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021 pool=819200 split=[30, 30] :18022
+2026-10-28T15:34:59+00:00 [flashnext] UP on 18022 | warmup 0.365009s | VRAM free MiB 1213/815/
+2026-10-28T15:34:59+00:00 [flashnext] FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-28T15:35:00Z [pf2lock-screen screen] complete B0 (3517s of work allocation left)
+2026-10-28T15:35:00Z [pf2lock-screen screen] boot A1 arm=A image=sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd pool=819200 split=[30, 30] :18022
+2026-10-28T15:35:24+00:00 [flashnext] UP on 18022 | warmup 0.454825s | VRAM free MiB 1213/815/
+2026-10-28T15:35:24+00:00 [flashnext] FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-28T15:38:02Z [pf2lock-screen screen] complete A1 (3335s of work allocation left)
+2026-10-28T15:38:02Z [pf2lock-screen screen] boot B1 arm=B image=sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021 pool=819200 split=[30, 30] :18022
+2026-10-28T15:38:24+00:00 [flashnext] UP on 18022 | warmup 0.363051s | VRAM free MiB 1213/815/
+2026-10-28T15:38:24+00:00 [flashnext] FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-28T15:41:01Z [pf2lock-screen screen] complete B1 (3156s of work allocation left)
+2026-10-28T15:41:01Z [pf2lock-screen screen] boot B2 arm=B image=sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021 pool=819200 split=[30, 30] :18022
+2026-10-28T15:41:22+00:00 [flashnext] UP on 18022 | warmup 0.393170s | VRAM free MiB 1213/815/
+2026-10-28T15:41:21+00:00 [flashnext] FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-28T15:43:59Z [pf2lock-screen screen] complete B2 (2978s of work allocation left)
+2026-10-28T15:43:59Z [pf2lock-screen screen] boot A2 arm=A image=sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd pool=819200 split=[30, 30] :18022
+2026-10-28T15:44:20+00:00 [flashnext] UP on 18022 | warmup 0.368639s | VRAM free MiB 1213/815/
+2026-10-28T15:44:20+00:00 [flashnext] FASTWARM ok (N_p 20 #4, N_p 29 #5, N_p 11 #6, none cached; pin d424997ca703a08f)
+2026-10-28T15:46:57Z [pf2lock-screen screen] complete A2 (2800s of work allocation left)
+2026-10-28T15:46:57Z [pf2lock-screen screen] all cells collected; restore follows; report.py runs after the lock is released
+2026-10-28T15:47:20Z [pf2lock-screen screen] restore check: image sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd launcher 7e36acd2019ffc21082d8a0d50d8c43ea5403c9b0cba5fe39968810e569288c7 model qwen3.8-flash-next-exl3-2.68bpw-selfcal default-daily flashnext
+2026-10-28T15:47:20Z [pf2lock-screen screen] DONE rc=0 restore=verified

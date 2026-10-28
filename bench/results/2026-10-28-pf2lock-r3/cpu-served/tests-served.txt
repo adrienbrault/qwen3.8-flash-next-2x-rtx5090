@@ -1,0 +1,326 @@
+W1028 15:00:02.210000 8 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+pf2lock_tests: module /opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py sha256 b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8 stubbed=False torch 2.9.0+cu128
+test_abandon_running_stage_releases_on_completion (__main__.Failures.test_abandon_running_stage_releases_on_completion) ... ERROR
+test_alloc_failure_fresh_set_inline (__main__.Failures.test_alloc_failure_fresh_set_inline) ... FAIL
+test_alloc_failure_growing_warm_set_keeps_old_buffers (__main__.Failures.test_alloc_failure_growing_warm_set_keeps_old_buffers) ... ERROR
+test_alloc_failure_on_worker (__main__.Failures.test_alloc_failure_on_worker) ... ok
+test_drain_retires_all_and_shuts_down_when_one_raises (__main__.Failures.test_drain_retires_all_and_shuts_down_when_one_raises) ... FAIL
+test_failed_future_retired_by_acquire_pressure (__main__.Failures.test_failed_future_retired_by_acquire_pressure) ... FAIL
+test_failed_future_retired_by_drain (__main__.Failures.test_failed_future_retired_by_drain) ... FAIL
+test_failed_inline_stage (__main__.Failures.test_failed_inline_stage) ... FAIL
+test_failed_submit_offpath_releases_set (__main__.Failures.test_failed_submit_offpath_releases_set) ... FAIL
+test_failed_submit_prefetch_ids (__main__.Failures.test_failed_submit_prefetch_ids) ... FAIL
+test_failed_upload_dequant_releases_set (__main__.Failures.test_failed_upload_dequant_releases_set) ... FAIL
+test_failed_upload_without_event_discards_set (__main__.Failures.test_failed_upload_without_event_discards_set) ... FAIL
+test_post_enqueue_submit_failure_offpath (__main__.Failures.test_post_enqueue_submit_failure_offpath) ... FAIL
+test_post_enqueue_submit_failure_prefetch2 (__main__.Failures.test_post_enqueue_submit_failure_prefetch2) ... FAIL
+test_post_enqueue_submit_failure_prefetch2_long (__main__.Failures.test_post_enqueue_submit_failure_prefetch2_long) ... FAIL
+test_post_enqueue_submit_failure_then_drain (__main__.Failures.test_post_enqueue_submit_failure_then_drain) ... FAIL
+test_no_lock_held_during_waits (__main__.Paths.test_no_lock_held_during_waits) ... ok
+test_prefetch2_long_prefetch (__main__.Paths.test_prefetch2_long_prefetch) ... ERROR
+test_prefetch2_off_long_prefetch (__main__.Paths.test_prefetch2_off_long_prefetch) ... ok
+test_warm_set_sequence (__main__.Paths.test_warm_set_sequence) ... ERROR
+test_cancel_pinless_queued_while_both_held_then_poll (__main__.Races.test_cancel_pinless_queued_while_both_held_then_poll) ... FAIL
+test_claimed_hit_vs_retire_is_noop (__main__.Races.test_claimed_hit_vs_retire_is_noop) ... Exception in thread Thread-1 (<lambda>):
+FAIL
+Traceback (most recent call last):
+test_publish_during_retire_scan (__main__.Races.test_publish_during_retire_scan) ...   File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/pf2lock/pf2lock_tests.py", line 197, in <lambda>
+    t = threading.Thread(target = lambda: out.setdefault("r", self.m.forward(a, {})))
+                                                              ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py", line 714, in forward
+    U = entry["future"].result()      # deferred entries have set entry["pin"] by now
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/pf2lock/pf2lock_tests.py", line 124, in result
+    return real_result(fut, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 454, in result
+    raise CancelledError()
+concurrent.futures._base.CancelledError
+ok
+test_retire_first_then_forward_misses (__main__.Races.test_retire_first_then_forward_misses) ... ok
+
+======================================================================
+ERROR: test_abandon_running_stage_releases_on_completion (__main__.Failures.test_abandon_running_stage_releases_on_completion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 574, in test_abandon_running_stage_releases_on_completion
+    self.assertTrue(self.m._claim(e))
+                    ^^^^^^^^^^^^^
+AttributeError: 'NGramEmbedding' object has no attribute '_claim'
+
+======================================================================
+ERROR: test_alloc_failure_growing_warm_set_keeps_old_buffers (__main__.Failures.test_alloc_failure_growing_warm_set_keeps_old_buffers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 317, in test_alloc_failure_growing_warm_set_keeps_old_buffers
+    self.assertEqual((pin.uids, pin.inverse, pin.heads, pin.packed), old)
+  File "/usr/lib/python3.12/unittest/case.py", line 885, in assertEqual
+    assertion_func(first, second, msg=msg)
+  File "/usr/lib/python3.12/unittest/case.py", line 1102, in assertTupleEqual
+    self.assertSequenceEqual(tuple1, tuple2, msg, seq_type=tuple)
+  File "/usr/lib/python3.12/unittest/case.py", line 1016, in assertSequenceEqual
+    if seq1 == seq2:
+       ^^^^^^^^^^^^
+RuntimeError: The size of tensor a (38) must match the size of tensor b (2) at non-singleton dimension 0
+
+======================================================================
+ERROR: test_prefetch2_long_prefetch (__main__.Paths.test_prefetch2_long_prefetch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 590, in test_prefetch2_long_prefetch
+    self.rows_ok(miss, "miss")
+  File "/opt/pf2lock/pf2lock_tests.py", line 154, in rows_ok
+    out = self.m.forward(history, {})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py", line 719, in forward
+    pin = self._acquire_pin(n, row_words, row_dtype)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py", line 558, in _acquire_pin
+    pin.grow(n, row_words, row_dtype)
+  File "/opt/pf2lock/pf2lock_harness.py", line 108, in grow
+    if self.uids is None or self.uids.numel() < n or self.packed.shape[1] != row_words \
+                                                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'shape'
+
+======================================================================
+ERROR: test_warm_set_sequence (__main__.Paths.test_warm_set_sequence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 608, in test_warm_set_sequence
+    self.rows_ok(b, "miss")
+  File "/opt/pf2lock/pf2lock_tests.py", line 154, in rows_ok
+    out = self.m.forward(history, {})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py", line 719, in forward
+    pin = self._acquire_pin(n, row_words, row_dtype)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py", line 558, in _acquire_pin
+    pin.grow(n, row_words, row_dtype)
+  File "/opt/pf2lock/pf2lock_harness.py", line 108, in grow
+    if self.uids is None or self.uids.numel() < n or self.packed.shape[1] != row_words \
+                                                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'shape'
+
+======================================================================
+FAIL: test_alloc_failure_fresh_set_inline (__main__.Failures.test_alloc_failure_fresh_set_inline)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 304, in test_alloc_failure_fresh_set_inline
+    self.assertIsNone(self.m._pins[0].uids)     # nothing published: the next grow allocates all four
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: tensor([139633257212848, 139633257212848, 139627471729120]) is not None
+
+======================================================================
+FAIL: test_drain_retires_all_and_shuts_down_when_one_raises (__main__.Failures.test_drain_retires_all_and_shuts_down_when_one_raises)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 369, in test_drain_retires_all_and_shuts_down_when_one_raises
+    self.assertIsNone(self.m._executor)
+AssertionError: <concurrent.futures.thread.ThreadPoolExecutor object at 0x7efd8d522690> is not None
+
+======================================================================
+FAIL: test_failed_future_retired_by_acquire_pressure (__main__.Failures.test_failed_future_retired_by_acquire_pressure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 385, in test_failed_future_retired_by_acquire_pressure
+    self.assertEqual([p for p in self.m._pins if p.held and p is not self.m._pending[0]["pin"]], [])
+AssertionError: Lists differ: [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522cc0>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522cc0>
+
+- [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522cc0>]
++ []
+
+======================================================================
+FAIL: test_failed_future_retired_by_drain (__main__.Failures.test_failed_future_retired_by_drain)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 356, in test_failed_future_retired_by_drain
+    self.assertIsNone(self.m._executor)         # drain still shut the executor down
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: <concurrent.futures.thread.ThreadPoolExecutor object at 0x7efd8d522c90> is not None
+
+======================================================================
+FAIL: test_failed_inline_stage (__main__.Failures.test_failed_inline_stage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 395, in test_failed_inline_stage
+    self.clean()
+  File "/opt/pf2lock/pf2lock_tests.py", line 163, in clean
+    self.assertEqual([p for p in self.m._pins if p.held], [])
+AssertionError: Lists differ: [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522f30>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522f30>
+
+- [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d522f30>]
++ []
+
+======================================================================
+FAIL: test_failed_submit_offpath_releases_set (__main__.Failures.test_failed_submit_offpath_releases_set)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 448, in test_failed_submit_offpath_releases_set
+    self.assertEqual([p for p in self.m._pins if p.held], [])
+AssertionError: Lists differ: [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d5230b0>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d5230b0>
+
+- [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d5230b0>]
++ []
+
+======================================================================
+FAIL: test_failed_submit_prefetch_ids (__main__.Failures.test_failed_submit_prefetch_ids)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 459, in test_failed_submit_prefetch_ids
+    self.assertEqual(self.m._pending, [])
+AssertionError: Lists differ: [{'history': tensor([[1, 2, 3]]), 'pin': None, 'future': None}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'history': tensor([[1, 2, 3]]), 'pin': None, 'future': None}
+
+- [{'future': None, 'history': tensor([[1, 2, 3]]), 'pin': None}]
++ []
+
+======================================================================
+FAIL: test_failed_upload_dequant_releases_set (__main__.Failures.test_failed_upload_dequant_releases_set)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 421, in test_failed_upload_dequant_releases_set
+    self.assertFalse(self.m._pins[0].held)
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_failed_upload_without_event_discards_set (__main__.Failures.test_failed_upload_without_event_discards_set)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 434, in test_failed_upload_without_event_discards_set
+    self.assertNotIn(pin, self.m._pins)         # never reused: an upload might still read it
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: <exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523320> unexpectedly found in [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523320>]
+
+======================================================================
+FAIL: test_post_enqueue_submit_failure_offpath (__main__.Failures.test_post_enqueue_submit_failure_offpath)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 519, in test_post_enqueue_submit_failure_offpath
+    staged, orphan = self.orphan_after_failed_submit(self.m.prefetch, a)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/pf2lock/pf2lock_tests.py", line 503, in orphan_after_failed_submit
+    self.assertEqual([p for p in self.m._pins if p.held], [])     # flag off: the issuer's set is released
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523980>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523980>
+
+- [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523980>]
++ []
+
+======================================================================
+FAIL: test_post_enqueue_submit_failure_prefetch2 (__main__.Failures.test_post_enqueue_submit_failure_prefetch2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 530, in test_post_enqueue_submit_failure_prefetch2
+    staged, orphan = self.orphan_after_failed_submit(self.m.prefetch_ids, a)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/pf2lock/pf2lock_tests.py", line 502, in orphan_after_failed_submit
+    self.assertEqual(self.m._pending, [])
+AssertionError: Lists differ: [{'history': tensor([[1, 2, 3, 4]]), 'pin': None, 'future': None}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'history': tensor([[1, 2, 3, 4]]), 'pin': None, 'future': None}
+
+- [{'future': None, 'history': tensor([[1, 2, 3, 4]]), 'pin': None}]
++ []
+
+======================================================================
+FAIL: test_post_enqueue_submit_failure_prefetch2_long (__main__.Failures.test_post_enqueue_submit_failure_prefetch2_long)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 540, in test_post_enqueue_submit_failure_prefetch2_long
+    staged, orphan = self.orphan_after_failed_submit(self.m.prefetch, a)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/pf2lock/pf2lock_tests.py", line 502, in orphan_after_failed_submit
+    self.assertEqual(self.m._pending, [])
+AssertionError: Lists differ: [{'history': tensor([[ 10,  11,  12,  13, [1558 chars]one}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'history': tensor([[ 10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,
+          24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,
+          38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,
+          52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,
+          66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,
+          80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,
+          94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107,
+         108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+         122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
+         136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+         150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163,
+         164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177,
+         178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+         192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205,
+         206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+         220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
+         234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247,
+         248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261,
+         262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275,
+         276, 277, 278, 279, 280, 281, 282, 283, 284, 285]]), 'pin': None, 'future': None}
+
+Diff is 1659 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_post_enqueue_submit_failure_then_drain (__main__.Failures.test_post_enqueue_submit_failure_then_drain)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 554, in test_post_enqueue_submit_failure_then_drain
+    staged, orphan = self.orphan_after_failed_submit(getattr(self.m, issue), hist)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/pf2lock/pf2lock_tests.py", line 503, in orphan_after_failed_submit
+    self.assertEqual([p for p in self.m._pins if p.held], [])     # flag off: the issuer's set is released
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523e00>] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523e00>
+
+- [<exllamav3.modules.ngram_embedding._PinSet object at 0x7efd8d523e00>]
++ []
+
+======================================================================
+FAIL: test_cancel_pinless_queued_while_both_held_then_poll (__main__.Races.test_cancel_pinless_queued_while_both_held_then_poll)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 270, in test_cancel_pinless_queued_while_both_held_then_poll
+    until(lambda: self.sleeps > 0, what = "W polling for a set")
+  File "/opt/pf2lock/pf2lock_tests.py", line 88, in until
+    raise AssertionError(f"timed out waiting for {what}")
+AssertionError: timed out waiting for W polling for a set
+
+======================================================================
+FAIL: test_claimed_hit_vs_retire_is_noop (__main__.Races.test_claimed_hit_vs_retire_is_noop)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/pf2lock/pf2lock_tests.py", line 201, in test_claimed_hit_vs_retire_is_noop
+    self.assertFalse(entry["future"].cancelled())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 24 tests in 5.046s
+
+FAILED (failures=15, errors=4)

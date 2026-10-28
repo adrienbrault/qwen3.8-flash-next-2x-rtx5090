@@ -1,0 +1,18 @@
+PROMOTE-ELIGIBLE  (2 run(s), candidate sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021)
+  run1 = /srv/qwen5090/results/2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598  (qwen5090.restore-run=2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598)
+  run2 = /srv/qwen5090/results/2026-10-28-154823-flashnext-pf2lock-screen-screen-3242976  (qwen5090.restore-run=2026-10-28-154823-flashnext-pf2lock-screen-screen-3242976)
+
+satisfied:
+  - run1 greedy: 24/24 identical B1 = B2 = A1 = A2
+  - run1 format: 7/7 checks identical across A and B (identical nulls included)
+  - run2 greedy: 24/24 identical B1 = B2 = A1 = A2
+  - run2 format: 7/7 checks identical across A and B (identical nulls included)
+  - code c1 per-stream tok/s: B vs A -0.19 % (A n=4, B n=4; noise hw 0.40 % vs window 2 %; per boot run1 A1 +0.3, run1 B1 -0.1, run1 B2 -0.1, run1 A2 -0.3, run2 A1 +0.3, run2 B1 -0.5, run2 B2 -0.1, run2 A2 -0.3): within the threshold
+  - code c4 aggregate tok/s: B vs A -0.12 % (A n=4, B n=4; noise hw 0.99 % vs window 2 %; per boot run1 A1 -1.1, run1 B1 +0.3, run1 B2 -0.3, run1 A2 +0.6, run2 A1 +0.0, run2 B1 +0.5, run2 B2 -0.9, run2 A2 +0.5): within the threshold
+  - six-agent replay span s: B vs A -0.79 % (A n=4, B n=4; noise hw 2.29 % vs window 3 %; per boot run1 A1 +0.7, run1 B1 +0.3, run1 B2 +1.1, run1 A2 +1.1, run2 A1 -0.0, run2 B1 -3.2, run2 B2 -1.3, run2 A2 -1.8): within the threshold
+
+reported:
+  - six-agent replay span per generated token ms: B vs A -0.79 % (A n=4, B n=4; noise hw 2.29 % vs window 3 %; per boot run1 A1 +0.7, run1 B1 +0.3, run1 B2 +1.1, run1 A2 +1.1, run2 A1 -0.0, run2 B1 -3.2, run2 B2 -1.3, run2 A2 -1.8): reported; the replay gate uses the worse for B (six-agent replay span s)
+validator-rc=0
+
+[exited with code 0]

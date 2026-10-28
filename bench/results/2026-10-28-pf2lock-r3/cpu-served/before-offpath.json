@@ -1,0 +1,25 @@
+{
+  "module": "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py",
+  "module_sha256": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+  "prefetch2": false,
+  "grow_sleep_us": 0,
+  "has_lock": false,
+  "torch": "2.9.0+cu128",
+  "results": [
+    {
+      "scenario": "offpath",
+      "counts": {
+        "iterations": 5000,
+        "failed": 0,
+        "wrong_rows": 0,
+        "exceptions": 0,
+        "leftover": 0,
+        "hang": 0,
+        "rate": 0.0
+      },
+      "examples": []
+    }
+  ],
+  "seconds": 30.6,
+  "pass": true
+}

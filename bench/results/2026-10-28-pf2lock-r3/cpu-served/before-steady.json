@@ -1,0 +1,66 @@
+{
+  "module": "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py",
+  "module_sha256": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+  "prefetch2": true,
+  "grow_sleep_us": 0,
+  "has_lock": false,
+  "torch": "2.9.0+cu128",
+  "results": [
+    {
+      "scenario": "steady",
+      "counts": {
+        "iterations": 5000,
+        "failed": 2503,
+        "wrong_rows": 571,
+        "exceptions": 1932,
+        "leftover": 0,
+        "hang": 0,
+        "rate": 0.5006
+      },
+      "examples": [
+        {
+          "iteration": 2,
+          "fails": [
+            "wrong rows on step 0 hit: want [3, 4, 5] got [13, 14, 15]",
+            "wrong rows on step 1 hit: want [40, 41, 42] got [50, 51, 52]",
+            "wrong rows on step 2 hit: want [77, 78, 79] got [87, 88, 89]",
+            "wrong rows on step 3 hit: want [114, 115, 116] got [124, 125, 126]"
+          ]
+        },
+        {
+          "iteration": 3,
+          "fails": [
+            "wrong rows on step 1 hit: want [41, 42, 43] got [51, 52, 53]",
+            "wrong rows on step 2 hit: want [78, 79, 80] got [88, 89, 90]",
+            "wrong rows on step 3 hit: want [115, 116, 117] got [125, 126, 127]",
+            "wrong rows on step 4 hit: want [152, 153, 154] got [162, 163, 164]"
+          ]
+        },
+        {
+          "iteration": 4,
+          "fails": [
+            "wrong rows on step 0 hit: want [5, 6, 7] got [15, 16, 17]",
+            "wrong rows on step 2 hit: want [79, 80, 81] got [99, 100, 101]"
+          ]
+        },
+        {
+          "iteration": 5,
+          "fails": [
+            "wrong rows on step 1 hit: want [43, 44, 45] got [53, 54, 55]",
+            "wrong rows on step 2 hit: want [80, 81, 82] got [90, 91, 92]",
+            "wrong rows on step 3 hit: want [117, 118, 119] got [127, 128, 129]",
+            "wrong rows on step 4 hit: want [154, 155, 156] got [164, 165, 166]"
+          ]
+        },
+        {
+          "iteration": 6,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'"
+          ]
+        }
+      ]
+    }
+  ],
+  "seconds": 9.6,
+  "pass": false
+}

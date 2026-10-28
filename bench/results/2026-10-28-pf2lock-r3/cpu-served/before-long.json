@@ -1,0 +1,66 @@
+{
+  "module": "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py",
+  "module_sha256": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+  "prefetch2": true,
+  "stubbed": false,
+  "grow_sleep_us": 0,
+  "has_lock": false,
+  "torch": "2.9.0+cu128",
+  "scenarios": [
+    "long"
+  ],
+  "results": [
+    {
+      "scenario": "long",
+      "counts": {
+        "iterations": 5000,
+        "failed": 3072,
+        "wrong_rows": 690,
+        "exceptions": 2382,
+        "counter": 0,
+        "leftover": 0,
+        "hang": 0,
+        "hits": 2619,
+        "misses": 5000,
+        "retired": 0,
+        "rate": 0.6144
+      },
+      "examples": [
+        {
+          "iteration": 1,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'",
+            "Traceback (most recent call last):\n  File \"/src/cpu_stress.py\", line 138, in run\n    fn(m, i, fails)\n  File \"/src/cpu_stress.py\", line 100, in it_long\n    check_rows(m, miss, \"long miss\", fails, \"miss\")\n  File \"/src/cpu_stress.py\", line 50, in check_rows\n    out = m.forward(history, {})\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py\", line 719, in forward\n    pin = self._acquire_pin(n, row_words, row_dtype)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'shape'\n"
+          ]
+        },
+        {
+          "iteration": 4,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'",
+            "Traceback (most recent call last):\n  File \"/src/cpu_stress.py\", line 138, in run\n    fn(m, i, fails)\n  File \"/src/cpu_stress.py\", line 100, in it_long\n    check_rows(m, miss, \"long miss\", fails, \"miss\")\n  File \"/src/cpu_stress.py\", line 50, in check_rows\n    out = m.forward(history, {})\n          ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py\", line 719, in forward\n    pin = self._acquire_pin(n, row_words, row_dtype)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'shape'\n"
+          ]
+        },
+        {
+          "iteration": 6,
+          "fails": [
+            "wrong rows on long miss: want [104, 105, 106, 107, 108, 109, 110, 111] got [104, 104, 104, 104, 104, 104, 104, 104]"
+          ]
+        },
+        {
+          "iteration": 7,
+          "fails": [
+            "exception AttributeError: 'NoneType' object has no attribute 'shape'"
+          ]
+        },
+        {
+          "iteration": 8,
+          "fails": [
+            "wrong rows on long hit: want [9, 10, 11, 12, 13, 14, 15, 16] got [106, 107, 108, 109, 110, 111, 112, 113]"
+          ]
+        }
+      ]
+    }
+  ],
+  "seconds": 22.7,
+  "pass": false
+}

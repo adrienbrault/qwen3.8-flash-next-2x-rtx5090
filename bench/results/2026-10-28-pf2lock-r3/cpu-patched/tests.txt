@@ -1,0 +1,31 @@
+W1028 14:59:41.521000 90120 torch/utils/cpp_extension.py:117] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+pf2lock_tests: module /opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py sha256 e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc stubbed=False torch 2.9.0+cu128
+test_abandon_running_stage_releases_on_completion (__main__.Failures.test_abandon_running_stage_releases_on_completion) ... ok
+test_alloc_failure_fresh_set_inline (__main__.Failures.test_alloc_failure_fresh_set_inline) ... ok
+test_alloc_failure_growing_warm_set_keeps_old_buffers (__main__.Failures.test_alloc_failure_growing_warm_set_keeps_old_buffers) ... ok
+test_alloc_failure_on_worker (__main__.Failures.test_alloc_failure_on_worker) ... ok
+test_drain_retires_all_and_shuts_down_when_one_raises (__main__.Failures.test_drain_retires_all_and_shuts_down_when_one_raises) ... ok
+test_failed_future_retired_by_acquire_pressure (__main__.Failures.test_failed_future_retired_by_acquire_pressure) ... ok
+test_failed_future_retired_by_drain (__main__.Failures.test_failed_future_retired_by_drain) ... ok
+test_failed_inline_stage (__main__.Failures.test_failed_inline_stage) ... ok
+test_failed_submit_offpath_releases_set (__main__.Failures.test_failed_submit_offpath_releases_set) ... ok
+test_failed_submit_prefetch_ids (__main__.Failures.test_failed_submit_prefetch_ids) ... ok
+test_failed_upload_dequant_releases_set (__main__.Failures.test_failed_upload_dequant_releases_set) ... ok
+test_failed_upload_without_event_discards_set (__main__.Failures.test_failed_upload_without_event_discards_set) ... ok
+test_post_enqueue_submit_failure_offpath (__main__.Failures.test_post_enqueue_submit_failure_offpath) ... ok
+test_post_enqueue_submit_failure_prefetch2 (__main__.Failures.test_post_enqueue_submit_failure_prefetch2) ... ok
+test_post_enqueue_submit_failure_prefetch2_long (__main__.Failures.test_post_enqueue_submit_failure_prefetch2_long) ... ok
+test_post_enqueue_submit_failure_then_drain (__main__.Failures.test_post_enqueue_submit_failure_then_drain) ... ok
+test_no_lock_held_during_waits (__main__.Paths.test_no_lock_held_during_waits) ... ok
+test_prefetch2_long_prefetch (__main__.Paths.test_prefetch2_long_prefetch) ... ok
+test_prefetch2_off_long_prefetch (__main__.Paths.test_prefetch2_off_long_prefetch) ... ok
+test_warm_set_sequence (__main__.Paths.test_warm_set_sequence) ... ok
+test_cancel_pinless_queued_while_both_held_then_poll (__main__.Races.test_cancel_pinless_queued_while_both_held_then_poll) ... ok
+test_claimed_hit_vs_retire_is_noop (__main__.Races.test_claimed_hit_vs_retire_is_noop) ... ok
+test_publish_during_retire_scan (__main__.Races.test_publish_during_retire_scan) ... ok
+test_retire_first_then_forward_misses (__main__.Races.test_retire_first_then_forward_misses) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.158s
+
+OK

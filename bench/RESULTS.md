@@ -2,6 +2,10 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-10-28
+
+- [N-gram prefetch staging-set race fix](results/pf2lock-r3-race-fix.md) — `tune268-r2-pf2lock-r3`, served since 2026-10-28; CPU stress 0 / 5,000 failures per scenario after the patch, two A/B screens with greedy output 24/24 identical and decode and replay within noise.
+
 ## 2026-10-23
 
 - [Served self-calibrated 2.68 bpw](results/publish268-served-268.md) — `tune268-r2`, pool 819,200, 50 selectors; decode/prefill/depth `20261023T000904Z`, standard `20261023T005148Z`, quality `20261023T031345Z`, with publication projections and promotion evidence.

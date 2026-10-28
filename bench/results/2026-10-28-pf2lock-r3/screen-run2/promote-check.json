@@ -1,0 +1,215 @@
+{
+ "verdict": "PROMOTE-ELIGIBLE",
+ "not_eligible": [],
+ "inconclusive": [],
+ "satisfied": [
+  "run1 greedy: 24/24 identical B1 = B2 = A1 = A2",
+  "run1 format: 7/7 checks identical across A and B (identical nulls included)",
+  "run2 greedy: 24/24 identical B1 = B2 = A1 = A2",
+  "run2 format: 7/7 checks identical across A and B (identical nulls included)",
+  "code c1 per-stream tok/s: B vs A -0.19 % (A n=4, B n=4; noise hw 0.40 % vs window 2 %; per boot run1 A1 +0.3, run1 B1 -0.1, run1 B2 -0.1, run1 A2 -0.3, run2 A1 +0.3, run2 B1 -0.5, run2 B2 -0.1, run2 A2 -0.3): within the threshold",
+  "code c4 aggregate tok/s: B vs A -0.12 % (A n=4, B n=4; noise hw 0.99 % vs window 2 %; per boot run1 A1 -1.1, run1 B1 +0.3, run1 B2 -0.3, run1 A2 +0.6, run2 A1 +0.0, run2 B1 +0.5, run2 B2 -0.9, run2 A2 +0.5): within the threshold",
+  "six-agent replay span s: B vs A -0.79 % (A n=4, B n=4; noise hw 2.29 % vs window 3 %; per boot run1 A1 +0.7, run1 B1 +0.3, run1 B2 +1.1, run1 A2 +1.1, run2 A1 -0.0, run2 B1 -3.2, run2 B2 -1.3, run2 A2 -1.8): within the threshold"
+ ],
+ "reported": [
+  "six-agent replay span per generated token ms: B vs A -0.79 % (A n=4, B n=4; noise hw 2.29 % vs window 3 %; per boot run1 A1 +0.7, run1 B1 +0.3, run1 B2 +1.1, run1 A2 +1.1, run2 A1 -0.0, run2 B1 -3.2, run2 B2 -1.3, run2 A2 -1.8): reported; the replay gate uses the worse for B (six-agent replay span s)"
+ ],
+ "resolved": [],
+ "runs": {
+  "run1": {
+   "path": "/srv/qwen5090/results/2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598",
+   "label": "qwen5090.restore-run=2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598",
+   "container": "flashnext-pf2lock-exp-2026-10-28-153418-flashnext-pf2lock-screen-screen-4071598",
+   "boots": {
+    "B0": [
+     "8e75e145be2a4ce29d895c597dafe972"
+    ],
+    "A1": [
+     "2c2074242c364ba0a4e5fb451e8d5969"
+    ],
+    "B1": [
+     "0550eecc9a4f4b1db3ca00045829fcae"
+    ],
+    "B2": [
+     "8198f9beda4a4701b32ad9fd7e210017"
+    ],
+    "A2": [
+     "5b272cd3c552496e80adf80919b83143"
+    ]
+   },
+   "replays": {
+    "A1": "964e07ff88eb7131391525d3969d27bec746a23b39f9d021b38bf029b71ff6fb",
+    "B1": "fb03fb2f021aaddccc2666ae646e370f856e179b15ee06485a67b0be2237d9ef",
+    "B2": "8094577c34548e920849a31e9077ddbe44b41aa6dffd437be8dcfacc8da3f639",
+    "A2": "9808dec7d52225d801c4458344668750982a03cddf6620e58a8e664a9645bf8b"
+   }
+  },
+  "run2": {
+   "path": "/srv/qwen5090/results/2026-10-28-154823-flashnext-pf2lock-screen-screen-3242976",
+   "label": "qwen5090.restore-run=2026-10-28-154823-flashnext-pf2lock-screen-screen-3242976",
+   "container": "flashnext-pf2lock-exp-2026-10-28-154823-flashnext-pf2lock-screen-screen-3242976",
+   "boots": {
+    "B0": [
+     "13212126bbc247cdb4a6da82f764911b"
+    ],
+    "A1": [
+     "63b90cea5d814ba4aad06c8f69398d6d"
+    ],
+    "B1": [
+     "4d34b60627e94b63b795889bdf01b619"
+    ],
+    "B2": [
+     "0d97e88884af4006bccba6407d467217"
+    ],
+    "A2": [
+     "a005abd3cd0e47578d52ea32c898ba99"
+    ]
+   },
+   "replays": {
+    "A1": "c5f341bd7094248b4f01afa18d083e01966680810983a806ac21b9a70e336adb",
+    "B1": "d9603acec0cca308517af638af3225f9b678f314ac197d33fa8245d1cd3748ab",
+    "B2": "5b2256046e48e4b495c07954daf1652fe34780cb99ea3af76a372efdaa970f35",
+    "A2": "40c82f20b1eb37a115105e5986ec601344470a7e0a2438b5d3862d5d9b2a6f16"
+   }
+  }
+ },
+ "resolutions": null,
+ "resolutions_sha256": null,
+ "candidate": [
+  "sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021"
+ ],
+ "pins": {
+  "round": "r3",
+  "tag": "tabbyapi:tune268-r2-pf2lock-r3",
+  "patch_sha256": "13a892c1fda54d4f7fbe68418edeb9fa017303ed3dc8d9eb9006b6c0e7791dde",
+  "module_sha256_before": "b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8",
+  "module_sha256_after": "e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc",
+  "module_path": "/opt/venv/lib/python3.12/site-packages/exllamav3/modules/ngram_embedding.py",
+  "module_rel": "exllamav3/modules/ngram_embedding.py",
+  "stress": [
+   "share",
+   "steady",
+   "long",
+   "offpath"
+  ],
+  "stress_iterations": 5000,
+  "min_tests": 24
+ },
+ "numbers": {
+  "code c1 per-stream tok/s": {
+   "a": [
+    249.15,
+    247.71499999999997,
+    249.34,
+    247.785
+   ],
+   "b": [
+    248.33499999999998,
+    248.16000000000003,
+    247.31,
+    248.26999999999998
+   ],
+   "delta_pct": -0.19265787382166666,
+   "hw_pct": 0.39843795993504805,
+   "window_pct": 2.0,
+   "better": "higher",
+   "per_boot_pct": {
+    "run1 A1": 0.2625780943470213,
+    "run1 B1": -0.0653930120021462,
+    "run1 B2": -0.13581625569673017,
+    "run1 A2": -0.31489250394873824,
+    "run2 A1": 0.33903761607259053,
+    "run2 B1": -0.4778720107848189,
+    "run2 B2": -0.09155021680299358,
+    "run2 A2": -0.2867232064708958
+   },
+   "gated": true
+  },
+  "code c4 aggregate tok/s": {
+   "a": [
+    583.31,
+    593.115,
+    589.83,
+    592.56
+   ],
+   "b": [
+    591.285,
+    587.94,
+    592.4449999999999,
+    584.23
+   ],
+   "delta_pct": -0.12357900047269554,
+   "hw_pct": 0.9871150181415754,
+   "window_pct": 2.0,
+   "better": "higher",
+   "per_boot_pct": {
+    "run1 A1": -1.0842308532038492,
+    "run1 B1": 0.26814311423319914,
+    "run1 B2": -0.29909085706169014,
+    "run1 A2": 0.5784684258833384,
+    "run2 A1": 0.021409054970411567,
+    "run2 B1": 0.46485205495130355,
+    "run2 B2": -0.9282203140136058,
+    "run2 A2": 0.48435337235008813
+   },
+   "gated": true
+  },
+  "six-agent replay span s": {
+   "a": [
+    46.790693044662476,
+    46.99916410446167,
+    46.47157144546509,
+    45.63749861717224
+   ],
+   "b": [
+    46.61986041069031,
+    46.9715781211853,
+    44.98383808135986,
+    45.855549573898315
+   ],
+   "delta_pct": -0.7897307674913812,
+   "hw_pct": 2.294392692448219,
+   "window_pct": 3.0,
+   "better": "lower",
+   "per_boot_pct": {
+    "run1 A1": 0.6798559764945589,
+    "run1 B1": 0.3122742232603004,
+    "run1 B2": 1.0690676394898624,
+    "run1 A2": 1.1284245893983247,
+    "run2 A1": -0.006800162911491103,
+    "run2 B1": -3.2079662727309777,
+    "run2 B2": -1.3322986599846875,
+    "run2 A2": -1.8014804029813813
+   },
+   "gated": true
+  },
+  "six-agent replay span per generated token ms": {
+   "a": [
+    4.985689189628394,
+    5.007902408573433,
+    4.951685822638795,
+    4.862812852122775
+   ],
+   "b": [
+    4.967486458251498,
+    5.004963039018146,
+    4.7931633544336565,
+    4.886046837922037
+   ],
+   "delta_pct": -0.7897307674913923,
+   "hw_pct": 2.294392692448216,
+   "window_pct": 3.0,
+   "better": "lower",
+   "per_boot_pct": {
+    "run1 A1": 0.6798559764945589,
+    "run1 B1": 0.3122742232603004,
+    "run1 B2": 1.0690676394898402,
+    "run1 A2": 1.1284245893983247,
+    "run2 A1": -0.0068001629115022055,
+    "run2 B1": -3.2079662727309777,
+    "run2 B2": -1.3322986599846987,
+    "run2 A2": -1.8014804029813924
+   }
+  }
+ }
+}
