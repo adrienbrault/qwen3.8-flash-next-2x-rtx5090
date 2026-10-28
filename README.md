@@ -7,7 +7,7 @@ Serving configuration, launcher, image recipe, kernel overlays, instruments and 
 The serving configuration supports concurrent coding-agent sessions with growing contexts. The launcher sets eight slots and a shared KV page pool; the measurements below cover decode, cold prefill, standard serving traffic and quality checks on that configuration.
 
 - **Checkpoint**: [turboderp's self-calibrated 2.68 bpw EXL3 quant][ckpt-268], revision `2.68bpw_h6_ng8`, 6-bit output head, 8-bit n-gram table and 2.5-bit MTP.
-- **Engine and server**: [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) plus this repository's overlays, under [TabbyAPI][tabby] `53da7919`; image `tabbyapi:tune268-r2`, 50 launcher selectors ([`docker/`][docker-readme]).
+- **Engine and server**: [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) plus this repository's overlays, under [TabbyAPI][tabby] `53da7919`; image `tabbyapi:tune268-r2-pf2lock-r3`, 50 launcher selectors ([`docker/`][docker-readme]).
 - **Capacity**: 262,144-token request window, 819,200-token shared page pool, 8-bit KV, eight slots and layer split `[30, 30]`.
 - **Drafting**: the checkpoint's MTP head, depth three through four jobs and depth two at five to eight; prompt lookup enabled at actual batch one after probation.
 - **Interface**: vision, separate reasoning and `qwen3_coder` tool parsing configured by [`scripts/launch-flashnext.sh`][launcher].
@@ -46,7 +46,7 @@ The decode curve has two boots, one unrecorded warm-up and three measured rounds
 
 ## Served configuration
 
-- Image `tabbyapi:tune268-r2`, pinned to `sha256:2239954c372397b97ec3d570d887fe0afe679e8de214dfda558f5095d8f855fd`; 50 launcher selectors. The [launcher][launcher], [`docs/CONFIG.md`][config] and [image chain][docker-readme] specify the configuration; [history][history] records the promotion.
+- Image `tabbyapi:tune268-r2-pf2lock-r3`, pinned to `sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021`; 50 launcher selectors. The [launcher][launcher], [`docs/CONFIG.md`][config] and [image chain][docker-readme] specify the configuration; [history][history] records the promotion.
 - Checkpoint `qwen3.8-flash-next-exl3-2.68bpw-selfcal`, [turboderp revision `2.68bpw_h6_ng8`][ckpt-268]: experts K3 on layers 0–3/44–47, K2.5 on 4–43, dense/shared K6, 6-bit output head, 8-bit n-gram table and 2.5-bit MTP.
 - 262,144-token window, 819,200-token shared pool, eight slots, 8-bit KV, layer split `[30, 30]`, draft component on GPU 1 and draft policy `[[4, 3], [8, 2]]`.
 - The launcher enables `EXL3_DENSE_V2_K6=1`, `EXL3_MOE_COOP_HALF=1` and `EXL3_MOE_PREFILL_E3_HALF=1`; the round-2 histogram, static and uncapped alternatives remain at their image default 0. All six selectors default off in their overlay recipes.
@@ -161,7 +161,7 @@ The fixed packet validators pass on standard request counts, manifests, forced l
 ## Reproducing a boot
 
 ```sh
-bash docker/build-chain.sh              # builds through tabbyapi:tune268-r2
+bash docker/build-chain.sh              # builds through tabbyapi:tune268-r2-pf2lock-r3
 # Review and update R825C_IMAGE_ID in the launcher for the rebuilt image before serving.
 ssh flan 'bash -s' < scripts/launch-flashnext.sh
 STOP=1 bash scripts/launch-flashnext.sh
