@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
 #   bash docker/build-chain.sh
-# 50 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
+# 51 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
 #                                                                              QSA multi-job + draft depth, native rebuild
 #   qsa-cid-pr337                             Dockerfile.tabbyapi-pr337       exllamav3#337
@@ -31,7 +31,8 @@
 #   r828-prompt-lookup-r3                     overlays/prompt-lookup-r3 (batch-one adaptive lookup beside MTP)
 #   tune268-r1                                overlays/tune268 (default-off K6 dense V2 twins and K2.5 cooperative MoE decode)
 #   tune268-r2                                overlays/tune268-r2 (default-off K2.5 E3 prefill and three alternatives)
-#   tune268-r2-pf2lock-r3                     overlays/pf2lock-r3 (n-gram prefetch staging-set lock, Python only) <- the served tag
+#   tune268-r2-pf2lock-r3                     overlays/pf2lock-r3 (n-gram prefetch staging-set lock, Python only)
+#   flashnext-names-fast-r1                   overlays/flashnext-names-fast-r1 (opt-in name policy, Python only) <- served tag
 # rebase-dev-r3 COPYs a tree that this repository does not carry: overlays/rebase-dev-r3/prepare-tree.sh fetches upstream 5783a93
 # from GitHub, applies ported-vs-dev.patch and checks both trees' SHA-256; this script runs it first, in DRY_RUN too.
 # The first image of docker/README.md's table (tabbyapi:53da7919-rqcount, Dockerfile.tabbyapi) is not built: no layer uses it as
@@ -254,6 +255,13 @@ build "$FINAL" $O/pf2lock-r3/Dockerfile $O/pf2lock-r3 --build-arg BASE="$R:tune2
   --network=none --build-arg PATCH_SHA="$(sha $O/pf2lock-r3/pf2lock.patch)" \
   --build-arg MODULE_BASE_SHA=b9b227f87b2ec1fb3b635c90268bcb789ebb3ae9fb9ce8dccdcbb556416838b8 \
   --build-arg MODULE_NEW_SHA=e04ef2536c35788160b429d79e751c9402ecddd085c171ed6f2391aa128f65fc
+
+# Exact installed-source checks also pin the rebuilt predecessor files. The standalone builder
+# additionally enforces the operator-built parent image digest.
+FINAL=$R:flashnext-names-fast-r1
+build "$FINAL" $O/flashnext-names-fast-r1/Dockerfile $O/flashnext-names-fast-r1 \
+  --build-arg BASE="$R:tune268-r2-pf2lock-r3" --network=none \
+  --build-arg OVERLAY_SHA="$(sha $O/flashnext-names-fast-r1/overlay/manifest.json)"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
 if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi

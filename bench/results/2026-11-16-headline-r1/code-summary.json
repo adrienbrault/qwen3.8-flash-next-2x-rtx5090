@@ -1,0 +1,1203 @@
+{
+  "status": "MEASURED",
+  "context_mode": "shared",
+  "table": [
+    {
+      "tag": "t1024-a2048-c1",
+      "prefix_target": 1024,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        3137
+      ],
+      "cached_tokens": [
+        1024
+      ],
+      "new_prompt_tokens": 2113,
+      "append_ttft_p50_ms": 530.6229359994177,
+      "append_ttft_p99_ms": 530.6229359994177,
+      "new_tok_s_from_ttft": 3982.1120736520875,
+      "draft_accepted": 294,
+      "draft_proposed": 318,
+      "draft_acceptance": 0.9245283018867925,
+      "tau": 3.7735849056603774,
+      "window": {
+        "start_monotonic_s": 43940.8781244,
+        "end_monotonic_s": 43941.991282494,
+        "duration_s": 1.1131580939982086,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 358.4396521493937,
+        "per_stream_tok_s": [
+          358.4396521493937
+        ],
+        "mean_per_stream_tok_s": 358.4396521493937,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t1024-a2048-c4",
+      "prefix_target": 1024,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        3136,
+        3137,
+        3137,
+        3137
+      ],
+      "cached_tokens": [
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "new_prompt_tokens": 8451,
+      "append_ttft_p50_ms": 1703.012096502789,
+      "append_ttft_p99_ms": 1703.3703377761412,
+      "new_tok_s_from_ttft": 1240.5467477194231,
+      "draft_accepted": 1153,
+      "draft_proposed": 1341,
+      "draft_acceptance": 0.8598061148396718,
+      "tau": 3.5794183445190155,
+      "window": {
+        "start_monotonic_s": 43951.387989263,
+        "end_monotonic_s": 43953.440167941,
+        "duration_s": 2.052178678000928,
+        "output_tokens": [
+          386,
+          393,
+          382,
+          399
+        ],
+        "aggregate_tok_s": 760.1677264864823,
+        "per_stream_tok_s": [
+          188.09278360498854,
+          191.50379263409457,
+          186.14363558835655,
+          194.42751465904257
+        ],
+        "mean_per_stream_tok_s": 190.04193162162056,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t1024-a2048-c8",
+      "prefix_target": 1024,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        3137,
+        3137,
+        3137,
+        3136,
+        3136,
+        3136,
+        3136,
+        3137
+      ],
+      "cached_tokens": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "new_prompt_tokens": 16900,
+      "append_ttft_p50_ms": 3313.282163497206,
+      "append_ttft_p99_ms": 3313.846823857748,
+      "new_tok_s_from_ttft": 637.5633620873928,
+      "draft_accepted": 2058,
+      "draft_proposed": 2302,
+      "draft_acceptance": 0.894005212858384,
+      "tau": 2.8021015761821366,
+      "window": {
+        "start_monotonic_s": 43964.413668858,
+        "end_monotonic_s": 43967.58509711,
+        "duration_s": 3.1714282520042616,
+        "output_tokens": [
+          363,
+          387,
+          380,
+          398,
+          399,
+          371,
+          375,
+          394
+        ],
+        "aggregate_tok_s": 967.0721694749785,
+        "per_stream_tok_s": [
+          114.45947098774607,
+          122.02703931751441,
+          119.81983188799863,
+          125.49550813532488,
+          125.81082348239858,
+          116.98199376433551,
+          118.24325515263024,
+          124.23424674703017
+        ],
+        "mean_per_stream_tok_s": 120.88402118437232,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t1024-a8192-c1",
+      "prefix_target": 1024,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        9281
+      ],
+      "cached_tokens": [
+        1024
+      ],
+      "new_prompt_tokens": 8257,
+      "append_ttft_p50_ms": 1061.854283005232,
+      "append_ttft_p99_ms": 1061.854283005232,
+      "new_tok_s_from_ttft": 7776.019866521851,
+      "draft_accepted": 294,
+      "draft_proposed": 318,
+      "draft_acceptance": 0.9245283018867925,
+      "tau": 3.7735849056603774,
+      "window": {
+        "start_monotonic_s": 43975.722864802,
+        "end_monotonic_s": 43976.828661988,
+        "duration_s": 1.1057971859991085,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 360.825660484473,
+        "per_stream_tok_s": [
+          360.825660484473
+        ],
+        "mean_per_stream_tok_s": 360.825660484473,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t1024-a8192-c4",
+      "prefix_target": 1024,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        9281,
+        9281,
+        9280,
+        9281
+      ],
+      "cached_tokens": [
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "new_prompt_tokens": 33027,
+      "append_ttft_p50_ms": 4513.388427498285,
+      "append_ttft_p99_ms": 4513.678257727806,
+      "new_tok_s_from_ttft": 1831.114017370056,
+      "draft_accepted": 1145,
+      "draft_proposed": 1365,
+      "draft_acceptance": 0.8388278388278388,
+      "tau": 3.5164835164835164,
+      "window": {
+        "start_monotonic_s": 43988.350585925,
+        "end_monotonic_s": 43990.333672035,
+        "duration_s": 1.983086109998112,
+        "output_tokens": [
+          373,
+          391,
+          379,
+          399
+        ],
+        "aggregate_tok_s": 777.5759167621158,
+        "per_stream_tok_s": [
+          188.0906724722887,
+          197.16743414655465,
+          191.11625969704403,
+          201.2015504462284
+        ],
+        "mean_per_stream_tok_s": 194.39397919052894,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t1024-a8192-c8",
+      "prefix_target": 1024,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "878891c5c1f4bb0323f25fde4865072fdf4df92010a558fdb1da588100b8f5bb",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        9280,
+        9281,
+        9280,
+        9281,
+        9280,
+        9280,
+        9281,
+        9281
+      ],
+      "cached_tokens": [
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024
+      ],
+      "new_prompt_tokens": 66052,
+      "append_ttft_p50_ms": 8929.771758001152,
+      "append_ttft_p99_ms": 8930.39791948373,
+      "new_tok_s_from_ttft": 924.8411040179467,
+      "draft_accepted": 2054,
+      "draft_proposed": 2309,
+      "draft_acceptance": 0.8895625812039845,
+      "tau": 2.7923211169284468,
+      "window": {
+        "start_monotonic_s": 44007.218647715,
+        "end_monotonic_s": 44010.384580462,
+        "duration_s": 3.1659327469969867,
+        "output_tokens": [
+          373,
+          387,
+          386,
+          398,
+          399,
+          365,
+          383,
+          383
+        ],
+        "aggregate_tok_s": 970.9618762166731,
+        "per_stream_tok_s": [
+          117.81677938478174,
+          122.2388568952025,
+          121.92299421588673,
+          125.71334636767595,
+          126.02920904699172,
+          115.28987795025559,
+          120.97540617793942,
+          120.97540617793942
+        ],
+        "mean_per_stream_tok_s": 121.37023452708414,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a2048-c1",
+      "prefix_target": 32768,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        34882
+      ],
+      "cached_tokens": [
+        32768
+      ],
+      "new_prompt_tokens": 2114,
+      "append_ttft_p50_ms": 498.5251999969478,
+      "append_ttft_p99_ms": 498.5251999969478,
+      "new_tok_s_from_ttft": 4240.507801838188,
+      "draft_accepted": 293,
+      "draft_proposed": 321,
+      "draft_acceptance": 0.9127725856697819,
+      "tau": 3.7383177570093458,
+      "window": {
+        "start_monotonic_s": 44021.275657266,
+        "end_monotonic_s": 44022.398629773,
+        "duration_s": 1.122972507000668,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 355.3070066387321,
+        "per_stream_tok_s": [
+          355.3070066387321
+        ],
+        "mean_per_stream_tok_s": 355.3070066387321,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a2048-c4",
+      "prefix_target": 32768,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        34882,
+        34882,
+        34881,
+        34882
+      ],
+      "cached_tokens": [
+        32768,
+        32768,
+        32768,
+        32768
+      ],
+      "new_prompt_tokens": 8455,
+      "append_ttft_p50_ms": 1748.2473400013987,
+      "append_ttft_p99_ms": 1748.4738544146967,
+      "new_tok_s_from_ttft": 1209.0814822559241,
+      "draft_accepted": 1155,
+      "draft_proposed": 1335,
+      "draft_acceptance": 0.8651685393258427,
+      "tau": 3.595505617977528,
+      "window": {
+        "start_monotonic_s": 44031.468926436,
+        "end_monotonic_s": 44033.502376797,
+        "duration_s": 2.033450360999268,
+        "output_tokens": [
+          385,
+          390,
+          381,
+          399
+        ],
+        "aggregate_tok_s": 764.7100857853494,
+        "per_stream_tok_s": [
+          189.33336529090644,
+          191.79224016481433,
+          187.36626539178016,
+          196.2182149378485
+        ],
+        "mean_per_stream_tok_s": 191.17752144633735,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a2048-c8",
+      "prefix_target": 32768,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        34882,
+        34881,
+        34882,
+        34882,
+        34882,
+        34882,
+        34882,
+        34882
+      ],
+      "cached_tokens": [
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768
+      ],
+      "new_prompt_tokens": 16911,
+      "append_ttft_p50_ms": 3377.5902345005306,
+      "append_ttft_p99_ms": 3378.0119079878205,
+      "new_tok_s_from_ttft": 625.8727744903586,
+      "draft_accepted": 2058,
+      "draft_proposed": 2300,
+      "draft_acceptance": 0.8947826086956522,
+      "tau": 2.8021015761821366,
+      "window": {
+        "start_monotonic_s": 44044.687980952,
+        "end_monotonic_s": 44047.855741429,
+        "duration_s": 3.1677604769938625,
+        "output_tokens": [
+          362,
+          387,
+          392,
+          399,
+          396,
+          359,
+          383,
+          380
+        ],
+        "aggregate_tok_s": 965.3507650622553,
+        "per_stream_tok_s": [
+          114.27631685825259,
+          122.16832769100485,
+          123.7467298575553,
+          125.95649289072593,
+          125.00945159079565,
+          113.32927555832232,
+          120.90560595776448,
+          119.95856465783422
+        ],
+        "mean_per_stream_tok_s": 120.66884563278191,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a8192-c1",
+      "prefix_target": 32768,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        41026
+      ],
+      "cached_tokens": [
+        32768
+      ],
+      "new_prompt_tokens": 8258,
+      "append_ttft_p50_ms": 1053.89894900145,
+      "append_ttft_p99_ms": 1053.89894900145,
+      "new_tok_s_from_ttft": 7835.6658461651405,
+      "draft_accepted": 294,
+      "draft_proposed": 318,
+      "draft_acceptance": 0.9245283018867925,
+      "tau": 3.7735849056603774,
+      "window": {
+        "start_monotonic_s": 44055.882176801,
+        "end_monotonic_s": 44056.999314639,
+        "duration_s": 1.1171378379949601,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 357.1627299959023,
+        "per_stream_tok_s": [
+          357.1627299959023
+        ],
+        "mean_per_stream_tok_s": 357.1627299959023,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a8192-c4",
+      "prefix_target": 32768,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        41026,
+        41026,
+        41026,
+        41025
+      ],
+      "cached_tokens": [
+        32768,
+        32768,
+        32768,
+        32768
+      ],
+      "new_prompt_tokens": 33031,
+      "append_ttft_p50_ms": 4662.030445495475,
+      "append_ttft_p99_ms": 4662.27795945495,
+      "new_tok_s_from_ttft": 1772.894147132578,
+      "draft_accepted": 1146,
+      "draft_proposed": 1362,
+      "draft_acceptance": 0.8414096916299559,
+      "tau": 3.5242290748898677,
+      "window": {
+        "start_monotonic_s": 44069.114242728,
+        "end_monotonic_s": 44071.09446735,
+        "duration_s": 1.9802246219987865,
+        "output_tokens": [
+          368,
+          375,
+          375,
+          396
+        ],
+        "aggregate_tok_s": 764.55972882097,
+        "per_stream_tok_s": [
+          185.83750343865057,
+          189.37245594971185,
+          189.37245594971185,
+          199.9773134828957
+        ],
+        "mean_per_stream_tok_s": 191.1399322052425,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t32768-a8192-c8",
+      "prefix_target": 32768,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "f74a6687af4ce9d99c22a6e2217757022b41fcff2c42138855cb52f7ffac5861",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        41026,
+        41026,
+        41026,
+        41026,
+        41026,
+        41026,
+        41026,
+        41025
+      ],
+      "cached_tokens": [
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768,
+        32768
+      ],
+      "new_prompt_tokens": 66063,
+      "append_ttft_p50_ms": 9197.368875498796,
+      "append_ttft_p99_ms": 9197.958628732595,
+      "new_tok_s_from_ttft": 898.0873995623483,
+      "draft_accepted": 2061,
+      "draft_proposed": 2296,
+      "draft_acceptance": 0.8976480836236934,
+      "tau": 2.809482001755926,
+      "window": {
+        "start_monotonic_s": 44088.195934003,
+        "end_monotonic_s": 44091.338359665,
+        "duration_s": 3.1424256620011874,
+        "output_tokens": [
+          373,
+          388,
+          387,
+          399,
+          393,
+          356,
+          381,
+          389
+        ],
+        "aggregate_tok_s": 975.6794049497046,
+        "per_stream_tok_s": [
+          118.69811417033262,
+          123.47149677771864,
+          123.15327127055957,
+          126.9719773564684,
+          125.062624313514,
+          113.28828054862845,
+          121.24391822760516,
+          123.78972228487771
+        ],
+        "mean_per_stream_tok_s": 121.95992561871307,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a2048-c1",
+      "prefix_target": 65536,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        67650
+      ],
+      "cached_tokens": [
+        65536
+      ],
+      "new_prompt_tokens": 2114,
+      "append_ttft_p50_ms": 574.8449919992709,
+      "append_ttft_p99_ms": 574.8449919992709,
+      "new_tok_s_from_ttft": 3677.5131199241296,
+      "draft_accepted": 295,
+      "draft_proposed": 315,
+      "draft_acceptance": 0.9365079365079365,
+      "tau": 3.8095238095238093,
+      "window": {
+        "start_monotonic_s": 44105.241044962,
+        "end_monotonic_s": 44106.35448393,
+        "duration_s": 1.1134389680009917,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 358.34923284240995,
+        "per_stream_tok_s": [
+          358.34923284240995
+        ],
+        "mean_per_stream_tok_s": 358.34923284240995,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a2048-c4",
+      "prefix_target": 65536,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        67650,
+        67650,
+        67649,
+        67650
+      ],
+      "cached_tokens": [
+        65536,
+        65536,
+        65536,
+        65536
+      ],
+      "new_prompt_tokens": 8455,
+      "append_ttft_p50_ms": 1788.4000330013805,
+      "append_ttft_p99_ms": 1788.7657837723236,
+      "new_tok_s_from_ttft": 1181.8783681519526,
+      "draft_accepted": 1153,
+      "draft_proposed": 1341,
+      "draft_acceptance": 0.8598061148396718,
+      "tau": 3.5794183445190155,
+      "window": {
+        "start_monotonic_s": 44115.422843838,
+        "end_monotonic_s": 44117.396401167,
+        "duration_s": 1.9735573290017783,
+        "output_tokens": [
+          361,
+          382,
+          369,
+          399
+        ],
+        "aggregate_tok_s": 765.6225526340605,
+        "per_stream_tok_s": [
+          182.91842587749562,
+          193.55910993131116,
+          186.97201980275867,
+          202.17299702249514
+        ],
+        "mean_per_stream_tok_s": 191.40563815851516,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a2048-c8",
+      "prefix_target": 65536,
+      "append_target": 2048,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        67650,
+        67649,
+        67650,
+        67650,
+        67650,
+        67650,
+        67650,
+        67650
+      ],
+      "cached_tokens": [
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536
+      ],
+      "new_prompt_tokens": 16911,
+      "append_ttft_p50_ms": 3466.8444825001643,
+      "append_ttft_p99_ms": 3467.381747301115,
+      "new_tok_s_from_ttft": 609.7409351851826,
+      "draft_accepted": 2045,
+      "draft_proposed": 2326,
+      "draft_acceptance": 0.8791917454858126,
+      "tau": 2.7705627705627704,
+      "window": {
+        "start_monotonic_s": 44129.374309992,
+        "end_monotonic_s": 44132.5597099,
+        "duration_s": 3.1853999079976347,
+        "output_tokens": [
+          362,
+          380,
+          381,
+          386,
+          399,
+          355,
+          377,
+          369
+        ],
+        "aggregate_tok_s": 944.6223667066905,
+        "per_stream_tok_s": [
+          113.64350174404187,
+          119.29428359871798,
+          119.60821592397777,
+          121.17787755027669,
+          125.25899777865388,
+          111.44597546722338,
+          118.35248662293863,
+          115.84102802086035
+        ],
+        "mean_per_stream_tok_s": 118.07779583833631,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a8192-c1",
+      "prefix_target": 65536,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/0"
+      ],
+      "task_sha256": [
+        "37df6ba92b93e711789c04cf392236bba91fa48b5538662451c31de1ed27656a"
+      ],
+      "concurrency": 1,
+      "requests": 1,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        73794
+      ],
+      "cached_tokens": [
+        65536
+      ],
+      "new_prompt_tokens": 8258,
+      "append_ttft_p50_ms": 1138.8630790024763,
+      "append_ttft_p99_ms": 1138.8630790024763,
+      "new_tok_s_from_ttft": 7251.091155956286,
+      "draft_accepted": 295,
+      "draft_proposed": 315,
+      "draft_acceptance": 0.9365079365079365,
+      "tau": 3.8095238095238093,
+      "window": {
+        "start_monotonic_s": 44140.880842922,
+        "end_monotonic_s": 44141.996655229,
+        "duration_s": 1.115812306998123,
+        "output_tokens": [
+          399
+        ],
+        "aggregate_tok_s": 357.5870220265201,
+        "per_stream_tok_s": [
+          357.5870220265201
+        ],
+        "mean_per_stream_tok_s": 357.5870220265201,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a8192-c4",
+      "prefix_target": 65536,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/1",
+        "HumanEval/2",
+        "HumanEval/3",
+        "HumanEval/4"
+      ],
+      "task_sha256": [
+        "29a65718f8ed2bdc6e05b54b53c4f9b8d406af92ac338706d1cdc5df2d147c20",
+        "f1fbd2c3f9a09497eeadbd6b7b2b97ef769f76c0f89f9d907d8d0ce87adc3f5f",
+        "a2f4a43d6ed3c836bda50ddfede1127017daf1308de055f3d7cb1abdfd68387e",
+        "a8e1d970c067db69a61f889679d8e6ef0e4cd79078150cbbee46e91f63a39a42"
+      ],
+      "concurrency": 4,
+      "requests": 4,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        73794,
+        73794,
+        73794,
+        73793
+      ],
+      "cached_tokens": [
+        65536,
+        65536,
+        65536,
+        65536
+      ],
+      "new_prompt_tokens": 33031,
+      "append_ttft_p50_ms": 4763.714359498408,
+      "append_ttft_p99_ms": 4764.073526349166,
+      "new_tok_s_from_ttft": 1735.0419512195892,
+      "draft_accepted": 1161,
+      "draft_proposed": 1317,
+      "draft_acceptance": 0.8815489749430524,
+      "tau": 3.644646924829157,
+      "window": {
+        "start_monotonic_s": 44154.319587143,
+        "end_monotonic_s": 44156.315897547,
+        "duration_s": 1.9963104039998143,
+        "output_tokens": [
+          376,
+          371,
+          396,
+          398
+        ],
+        "aggregate_tok_s": 771.9240439324702,
+        "per_stream_tok_s": [
+          188.3474630231076,
+          185.8428425041833,
+          198.36594509880481,
+          199.36779330637452
+        ],
+        "mean_per_stream_tok_s": 192.98101098311756,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    },
+    {
+      "tag": "t65536-a8192-c8",
+      "prefix_target": 65536,
+      "append_target": 8192,
+      "context_mode": "shared",
+      "context_sha256": "2562a70eec55b89bc7e14c89faa21776965718867d2318464c263ffa720743d2",
+      "task_ids": [
+        "HumanEval/5",
+        "HumanEval/6",
+        "HumanEval/7",
+        "HumanEval/8",
+        "HumanEval/9",
+        "HumanEval/10",
+        "HumanEval/11",
+        "HumanEval/12"
+      ],
+      "task_sha256": [
+        "b796c8f14c5be440ea3730947aa4d6d0f5d2594a8bfebcfeb20a0381ea43184b",
+        "4ba54a747def5ca4dc5ba283251fb006a2e0849e068475f4c3527293ff9dfae5",
+        "7fa3d69452c2327129134c77e4bd5941af00117f37f57782660238a10d2bac2b",
+        "d721f7ad2fc99a4ee28477903ea428127e7c02b3a4dcc99666b2f4bc393659e8",
+        "eaa34509dc21c71370dcb9388acc3ad5705e35761233945587131517c2caac4b",
+        "cba7ce7aaad59d4e9a08e40f06d8b70d88e46ad1d38f674db2de08c628b88d1c",
+        "f2f3c9d104f0f77d95287d73ed2e374722c707a34d0fb420eae81e65a54825f7",
+        "4ff3bb2f16f06bee6c4dd9e149ac64938c33d5bf150fa53115722ba5b3a6f8dd"
+      ],
+      "concurrency": 8,
+      "requests": 8,
+      "output_tokens_per_request": 400,
+      "thinking": false,
+      "actual_prompt_tokens": [
+        73794,
+        73794,
+        73794,
+        73794,
+        73794,
+        73794,
+        73794,
+        73793
+      ],
+      "cached_tokens": [
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536,
+        65536
+      ],
+      "new_prompt_tokens": 66063,
+      "append_ttft_p50_ms": 9367.750936497032,
+      "append_ttft_p99_ms": 9368.443255732855,
+      "new_tok_s_from_ttft": 881.7608512734322,
+      "draft_accepted": 2040,
+      "draft_proposed": 2334,
+      "draft_acceptance": 0.8740359897172236,
+      "tau": 2.7586206896551726,
+      "window": {
+        "start_monotonic_s": 44173.77865455,
+        "end_monotonic_s": 44177.011040492,
+        "duration_s": 3.2323859419993823,
+        "output_tokens": [
+          364,
+          383,
+          365,
+          392,
+          399,
+          355,
+          373,
+          375
+        ],
+        "aggregate_tok_s": 929.9632079641603,
+        "per_stream_tok_s": [
+          112.61031526911323,
+          118.48832623096254,
+          112.9196842671053,
+          121.27264721289117,
+          123.43823019883565,
+          109.82599428718461,
+          115.39463625104186,
+          116.013374247026
+        ],
+        "mean_per_stream_tok_s": 116.24540099552004,
+        "definition": "canonical output token endings in (last first-text frame, first last-text frame]; server total matched; client monotonic receive times"
+      }
+    }
+  ],
+  "thinking_split": [
+    {
+      "kind": "code",
+      "utc": "2026-11-16T20:00:22Z",
+      "reasoning_frames": 390,
+      "reasoning_chars": 4929,
+      "content_frames": 0,
+      "content_chars": 0,
+      "finish_reason": "length",
+      "completion_tokens": 1024
+    },
+    {
+      "kind": "prose",
+      "utc": "2026-11-16T20:00:27Z",
+      "reasoning_frames": 385,
+      "reasoning_chars": 4492,
+      "content_frames": 0,
+      "content_chars": 0,
+      "finish_reason": "length",
+      "completion_tokens": 1024
+    }
+  ],
+  "replication": "one concurrent batch per cell",
+  "metric": "canonical output tokens in the common decode window, with total matched to server usage; same requests give cached-append TTFT",
+  "instrumentation": "thinking off; no logprobs or engine switches; canonical token offsets aligned after the batch; total must match 400 server tokens",
+  "peak": "prefix_target=1024; actual decode depth includes the 2048/8192 append",
+  "prefill_definition": "sum(server new prompt tokens)/sum(TTFT seconds); scheduling and first decode included; concurrent TTFT includes contention"
+}

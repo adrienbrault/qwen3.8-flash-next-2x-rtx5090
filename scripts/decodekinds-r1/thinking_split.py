@@ -22,8 +22,10 @@ a = ap.parse_args()
 spec = importlib.util.spec_from_file_location("fn_bench", a.fn_bench)
 fb = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fb)
-for kind, prompt in (("code", fb.CODE), ("prose", fb.PROSE)):
-    prompt = prompt + "\n\n[variant 0: treat this document as section 0 of a series.]"
+# Match fn_bench request 0 at ctx=0: the task instruction, then the distinct-stream suffix.
+# CODE/PROSE are context filler, not the curve's ctx=0 request; their earlier split is withdrawn.
+for kind, ask in (("code", fb.ASK_CODE), ("prose", fb.ASK_PROSE)):
+    prompt = ask.strip() + " Begin now." + "\n\n[variant 0: treat this document as section 0 of a series.]"
     body = {"model": a.model, "max_tokens": 1024, "min_tokens": 1024, "temperature": 0.0, "stream": True,
             "stream_options": {"include_usage": True}, "messages": [{"role": "user", "content": prompt}]}
     req = urllib.request.Request(a.url + "/chat/completions", json.dumps(body).encode(), {"Content-Type": "application/json"})

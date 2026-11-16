@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# 2026-11-16: tabbyapi:flashnext-names-fast-r1 = pf2lock r3 + the opt-in -fast name overlay.
+# EXL3_FLASHNEXT_FAST=1 makes the alias available; the default name retains native acceptance.
+# Source launcher SHA256 1c617f6deffe7f74efd8ea497b81aa27bd109e89255bc10ac3bfb707ea720c1b.
+# The served checkpoint contains the HermiHg 2.6-bpw MTP graft; pool 819,200, 51 selectors.
+# Evidence: bench/results/headline-r1.md; rollback: scripts/launchers/launch-flashnext-pf2lock-r3.sh.
 # 2026-10-28: served image tabbyapi:tune268-r2-pf2lock-r3 = tune268-r2 + docker/overlays/pf2lock-r3 (lock and set
 # ownership for the EXL3_NGRAM_PREFETCH2 staging sets; Python only, numerics unchanged). Source launcher SHA256
 # 466def5f397cdd36231c4b50c6c3f596624b1d78a1672412712f1e6d50c2c0f8; HOME lookup scrubbed as in the previous public
@@ -19,7 +24,7 @@
 # Source launcher md5 262e9c31; image tabbyapi:r825c-hostprepare; trace on, NVMe default off.
 # Records and limits: bench/results/r825-whole-prompt-window.md.
 # Rollback: scripts/launchers/launch-flashnext-r823p-tailckpt.sh.
-R825C_IMAGE_ID=sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021   # pf2lock r3 2026-10-28: tabbyapi:tune268-r2-pf2lock-r3 (was 2239954c = tune268-r2, before that 48f4ad3a)
+R825C_IMAGE_ID=sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22a7b125   # names-fast r1 2026-11-16; predecessor pf2lock r3: tabbyapi:tune268-r2-pf2lock-r3 (was 2239954c = tune268-r2, before that 48f4ad3a)
 # R823p (2026-10-01): tail recurrent checkpoints captured inside the LS prefill pipeline.
 # Image tabbyapi:r823c-cachetail-inforward; 44 launcher keys, image EXL3_CACHE_TRACE=1;
 # EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096, TAIL_PP=12288 and INFORWARD=1; NVMe default off.
@@ -289,7 +294,7 @@ DRAFT=${DRAFT:-3}
 #   R784's promote.env). Gates: bench/results/r784-rebase-dev-r3.md, bench/results/r785-promote-rebase-r3.md.
 #   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache and
 #   EXTRA_ENV without EXL3_GR_MIX_TILED=1 (the R783 launcher: 983,040, 41 keys).
-DAILY_IMG=tabbyapi:tune268-r2-pf2lock-r3   # pf2lock r3 2026-10-28: tune268-r2 + pf2lock.patch r3 (da386167); rollback scripts/launchers/launch-flashnext-tune268r2.sh. Before: tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
+DAILY_IMG=tabbyapi:flashnext-names-fast-r1   # names-fast r1 2026-11-16; predecessor pf2lock r3: tune268-r2 + pf2lock.patch r3 (da386167); rollback scripts/launchers/launch-flashnext-tune268r2.sh. Before: tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
 IMG=${IMG:-$DAILY_IMG}
 # IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
@@ -409,7 +414,7 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # stride, which must survive every rebase), EXL3_GR_STATE_REGRID=1 (unreachable with HC_MIX_V2_INT8=1 + MIX_V3 + STATE_IN_UP)
 # and EXL3_HC_MIX_V3_PDL=0 (the literal default). The image bakes none of the three. The R425 note above about re-adding
 # EXL3_HOST_GAP_REWIND=1 is historical since R789.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1 EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1 EXL3_MOE_PREFILL_E3_HALF=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1 EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1 EXL3_MOE_PREFILL_E3_HALF=1 EXL3_FLASHNEXT_FAST=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,

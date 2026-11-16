@@ -4,7 +4,7 @@ Results directory `20261116T102550Z-decodekinds-r1` on the serving host, records
 
 ## Why this run exists
 
-The decode curve's code and prose requests are sent with the served default, thinking on, and force 1,024 greedy tokens. Most of those tokens are thinking. A recorded pair of the curve's requests ([`thinking-split.jsonl`](20261116T102550Z-decodekinds-r1/thinking-split.jsonl), [`thinking_split.py`](../../scripts/decodekinds-r1/thinking_split.py), on the served daily at 11:24 UTC) streamed 290 thinking frames and 73 answer frames for the code prompt, and 234 and 136 for the prose prompt; both answers begin by restating the prompt. The code and prose lines of the decode figure therefore decode mostly the same kind of text, which is why they read 248.7 / 251.4 t/s at one stream. This run measures decode on answers that are code, maths, structured output or prose, with thinking off.
+The decode curve’s code/prose requests force 1,024 greedy tokens with thinking on. The corrected 2026-11-16 probe records all output in reasoning and zero answer characters for both prompts; the earlier thinking/answer frame split was incorrect and is withdrawn ([correction](headline-r1.md#thinking-split-correction), [numeric observations](2026-11-16-headline-r1/code-summary.json)). The old 248.7/251.4 t/s curves describe those thinking-on prompts, rather than code/prose answers; frame and character counts do not measure token shares.
 
 ## How decode rate is computed here
 

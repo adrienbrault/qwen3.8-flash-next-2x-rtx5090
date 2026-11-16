@@ -423,3 +423,9 @@ R826 (2026-10-01, [write-up](../bench/results/r826-std-ab.md), results `2026-10-
 **What it is:** the checkpoint's `chat_template.jinja` accepts `low`, `medium` and `xhigh` and raises on any other value. Its own off switch is `enable_thinking: false`, which these clients do not send.
 
 **Fix:** [`scripts/template-effort-none.sh`](../scripts/template-effort-none.sh), applied to the served checkpoint on 2026-10-27, adds one block before the effort check that sets `enable_thinking = false` when `reasoning_effort` is `"none"`. Every other value renders the same prompt as before. On the served stack, `none` answered a one-line arithmetic prompt with no reasoning text, and `low` and the default still reasoned.
+
+## A thinking/answer split that disappears on the exact request
+
+**What it looks like:** the historical code/prose curves appear to mix reasoning and visible answers based on the earlier channel-frame record.
+
+**What it is:** the corrected 2026-11-16 probe of each curve’s exact request 0 produces 1,024 completion tokens in reasoning and zero answer characters. The earlier probe used CODE/PROSE context filler instead of the curve’s ASK_CODE/ASK_PROSE request and is withdrawn. Character and frame fractions cannot be reported as token fractions ([correction and numeric observations](../bench/results/headline-r1.md#thinking-split-correction)).

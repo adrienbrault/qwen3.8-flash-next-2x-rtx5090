@@ -11,6 +11,8 @@ This repository is MIT-licensed (see [LICENSE](LICENSE)) for the **original** wo
 | `qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab` (served 2026-09-18 to 2026-10-22) | EXL3 quantisation by **r0b0tlab** — https://huggingface.co/r0b0tlab/Qwen3.8-Flash-Next-EXL3-2.50bpw (routed experts at K = 2 / 3 / 4, 4-bit MTP layer) | the model's licence |
 | `qwen3.8-flash-next-exl3-2.68bpw-selfcal` (served since 2026-10-22 22:33 UTC) | Self-calibrated EXL3 quantization by **turboderp** — [Qwen3.8-Flash-Next-exl3, revision `2.68bpw_h6_ng8`](https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3/tree/2.68bpw_h6_ng8); 6-bit output head, 8-bit n-gram table, 2.5-bit MTP, K3 experts on layers 0–3/44–47 and K2.5 on 4–43, dense/shared K6 | the model's licence; quantization and self-calibration are turboderp's work |
 
+The served MTP head since 2026-11-16 is [HermiHg’s optimized 2.6-bpw head](https://huggingface.co/HermiHg/Qwen3.8-Flash-Next-Optimized-MTP-Heads-exl3/tree/836df288557a5f2e06ba8de6fefc73851653c981), revision `836df288557a5f2e06ba8de6fefc73851653c981`, file `mtp-2.6bpw.safetensors`, SHA256 `998f5de2d1fc65617111f9092017062eda67f09b3acc74adae38932e22cb55ad`. The quantization is HermiHg’s work; the underlying model licence governs the weights. [`scripts/mtphead-graft.py`](scripts/mtphead-graft.py) builds a duplicate-free header graft while preserving target tensor bytes.
+
 This repository ships no weights.
 
 ## The engine and the server (the image base)
@@ -124,3 +126,11 @@ Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of t
 ## ExLlamaV3 1.6.4 candidate (2026-10-21)
 
 The experimental [rebase-v164 packet](docker/overlays/rebase-v164/) pins turboderp-org/exllamav3 `da68d57de61781e5b74ad68698ac4caf36408d7a` (MIT), the official 1.6.4 wheel and theroyallab/tabbyAPI `a270c555db91a5178d72f7dee7bdd34951ac1dad` (AGPL-3.0). The packet carries the existing local server fixes, batch-indexed drafting and tokenizer mode-isolation corrections; the native kernels come from upstream. It does not change the served configuration.
+
+## FLy method and opt-in name overlay
+
+The acceptance idea is Jinze Li et al., [Training-Free Loosely Speculative Decoding: Accepting Semantically Correct Drafts Beyond Exact Match](https://arxiv.org/abs/2511.22972), ICLR 2026. The upstream [vLLM FLy verifier documentation](https://docs.vllm.ai/en/latest/features/speculative_decoding/fly/) and native rejection-sampler utilities supplied the reference used in the sampled-acceptance experiments: W=1, entropy threshold 0.3, top-three entropy. This ExLlamaV3 adaptation implements that method on the existing native verifier; it does not redistribute vLLM verifier code.
+
+[`docker/overlays/flashnext-names-fast-r1/`](docker/overlays/flashnext-names-fast-r1/) contains the SHA-pinned Python overlay, including full modified ExLlamaV3 files (MIT derivatives) and TabbyAPI files (AGPL-3.0 derivatives). The name policy, rescue helper, cache-domain changes and installer are this repository’s work; upstream portions retain their licences. The overlay preserves the default model name’s native acceptance and exposes the altered sampled policy only through the experimental alias.
+
+The headline code workload uses HumanEval task IDs ([OpenAI HumanEval](https://github.com/openai/human-eval), MIT) and a frozen ExLlamaV3 code corpus (MIT). This publication distributes IDs, hashes and numeric observations, with the corpus snapshot commit recorded in [input provenance](bench/results/2026-11-16-headline-r1/input-provenance.json); it distributes neither benchmark request bodies nor generated output.

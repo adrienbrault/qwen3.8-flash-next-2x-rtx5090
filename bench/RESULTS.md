@@ -4,6 +4,8 @@ One file per experiment, newest first. Each file names its results directory on 
 
 ## 2026-11-16
 
+- [Headline-r1: real work, cached-code peak and decode at depth](results/headline-r1.md) — 2.68/HermiHg on names-fast r1, T=0, Spec-Bench 120/480 at c1/c4/c8, code 400 forced tokens at cached 1K/32K/64K plus 2K/8K appends; numeric per-request observations and thinking-split correction.
+
 - [Decode depends on content](results/decodekinds-r1.md) — `tune268-r2-pf2lock-r3`, thinking off, step-based: 238.9 to 341.3 t/s per stream at one stream across 14 categories, 282.4 / 282.5 over 560 prompts; code-file rewrites 383.4; the client formula overstates short answers (+43 % at 26 tokens); thinking-on control within 1.3 % of 2026-10-23.
 - [tool-eval-bench 3.0.0](results/tooleval-bench-3.md) — `tune268-r2-pf2lock-r3`, 69 × 4: mean 93.8, SD 1.0.
 

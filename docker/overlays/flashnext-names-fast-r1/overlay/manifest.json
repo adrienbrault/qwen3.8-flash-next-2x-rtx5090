@@ -1,0 +1,46 @@
+{
+  "app/backends/exllamav3/model.py": {
+    "base": "7b00e54de9449e0c44dbcb8420a5805d142e272eb0872340087e97f2429d7b1c",
+    "candidate": "167f012ff327b2851248e5f8a3b4ce9b3eb20e6afdae7ca87aa8799b72375aef"
+  },
+  "app/endpoints/OAI/utils/chat_completion.py": {
+    "base": "9116332544045c109b8860d247b3909a84ed1d420f1674fdb8f3b644fa5f286e",
+    "candidate": "5a8bfeeab41e4bed03fc78fb56155bba05ddec783c3d21e79b146536b54d4b05"
+  },
+  "app/endpoints/OAI/utils/common_.py": {
+    "base": "90d1d2d99cb990d0cb271acbd4345b260ac48b5bbd0989971fee23950e1ea5a4",
+    "candidate": "efd9c4ec5a81e7e82a032561dcb2676d338089187daf386e975844476529241e"
+  },
+  "app/endpoints/OAI/utils/completion.py": {
+    "base": "4adf82f11a145c4213d9b3da58f854147baafebcbfd77263a6fed1aaca5989c1",
+    "candidate": "9703ae267147c873bcdf67738b2bf261e92ada5eef810fea282ba45ba295194d"
+  },
+  "app/endpoints/core/router.py": {
+    "base": "0f2a75217fce15b907ed5d2a0597c85e8aff6fec1dde0ad45b1de7647732006a",
+    "candidate": "4c6a1fa2473cfe2dcb26d88ea3c568825fc6cd9723e0bebc7be1d72a897a76dd"
+  },
+  "exllamav3/generator/disk_cache.py": {
+    "base": "cc4808402e5e6f6c0c7b60c9eba919833ee72afa6818b72137d996c443aa4f50",
+    "candidate": "02ff9d93bad45090d7bc0baf5b863fd7b4ad1fac40df4d88bd28c601f40e5555"
+  },
+  "exllamav3/generator/fast_accept.py": {
+    "base": null,
+    "candidate": "5b1165baae4d4a68a68176a7fd0b9791cba2f4d7d952ab64a367127b531d5fa1"
+  },
+  "exllamav3/generator/generator.py": {
+    "base": "34f1c2b14253ebd4a7399e05ef27a66f9dab66bcce740d20e80d3b5ee7130d92",
+    "candidate": "3741b25ea9ccb26544f0bce3a1c5803f931f7f743a782ec32c304401a125dde7"
+  },
+  "exllamav3/generator/job.py": {
+    "base": "7cb611e665d65d4ecbf6ea08d02b3d745c8ae3b78bf4228435ef22133d3684de",
+    "candidate": "b7c8f2d221dcabfe976f13a6670b4eb0a7ba4b202a015e324739337988a73e61"
+  },
+  "exllamav3/generator/name_policy.py": {
+    "base": null,
+    "candidate": "9fd88917def043788466d9f579dcd698e21d2ce712a8d1e95410869ea8a4c484"
+  },
+  "exllamav3/generator/pagetable.py": {
+    "base": "605cf7a4ec06475f6faaa22d0dba404693905ad74f98c9806f43914e86a6ba78",
+    "candidate": "515ab7c9f269f681a7b758469c473774cb8f8b26d6a925197c25ffd7aaca274e"
+  }
+}

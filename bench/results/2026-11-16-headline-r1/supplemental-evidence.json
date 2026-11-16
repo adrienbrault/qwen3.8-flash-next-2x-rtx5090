@@ -1,0 +1,38 @@
+{
+  "source_document": "operating findings, entries dated 2026-11-16",
+  "source_document_sha256": "3596ab0b3260b8df37ad801397d59c92bbe8f7ad0cda5a99eebf3e2bd221dfae",
+  "screen_run": "20261116T190421Z-flashnext-names-fast-r1-1394552",
+  "ship_run": "20261116T192938Z-names-fast-ship",
+  "promotion_run": "20261116T170337Z-mtphead-promote",
+  "temperature_1_gain_percent": [
+    3.1,
+    36.2
+  ],
+  "temperature_06_c4_gain_percent": [
+    -17,
+    -9
+  ],
+  "temperature_0_c4_gain_percent": [
+    -5.3,
+    2.5
+  ],
+  "marginal_kl": 0.4974,
+  "standard_null_kl": 0.4902,
+  "reverse_null_kl": 0.493,
+  "kl_p95": 0.64,
+  "nll_fast": 0.567,
+  "nll_standard": [
+    0.675,
+    0.657
+  ],
+  "mtp_r2_pair_gain_percent": [
+    1.07,
+    0.99,
+    1.59,
+    0.54,
+    1.51
+  ],
+  "mtp_r2_mean_gain_percent": 1.14,
+  "greedy_identity_boots": 10,
+  "limitation": "Screen request arrays and promotion captures are not included in the headline packet; values are transcribed from findings."
+}

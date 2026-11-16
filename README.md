@@ -1,65 +1,65 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-356ef14b.png)
+![Recipe card: Spec-Bench real work, served configuration and dated quality results, 2026-11-16](docs/img/recipe-card-11400eda.png)
 
-Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal`.
+Serving [Qwen3.8-Flash-Next][qwen-hf] as `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on two RTX 5090 cards through ExLlamaV3 and TabbyAPI. The recipe uses [turboderp’s self-calibrated 2.68 bpw pack][ckpt-268] with the [HermiHg 2.6-bpw MTP head][mtp26], promoted 2026-11-16.
 
-The serving configuration supports concurrent coding-agent sessions with growing contexts. The launcher sets eight slots and a shared KV page pool; the measurements below cover decode, cold prefill, standard serving traffic and quality checks on that configuration.
-
-- **Checkpoint**: [turboderp's self-calibrated 2.68 bpw EXL3 quant][ckpt-268], revision `2.68bpw_h6_ng8`, 6-bit output head, 8-bit n-gram table and 2.5-bit MTP.
-- **Engine and server**: [ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) plus this repository's overlays, under [TabbyAPI][tabby] `53da7919`; image `tabbyapi:tune268-r2-pf2lock-r3`, 50 launcher selectors ([`docker/`][docker-readme]).
-- **Capacity**: 262,144-token request window, 819,200-token shared page pool, 8-bit KV, eight slots and layer split `[30, 30]`.
-- **Drafting**: the checkpoint's MTP head, depth three through four jobs and depth two at five to eight; prompt lookup enabled at actual batch one after probation.
-- **Interface**: vision, separate reasoning and `qwen3_coder` tool parsing configured by [`scripts/launch-flashnext.sh`][launcher].
-
-Measurements are dated 2026-10-23, except decode by content and tool-eval-bench (2026-11-16), and linked to their published records in [the served 2.68 write-up][p268]. The experiment index is [`bench/RESULTS.md`][results].
+The served image is `tabbyapi:flashnext-names-fast-r1`: pf2lock r3 plus the opt-in name overlay. The [launcher][launcher] sets a 262,144-token request window, an 819,200-token shared page pool, eight slots, 8-bit KV and layer split `[30, 30]`; [history][history] records the promotions.
 
 ## Numbers
 
-Measured 2026-10-23 on `tabbyapi:tune268-r2`, the 2.68 bpw self-calibrated checkpoint, pool 819,200 and all 50 served selectors: [run `20261023T000904Z`][p268-a] supplies decode, prefill and depth; [run `20261023T005148Z`][p268-d] supplies standard serving; [run `20261116T102550Z`][dk-run] on the served image `tabbyapi:tune268-r2-pf2lock-r3` supplies decode by content with thinking off and the code-file rewrite rate. `fn_bench` records greedy code/prose bursts of 1,024 forced tokens at one to eight streams with thinking on, the served default; `vllm bench serve` records closed-loop ShareGPT and Spec-Bench traffic. Decode rate excludes time to the first token; decode aggregate is the mean round sum of concurrent request rates, and standard aggregate is output tokens over wall time ([method][p268]).
+Measured 2026-11-16 on `tabbyapi:flashnext-names-fast-r1`, the 2.68 bpw pack with the HermiHg MTP graft, pool 819,200 and eight slots: [headline-r1][headline], [numeric records][headline-data]. The instrument records Spec-Bench’s frozen 120-prompt subset and full-480 check at c1/c4/c8, then shared cached-code contexts at 1K/32K/64K with 2K/8K appends; real-work output is completion tokens over benchmark wall, real-work per stream is `1000 / TPOT p50`, and code decode excludes TTFT with aggregate equal to the sum of individually counted common-window rates.
 
-![Served 2.68 decode alone and standard serving, aggregate and per stream](docs/img/std-bench.svg)
+![Spec-Bench real-work throughput and first-token latency, 2026-11-16](docs/img/std-bench.svg)
 
-Solid lines show decode alone with thinking on. Most of each request's 1,024 forced tokens are thinking: a recorded pair of the curve's requests streamed 290 thinking and 73 answer frames for the code prompt and 234 and 136 for the prose prompt, and both answers restate the prompt ([record][dk-split]). The two lines therefore decode mostly the same kind of text. Dashed lines show ShareGPT and Spec-Bench with new requests' prefill interleaved, also with thinking on. The left panel's dashed lines are output tokens over wall clock; on the right panel every line is output tokens after the first over decode time. The [decode-only figure](docs/img/decode-scaling.svg) uses the same decode records.
+Solid lines are the 120-prompt subset; dashed lines are the full-480 check from the same boot. The panels keep wall output, per-stream decode and first-token latency separate.
 
-- With thinking on, at one stream, the code / prose prompt decodes at 248.7 / 251.4 t/s, mostly thinking text. At eight streams, code / prose decode aggregate is 795 / 786 t/s, with median per-stream rates 98.8 / 98.2 t/s; each request forces 1,024 greedy tokens on a 118 / 106-token prompt ([`20261023T000904Z`][p268-a]).
-- At eight streams, ShareGPT / Spec-Bench output is 445.9 / 492.7 tok/s over wall time, with per-stream decode of 64.0 / 69.6 t/s; output lengths follow the ShareGPT references or force 256 tokens for Spec-Bench ([`20261023T005148Z`][p268-d]).
-- With thinking off, one-stream decode depends on the content: 238.9 t/s on MT-Bench writing, 311.3 on MBPP code, 334.0 on GSM8K maths and 282.4 / 282.5 over all 560 Spec-Bench and MBPP prompts (passes A / B), natural output lengths, step-based ([figure](docs/img/decode-by-content.svg)). Code-file rewrites, which copy their context, decode at 383.4 t/s (R828's suite, 2,048 forced tokens; [`20261116T102550Z`][dk-run]).
-- Decode-burst TTFT medians are 0.163 / 0.155 s at one stream and 0.919 / 0.910 s at eight (code / prose prompt, thinking on, greedy, 1,024 forced tokens; [`20261023T000904Z`][p268-a]).
+- **Real work:** Spec-Bench subset output 227.1/433.3/509.1 tok/s at c1/c4/c8, T=0, 256 forced tokens and template-default thinking, with per-cell prompt lengths and acceptance in the [standard table](#standard-benchmark-vllm-bench-serve) and [records][headline-data].
+- **Peak realistic code:** fixed 1K cached prefix plus 2K append, c1/c4/c8, T=0, 400 forced tokens, thinking off; [per-stream and aggregate figure](docs/img/decode-scaling.svg). The 8K append companion and all 32K/64K cells remain separate in the [code matrix](#cached-code-matrix).
+- **Long context:** the same code protocol at cached 32K/64K, with both append sizes and all three concurrencies; actual decode depth includes the fresh append. Shared slot-0 context is reused across cells, with a fresh task suffix per request ([method][headline]).
+- **Prefill proxy:** c1 subset / full `prompt_tokens / TTFT` medians are 725.5 / 728.9 new prompt tokens/s, including scheduling, encoding and first decode; [full-set ratios](#subsetfull-calibration) retain every cell.
 
-![Served 2.68 cold prefill and one-stream decode at depth](docs/img/prefill.svg)
+![Cached-append TTFT and common-window code decode at depth, 2026-11-16](docs/img/prefill.svg)
 
-Cold prefill averages 12,440 prompt tokens/s at 199,977 prompt tokens (16.076 s TTFT), and 12,356 prompt tokens/s at 239,866 (19.413 s); each point is the mean of three salted prompts with 64 forced greedy output tokens ([`20261023T000904Z`, unit b][p268-b]). Decode at depth averages each cold/cached pair at one stream with 2,048 forced greedy tokens ([unit c][p268-c]).
+Solid lines use a 2K append and dashed lines an 8K append; colours identify c1/c4/c8. TTFT includes concurrent contention; the [matrix](#cached-code-matrix) reports p50/p99 from the same scored batches as decode.
 
-| | value | source |
+| measurement | value | source |
 | --- | --- | --- |
-| context window | 262,144 tokens | [served launcher][launcher]; [configuration][config] |
-| shared page pool | 819,200 tokens, eight slots, 8-bit KV | [served launcher][launcher]; [`20261023T000904Z` boot projections][p268-a] |
-| free VRAM after boot warm-up, GPUs 0 / 1 | both decode boots: launcher 1,213 / 815 MiB; later NVML 1,212 / 814 MiB | [`20261023T000904Z`, `boots.tsv`][p268-a] |
-| long-context substring retrieval | 5/5 at 105,680 and 5/5 at 193,464 actual prompt tokens; five positions per length, all `length` finishes, hits in combined reasoning/visible text | [`20261023T031345Z`, needle outcomes and summary][p268-e] |
-| GSM8K five-shot, n=500, no stop strings, c8, T=0, max 8,192 | flexible extraction 0.982; strict 0.976 | [`20261023T031345Z`, GSM outcomes and summary][p268-e] |
-| [tool-eval-bench][tool-eval] 3.0.0, 69 × 4, parallel 8, T=.6/top_p=.95/top_k=20, 2026-11-16 | mean 93.8, SD 1.0, 95 % interval 93.0–94.5; 129.5 of 138 points | [`20261116T093909Z`][te3] |
-| boot to serving, existing tune cache | 18.269 / 18.319 s, launcher invocation through ready/warm-up and model check | [`20261023T000904Z`, both decode boots][p268-a] |
+| real work · c1 | output 227.1 tok/s; per stream 277.6 tok/s; TTFT p50/p99 173.6/381.6 ms; acceptance 0.6249 | [2026-11-16 subset, 256 forced, T=0][headline] |
+| real work · c4 | output 433.3 tok/s; per stream 124.2 tok/s; TTFT p50/p99 268.3/838.3 ms; acceptance 0.6347 | [2026-11-16 subset, 256 forced, T=0][headline] |
+| real work · c8 | output 509.1 tok/s; per stream 71.3 tok/s; TTFT p50/p99 373.2/1642.3 ms; acceptance 0.7117 | [2026-11-16 subset, 256 forced, T=0][headline] |
+| peak code · c1 | mean per stream 358.4 tok/s; sum 358.4 tok/s | [2026-11-16, 1K cached + 2K append, 400 forced, T=0, thinking off][headline] |
+| peak code · c4 | mean per stream 190.0 tok/s; sum 760.2 tok/s | [2026-11-16, 1K cached + 2K append, 400 forced, T=0, thinking off][headline] |
+| peak code · c8 | mean per stream 120.9 tok/s; sum 967.1 tok/s | [2026-11-16, 1K cached + 2K append, 400 forced, T=0, thinking off][headline] |
+| context / shared pool | 262,144 / 819,200 tokens; eight slots | [launcher][launcher]; [2026-11-16 boot][headline-data] |
+| GSM8K five-shot, n=500, no stop strings, c8, T=0, max 8,192 | flexible 0.982; strict 0.976 | [2026-10-23, tune268-r2, original MTP][p268-e] |
+| long-context substring retrieval | 5/5 at 105,680 and 5/5 at 193,464 actual prompt tokens, five positions, length finishes | [2026-10-23, tune268-r2, original MTP][p268-e] |
+| tool-eval-bench 3.0.0, 69 × 4, c8, T=.6/top_p=.95/top_k=20 | mean 93.8; SD 1.0; 95 % interval 93.0–94.5 | [2026-11-16 before graft, pf2lock r3][te3] |
+
+Also passing: [2026-10-23 tune268-r2 quality outcomes, original MTP][p268-e].
 
 ### Conditions
 
-The decode curve has two boots, one unrecorded warm-up and three measured rounds per shape, 432 requests, distinct stream suffixes and 118 / 106-token code / prose prompts. Prefill has three salted prompts per target through 240k; depth has two requests per shape at one stream. The standard matrix has two replication passes, a fresh boot per cell and 7,040 measured requests at one, two, four and eight concurrent requests. The content run has two fresh boots, each with 560 thinking-off requests at one and at four streams, the three MiaAI-Lab prompts, R828's 12 rewrites and a thinking-on control that reads within 1.3 % of the decode curve. All units use the served boot warm-up, NVMe off, stock 600 / 575 W power limits, core offset zero and memory offset +4500 MHz, with independent per-boot copies of the existing tune cache ([method and boot readbacks][p268]).
+One boot and one pass or scored batch per cell. Spec-Bench uses zero cached prompt tokens, a frozen stratified 120-ID subset (seed 7310), greedy 256-token outputs and the template’s thinking default; code uses shared cached context, fresh HumanEval task suffixes, greedy 400-token outputs, thinking off and no logprobs. The [records][headline-data] retain actual prompt lengths, context/task hashes, canonical-token timelines, server counters and the independent tuning-cache seed; stock power limits are 600/575 W, core offset zero, memory offset +4500 MHz and NVMe tier off.
 
 ## Served configuration
 
-- Image `tabbyapi:tune268-r2-pf2lock-r3`, pinned to `sha256:da386167cc762f08763a3ab41d98e50403504790b4495053d568f70e61432021`; 50 launcher selectors. The [launcher][launcher], [`docs/CONFIG.md`][config] and [image chain][docker-readme] specify the configuration; [history][history] records the promotion.
-- Checkpoint `qwen3.8-flash-next-exl3-2.68bpw-selfcal`, [turboderp revision `2.68bpw_h6_ng8`][ckpt-268]: experts K3 on layers 0–3/44–47, K2.5 on 4–43, dense/shared K6, 6-bit output head, 8-bit n-gram table and 2.5-bit MTP.
-- 262,144-token window, 819,200-token shared pool, eight slots, 8-bit KV, layer split `[30, 30]`, draft component on GPU 1 and draft policy `[[4, 3], [8, 2]]`.
-- The launcher enables `EXL3_DENSE_V2_K6=1`, `EXL3_MOE_COOP_HALF=1` and `EXL3_MOE_PREFILL_E3_HALF=1`; the round-2 histogram, static and uncapped alternatives remain at their image default 0. All six selectors default off in their overlay recipes.
-- Prefill merge, asynchronous recurrent stashes, tail checkpoints, resumable whole-prompt prefill, adaptive prompt lookup and cache trace are enabled; NVMe tier is off. Kernel caches use `/srv/qwen5090/.exl3cache-tune268`; the launcher performs the served boot warm-up.
+- Image `tabbyapi:flashnext-names-fast-r1`, pinned to `sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22a7b125`, with 51 launcher selectors including `EXL3_FLASHNEXT_FAST=1` ([image chain][docker-readme]).
+- Checkpoint `qwen3.8-flash-next-exl3-2.68bpw-selfcal`: [turboderp 2.68 bpw][ckpt-268], K3 experts on layers 0–3/44–47 and K2.5 on 4–43, dense/shared K6, 6-bit output head, 8-bit n-gram table; duplicate-free [HermiHg 2.6-bpw MTP graft][mtp26] at revision `836df288557a5f2e06ba8de6fefc73851653c981` ([graft utility](scripts/mtphead-graft.py), [pins](scripts/mtphead-pins.json)).
+- Window 262,144, pool 819,200, eight slots, 8-bit KV, split `[30, 30]`, draft component on GPU 1 and draft policy `[[4, 3], [8, 2]]`.
+- K6 dense V2, K2.5 cooperative decode and grouped E3 prefill selectors enabled; histogram, static and uncapped alternatives at image default 0. Prefill merge, asynchronous recurrent stashes, tail checkpoints, resumable whole-prompt prefill, adaptive lookup and cache trace enabled; NVMe tier off ([configuration][config]).
 
 ## What the stack is
 
-The [checkpoint][ckpt-268] is turboderp's self-calibrated EXL3 quantization of Qwen3.8-Flash-Next. [ExLlamaV3][exl3] `dev` `5783a93` and [TabbyAPI][tabby] `53da7919` supply the inference engine and OpenAI-compatible server. The complete source overlay chain is in [`docker/`][docker-readme], with attribution and licences in [`THIRD_PARTY.md`][third-party].
+[ExLlamaV3][exl3] `dev` `5783a93` (v1.5.2) and [TabbyAPI][tabby] `53da7919` supply the engine and OpenAI-compatible server. The [overlay chain][docker-readme] covers multi-job QSA, batch-indexed MTP, cooperative MoE, dense projections, hyper-connection mixing, two-card prefill, recurrent checkpoints, prompt lookup and the opt-in name policy; [THIRD_PARTY.md][third-party] records origins and licences.
 
-The engine overlays cover multi-job QSA, concurrency-indexed MTP drafting, cooperative MoE decode, dense projections, the hyper-connection mixer, two-card prefill, recurrent checkpoints and prompt lookup. The 2.68 overlays add K6 dense V2 twins, K2.5 cooperative decode and K2.5 grouped E3 prefill. The build verifies patch hashes and predecessor SASS; the launcher enables the measured selectors ([recipe][docker-readme]).
+Vision, separate reasoning and `qwen3_coder` tool parsing are enabled. Sampler fallbacks are temperature 1.0, top_k 20 and top_p 0.95 with `force: false`; client settings take precedence ([settings][config]).
 
-TabbyAPI carries the reasoning-loop handling, one prompt encode per request and off-loop encoding above 12,000 characters. Sampler fallbacks are temperature 1.0, top_k 20 and top_p 0.95 with `force: false`; client settings take precedence. Vision, reasoning and tool parsing are enabled in the generated configuration ([settings][config]).
+## Experimental opt-in `-fast`
+
+Request `qwen3.8-flash-next-exl3-2.68bpw-selfcal-fast` to select FLy-style W=1 rescue on the existing speculative path when entropy is at least 0.3. The default model name retains native acceptance; default-name greedy tokens were identical in the ship check ([screen and ship evidence][headline]).
+
+The 2026-11-16 code/prose screen at c1/c4, 512-token inputs and 128-token caps, with thinking on/off, measured +3 to +36 % at T=1, slower output at T=0.6 and unchanged greedy tokens at T=0. Output is slightly less varied: positional marginal KL was 1.5 % above the standard-vs-standard null and target NLL was lower; this finite-sample screen does not establish task-quality equivalence ([details][headline]).
 
 ## Hardware
 
@@ -102,7 +102,42 @@ Each entry names the change and the number that kept it out of the served config
 
 ## How the numbers are measured
 
-The [served publication write-up][p268] names all inputs and definitions. Decode, prefill and depth come from `20261023T000904Z`, units a/b/c, on the served 2.68 configuration. `fn_bench` ([`bench/probe.py`][probe]) records one line per request, forces length through `min_tokens`, checks `finish_reason=length` and retains both server completion counts and streamed frame counts.
+The [headline-r1 write-up][headline] records the completed source snapshot, source hashes and validation receipt. [`bench/sanitize_headline.py`](bench/sanitize_headline.py) exports numeric observations, IDs and hashes; [`bench/headline.py`](bench/headline.py) independently recomputes the rates, quantiles, acceptance, τ and common-window counts. [`bench/plot.py`](bench/plot.py) reads only that public export and fails on missing files or cells; run `uv run bench/plot.py` to regenerate the three current figures.
+
+### Cached code matrix
+
+Measured 2026-11-16, `tabbyapi:flashnext-names-fast-r1`, default model with HermiHg MTP, T=0, thinking off, no logprobs, 400 forced tokens per request. Every row reuses the shared slot-0 prefix across c1/c4/c8 and both append sizes, with fresh HumanEval suffixes selected by the frozen warmup/scored task selector (offsets 0/1/5); tokenizer calibration determines actual lengths. Per-stream is the arithmetic mean of individually counted canonical-token rates inside `(last first-text frame, first last-text frame]`; aggregate is their sum. The [numeric records][headline-data] retain each stream’s prompt/cached lengths, task ID/hash, context hash, duration and counted tokens; totals match server usage, which does not prove per-frame generator segmentation.
+
+| cached prefix | append | streams | TTFT p50 / p99 ms | decode sum tok/s | mean per stream tok/s | new tokens / summed TTFT, tok/s | accepted / proposed (fraction) | τ |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,024 | 2,048 | 1 | 530.6 / 530.6 | 358.4 | 358.4 | 3982.1 | 294/318 (0.9245) | 3.77 |
+| 1,024 | 2,048 | 4 | 1703.0 / 1703.4 | 760.2 | 190.0 | 1240.5 | 1153/1341 (0.8598) | 3.58 |
+| 1,024 | 2,048 | 8 | 3313.3 / 3313.8 | 967.1 | 120.9 | 637.6 | 2058/2302 (0.8940) | 2.80 |
+| 1,024 | 8,192 | 1 | 1061.9 / 1061.9 | 360.8 | 360.8 | 7776.0 | 294/318 (0.9245) | 3.77 |
+| 1,024 | 8,192 | 4 | 4513.4 / 4513.7 | 777.6 | 194.4 | 1831.1 | 1145/1365 (0.8388) | 3.52 |
+| 1,024 | 8,192 | 8 | 8929.8 / 8930.4 | 971.0 | 121.4 | 924.8 | 2054/2309 (0.8896) | 2.79 |
+| 32,768 | 2,048 | 1 | 498.5 / 498.5 | 355.3 | 355.3 | 4240.5 | 293/321 (0.9128) | 3.74 |
+| 32,768 | 2,048 | 4 | 1748.2 / 1748.5 | 764.7 | 191.2 | 1209.1 | 1155/1335 (0.8652) | 3.60 |
+| 32,768 | 2,048 | 8 | 3377.6 / 3378.0 | 965.4 | 120.7 | 625.9 | 2058/2300 (0.8948) | 2.80 |
+| 32,768 | 8,192 | 1 | 1053.9 / 1053.9 | 357.2 | 357.2 | 7835.7 | 294/318 (0.9245) | 3.77 |
+| 32,768 | 8,192 | 4 | 4662.0 / 4662.3 | 764.6 | 191.1 | 1772.9 | 1146/1362 (0.8414) | 3.52 |
+| 32,768 | 8,192 | 8 | 9197.4 / 9198.0 | 975.7 | 122.0 | 898.1 | 2061/2296 (0.8976) | 2.81 |
+| 65,536 | 2,048 | 1 | 574.8 / 574.8 | 358.3 | 358.3 | 3677.5 | 295/315 (0.9365) | 3.81 |
+| 65,536 | 2,048 | 4 | 1788.4 / 1788.8 | 765.6 | 191.4 | 1181.9 | 1153/1341 (0.8598) | 3.58 |
+| 65,536 | 2,048 | 8 | 3466.8 / 3467.4 | 944.6 | 118.1 | 609.7 | 2045/2326 (0.8792) | 2.77 |
+| 65,536 | 8,192 | 1 | 1138.9 / 1138.9 | 357.6 | 357.6 | 7251.1 | 295/315 (0.9365) | 3.81 |
+| 65,536 | 8,192 | 4 | 4763.7 / 4764.1 | 771.9 | 193.0 | 1735.0 | 1161/1317 (0.8815) | 3.64 |
+| 65,536 | 8,192 | 8 | 9367.8 / 9368.4 | 930.0 | 116.2 | 881.8 | 2040/2334 (0.8740) | 2.76 |
+
+New prompt tokens / summed TTFT includes HTTP, scheduling and first decode, with contention at c4/c8; it is not isolated cold prefill. Accepted/proposed and τ counters cover the whole scored batch, rather than the smaller decode window. All warm/confirm phases are excluded.
+
+### Historical measurements before the MTP graft
+
+The following measurements keep their original date and configuration and do not describe the current speed headlines. Quality results carry forward for the default model because the MTP swap and name overlay passed greedy token identity; the experimental alias changes sampled output and inherits no quality-equivalence claim.
+
+The corrected 2026-11-16 probe of the old curve’s exact code/prose request 0 records all 1,024 completion tokens in reasoning and zero answer characters: code 390 reasoning frames / 4,929 characters, prose 385 / 4,492. The earlier thinking/answer frame splits were incorrect and are withdrawn; frame or character shares are not token shares ([corrected numeric observations][headline-data], [dated write-up][dk-md]).
+
+The [2026-10-23 publication write-up][p268] names all inputs and definitions. Decode, prefill and depth come from `20261023T000904Z`, units a/b/c, on `tabbyapi:tune268-r2`, before the MTP graft. `fn_bench` ([`bench/probe.py`][probe]) records one line per request, forces length through `min_tokens`, checks `finish_reason=length` and retains both server completion counts and streamed frame counts.
 
 Decode uses two boots, one unrecorded warm-up plus three recorded rounds per shape, greedy 1,024-token outputs, one to eight distinct streams, code prompts of 118 tokens and prose prompts of 106. Per-stream is the median request rate `(completion_tokens - 1) / decode_window_s`; aggregate is the mean round sum of concurrent request rates. The secondary round-wall aggregate includes TTFT and straggler tails. Every stream decodes together during 91.3–98.4% of the mean decode window at two to eight streams. The maximum two-boot spread is 2.56% for per-stream medians and 1.98% for decode aggregate ([records][p268-a]).
 
@@ -128,47 +163,55 @@ Cold prefill uses three salted prompts at each of five targets, ignores the cali
 | prose | 99,878 | 268.530 | 2.93414 | 10.91797 |
 | prose | 199,915 | 379.975 | 3.94605 | 10.38054 |
 
-Figures are drawn by [`bench/plot.py`](bench/plot.py), with explicit run paths and missing-input errors. Run `uv run bench/plot.py` to regenerate `decode-scaling.svg`, `std-bench.svg`, `prefill.svg` and `decode-by-content.svg`.
+Current figures are drawn by [`bench/plot.py`](bench/plot.py) from headline-r1 only; these earlier measurements do not enter them.
 
 **Decode by content, thinking off** ([write-up][dk-md], [records][dk-run]): `vllm bench serve` sends Spec-Bench's 480 prompts and 80 MBPP prompts (test split, task 11 to 90) with `chat_template_kwargs.enable_thinking=false`, temperature 0 and a 1,024-token cap without `min_tokens`, at one and at four streams, on two fresh boots. Each request is checked for zero thinking frames. The rate is step-based: tokens per decode step from the server's per-request counters, divided by the mean interval between streamed frames, the pass mean. The client formula `(output_tokens - 1) / (latency - TTFT)` overstates answers of a few decode steps, because the last step's tokens arrive in two frames 0.1 ms apart: by 43 % on 26-token translations and 10–15 % on MBPP and extraction answers, by 0–3 % above 150 tokens. MBPP stands in for a code-generation set. The MT-Bench categories have 10 prompts each and the others 80. MiaAI-Lab's `bench_decode.py` prompts are reported with their step counts in the write-up.
 
-![Decode by content with thinking off, one and four streams](docs/img/decode-by-content.svg)
+The [dated content figure](docs/img/decode-by-content.svg) retains the pre-graft 2026-11-16 measurements.
 
 ## Standard benchmark (`vllm bench serve`)
 
-[vLLM][vllm] v0.30.0's serving benchmark runs against TabbyAPI through [`bench/vllm_bench_tabby.py`][vllm-bench-tabby], using [ShareGPT V3][sharegpt] and [Spec-Bench][spec-bench]. [Run `20261023T005148Z`, unit d][p268-d] contains 16 cells, passes A/B at concurrency 1/2/4/8, 7,040 measured requests and a fresh boot per cell. Every cell uses `tabbyapi:tune268-r2`, all 50 selectors, pool 819,200, the served warm-up, stock power/core, memory offset +4500 and NVMe off.
+The primary rows below are the 2026-11-16 Spec-Bench frozen 120-prompt subset on the served 2.68/HermiHg model and `tabbyapi:flashnext-names-fast-r1`, default name, pool 819,200, c1/c4/c8 in one boot. The TabbyAPI-adapted benchmark submits all arrivals at once, limits active requests to c, uses template-default thinking, T=0 and `min_tokens=max_tokens=256`; server evidence records zero cached prompt tokens. [Per-request numeric observations and input hashes][headline-data] preserve all six cells.
 
-Each ShareGPT cell uses the same 400 conversations at seed 7310 and forces the reference output lengths, mean 210.3 tokens; each Spec-Bench cell uses all 480 prompts across 13 categories and forces 256 output tokens. Mean input lengths are 272.255 / 321.952 tokens and maxima 1,070 / 1,540 (ShareGPT / Spec-Bench). Thinking uses the template default and sampling is greedy. All measured requests finish at length, with no failures or cached prompt tokens; each cell outputs 84,120 / 122,880 tokens.
+| size · streams | output tok/s (wall) | req/s | per-stream tok/s (1000 / TPOT p50) | TTFT p50 / p99 ms | TPOT p50 / p99 ms | E2E p50 s | accepted / proposed (fraction) | τ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| subset · 1 | 227.1 | 0.887 | 277.6 | 173.6 / 381.6 | 3.60 / 4.49 | 1.11 | 20034/32058 (0.6249) | 2.87 |
+| subset · 4 | 433.3 | 1.693 | 124.2 | 268.3 / 838.3 | 8.05 / 10.47 | 2.35 | 20142/31734 (0.6347) | 2.90 |
+| subset · 8 | 509.1 | 1.989 | 71.3 | 373.2 / 1642.3 | 14.03 / 17.11 | 3.97 | 18082/25406 (0.7117) | 2.43 |
 
-Output tok/s is all completion tokens over the cell's wall time, including prefill and turnover. The figure's per-stream dashed lines are token-weighted, `sum(output_tokens - 1) / sum(latency - TTFT)`: ShareGPT 253.8 / 173.3 / 109.3 / 64.0 and Spec-Bench 272.0 / 190.8 / 121.4 / 69.6 t/s at one / two / four / eight streams. The table's per-stream t/s is the mean of each pass's `1000/p50_tpot_ms`, where TPOT is `(E2E - TTFT)/(output_tokens - 1)` per request. Means pool A/B equally; p99 columns show their range. A/B spread is `abs(A-B)/mean(A,B)`; the maximum is 0.47% at Spec-Bench c2, within the 3% publication gate. No cell is replaced by a repeat.
+Output tok/s is all completion tokens / benchmark wall; per stream is `1000 / TPOT p50`, with TPOT `(E2E − TTFT)/(output_tokens − 1)`. Acceptance is accepted / proposed drafts; τ is `generated/(generated − accepted)`, including the prefill token, and is not accepted drafts per step.
 
-**ShareGPT V3**
+### Full-480 check
 
-| streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 207.7 | 0.04 % | 0.99 | 172 / 294 | 3.66 / 5.03 | 274 | 0.67 | 2.62 |
-| 2 | 285.5 | 0.19 % | 1.36 | 230 / 535–594 | 5.22 / 10.41–10.42 | 192 | 0.97 | 2.60 |
-| 4 | 371.0 | 0.14 % | 1.76 | 303 / 643–755 | 8.43 / 17.00–21.28 | 119 | 1.45 | 2.61 |
-| 8 | 445.9 | 0.06 % | 2.12 | 374 / 1,910–1,918 | 15.07 / 27.41–30.39 | 66 | 2.37 | 2.28 |
+The full set uses the same configuration and output length, with its own leading cell/question labels and order seeds to prevent prefix reuse.
 
-**Spec-Bench**
+| size · streams | output tok/s (wall) | req/s | per-stream tok/s (1000 / TPOT p50) | TTFT p50 / p99 ms | TPOT p50 / p99 ms | E2E p50 s | accepted / proposed (fraction) | τ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| full · 1 | 231.1 | 0.903 | 279.9 | 171.3 / 366.6 | 3.57 / 4.62 | 1.10 | 80624/126768 (0.6360) | 2.91 |
+| full · 4 | 434.6 | 1.698 | 126.0 | 272.5 / 759.5 | 7.93 / 10.16 | 2.33 | 80625/126765 (0.6360) | 2.91 |
+| full · 8 | 517.7 | 2.022 | 72.8 | 370.0 / 925.1 | 13.74 / 17.12 | 3.91 | 72870/100224 (0.7271) | 2.46 |
 
-| streams | output tok/s (wall clock) | A/B spread | req/s | TTFT p50 / p99 (ms) | TPOT p50 / p99 (ms) | per-stream tok/s (1000 / TPOT p50) | E2E p50 (s) | τ |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 226.6 | 0.13 % | 0.89 | 163 / 361–371 | 3.67 / 4.66–4.67 | 273 | 1.13 | 2.83 |
-| 2 | 318.2 | 0.47 % | 1.24 | 220 / 506–532 | 5.22 / 7.05–7.15 | 192 | 1.59 | 2.84 |
-| 4 | 415.0 | 0.02 % | 1.62 | 320 / 749–805 | 8.20 / 10.88–10.94 | 122 | 2.42 | 2.84 |
-| 8 | 492.7 | 0.23 % | 1.92 | 394 / 1,479–1,503 | 14.41 / 17.95–18.08 | 69 | 4.10 | 2.42 |
+### Subset/full calibration
 
-τ is the server-log ratio `Σ generated / (Σ generated - Σ accepted drafts)`, including the prefill step; it differs from the decode probe's tokens/frame and from published Spec-Bench acceptance definitions. The [summary][p268-d] retains τ, client τ, accepted/proposed fractions, depth, ITL and category diagnostics. The detailed numeric request arrays and sample hashes are published with the scalar results; generated text and prompts are omitted.
+Each value is subset / full for the named summary field, without pooling the two sets or dropping tail cells. The c1 TTFT-derived prefill medians are 725.5 / 728.9 new prompt tokens/s; HTTP, scheduling, encoding and first decode are included.
 
-The fixed packet validators pass on standard request counts, manifests, forced lengths, foreign-request checks and the recorded `PUBLISHABLE` decision. Decode, prefill and depth numeric request checks pass; their copied inputs omit the final server logs, preventing an independent repetition here of server-count and zero-cache assertions. The unit `VALIDATED` markers and supplied summaries are the retained upstream validation evidence ([publication limits][p268]).
+| streams | output | per stream | TTFT p50 | TTFT p99 | acceptance | τ | c1 prefill proxy |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.9825 | 0.9918 | 1.0137 | 1.0409 | 0.9826 | 0.9886 | 0.9953 |
+| 4 | 0.9970 | 0.9853 | 0.9846 | 1.1037 | 0.9979 | 0.9987 | — |
+| 8 | 0.9834 | 0.9794 | 1.0089 | 1.7753 | 0.9789 | 0.9893 | — |
+
+Earlier ShareGPT, Spec-Bench c2, content-category speed, cold-prefill and 100K/200K depth measurements remain dated in the [2026-10-23 write-up][p268] and [2026-11-16 pre-graft content write-up][dk-md]. They do not enter the current headline charts.
 
 ## Reproducing a boot
 
 ```sh
-bash docker/build-chain.sh              # builds through tabbyapi:tune268-r2-pf2lock-r3
+bash docker/build-chain.sh              # builds through tabbyapi:flashnext-names-fast-r1
 # Review and update R825C_IMAGE_ID in the launcher for the rebuilt image before serving.
+# Download the pinned MTP sidecar and preserve the original checkpoint as <served>-base.
+# With the server stopped, build a new served directory from that preserved base:
+python3 scripts/mtphead-graft.py build "$BASE_CHECKPOINT" "$MTP_SIDECAR" "$SERVED_CHECKPOINT" scripts/mtphead-pins.json
+python3 scripts/mtphead-graft.py verify "$BASE_CHECKPOINT" "$MTP_SIDECAR" "$SERVED_CHECKPOINT" scripts/mtphead-pins.json
 ssh flan 'bash -s' < scripts/launch-flashnext.sh
 STOP=1 bash scripts/launch-flashnext.sh
 ```
@@ -414,3 +457,7 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [p268-d]: bench/results/20261023T005148Z-publish268-d/
 [p268-e]: bench/results/20261023T031345Z-publish268-e/
 [ckpt-268]: https://huggingface.co/turboderp/Qwen3.8-Flash-Next-exl3/tree/2.68bpw_h6_ng8
+
+[headline]: bench/results/headline-r1.md
+[headline-data]: bench/results/2026-11-16-headline-r1/
+[mtp26]: https://huggingface.co/HermiHg/Qwen3.8-Flash-Next-Optimized-MTP-Heads-exl3/tree/836df288557a5f2e06ba8de6fefc73851653c981

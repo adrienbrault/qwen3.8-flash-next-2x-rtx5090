@@ -1,0 +1,17 @@
+{
+  "image_id": "sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22a7b125",
+  "model": "qwen3.8-flash-next-exl3-2.68bpw-selfcal",
+  "pool": 819200,
+  "selectors": 51,
+  "free_mib_launcher": [
+    1213,
+    935
+  ],
+  "boot_to_serving_s": 18.12772055100504,
+  "definition": "launcher invocation after old container removal through successful ready/warmup and model check",
+  "kernel_cache": "independent per-boot copy of served TUNEDIR; not cleared",
+  "image_tag": "tabbyapi:flashnext-names-fast-r1",
+  "kernel_cache_seed": "independent copy of the served tuning cache",
+  "measurement_date": "2026-11-16",
+  "source_run": "20261116T193116Z-1449174-headline-r1"
+}
