@@ -1,6 +1,6 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card: Spec-Bench real work and measured peaks, 2026-11-16](docs/img/recipe-card-841f5007.png)
+![Recipe card: Spec-Bench real work and measured peaks, 2026-11-16](docs/img/recipe-card-ede6372f.png)
 
 Serving [Qwen3.8-Flash-Next][qwen-hf] as `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on two RTX 5090 cards through ExLlamaV3 and TabbyAPI. The recipe uses [turboderp’s self-calibrated 2.68 bpw pack][ckpt-268] with the [HermiHg 2.6-bpw MTP head][mtp26], promoted 2026-11-16.
 
