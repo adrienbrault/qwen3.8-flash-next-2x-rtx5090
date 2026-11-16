@@ -1,6 +1,6 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-0c983caf.png)
+![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-1738c6a1.png)
 
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal`.
 
@@ -92,7 +92,7 @@ Each entry names the change and the number that kept it out of the served config
 - `EXL3_INT8_GEMV=0`: −0.3 % at c1 with a 95 % interval of ±1.2 % over 8 boots ([R520b][r520b]).
 - 6 decode slots: +17 % at c6 and 9 % slower on an 8-agent replay, measured before the bf16 GDN state halved the per-slot cost ([R518][r518]).
 - Split [30, 31] at 393,216 ([R487][r487]).
-- The n-gram table in host RAM: +1–2 % for 30.5 GiB ([R484][r484]).
+- The n-gram table in host RAM, on the 3.05 bpw pack: +1–2 % for 30.5 GiB, measured before the served row prefetch ([R484][r484]). The served 2.68 pack's table is 48.3 GiB on a 60 GiB host.
 - The host KV tier ([R358][r358], [R493][r493]); GDN state replay ([R496][r496]); a 4-bit MTP graft ([R498][r498]); CPU-offloaded experts ([R482][r482]); MoE coop mode 3 ([R462][r462]).
 - The 2026-09-18 prompt-lookup variant: +3–4 % on code at c1, flat at c4 ([R501][r501]).
 - K8V4: +18 % pool for −11 % code at c1 ([R480][r480]).
