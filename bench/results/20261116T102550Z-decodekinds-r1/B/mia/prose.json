@@ -1,0 +1,302 @@
+{
+ "phase": "mia-prose",
+ "health_code": 200,
+ "health_body": "{\"status\":\"healthy\",\"issues\":[]}",
+ "runs": [
+  {
+   "http": 200,
+   "ttft_s": 0.10723248000067542,
+   "wall_s": 1.414501774999735,
+   "decode_s": 1.3072692949990596,
+   "tok_s": 305.21637854294363,
+   "delivered_tok_s": 282.7850816942771,
+   "completion_tokens": 400,
+   "prompt_tokens": 39,
+   "finish_reason": "length",
+   "nan": false,
+   "text_head": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components",
+   "text": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components:\n\n1. **An underlying array (bucket array)**: A fixed-size array where entries are stored.\n2. **A hash function**: A function that converts a key into an integer index.\n3. **Collision resolution strategy**: A method to handle cases where two different keys hash to the same index.\n\n---\n\n## 2. Step-by-Step Operation\n\n### Step 1: Hashing the Key\n\nWhen you insert a key-value pair `(key, value)`, the hash map first applies a **hash function** to the key:\n\n```\nindex = hash(key) % array_size\n```\n\n- The hash function converts the key (which can be any type: string, integer, object, etc.) into a large integer.\n- The modulo operation (`% array_size`) maps this large integer into a valid index within the bounds of the underlying array.\n\n**Example:**\n```\nhash(\"apple\") = 123456789\narray_size = 16\nindex = 123456789 % 16 = 5\n```\n\nSo `\"apple\"` would be stored at index 5.\n\n### Step 2: Storing the Entry\n\nThe key-value pair is stored at the computed index in the array. Each slot in the array is called a **bucket**.\n\n```\nbuckets[5] = (\"apple\", 42)\n```\n\n### Step 3: Retrieving a Value\n\nTo retrieve the value",
+   "text_len": 1502,
+   "usage": {
+    "prompt_tokens": 39,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.07,
+    "prompt_tokens_per_sec": 557.14,
+    "completion_tokens": 400,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 270,
+     "rejected_prediction_tokens": 120
+    },
+    "completion_time": 1.34,
+    "completion_tokens_per_sec": 299.08,
+    "total_tokens": 439,
+    "total_time": 1.41
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.10807784399912634,
+   "wall_s": 1.416556412999853,
+   "decode_s": 1.3084785690007266,
+   "tok_s": 304.9343026723875,
+   "delivered_tok_s": 282.3749173200358,
+   "completion_tokens": 400,
+   "prompt_tokens": 39,
+   "finish_reason": "length",
+   "nan": false,
+   "text_head": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components",
+   "text": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components:\n\n1. **An underlying array (bucket array)**: A fixed-size array where entries are stored.\n2. **A hash function**: A function that converts a key into an integer index.\n3. **Collision resolution strategy**: A method to handle cases where two different keys hash to the same index.\n\n---\n\n## 2. Step-by-Step Operation\n\n### Step 1: Hashing the Key\n\nWhen you insert a key-value pair `(key, value)`, the hash map first applies a **hash function** to the key:\n\n```\nindex = hash(key) % array_size\n```\n\n- The hash function converts the key (which can be any type: string, integer, object, etc.) into a large integer.\n- The modulo operation (`% array_size`) maps this large integer into a valid index within the bounds of the underlying array.\n\n**Example:**\n```\nhash(\"apple\") = 123456789\narray_size = 16\nindex = 123456789 % 16 = 5\n```\n\nSo `\"apple\"` would be stored at index 5.\n\n### Step 2: Storing the Entry\n\nThe key-value pair is stored at the computed index in the array. Each slot in the array is called a **bucket**.\n\n```\nbuckets[5] = (\"apple\", 42)\n```\n\n### Step 3: Retrieving a Value\n\nTo retrieve the value",
+   "text_len": 1502,
+   "usage": {
+    "prompt_tokens": 39,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.07,
+    "prompt_tokens_per_sec": 557.14,
+    "completion_tokens": 400,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 270,
+     "rejected_prediction_tokens": 120
+    },
+    "completion_time": 1.34,
+    "completion_tokens_per_sec": 298.84,
+    "total_tokens": 439,
+    "total_time": 1.41
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.10796254799970484,
+   "wall_s": 1.4188605219987949,
+   "decode_s": 1.31089797399909,
+   "tok_s": 304.3715132023516,
+   "delivered_tok_s": 281.9163644334166,
+   "completion_tokens": 400,
+   "prompt_tokens": 39,
+   "finish_reason": "length",
+   "nan": false,
+   "text_head": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components",
+   "text": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components:\n\n1. **An underlying array (bucket array)**: A fixed-size array where entries are stored.\n2. **A hash function**: A function that converts a key into an integer index.\n3. **Collision resolution strategy**: A method to handle cases where two different keys hash to the same index.\n\n---\n\n## 2. Step-by-Step Operation\n\n### Step 1: Hashing the Key\n\nWhen you insert a key-value pair `(key, value)`, the hash map first applies a **hash function** to the key:\n\n```\nindex = hash(key) % array_size\n```\n\n- The hash function converts the key (which can be any type: string, integer, object, etc.) into a large integer.\n- The modulo operation (`% array_size`) maps this large integer into a valid index within the bounds of the underlying array.\n\n**Example:**\n```\nhash(\"apple\") = 123456789\narray_size = 16\nindex = 123456789 % 16 = 5\n```\n\nSo `\"apple\"` would be stored at index 5.\n\n### Step 2: Storing the Entry\n\nThe key-value pair is stored at the computed index in the array. Each slot in the array is called a **bucket**.\n\n```\nbuckets[5] = (\"apple\", 42)\n```\n\n### Step 3: Retrieving a Value\n\nTo retrieve the value",
+   "text_len": 1502,
+   "usage": {
+    "prompt_tokens": 39,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.07,
+    "prompt_tokens_per_sec": 557.14,
+    "completion_tokens": 400,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 270,
+     "rejected_prediction_tokens": 120
+    },
+    "completion_time": 1.34,
+    "completion_tokens_per_sec": 298.28,
+    "total_tokens": 439,
+    "total_time": 1.42
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.10851050099881832,
+   "wall_s": 1.4165575959996204,
+   "decode_s": 1.308047095000802,
+   "tok_s": 305.0348886710041,
+   "delivered_tok_s": 282.37468150226005,
+   "completion_tokens": 400,
+   "prompt_tokens": 39,
+   "finish_reason": "length",
+   "nan": false,
+   "text_head": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components",
+   "text": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components:\n\n1. **An underlying array (bucket array)**: A fixed-size array where entries are stored.\n2. **A hash function**: A function that converts a key into an integer index.\n3. **Collision resolution strategy**: A method to handle cases where two different keys hash to the same index.\n\n---\n\n## 2. Step-by-Step Operation\n\n### Step 1: Hashing the Key\n\nWhen you insert a key-value pair `(key, value)`, the hash map first applies a **hash function** to the key:\n\n```\nindex = hash(key) % array_size\n```\n\n- The hash function converts the key (which can be any type: string, integer, object, etc.) into a large integer.\n- The modulo operation (`% array_size`) maps this large integer into a valid index within the bounds of the underlying array.\n\n**Example:**\n```\nhash(\"apple\") = 123456789\narray_size = 16\nindex = 123456789 % 16 = 5\n```\n\nSo `\"apple\"` would be stored at index 5.\n\n### Step 2: Storing the Entry\n\nThe key-value pair is stored at the computed index in the array. Each slot in the array is called a **bucket**.\n\n```\nbuckets[5] = (\"apple\", 42)\n```\n\n### Step 3: Retrieving a Value\n\nTo retrieve the value",
+   "text_len": 1502,
+   "usage": {
+    "prompt_tokens": 39,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.07,
+    "prompt_tokens_per_sec": 557.14,
+    "completion_tokens": 400,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 270,
+     "rejected_prediction_tokens": 120
+    },
+    "completion_time": 1.34,
+    "completion_tokens_per_sec": 298.91,
+    "total_tokens": 439,
+    "total_time": 1.41
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.10838571599924762,
+   "wall_s": 1.4127513749990612,
+   "decode_s": 1.3043656589998136,
+   "tok_s": 305.895817823012,
+   "delivered_tok_s": 283.1354526200803,
+   "completion_tokens": 400,
+   "prompt_tokens": 39,
+   "finish_reason": "length",
+   "nan": false,
+   "text_head": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components",
+   "text": "# How a Hash Map Works: A Detailed Explanation\n\nA **hash map** (also called a hash table, dictionary, or associative array) is a data structure that stores key-value pairs and provides fast lookup, insertion, and deletion operations. It achieves this by using a **hash function** to map keys to indices in an underlying array.\n\n---\n\n## 1. Core Components\n\nA hash map consists of three main components:\n\n1. **An underlying array (bucket array)**: A fixed-size array where entries are stored.\n2. **A hash function**: A function that converts a key into an integer index.\n3. **Collision resolution strategy**: A method to handle cases where two different keys hash to the same index.\n\n---\n\n## 2. Step-by-Step Operation\n\n### Step 1: Hashing the Key\n\nWhen you insert a key-value pair `(key, value)`, the hash map first applies a **hash function** to the key:\n\n```\nindex = hash(key) % array_size\n```\n\n- The hash function converts the key (which can be any type: string, integer, object, etc.) into a large integer.\n- The modulo operation (`% array_size`) maps this large integer into a valid index within the bounds of the underlying array.\n\n**Example:**\n```\nhash(\"apple\") = 123456789\narray_size = 16\nindex = 123456789 % 16 = 5\n```\n\nSo `\"apple\"` would be stored at index 5.\n\n### Step 2: Storing the Entry\n\nThe key-value pair is stored at the computed index in the array. Each slot in the array is called a **bucket**.\n\n```\nbuckets[5] = (\"apple\", 42)\n```\n\n### Step 3: Retrieving a Value\n\nTo retrieve the value",
+   "text_len": 1502,
+   "usage": {
+    "prompt_tokens": 39,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.07,
+    "prompt_tokens_per_sec": 557.14,
+    "completion_tokens": 400,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 270,
+     "rejected_prediction_tokens": 120
+    },
+    "completion_time": 1.33,
+    "completion_tokens_per_sec": 299.72,
+    "total_tokens": 439,
+    "total_time": 1.41
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "ts": 1794826047.8728695,
+ "prompt": "hashmap-prose",
+ "thinking": false,
+ "temperature": 0,
+ "concurrency": 1,
+ "note": "decode_ms_per_draft_step is a serving-cycle ratio, not a kernel timing",
+ "tok_s_median": 305.0348886710041,
+ "tok_s_min": 304.3715132023516,
+ "tok_s_max": 305.895817823012,
+ "ttft_median_s": 0.10807784399912634,
+ "completion_tokens_median": 400.0,
+ "accept_ratio_median": null,
+ "accepted_per_step_median": null,
+ "mean_draft_tokens_per_step_median": null,
+ "aggregate_tok_s_median": null,
+ "decode_ms_per_draft_step_median": null,
+ "any_nan": false,
+ "health_code_after": 200,
+ "short_after": {
+  "http": 200,
+  "ttft_s": 0.10789384900090226,
+  "wall_s": 0.10811209100029373,
+  "decode_s": 0.00021824199939146638,
+  "tok_s": 32074.486210346327,
+  "delivered_tok_s": 73.99727381073653,
+  "completion_tokens": 8,
+  "prompt_tokens": 39,
+  "finish_reason": "length",
+  "nan": false,
+  "text_head": "# How a Hash Map Works: A",
+  "text": "# How a Hash Map Works: A",
+  "text_len": 25,
+  "usage": {
+   "prompt_tokens": 39,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "prompt_time": 0.07,
+   "prompt_tokens_per_sec": 557.14,
+   "completion_tokens": 8,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": 5,
+    "rejected_prediction_tokens": 4
+   },
+   "completion_time": 0.03,
+   "completion_tokens_per_sec": 264.79,
+   "total_tokens": 47,
+   "total_time": 0.1
+  }
+ }
+}

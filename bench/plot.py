@@ -159,7 +159,7 @@ def figure_decode_scaling():
             (ax, agg, "Decode aggregate", "decode tokens per second, sum over streams"),
             (ax2, per, "Decode rate per stream", "decode tokens per second, one stream (median)")):
         for kind, color in (("code", CODE), ("prose", PROSE)):
-            a.plot(conc, series[kind], marker="o", markersize=5, color=color, linewidth=2, label=kind)
+            a.plot(conc, series[kind], marker="o", markersize=5, color=color, linewidth=2, label=f"{kind} prompt")
         # At each x the higher of the two values is labelled above its marker and the lower one below.
         for i, x in enumerate(conc):
             hi = "code" if series["code"][i] >= series["prose"][i] else "prose"
@@ -173,7 +173,7 @@ def figure_decode_scaling():
         a.grid(axis="y", color="#eaeef2")
         a.set_axisbelow(True)
         a.legend(frameon=False, fontsize=9, loc="lower right" if a is ax else "upper right")
-    fig.suptitle("Decode against concurrency · served 2.68 bpw · 2026-10-23", fontsize=11,
+    fig.suptitle("Decode against concurrency, thinking on · served 2.68 bpw · 2026-10-23", fontsize=11,
                  fontweight="bold")
     print(f"decode scaling (20261023T000904Z, 2 boots x 3 rounds) at {conc}")
     print("  shape      per-stream   decode agg   round-wall agg   TTFT     overlap")
@@ -313,7 +313,7 @@ def figure_prefill():
         xs = [t for t, _, _ in depth[kind]]
         ys = [v for _, v, _ in depth[kind]]
         handles += ax2.plot(xs, ys, marker="s", markersize=4, linestyle="--", color=color, linewidth=1.6,
-                            label=f"decode at depth, {kind}")
+                            label=f"decode at depth, thinking on, {kind} prompt")
         for i, (x, y, tps) in enumerate(depth[kind]):
             other = "prose" if kind == "code" else "code"
             dy = 7 if y >= depth[other][i][1] else -14
@@ -405,6 +405,23 @@ def std_bench_cells(runs):
     return out
 
 
+def token_weighted_decode(d):
+    """Per-stream decode rate of one `vllm bench serve` cell with the decode-only definition: all output tokens after
+    each request's first, over the summed time from each first token to its last, sum(n - 1) / sum(latency - TTFT).
+    Unlike 1000 / TPOT p50 (the median of per-request rates), a short request weighs by its tokens."""
+    tok = dec = 0.0
+    for n, lat, ttft in zip(d["output_lens"], d["latencies"], d["ttfts"]):
+        if n and n > 1 and lat > ttft:
+            tok += n - 1
+            dec += lat - ttft
+    return tok / dec
+
+
+def std_bench_token_weighted(runs):
+    """Per (dataset, conc), the pass mean of token_weighted_decode."""
+    return {k: st.mean(token_weighted_decode(d) for d in v) for k, v in runs.items()}
+
+
 def std_bench(path):
     """One standard-benchmark results directory (R731b, R787d), passes A/B mean per cell."""
     return std_bench_cells(std_bench_runs(path))
@@ -415,7 +432,9 @@ def figure_std_bench():
     Each series uses its own complete unit; standard output includes prefill and turnover."""
     fn = served_decode_rates()
     fn_conc = [c for c in range(1, 9) if f"c{c}-code" in fn]
-    sb = std_bench_cells(std_bench_served_runs())
+    sb_runs = std_bench_served_runs()
+    sb = std_bench_cells(sb_runs)
+    tw = std_bench_token_weighted(sb_runs)
     datasets = (("sharegpt", "ShareGPT V3", SHAREGPT), ("specbench", "Spec-Bench", SPECBENCH))
     sb_conc = sorted({c for (_, c) in sb})
 
@@ -423,22 +442,24 @@ def figure_std_bench():
     for a, idx, fn_key, title in ((ax, 0, "decode_agg", "Aggregate over streams"), (ax2, 1, "per_stream", "Per stream")):
         for kind, color in (("code", CODE), ("prose", PROSE)):
             ys = [fn[f"c{c}-{kind}"][fn_key] for c in fn_conc]
-            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, {kind} (00:09 UTC)")
+            a.plot(fn_conc, ys, marker="o", markersize=4, color=color, linewidth=2, label=f"decode only, thinking on, {kind} prompt (00:09 UTC)")
             if kind == "code":
                 annotate(a, fn_conc, ys, color, dy=7)
         for key, name, color in datasets:
-            ys = [sb[(key, c)][idx] for c in sb_conc]
+            # Left: wall-clock output tok/s (TTFT and turnover included). Right: per-stream decode with the solid
+            # lines' definition, so the two kinds of line share one metric on that panel.
+            ys = [sb[(key, c)][0] if idx == 0 else tw[(key, c)] for c in sb_conc]
             a.plot(sb_conc, ys, marker="s", markersize=4, color=color, linewidth=2, linestyle="--",
-                   label=f"{name}, prefill interleaved (00:51 UTC)")
+                   label=f"{name}, thinking on, prefill interleaved (00:51 UTC)")
             # Labels only from 2 streams on the aggregate panel and from 4 on the per-stream panel (the values are in
             # the README tables): below that the dashed and solid series lie within a few label heights of each other.
-            # On the per-stream panel both datasets label below their markers, ShareGPT one line lower, because the
-            # decode-only labels sit above theirs.
+            # On the per-stream panel ShareGPT labels below its markers and Spec-Bench above, between the dashed
+            # lines and the decode-only labels.
             first = 2 if a is ax else 4
             if a is ax:
                 dy = -14 if key == "sharegpt" else 7
             else:
-                dy = -26 if key == "sharegpt" else -14
+                dy = -16 if key == "sharegpt" else 7
             annotate(a, sb_conc, [y if c >= first else None for c, y in zip(sb_conc, ys)], color, dy=dy)
         a.set_title(title)
         a.set_xlabel("concurrent streams")
@@ -448,12 +469,13 @@ def figure_std_bench():
         a.set_axisbelow(True)
         a.legend(frameon=False, fontsize=8, loc="lower right" if a is ax else "upper right")
     ax.set_ylabel("tokens per second, sum over streams\n(standard benchmark: output tok/s, wall clock)")
-    ax2.set_ylabel("tokens per second, one stream\n(standard benchmark: 1000 / TPOT p50)")
+    ax2.set_ylabel("decode tokens per second, one stream\n(all lines: output tokens after the first / decode time)")
     fig.suptitle("Decode and standard serving · served 2.68 bpw · 2026-10-23", fontsize=11, fontweight="bold")
     print(f"standard benchmark (20261023T005148Z, passes A/B mean) at {sb_conc}")
     for key, name, _ in datasets:
         print(f"  {name:11}  output tok/s {[round(sb[(key, c)][0], 1) for c in sb_conc]}"
-              f"   per-stream {[round(sb[(key, c)][1]) for c in sb_conc]}")
+              f"   per-stream 1000/TPOT p50 {[round(sb[(key, c)][1]) for c in sb_conc]}"
+              f"   per-stream token-weighted {[round(tw[(key, c)], 1) for c in sb_conc]}")
     save(fig, "std-bench.svg", "Decode alone against the standard benchmark, sum over streams and per stream")
 
 
@@ -583,6 +605,119 @@ def figure_memory():
     save(fig, "memory.svg", "VRAM and host DRAM of the served configuration by category")
 
 
+DK = RESULTS / "20261116T102550Z-decodekinds-r1"
+DK_LABELS = {
+    "translation": "translation", "extraction": "extraction (MT-Bench)", "math": "math (MT-Bench)",
+    "math_reasoning": "math reasoning (GSM8K)", "mbpp": "code (MBPP)", "coding": "coding (MT-Bench)",
+    "rag": "retrieval-augmented QA", "reasoning": "reasoning (MT-Bench)", "stem": "STEM (MT-Bench)",
+    "summarization": "summarization", "qa": "question answering", "roleplay": "roleplay (MT-Bench)",
+    "humanities": "humanities (MT-Bench)", "writing": "writing (MT-Bench)",
+}
+
+
+def decodekinds_server_steps(p, conc, req):
+    """Server decode-step counters (A|B/server-steps.jsonl) for the bench requests, in requests.jsonl order.
+    The one-stream run is the 560 consecutive records whose generated-token sequence equals the client's; the
+    four-stream run is the next 560, matched to each client record by generated and prompt tokens within one
+    position of completion order."""
+    srv = [json.loads(l) for l in need(DK / p / "server-steps.jsonl").read_text().splitlines()]
+    gens = [r["generated"] for r in srv]
+    want1 = [r["completion_tokens"] for r in
+             map(json.loads, (DK / p / "bench" / f"{p}-c1.requests.jsonl").read_text().splitlines())]
+    start = next((i for i in range(len(gens) - 559) if gens[i:i + 560] == want1), None)
+    if start is None:
+        raise ValueError(f"{DK}/{p}: one-stream bench requests not found in server-steps.jsonl")
+    win = srv[start + (0 if conc == 1 else 560):][:560]
+    used, out = set(), []
+    for i, r in enumerate(req):
+        js = [j for j in range(max(0, i - 12), min(560, i + 13)) if j not in used and win[j]["generated"] == r["completion_tokens"]
+              and win[j].get("prompt_tokens", r["prompt_tokens"]) == r["prompt_tokens"]]
+        if not js:
+            raise ValueError(f"{DK}/{p} c{conc}: request {i} has no server counter")
+        used.add(js[0])
+        out.append(win[js[0]])
+    return out
+
+
+def decodekinds_categories(conc):
+    """20261116T102550Z-decodekinds-r1: per Spec-Bench/MBPP category, thinking off, natural lengths (cap 1,024),
+    pass A/B means of: the step-based decode rate per stream, (generated tokens / decode steps) from the server's
+    counters divided by the mean client inter-frame interval above 2 ms (one frame per decode step; at four streams this includes the steps that carry a new request's prefill); the client
+    token-weighted rate sum(n - 1) / sum(latency - TTFT), which overstates answers of a few steps because the last
+    frame arrives ~0.1 ms after the one before it; tokens per step; step interval; mean output tokens."""
+    cats = json.load(open(need(DK / "dataset" / "categories.json")))
+    per_pass = []
+    for p in ("A", "B"):
+        d = json.load(open(need(DK / p / "bench" / f"{p}-c{conc}.json")))
+        req = [json.loads(l) for l in need(DK / p / "bench" / f"{p}-c{conc}.requests.jsonl").read_text().splitlines()]
+        shas = [l.split("\t")[1] for l in (DK / p / "bench" / f"{p}-c{conc}.samples.tsv").read_text().splitlines()[1:]]
+        if len(shas) != 560 or d["completed"] != 560 or d["failed"] != 0 or len(req) != 560:
+            raise ValueError(f"{DK}/{p}: expected 560 completed requests")
+        acc = collections.defaultdict(lambda: dict(gen=0, steps=0, cn=0, ct=0.0, itl=[], n=[]))
+        for r, s in zip(req, decodekinds_server_steps(p, conc, req)):
+            for a in (acc[cats[r["prompt_sha"]]], acc["all"]):
+                a["gen"] += s["generated"]
+                a["steps"] += s["steps"]
+        for sha, n, lat, ttft, itl in zip(shas, d["output_lens"], d["latencies"], d["ttfts"], d["itls"]):
+            for a in (acc[cats[sha]], acc["all"]):
+                a["itl"] += [x for x in itl if x > 0.002]
+                a["n"].append(n or 0)
+                if n and n > 1 and lat > ttft:
+                    a["cn"] += n - 1
+                    a["ct"] += lat - ttft
+        per_pass.append({c: dict(rate=(v["gen"] / v["steps"]) / st.mean(v["itl"]), client=v["cn"] / v["ct"],
+                                 tps=v["gen"] / v["steps"], step_ms=1000 * st.mean(v["itl"]), out=st.mean(v["n"]))
+                         for c, v in acc.items()})
+    return {c: {k: st.mean(pp[c][k] for pp in per_pass) for k in per_pass[0][c]} for c in per_pass[0]}
+
+
+def decodekinds_reasoning():
+    """Thinking-on control of the same session: fn_bench, 1,024 forced tokens, c1, median per kind, pass mean."""
+    out = {}
+    for kind in ("code", "prose"):
+        meds = []
+        for p in ("A", "B"):
+            rows = [json.loads(l) for l in need(DK / p / "reasoning.jsonl").read_text().splitlines()]
+            meds.append(st.median(r["decode_tps"] for r in rows if r["tag"].endswith("reasoning-" + kind)))
+        out[kind] = st.mean(meds)
+    return out
+
+
+def figure_decode_by_content():
+    """Decode rate by content with thinking off (20261116T102550Z), against the thinking-on rate of the same boots."""
+    c1, c4 = decodekinds_categories(1), decodekinds_categories(4)
+    all1, all4 = c1.pop("all"), c4.pop("all")
+    reasoning = decodekinds_reasoning()
+    order = sorted(c1, key=lambda c: c1[c]["rate"])
+    ys = range(len(order))
+    fig, ax = plt.subplots(figsize=(10.4, 5.6))
+    ax.barh([y + 0.2 for y in ys], [c1[c]["rate"] for c in order], height=0.38, color=CODE, label="1 stream")
+    ax.barh([y - 0.2 for y in ys], [c4[c]["rate"] for c in order], height=0.38, color="#9ec5f4", label="4 streams, per stream")
+    for y, c in zip(ys, order):
+        ax.annotate(f"{c1[c]['rate']:.0f}", (c1[c]["rate"], y + 0.2), textcoords="offset points", xytext=(4, -3), fontsize=8, color=CODE)
+        ax.annotate(f"{c4[c]['rate']:.0f}", (c4[c]["rate"], y - 0.2), textcoords="offset points", xytext=(4, -3), fontsize=8, color="#57606a")
+    think = st.mean(reasoning.values())
+    ax.axvline(think, color=PROSE, linestyle="--", linewidth=1.5,
+               label=f"thinking on, code or prose prompt, 1 stream ({think:.0f})")
+    ax.set_yticks(list(ys), [f"{DK_LABELS.get(c, c)} · {c1[c]['out']:.0f} tok" for c in order])
+    ax.set_xlabel("decode tokens per second per stream (tokens per decode step / step interval)")
+    ax.set_xlim(0, max(v["rate"] for v in c1.values()) * 1.12)
+    ax.grid(axis="x", color="#eaeef2")
+    ax.set_axisbelow(True)
+    ax.legend(frameon=False, fontsize=8.5, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3)
+    ax.set_title("Decode by content, thinking off · served 2.68 bpw · 2026-11-16", fontsize=11)
+    print("decode by content (20261116T102550Z, passes A/B mean): step-based c1 / c4, client c1 / c4, tokens/step c1,"
+          " step ms c1 / c4, mean output tokens")
+    for c in reversed(order):
+        a, b = c1[c], c4[c]
+        print(f"  {c:15} {a['rate']:6.1f} / {b['rate']:6.1f}   {a['client']:6.1f} / {b['client']:6.1f}   {a['tps']:.2f}"
+              f"   {a['step_ms']:.2f} / {b['step_ms']:.2f}   {a['out']:4.0f}")
+    print(f"  {'all 560':15} {all1['rate']:6.1f} / {all4['rate']:6.1f}   {all1['client']:6.1f} / {all4['client']:6.1f}   {all1['tps']:.2f}"
+          f"   {all1['step_ms']:.2f} / {all4['step_ms']:.2f}   {all1['out']:4.0f}")
+    print(f"  thinking on (fn_bench c1): code {reasoning['code']:.1f}, prose {reasoning['prose']:.1f}")
+    save(fig, "decode-by-content.svg", "Decode rate per stream by content category with thinking off, 1 and 4 streams")
+
+
 def print_served_tables():
     print_std_bench_tables(std_bench_served_runs(), "20261023T005148Z, passes A/B")
 
@@ -592,4 +727,5 @@ if __name__ == "__main__":
     figure_std_bench()
     print_served_tables()
     figure_prefill()
-    print("wrote decode-scaling.svg, std-bench.svg, prefill.svg")
+    figure_decode_by_content()
+    print("wrote decode-scaling.svg, std-bench.svg, prefill.svg, decode-by-content.svg")

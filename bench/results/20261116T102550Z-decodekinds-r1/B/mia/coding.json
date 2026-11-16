@@ -1,0 +1,307 @@
+{
+ "phase": "mia-coding",
+ "health_code": 200,
+ "health_body": "{\"status\":\"healthy\",\"issues\":[]}",
+ "runs": [
+  {
+   "http": 200,
+   "ttft_s": 0.11829105600008916,
+   "wall_s": 0.2643772289993649,
+   "decode_s": 0.14608617299927573,
+   "tok_s": 397.02593893186287,
+   "delivered_tok_s": 223.16596714213134,
+   "completion_tokens": 59,
+   "prompt_tokens": 49,
+   "finish_reason": "stop",
+   "nan": false,
+   "text_head": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text_len": 173,
+   "usage": {
+    "prompt_tokens": 49,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.08,
+    "prompt_tokens_per_sec": 612.5,
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 42,
+     "rejected_prediction_tokens": 9
+    },
+    "completion_time": 0.18,
+    "completion_tokens_per_sec": 335.45,
+    "total_tokens": 108,
+    "total_time": 0.26
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.11453913200057286,
+   "wall_s": 0.26063070600139326,
+   "decode_s": 0.1460915740008204,
+   "tok_s": 397.0112608936248,
+   "delivered_tok_s": 226.3739407577118,
+   "completion_tokens": 59,
+   "prompt_tokens": 49,
+   "finish_reason": "stop",
+   "nan": false,
+   "text_head": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text_len": 173,
+   "usage": {
+    "prompt_tokens": 49,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.08,
+    "prompt_tokens_per_sec": 612.5,
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 42,
+     "rejected_prediction_tokens": 9
+    },
+    "completion_time": 0.18,
+    "completion_tokens_per_sec": 335.56,
+    "total_tokens": 108,
+    "total_time": 0.26
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.1140416450016346,
+   "wall_s": 0.258840782000334,
+   "decode_s": 0.1447991369986994,
+   "tok_s": 400.5548734763589,
+   "delivered_tok_s": 227.93935153512194,
+   "completion_tokens": 59,
+   "prompt_tokens": 49,
+   "finish_reason": "stop",
+   "nan": false,
+   "text_head": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text_len": 173,
+   "usage": {
+    "prompt_tokens": 49,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.08,
+    "prompt_tokens_per_sec": 612.5,
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 42,
+     "rejected_prediction_tokens": 9
+    },
+    "completion_time": 0.17,
+    "completion_tokens_per_sec": 337.98,
+    "total_tokens": 108,
+    "total_time": 0.26
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.11409223100054078,
+   "wall_s": 0.2589828910004144,
+   "decode_s": 0.1448906599998736,
+   "tok_s": 400.3018552061989,
+   "delivered_tok_s": 227.81427673500485,
+   "completion_tokens": 59,
+   "prompt_tokens": 49,
+   "finish_reason": "stop",
+   "nan": false,
+   "text_head": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text_len": 173,
+   "usage": {
+    "prompt_tokens": 49,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.08,
+    "prompt_tokens_per_sec": 612.5,
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 42,
+     "rejected_prediction_tokens": 9
+    },
+    "completion_time": 0.17,
+    "completion_tokens_per_sec": 337.96,
+    "total_tokens": 108,
+    "total_time": 0.26
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "http": 200,
+   "ttft_s": 0.11507005400017079,
+   "wall_s": 0.2601165470005071,
+   "decode_s": 0.14504649300033634,
+   "tok_s": 399.8717845585243,
+   "delivered_tok_s": 226.82140248419094,
+   "completion_tokens": 59,
+   "prompt_tokens": 49,
+   "finish_reason": "stop",
+   "nan": false,
+   "text_head": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text": "```python\ndef clamp_range(values: list[int]) -> list[int]:\n    \"\"\"Clamp each integer in the list to the range [0, 50].\"\"\"\n    return [max(0, min(50, v)) for v in values]\n```",
+   "text_len": 173,
+   "usage": {
+    "prompt_tokens": 49,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "prompt_time": 0.08,
+    "prompt_tokens_per_sec": 612.5,
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+     "accepted_prediction_tokens": 42,
+     "rejected_prediction_tokens": 9
+    },
+    "completion_time": 0.17,
+    "completion_tokens_per_sec": 337.63,
+    "total_tokens": 108,
+    "total_time": 0.26
+   },
+   "spec": {
+    "drafts": 0,
+    "draft_tokens": 0,
+    "accepted": 0,
+    "accept_ratio": null,
+    "accepted_per_step": null,
+    "mean_draft_tokens_per_step": null,
+    "pos": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "ts": 1794826040.29225,
+ "prompt": "coding-clamp-range",
+ "thinking": false,
+ "temperature": 0,
+ "concurrency": 1,
+ "note": "decode_ms_per_draft_step is a serving-cycle ratio, not a kernel timing",
+ "warmup": {
+  "tok_s": 424.10018526447186,
+  "ttft_s": 0.12064556399855064,
+  "completion_tokens": 32
+ },
+ "tok_s_median": 399.8717845585243,
+ "tok_s_min": 397.0112608936248,
+ "tok_s_max": 400.5548734763589,
+ "ttft_median_s": 0.11453913200057286,
+ "completion_tokens_median": 59.0,
+ "accept_ratio_median": null,
+ "accepted_per_step_median": null,
+ "mean_draft_tokens_per_step_median": null,
+ "aggregate_tok_s_median": null,
+ "decode_ms_per_draft_step_median": null,
+ "any_nan": false,
+ "health_code_after": 200,
+ "short_after": {
+  "http": 200,
+  "ttft_s": 0.10830734500086692,
+  "wall_s": 0.10859123999944131,
+  "decode_s": 0.0002838949985743966,
+  "tok_s": 24657.003593409918,
+  "delivered_tok_s": 73.67076755032136,
+  "completion_tokens": 8,
+  "prompt_tokens": 39,
+  "finish_reason": "length",
+  "nan": false,
+  "text_head": "# How a Hash Map Works: A",
+  "text": "# How a Hash Map Works: A",
+  "text_len": 25,
+  "usage": {
+   "prompt_tokens": 39,
+   "prompt_tokens_details": {
+    "cached_tokens": 0
+   },
+   "prompt_time": 0.07,
+   "prompt_tokens_per_sec": 557.14,
+   "completion_tokens": 8,
+   "completion_tokens_details": {
+    "accepted_prediction_tokens": 5,
+    "rejected_prediction_tokens": 4
+   },
+   "completion_time": 0.03,
+   "completion_tokens_per_sec": 262.9,
+   "total_tokens": 47,
+   "total_time": 0.1
+  }
+ }
+}

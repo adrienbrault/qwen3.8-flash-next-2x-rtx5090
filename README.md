@@ -1,6 +1,6 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card: served configuration, decode, prefill, KV pool and power, 2026-10-23](docs/img/recipe-card-8249bc22.png)
+![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-0c983caf.png)
 
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal`.
 
@@ -12,19 +12,20 @@ The serving configuration supports concurrent coding-agent sessions with growing
 - **Drafting**: the checkpoint's MTP head, depth three through four jobs and depth two at five to eight; prompt lookup enabled at actual batch one after probation.
 - **Interface**: vision, separate reasoning and `qwen3_coder` tool parsing configured by [`scripts/launch-flashnext.sh`][launcher].
 
-Measurements are dated 2026-10-23 and linked to their published records in [the served 2.68 write-up][p268]. The experiment index is [`bench/RESULTS.md`][results].
+Measurements are dated 2026-10-23, except decode by content and tool-eval-bench (2026-11-16), and linked to their published records in [the served 2.68 write-up][p268]. The experiment index is [`bench/RESULTS.md`][results].
 
 ## Numbers
 
-Measured 2026-10-23 on `tabbyapi:tune268-r2`, the 2.68 bpw self-calibrated checkpoint, pool 819,200 and all 50 served selectors: [run `20261023T000904Z`][p268-a] supplies decode, prefill and depth; [run `20261023T005148Z`][p268-d] supplies standard serving. `fn_bench` records greedy code/prose bursts of 1,024 forced tokens at one to eight streams; `vllm bench serve` records closed-loop ShareGPT and Spec-Bench traffic. Decode rate excludes time to the first token; decode aggregate is the mean round sum of concurrent request rates, and standard aggregate is output tokens over wall time ([method][p268]).
+Measured 2026-10-23 on `tabbyapi:tune268-r2`, the 2.68 bpw self-calibrated checkpoint, pool 819,200 and all 50 served selectors: [run `20261023T000904Z`][p268-a] supplies decode, prefill and depth; [run `20261023T005148Z`][p268-d] supplies standard serving; [run `20261116T102550Z`][dk-run] on the served image `tabbyapi:tune268-r2-pf2lock-r3` supplies decode by content with thinking off and the code-file rewrite rate. `fn_bench` records greedy code/prose bursts of 1,024 forced tokens at one to eight streams with thinking on, the served default; `vllm bench serve` records closed-loop ShareGPT and Spec-Bench traffic. Decode rate excludes time to the first token; decode aggregate is the mean round sum of concurrent request rates, and standard aggregate is output tokens over wall time ([method][p268]).
 
 ![Served 2.68 decode alone and standard serving, aggregate and per stream](docs/img/std-bench.svg)
 
-Solid lines show decode alone on code and prose; dashed lines show ShareGPT and Spec-Bench with new requests' prefill interleaved. The [decode-only figure](docs/img/decode-scaling.svg) uses the same decode records.
+Solid lines show decode alone with thinking on. Most of each request's 1,024 forced tokens are thinking: a recorded pair of the curve's requests streamed 290 thinking and 73 answer frames for the code prompt and 234 and 136 for the prose prompt, and both answers restate the prompt ([record][dk-split]). The two lines therefore decode mostly the same kind of text. Dashed lines show ShareGPT and Spec-Bench with new requests' prefill interleaved, also with thinking on. The left panel's dashed lines are output tokens over wall clock; on the right panel every line is output tokens after the first over decode time. The [decode-only figure](docs/img/decode-scaling.svg) uses the same decode records.
 
-- At one stream, code / prose decode is 248.7 / 251.4 t/s. At eight streams, code / prose decode aggregate is 795 / 786 t/s, with median per-stream rates 98.8 / 98.2 t/s; each request forces 1,024 greedy tokens on a 118 / 106-token prompt ([`20261023T000904Z`][p268-a]).
-- At eight streams, ShareGPT / Spec-Bench output is 445.9 / 492.7 tok/s over wall time, with per-stream 1000 / TPOT p50 of 66 / 69 t/s; output lengths follow the ShareGPT references or force 256 tokens for Spec-Bench ([`20261023T005148Z`][p268-d]).
-- Decode-burst TTFT medians are 0.163 / 0.155 s at one stream and 0.919 / 0.910 s at eight (code / prose, greedy, 1,024 forced tokens; [`20261023T000904Z`][p268-a]).
+- With thinking on, at one stream, the code / prose prompt decodes at 248.7 / 251.4 t/s, mostly thinking text. At eight streams, code / prose decode aggregate is 795 / 786 t/s, with median per-stream rates 98.8 / 98.2 t/s; each request forces 1,024 greedy tokens on a 118 / 106-token prompt ([`20261023T000904Z`][p268-a]).
+- At eight streams, ShareGPT / Spec-Bench output is 445.9 / 492.7 tok/s over wall time, with per-stream decode of 64.0 / 69.6 t/s; output lengths follow the ShareGPT references or force 256 tokens for Spec-Bench ([`20261023T005148Z`][p268-d]).
+- With thinking off, one-stream decode depends on the content: 238.9 t/s on MT-Bench writing, 311.3 on MBPP code, 334.0 on GSM8K maths and 282.4 / 282.5 over all 560 Spec-Bench and MBPP prompts (passes A / B), natural output lengths, step-based ([figure](docs/img/decode-by-content.svg)). Code-file rewrites, which copy their context, decode at 383.4 t/s (R828's suite, 2,048 forced tokens; [`20261116T102550Z`][dk-run]).
+- Decode-burst TTFT medians are 0.163 / 0.155 s at one stream and 0.919 / 0.910 s at eight (code / prose prompt, thinking on, greedy, 1,024 forced tokens; [`20261023T000904Z`][p268-a]).
 
 ![Served 2.68 cold prefill and one-stream decode at depth](docs/img/prefill.svg)
 
@@ -37,12 +38,12 @@ Cold prefill averages 12,440 prompt tokens/s at 199,977 prompt tokens (16.076 s 
 | free VRAM after boot warm-up, GPUs 0 / 1 | both decode boots: launcher 1,213 / 815 MiB; later NVML 1,212 / 814 MiB | [`20261023T000904Z`, `boots.tsv`][p268-a] |
 | long-context substring retrieval | 5/5 at 105,680 and 5/5 at 193,464 actual prompt tokens; five positions per length, all `length` finishes, hits in combined reasoning/visible text | [`20261023T031345Z`, needle outcomes and summary][p268-e] |
 | GSM8K five-shot, n=500, no stop strings, c8, T=0, max 8,192 | flexible extraction 0.982; strict 0.976 | [`20261023T031345Z`, GSM outcomes and summary][p268-e] |
-| [tool-eval-bench][tool-eval] 2.1.0, 69 × 4, parallel 8, T=.6/top_p=.95/top_k=20 | final trial 88; trials 88/87/89/88; CLI mean 88, sample SD 0.8 | [`20261023T031345Z`, tool outcomes and summary][p268-e] |
+| [tool-eval-bench][tool-eval] 3.0.0, 69 × 4, parallel 8, T=.6/top_p=.95/top_k=20, 2026-11-16 | mean 93.8, SD 1.0, 95 % interval 93.0–94.5; 129.5 of 138 points | [`20261116T093909Z`][te3] |
 | boot to serving, existing tune cache | 18.269 / 18.319 s, launcher invocation through ready/warm-up and model check | [`20261023T000904Z`, both decode boots][p268-a] |
 
 ### Conditions
 
-The decode curve has two boots, one unrecorded warm-up and three measured rounds per shape, 432 requests, distinct stream suffixes and 118 / 106-token code / prose prompts. Prefill has three salted prompts per target through 240k; depth has two requests per shape at one stream. The standard matrix has two replication passes, a fresh boot per cell and 7,040 measured requests at one, two, four and eight concurrent requests. All units use the served boot warm-up, NVMe off, stock 600 / 575 W power limits, core offset zero and memory offset +4500 MHz, with independent per-boot copies of the existing tune cache ([method and boot readbacks][p268]).
+The decode curve has two boots, one unrecorded warm-up and three measured rounds per shape, 432 requests, distinct stream suffixes and 118 / 106-token code / prose prompts. Prefill has three salted prompts per target through 240k; depth has two requests per shape at one stream. The standard matrix has two replication passes, a fresh boot per cell and 7,040 measured requests at one, two, four and eight concurrent requests. The content run has two fresh boots, each with 560 thinking-off requests at one and at four streams, the three MiaAI-Lab prompts, R828's 12 rewrites and a thinking-on control that reads within 1.3 % of the decode curve. All units use the served boot warm-up, NVMe off, stock 600 / 575 W power limits, core offset zero and memory offset +4500 MHz, with independent per-boot copies of the existing tune cache ([method and boot readbacks][p268]).
 
 ## Served configuration
 
@@ -126,7 +127,11 @@ Cold prefill uses three salted prompts at each of five targets, ignores the cali
 | prose | 99,878 | 268.530 | 2.93414 | 10.91797 |
 | prose | 199,915 | 379.975 | 3.94605 | 10.38054 |
 
-Figures are drawn by [`bench/plot.py`](bench/plot.py), with explicit run paths and missing-input errors. Run `uv run bench/plot.py` to regenerate `decode-scaling.svg`, `std-bench.svg` and `prefill.svg`.
+Figures are drawn by [`bench/plot.py`](bench/plot.py), with explicit run paths and missing-input errors. Run `uv run bench/plot.py` to regenerate `decode-scaling.svg`, `std-bench.svg`, `prefill.svg` and `decode-by-content.svg`.
+
+**Decode by content, thinking off** ([write-up][dk-md], [records][dk-run]): `vllm bench serve` sends Spec-Bench's 480 prompts and 80 MBPP prompts (test split, task 11 to 90) with `chat_template_kwargs.enable_thinking=false`, temperature 0 and a 1,024-token cap without `min_tokens`, at one and at four streams, on two fresh boots. Each request is checked for zero thinking frames. The rate is step-based: tokens per decode step from the server's per-request counters, divided by the mean interval between streamed frames, the pass mean. The client formula `(output_tokens - 1) / (latency - TTFT)` overstates answers of a few decode steps, because the last step's tokens arrive in two frames 0.1 ms apart: by 43 % on 26-token translations and 10–15 % on MBPP and extraction answers, by 0–3 % above 150 tokens. MBPP stands in for a code-generation set. The MT-Bench categories have 10 prompts each and the others 80. MiaAI-Lab's `bench_decode.py` prompts are reported with their step counts in the write-up.
+
+![Decode by content with thinking off, one and four streams](docs/img/decode-by-content.svg)
 
 ## Standard benchmark (`vllm bench serve`)
 
@@ -134,7 +139,7 @@ Figures are drawn by [`bench/plot.py`](bench/plot.py), with explicit run paths a
 
 Each ShareGPT cell uses the same 400 conversations at seed 7310 and forces the reference output lengths, mean 210.3 tokens; each Spec-Bench cell uses all 480 prompts across 13 categories and forces 256 output tokens. Mean input lengths are 272.255 / 321.952 tokens and maxima 1,070 / 1,540 (ShareGPT / Spec-Bench). Thinking uses the template default and sampling is greedy. All measured requests finish at length, with no failures or cached prompt tokens; each cell outputs 84,120 / 122,880 tokens.
 
-Output tok/s is all completion tokens over the cell's wall time, including prefill and turnover. Per-stream t/s is the mean of each pass's `1000/p50_tpot_ms`, where TPOT is `(E2E - TTFT)/(output_tokens - 1)` per request. Means pool A/B equally; p99 columns show their range. A/B spread is `abs(A-B)/mean(A,B)`; the maximum is 0.47% at Spec-Bench c2, within the 3% publication gate. No cell is replaced by a repeat.
+Output tok/s is all completion tokens over the cell's wall time, including prefill and turnover. The figure's per-stream dashed lines are token-weighted, `sum(output_tokens - 1) / sum(latency - TTFT)`: ShareGPT 253.8 / 173.3 / 109.3 / 64.0 and Spec-Bench 272.0 / 190.8 / 121.4 / 69.6 t/s at one / two / four / eight streams. The table's per-stream t/s is the mean of each pass's `1000/p50_tpot_ms`, where TPOT is `(E2E - TTFT)/(output_tokens - 1)` per request. Means pool A/B equally; p99 columns show their range. A/B spread is `abs(A-B)/mean(A,B)`; the maximum is 0.47% at Spec-Bench c2, within the 3% publication gate. No cell is replaced by a repeat.
 
 **ShareGPT V3**
 
@@ -398,6 +403,10 @@ Benchmarks and harnesses: [tool-eval-bench][tool-eval] · [mini-SWE-agent][mini-
 [r828]: bench/results/r827-r828-prompt-lookup.md
 
 [p268]: bench/results/publish268-served-268.md
+[dk-run]: bench/results/20261116T102550Z-decodekinds-r1/
+[dk-md]: bench/results/decodekinds-r1.md
+[dk-split]: bench/results/20261116T102550Z-decodekinds-r1/thinking-split.jsonl
+[te3]: bench/results/tooleval-bench-3.md
 [p268-a]: bench/results/20261023T000904Z-publish268-a/
 [p268-b]: bench/results/20261023T000904Z-publish268-b/
 [p268-c]: bench/results/20261023T000904Z-publish268-c/

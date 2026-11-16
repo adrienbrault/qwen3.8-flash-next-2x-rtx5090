@@ -2,6 +2,11 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-11-16
+
+- [Decode depends on content](results/decodekinds-r1.md) — `tune268-r2-pf2lock-r3`, thinking off, step-based: 238.9 to 341.3 t/s per stream at one stream across 14 categories, 282.4 / 282.5 over 560 prompts; code-file rewrites 383.4; the client formula overstates short answers (+43 % at 26 tokens); thinking-on control within 1.3 % of 2026-10-23.
+- [tool-eval-bench 3.0.0](results/tooleval-bench-3.md) — `tune268-r2-pf2lock-r3`, 69 × 4: mean 93.8, SD 1.0.
+
 ## 2026-10-28
 
 - [N-gram prefetch staging-set race fix](results/pf2lock-r3-race-fix.md) — `tune268-r2-pf2lock-r3`, served since 2026-10-28; CPU stress 0 / 5,000 failures per scenario after the patch, two A/B screens with greedy output 24/24 identical and decode and replay within noise.

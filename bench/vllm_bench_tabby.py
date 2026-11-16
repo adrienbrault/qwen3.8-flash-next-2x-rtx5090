@@ -91,6 +91,11 @@ class StreamState:
         self.text = ""
         self.usage = None
         self.frames = 0
+        # decodekinds-r1: thinking-off validity evidence (never changes vLLM's metrics or payload).
+        self.reasoning_frames = 0
+        self.reasoning_chars = 0
+        # publish268: evidence only; never changes vLLM's metrics or payload.
+        self.finish_reason = None
 
     def feed(self, payload: str, ts: float) -> None:
         if payload == "[DONE]":
@@ -101,8 +106,14 @@ class StreamState:
         choices = data.get("choices") or []
         if not choices:
             return
+        if choices[0].get("finish_reason"):
+            self.finish_reason = choices[0]["finish_reason"]
         d = choices[0].get("delta") or {}
-        piece = (d.get("reasoning_content") or d.get("reasoning") or "") + (d.get("content") or "")
+        rpiece = d.get("reasoning_content") or d.get("reasoning") or ""
+        if rpiece:
+            self.reasoning_frames += 1
+            self.reasoning_chars += len(rpiece)
+        piece = rpiece + (d.get("content") or "")
         if not piece and not d.get("tool_calls"):
             return  # TabbyAPI's empty-delta finish frame and its usage frame: not tokens
         if not self.first:
@@ -179,6 +190,20 @@ def build_request_func(E):
             output.error = "".join(traceback.format_exception(*sys.exc_info()))
         if pbar:
             pbar.update(1)
+        audit = os.environ.get("TABBY_AUDIT_OUT")
+        if audit:
+            prompt = request_func_input.prompt
+            prompt = prompt if isinstance(prompt, str) else json.dumps(prompt, sort_keys=True)
+            rec = dict(prompt_sha=hashlib.sha256(prompt.encode()).hexdigest()[:16],
+                       requested_tokens=request_func_input.output_len, min_tokens=payload.get("min_tokens"),
+                       completion_tokens=(state.usage or {}).get("completion_tokens"),
+                       prompt_tokens=(state.usage or {}).get("prompt_tokens"),
+                       finish_reason=state.finish_reason, frames=state.frames, success=output.success,
+                       reasoning_frames=state.reasoning_frames, reasoning_chars=state.reasoning_chars,
+                       completion_details=(state.usage or {}).get("completion_tokens_details"))
+            # No await between open/write/close: writes serialize on the asyncio loop.
+            with open(audit, "a") as f:
+                f.write(json.dumps(rec) + "\n")
         return output
 
     return tabby_chat

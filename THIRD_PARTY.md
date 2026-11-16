@@ -111,12 +111,14 @@ Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of t
 | tool | origin | licence | use |
 |---|---|---|---|
 | lm-evaluation-harness (`lm_eval`, GSM8K 5-shot, n=200) | EleutherAI — https://github.com/EleutherAI/lm-evaluation-harness | MIT | quality gate |
-| tool-eval-bench v2.1.0 | **SeraphimSerapis** — https://github.com/SeraphimSerapis/tool-eval-bench | MIT | agentic tool-call gate (69 cases × 4) |
+| tool-eval-bench v2.1.0 and v3.0.0 | **SeraphimSerapis** — https://github.com/SeraphimSerapis/tool-eval-bench | MIT | agentic tool-call gate (69 cases × 4) |
 | mini-SWE-agent + SWE-bench Verified | SWE-agent / princeton-nlp — https://github.com/SWE-agent/mini-swe-agent | MIT (harness) / SWE-bench data licence | the SWE-bench measurements in `bench/results/r359-swebench.md` |
 | `vllm bench serve` (vLLM v0.30.0, image `vllm/vllm-openai:v0.30.0`) | vLLM project — https://github.com/vllm-project/vllm | Apache-2.0 | the standard serving benchmark in `bench/results/r731b-std-bench.md`; run unmodified except for the functions `bench/vllm_bench_tabby.py` replaces at import |
 | `bench/vllm_bench_tabby.py` | this repository; its `tabby_chat` is a modified copy of vLLM v0.30.0's `async_request_openai_chat_completions` (`vllm/benchmarks/lib/endpoint_request_func.py`), and its Spec-Bench reader re-implements `SpecBench.load_data` without pandas | Apache-2.0 for the parts derived from vLLM, MIT otherwise | makes `vllm bench serve` measure TabbyAPI correctly: usage read from any frame, CRLF-separated events, `min_tokens` for length forcing, Spec-Bench prompts templated once, a per-cell sample manifest |
 | ShareGPT V3 (`ShareGPT_V3_unfiltered_cleaned_split.json`) | anon8231489123 — https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered | Apache-2.0 (dataset card) | prompts and reference output lengths for the standard benchmark; not redistributed here |
 | Spec-Bench (`data/spec_bench/question.jsonl`) | **hemingkx** — https://github.com/hemingkx/Spec-Bench | Apache-2.0 | the 480 prompts of the standard benchmark; not redistributed here |
+| MBPP (test split, tasks 11 to 90) | **google-research-datasets** — https://huggingface.co/datasets/google-research-datasets/mbpp | CC-BY-4.0 | the 80 code-generation prompts of the decode-by-content run; not redistributed here (only prompt hashes) |
+| `tests/bench_decode.py` at `6278ecb` | **MiaAI-Lab** — https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks | AGPL-3.0 | the code / structured / prose decode protocol (thinking off, temperature 0, five requests capped at 400 tokens) run unmodified in the decode-by-content run; not copied here |
 | `bench/*.py` probes (`probe.py` = `fn_bench`, `needle.py`, `capabilities.py`, `summarize.py`, `multiprompt.py`, `agentic-edit.py`, `nostop_proxy.py`, `agent_replay.py`, `revisit.py`, `std_bench_summary.py`) | this repository | MIT | original |
 
 ## ExLlamaV3 1.6.4 candidate (2026-10-21)
