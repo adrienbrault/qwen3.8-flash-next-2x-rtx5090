@@ -1,6 +1,6 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-1738c6a1.png)
+![Recipe card: served configuration, decode by content, prefill, KV pool and power, 2026-10-23 and 2026-11-16](docs/img/recipe-card-356ef14b.png)
 
 Serving configuration, launcher, image recipe, kernel overlays, instruments and measurements for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards, served as `qwen3.8-flash-next-exl3-2.68bpw-selfcal`.
 
@@ -67,6 +67,7 @@ Read from the box on 2026-09-19. Every number in this README was measured on thi
 
 - Host: ASRock X870 Taichi Creator, AMD Ryzen 7 9800X3D, 64 GB DDR5-6000 (2 × 32 GB), Ubuntu 24.04.4 LTS, kernel 7.0.0-30-generic.
 - GPUs: two RTX 5090 32 GB (`sm_120`) on PCIe Gen5 x8/x8. Power limits are the cards' defaults, 600 W (ASUS, `cuda:0`) and 575 W (HP OEM, `cuda:1`). Memory clock offset +4500 MHz on both cards, core clock stock. A boot-time service applies them once per host boot, and since 2026-09-25 the launcher sets the memory offset before every engine boot and logs the readback. The offset had reset to 0 between 2026-09-03 and 2026-09-19 without a reboot, so the numbers measured from 2026-09-19 to 2026-09-25 02:22 UTC ran at the stock memory clock; +4500 is +14.3 % DRAM bandwidth and +1.7 to +1.8 % decode per stream at 1 stream ([R726][r726]).
+- GPU draw during decode, NVML, run `20261023T000904Z` unit a ([`power-summary.json`](bench/results/20261023T000904Z-publish268-a/power-summary.json)), medians of code and prose rounds: 244 + 237 W at one stream (1.93 J per token), 306 + 274 W at eight streams (0.74 J per token). The cards draw about half their limits: decode alternates between them (layer split), and each waits on memory more than compute.
 - Driver: NVIDIA 610.57.04 open kernel modules, CUDA 13.3 user-mode driver.
 - Storage: one KIOXIA KBG80ZNV2T04 2 TB NVMe (ext4) holds the checkpoint, including the n-gram table that decode reads rows from; the NVMe prefix tier is disabled by default. A sequential 16 MiB `O_DIRECT` read of a tier segment ran at 6.7 GB/s (2026-09-19).
 
