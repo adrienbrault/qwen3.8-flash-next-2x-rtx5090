@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["matplotlib>=3.9"]
 # ///
-"""Draw the current README figures exclusively from the headline-r1 public records.
+"""Draw the current README figures from headline-r1 and cold-prefill public records.
 
 uv run bench/plot.py
 Missing files, missing cells and numeric inconsistencies are fatal. Historical
@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from headline import load
+from prefill import load as load_prefill
 
 OUT = Path(__file__).resolve().parent.parent / 'docs/img'
 COLORS = {1: '#0969da', 4: '#8250df', 8: '#cf222e'}
@@ -78,7 +79,7 @@ def figure_decode_scaling(code):
          'Primary peak = 2K append · 400 forced tokens · thinking off · T=0 · shared context · canonical token counts')
 
 
-def figure_prefill(code):
+def figure_cached_code(code):
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.3))
     prefixes = [1024, 32768, 65536]
     # Discrete measured targets only; lines join those targets without new observations.
@@ -96,17 +97,38 @@ def figure_prefill(code):
         ax.set_ylim(bottom=0)
         ax.grid(axis='y', alpha=.2)
         ax.legend(fontsize=8, loc='center', bbox_to_anchor=(.5, .66), ncols=2) if ax is axes[0] else ax.legend(fontsize=8, loc='lower left', ncols=2)
-    save(fig, 'prefill.svg', 'Cached append and code at depth · 2026-11-16',
+    save(fig, 'cached-code.svg', 'Cached append and code at depth · 2026-11-16',
          '2K solid / 8K dashed append · c1/c4/c8 · shared context · T=0 · 400 forced tokens · thinking off · p99 in numeric matrix')
+
+
+def figure_prefill(cells):
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.3))
+    # Measured targets are categorical so neighbouring 200K/240K labels stay legible.
+    xs = list(range(len(cells)))
+    for ax, field, label in zip(axes, ('tps', 'ttft_s'), ('Cold prefill: prompt tokens / TTFT (tok/s)', 'Time to first token (s)')):
+        ys = [r[field] for r in cells]
+        ax.plot(xs, ys, '-o', color=COLORS[1])
+        for x, y in zip(xs, ys):
+            ax.annotate(f'{y:,.0f}' if field == 'tps' else f'{y:.2f}', (x, y),
+                        xytext=(0, 9), textcoords='offset points', ha='center', fontsize=8)
+        ax.set_xticks(xs, ['2K', '8K', '30K', '60K', '120K', '200K', '240K'], rotation=35)
+        ax.set_xlabel('Measured prompt target (actual token counts in table)')
+        ax.set_ylabel(label)
+        ax.set_ylim(0, max(ys) * 1.18)
+        ax.grid(axis='y', alpha=.2)
+    save(fig, 'prefill.svg', 'Cold prefill · 2026-11-16',
+         'names-fast r1, default name · prose · c1 · 3 salted prompts per target · 64 forced tokens · T=0 · template-default thinking')
 
 
 if __name__ == '__main__':
     real, code, rr, cc = load()
+    cold = load_prefill()
     figure_std_bench(rr)
     figure_decode_scaling(cc)
-    figure_prefill(cc)
+    figure_cached_code(cc)
+    figure_prefill(cold)
     for r in real['table']:
         print(r['tag'], {k: r[k] for k in ('output_tok_s', 'per_stream_tok_s', 'ttft_p50_ms', 'ttft_p99_ms', 'draft_acceptance')})
     for r in code['table']:
         print(r['tag'], r['window']['aggregate_tok_s'], r['window']['mean_per_stream_tok_s'], r['append_ttft_p50_ms'], r['append_ttft_p99_ms'])
-    print('wrote std-bench.svg, decode-scaling.svg, prefill.svg from validated headline-r1 records')
+    print('wrote std-bench.svg, decode-scaling.svg, cached-code.svg, prefill.svg from validated public records')

@@ -30,13 +30,13 @@ Spec-Bench frozen stratified subset, 120 IDs from 480, seed 7310, selector `head
 
 ### Subset/full ratios
 
-| streams | output | per stream | TTFT p50 | TTFT p99 | acceptance | τ | c1 prefill proxy |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 0.9825 | 0.9918 | 1.0137 | 1.0409 | 0.9826 | 0.9886 | 0.9953 |
-| 4 | 0.9970 | 0.9853 | 0.9846 | 1.1037 | 0.9979 | 0.9987 | — |
-| 8 | 0.9834 | 0.9794 | 1.0089 | 1.7753 | 0.9789 | 0.9893 | — |
+| streams | output | per stream | TTFT p50 | TTFT p99 | acceptance | τ |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.9825 | 0.9918 | 1.0137 | 1.0409 | 0.9826 | 0.9886 |
+| 4 | 0.9970 | 0.9853 | 0.9846 | 1.1037 | 0.9979 | 0.9987 |
+| 8 | 0.9834 | 0.9794 | 1.0089 | 1.7753 | 0.9789 | 0.9893 |
 
-Output is total completion tokens / wall time, and per stream is `1000 / TPOT p50`. TTFT is reported separately; the c1 prefill proxy is median per-request new prompt tokens / TTFT, including scheduling, encoding and first decode. The subset/full c8 p99 ratio is retained as observed; this single pass gives no estimate of A/B spread.
+Output is total completion tokens / wall time, and per stream is `1000 / TPOT p50`. TTFT p50/p99 is reported separately. Short prompts (median 128 tokens) are dominated by a roughly 0.11 s fixed per-request cost. The subset/full c8 p99 ratio is retained as observed; this single pass gives no estimate of A/B spread.
 
 ## Cached code
 
