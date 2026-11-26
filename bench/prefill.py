@@ -4,9 +4,9 @@ import json
 import statistics as st
 from pathlib import Path
 
-from headline import close, indexed
+from headline import DATA as HEADLINE_DATA, close, indexed
 
-DATA = Path(__file__).resolve().parent / 'results/2026-11-16-prefill-r1'
+DATA = Path(__file__).resolve().parent / 'results/2026-11-26-prefill-r2'
 TARGETS = (2000, 8000, 30000, 60000, 120000, 200000, 240000)
 
 
@@ -16,8 +16,8 @@ def load(root=DATA):
     summary = json.loads((root / 'analysis.json').read_text())
     receipt = json.loads((root / 'validation.json').read_text())
     provenance = json.loads((root / 'provenance.json').read_text())
-    served = json.loads((DATA.parent / '2026-11-16-headline-r1/served-config.json').read_text())
-    for key in ('image_id', 'model', 'pool'):
+    served = json.loads((HEADLINE_DATA / 'served-config.json').read_text())
+    for key in ('image_id', 'model', 'pool', 'launcher_sha256', 'window', 'split'):
         assert provenance[key] == served[key], f'cold-prefill served {key} differs'
     assert receipt['unit_status'] == 'VALIDATED' and receipt['exit_code'] == 0
     assert receipt['restored_model'] == served['model']

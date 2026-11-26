@@ -292,3 +292,20 @@ Rollback is [the archived tune268-r2 launcher](../scripts/launchers/launch-flash
 | 19:29:47–19:30:05 | pf2lock r3 (`da386167`) → `flashnext-names-fast-r1` (`679274ac`); add `EXL3_FLASHNEXT_FAST=1`, 50 → 51 selectors and exact `-fast` alias | T=1 code/prose c1/c4 screen +3.1 to +36.2 %, T=0.6 slower, default greedy identical; marginal KL 0.4974 versus null 0.4902 (+1.5 %), lower NLL, arithmetic gate not run. User accepted experimental opt-in. Fresh headlines measured after shipping | 819,200 | [screen and ship](../bench/results/headline-r1.md#experimental-alias-and-promotion-evidence), `20261116T192938Z-names-fast-ship`; [all headline records](../bench/results/2026-11-16-headline-r1/) |
 
 The alias screen and promotion values above are retained findings summaries; their request arrays are not included in this packet. The default name’s dated quality results carry forward under the output-identical change class. Rolling back the alias uses [the archived pf2lock r3 launcher](../scripts/launchers/launch-flashnext-pf2lock-r3.sh); the graft is a separate model-directory change.
+
+
+## 2026-11-20 · ExLlamaV3 v1.6.7 r2 promotion
+
+Promoted at 11:57 Paris. `tabbyapi:rebase167-r2` (`96ab0d09`) replaces `tabbyapi:flashnext-names-fast-r1` (`679274ac`). The engine uses FP16 MoE routing and 16-row paged-attention decode tiles as code defaults. The launcher pins layer-split prefill before `model.language_model.layers.25`, enables fast RoPE sin/cos, and uses a separate tuning cache. The full selector list and build pins are recorded in [CONFIG.md](CONFIG.md).
+
+The 2026-11-19 comparison screen used separate boots within one session, source `2026-11-19-141851-flashnext-rebase167-screen-perf-1364181`. Greedy code c1 rose from 252.1 to 257.9 tok/s (+2.3%), code c4 aggregate from 602.4 to 622.6 tok/s (+3.4%), and c1 code TTFT fell from 0.16 to 0.12 s (−27% on unrounded values). The six-agent replay span went from 45.5 to 47.0 s (+3.4%, within the 3.7% screen threshold). Greedy thinking-prose c1 went from 254.1 to 240.6 tok/s (−5.3%) on the screen's fixed prompt.
+
+The r2 promotion retained upstream's corrected top-p rule, which includes the token that brings cumulative mass to p. The 2026-11-19 sampled c1 screen at T=0.6 measured 238.2 to 226.8 tok/s for code (−4.8%) and 229.9 to 225.0 tok/s for prose (−2.1%). A legacy-cutoff attribution arm recovered 68% of the sampled code acceptance gap. The sampled cost was accepted with the upstream rule. The later 1K cached-code headline at T=0 is a separate test.
+
+## 2026-11-26 · Served recipe measurements and effort aliases
+
+The [2026-11-16 headline boot](../bench/results/headline-r1.md) on names-fast r1 recorded 227.1 / 433.3 / 509.1 tok/s on the 120-prompt Spec-Bench subset at c1/c4/c8. The [2026-11-26 headline boot](../bench/results/headline-r2.md) on rebase167-r2 recorded 234.2 / 466.9 / 562.4 tok/s. The 1K cached + 2K append greedy-code c1 cell recorded 358.4 and 337.2 tok/s on those boots, about 6% lower. [Cold prefill on 2026-11-16](../bench/results/prefill-r1.md) peaked at 12,537 tok/s at 120,133 prompt tokens. [Cold prefill on 2026-11-26](../bench/results/prefill-r2.md) peaked at 13,146 tok/s at 60,079 prompt tokens, with higher rates at all seven matched targets.
+
+The served template maps `minimal` to `low` and `high` or `max` to `xhigh`. `none` turns thinking off. The installer's render check preserves byte-identical prompts for the previously accepted levels and verifies each alias against its target level, both with and without tools. [Alias installer](../scripts/template-effort-aliases.sh)
+
+Every tool-eval row before 2026-11-16 uses tool-eval-bench 2.1.0, which drops prior assistant reasoning. On one 2026-11-26 boot, stock 2.1.0 scored 89.0 ± 2.3, tool-turn echo 87.8 ± 1.5 (434/434), and all-turn echo 88.8 ± 1.0 (432/432 tool turns and 328/328 other turns). The change to 3.0.0 uses a revised scorer. [Same-boot results](../bench/results/tooleval-r2.md)

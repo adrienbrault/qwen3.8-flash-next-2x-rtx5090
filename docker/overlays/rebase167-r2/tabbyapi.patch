@@ -1,0 +1,4216 @@
+diff --git a/TABBY.txt b/TABBY.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..2580af334e89a90fdddc46f55d49f5999c3dc5ce
+--- /dev/null
++++ b/TABBY.txt
+@@ -0,0 +1,2 @@
++564f8fb Sampling: Fix sampler step order, fix broken output when using adaptive-P with temp 0
++rebase165: served tune268-r2 TabbyAPI (53da791 + flan tree) merged into 564f8fb
+diff --git a/backends/exllamav3/model.py b/backends/exllamav3/model.py
+index 63972f9be359a46549cbd0559526ca72696c25da..227f8b25e7c6a30a30d64f3bc51e6af43d27a62a 100644
+--- a/backends/exllamav3/model.py
++++ b/backends/exllamav3/model.py
+@@ -6,0 +7 @@ import re
++import threading
+@@ -11,0 +13 @@ from itertools import zip_longest
++from inspect import signature
+@@ -40,0 +43 @@ from common.concurrency import iterate_in_threadpool
++from common.config_models import DraftModelConfig
+@@ -64,0 +68 @@ from common.templating import PromptTemplate, find_prompt_template
++from common.tokenize_offloop import encode_once_enabled, run_tokenize
+@@ -86,0 +91,6 @@ ENCODE_CACHE_ENTRIES = 20
++# flan tokenize-offloop: long encodes run on the tokenize worker thread
++# (common/tokenize_offloop.py) while short ones and /v1/token/encode run on the
++# event loop thread, so the encode cache is touched from two threads. The lock
++# covers the cache bookkeeping only, never an encode
++_ENCODE_CACHE_LOCK = threading.Lock()
++
+@@ -292,0 +303 @@ class ExllamaV3Container:
++    draft_num_tokens_by_batch: Optional[List[tuple[int, int]]] = None
+@@ -477,0 +489,9 @@ class ExllamaV3Container:
++        self.draft_num_tokens_by_batch = None
++        if draft_args.get("draft_num_tokens_by_batch") is not None:
++            # Inline/load overrides need the same validation as config.yml, before cache allocation
++            draft_policy = DraftModelConfig.model_validate(draft_args)
++            self.draft_num_tokens_by_batch = draft_policy.draft_num_tokens_by_batch
++            # Older Generator versions accept **kwargs and would silently ignore this capability
++            if "num_draft_tokens_by_batch" not in signature(Generator.__init__).parameters:
++                raise RuntimeError("Batch-indexed drafting requires the matching ExLlamaV3 patch")
++
+@@ -683 +703,8 @@ class ExllamaV3Container:
+-        xlogger.info(f"Recurrent state storage: {'fp32' if self.recurrent_state_fp32 else 'fp16'}")
++        xlogger.info(
++            "Recurrent state storage: "
++            + (
++                "fp32"
++                if self.recurrent_state_fp32
++                else "engine default (fp16, or bf16 with EXL3_GDN_STATE_BF16=1)"
++            )
++        )
+@@ -978 +1004,0 @@ class ExllamaV3Container:
+-            "recurrent_dtype": torch.float if self.recurrent_state_fp32 else torch.half,
+@@ -979,0 +1006,13 @@ class ExllamaV3Container:
++        # rebase165 (flan): recurrent_dtype is passed only when fp32 is asked
++        # for. Otherwise the engine picks its default storage (v1.6.5: fp16;
++        # the served EXL3_GDN_STATE_BF16=1 path: bf16), so Tabby never forces
++        # fp16 over an engine-side storage selector
++        if self.recurrent_state_fp32:
++            batch_draft_args["recurrent_dtype"] = torch.float
++
++        if self.draft_num_tokens_by_batch is not None:
++            # Recurrent rejection can rewind any policy depth, regardless of the first batch size
++            batch_draft_args["max_history"] = max(
++                batch_draft_args["max_history"],
++                *(depth for _, depth in self.draft_num_tokens_by_batch),
++            )
+@@ -1296,0 +1336,3 @@ class ExllamaV3Container:
++            # Opt-in upstream sparse draft head (off by default: the engine default applies)
++
++
+@@ -1308,0 +1351 @@ class ExllamaV3Container:
++                num_draft_tokens_by_batch=self.draft_num_tokens_by_batch,
+@@ -1435,0 +1479 @@ class ExllamaV3Container:
++        trace_path: Optional[str] = None,
+@@ -1443,0 +1488,5 @@ class ExllamaV3Container:
++
++        rebase165 (flan): the cache is thread-safe (the tokenize worker thread
++        calls this for long prompts), TABBY_ENCODE_ONCE=0 bypasses it (every
++        call encodes, the served "encode twice" arm), and each real encode of a
++        traced call site is reported to exllamav3.cache_trace (EXL3_CACHE_TRACE).
+@@ -1454,5 +1502,0 @@ class ExllamaV3Container:
+-        # Containers are also built without __init__ in places
+-        cache = getattr(self, "encode_cache", None)
+-        if cache is None:
+-            cache = self.encode_cache = OrderedDict()
+-
+@@ -1460 +1504 @@ class ExllamaV3Container:
+-        ids = cache.get(key)
++        ids = self.cached_prompt_ids(key)
+@@ -1462 +1505,0 @@ class ExllamaV3Container:
+-            cache.move_to_end(key)
+@@ -1471,3 +1514,12 @@ class ExllamaV3Container:
+-        cache[key] = ids
+-        while len(cache) > ENCODE_CACHE_ENTRIES:
+-            cache.popitem(last=False)
++        if trace_path is not None:
++            from exllamav3 import cache_trace as r823_trace
++
++            r823_trace.encoded(ids, path=trace_path)
++
++        if encode_once_enabled():
++            with _ENCODE_CACHE_LOCK:
++                cache = self._encode_cache()
++                cache[key] = ids
++                cache.move_to_end(key)
++                while len(cache) > ENCODE_CACHE_ENTRIES:
++                    cache.popitem(last=False)
+@@ -1475,0 +1528,46 @@ class ExllamaV3Container:
++    def _encode_cache(self) -> OrderedDict:
++        # Containers are also built without __init__ in places
++        cache = getattr(self, "encode_cache", None)
++        if cache is None:
++            cache = self.encode_cache = OrderedDict()
++        return cache
++
++    def cached_prompt_ids(self, key: tuple) -> Optional[torch.Tensor]:
++        """
++        The cached ids for key = (text, add_bos, encode_special_tokens), or None.
++        Always None with TABBY_ENCODE_ONCE=0. A lookup only: never encodes.
++        """
++
++        if not encode_once_enabled():
++            return None
++        with _ENCODE_CACHE_LOCK:
++            cache = self._encode_cache()
++            ids = cache.get(key)
++            if ids is not None:
++                cache.move_to_end(key)
++            return ids
++
++    async def encode_prompt_offloop(
++        self, prompt: str, add_bos: bool, embeddings: Optional[list], trace_path: str
++    ) -> torch.Tensor:
++        """
++        flan tokenize-offloop r2 on top of the encode cache: a cache hit is
++        returned inline (a hop would only cost the request TTFT); a miss is
++        encoded on the tokenize worker thread when the prompt is long
++        (EXL3_TOKENIZE_OFFLOOP, EXL3_TOKENIZE_OFFLOOP_MIN_CHARS), inline otherwise.
++        """
++
++        if not embeddings:
++            ids = self.cached_prompt_ids((prompt, bool(add_bos), True))
++            if ids is not None:
++                return ids
++        return await run_tokenize(
++            len(prompt),
++            self.encode_prompt,
++            prompt,
++            add_bos=add_bos,
++            encode_special_tokens=True,
++            embeddings=embeddings,
++            trace_path=trace_path,
++        )
++
+@@ -1550,0 +1649,3 @@ class ExllamaV3Container:
++        # (upstream encode cache, dfd3848; replaces the served TABBY_ENCODE_ONCE
++        # ids-on-the-request store). The router runs this on the tokenize worker
++        # thread for a long prompt (flan tokenize-offloop r2)
+@@ -1555,0 +1657 @@ class ExllamaV3Container:
++            trace_path="validate_context_length",
+@@ -2150 +2252,3 @@ class ExllamaV3Container:
+-            finish_reason = "repetition"
++            job = result.get("job")
++            served_window = isinstance(getattr(job, "stop_on_loop", None), tuple)
++            finish_reason = "stop" if served_window else "repetition"
+@@ -2208,0 +2313,7 @@ class ExllamaV3Container:
++        # R828 exact per-logical-request counters, including physical requeues.
++        # .get: a diagnostic counter the engine did not publish (e.g. a job without adaptive
++        # lookup state) shows as null in the R828_COUNTER line instead of failing the request
++        from exllamav3.generator.prompt_lookup import COUNTERS
++        finish_chunk.update({key: result.get(key) for key in COUNTERS})
++        finish_chunk["r828_generate_time_s"] = gen_time  # Preserve precision without changing old fields.
++
+@@ -2340,0 +2452,7 @@ class ExllamaV3Container:
++        from exllamav3.generator.name_policy import NATIVE, resolve
++        from fastapi import HTTPException
++        try:
++            name_policy = resolve(getattr(params, "model", None), self.model_dir.name)
++        except ValueError as exc:
++            raise HTTPException(400, str(exc)) from exc
++        policy_kwargs = {"name_policy": name_policy} if name_policy is not NATIVE else {}
+@@ -2391,0 +2510,3 @@ class ExllamaV3Container:
++        # The ids the context-length check already encoded (encode cache), else an encode
++        # (flan tokenize-offloop r2: a long prompt's on the tokenize worker thread, while the
++        # event loop keeps iterating)
+@@ -2393,5 +2514,2 @@ class ExllamaV3Container:
+-            self.encode_prompt(
+-                prompt,
+-                add_bos=add_bos_token,
+-                encode_special_tokens=True,
+-                embeddings=mm_embeddings_content,
++            await self.encode_prompt_offloop(
++                prompt, add_bos_token, mm_embeddings_content, trace_path="generate_gen"
+@@ -2543,0 +2662,2 @@ class ExllamaV3Container:
++        from exllamav3 import cache_trace as r823_trace
++        trace_record = r823_trace.render(request_id, input_ids[0], self.tokenizer, params, sampler=sampler)
+@@ -2564 +2684 @@ class ExllamaV3Container:
+-                stop_on_loop=bool(params.loop_detect),
++                stop_on_loop=params.get_stop_on_loop(),
+@@ -2569,0 +2690 @@ class ExllamaV3Container:
++                **policy_kwargs,
+@@ -2580,0 +2702 @@ class ExllamaV3Container:
++        r823_trace.attach(job.job, trace_record)
+@@ -2717,0 +2840 @@ class ExllamaV3Container:
++                    r823_trace.finished(job.job, result, finish_chunk)
+@@ -2724 +2847 @@ class ExllamaV3Container:
+-                    if finish_chunk["finish_reason"] == "repetition" and params.loop_detect_error:
++                    if finish_chunk.get("eos_reason") == "loop_detected" and params.loop_detect_error:
+diff --git a/common/config_models.py b/common/config_models.py
+index e7b0b2cce210048f8cd1c07e118381e27a970192..20263ab51fc6f7d2deb1423083ce98e5f868869e 100644
+--- a/common/config_models.py
++++ b/common/config_models.py
+@@ -7,0 +8 @@ from pydantic import (
++    model_validator,
+@@ -9 +10 @@ from pydantic import (
+-from typing import List, Literal, Optional, Union
++from typing import Annotated, List, Literal, Optional, Tuple, Union
+@@ -99 +100 @@ class NetworkConfig(BaseConfigModel):
+-        False,
++        None,
+@@ -101 +102 @@ class NetworkConfig(BaseConfigModel):
+-            "Enable the Prometheus-compatible /metrics endpoint (default: False).\n"
++            "Unset keeps the served /metrics exporter. False disables the endpoint. True enables upstream metrics.\n"
+@@ -117 +118 @@ class NetworkConfig(BaseConfigModel):
+-        True,
++        False,
+@@ -120 +121 @@ class NetworkConfig(BaseConfigModel):
+-            "/ui/status (default: True). Static pages for testing models and\n"
++            "/ui/status (default: False). Static pages for testing models and\n"
+@@ -648,0 +650,7 @@ class ModelConfig(BaseConfigModel):
++# Strict positive integers prevent booleans, floats and numeric strings from changing policy meaning
++DraftDepthRule = Tuple[
++    Annotated[int, Field(strict=True, gt=0)],
++    Annotated[int, Field(strict=True, gt=0)],
++]
++
++
+@@ -712,0 +721,12 @@ class DraftModelConfig(BaseConfigModel):
++    draft_num_tokens_by_batch: Optional[List[DraftDepthRule]] = Field(
++        None,
++        min_length=1,
++        description=(
++            "Optional ascending [max_batch_size, depth] pairs for exllamav3.\n"
++            "The first inclusive limit covering decode-ready jobs selects the draft ceiling.\n"
++            "Above all limits, draft_num_tokens (or the drafter default) is used.\n"
++            "Limits and depths must be positive integers; only single-sequence jobs are supported.\n"
++            "Confidence and n-gram matching may shorten the selected ceiling.\n"
++            "The largest mapped or default depth determines buffer and cache-history capacity."
++        ),
++    )
+@@ -717 +737 @@ class DraftModelConfig(BaseConfigModel):
+-            "Ceiling is given by num_draft_tokens."
++            "Ceiling is given by draft_num_tokens, or the selected batch policy depth if configured."
+@@ -769 +789 @@ class DraftModelConfig(BaseConfigModel):
+-            "directory. Layer-split loads only; ignored with tensor parallelism."
++            "directory. Layer-split only. Mutually exclusive with EXL3_MTP_HEAD_N."
+@@ -773,0 +794,19 @@ class DraftModelConfig(BaseConfigModel):
++    @field_validator("draft_num_tokens_by_batch")
++    @classmethod
++    def validate_draft_num_tokens_by_batch(cls, rules):
++        # Reject ambiguous or reordered ceilings instead of silently changing the policy
++        if rules is not None and any(a[0] >= b[0] for a, b in zip(rules, rules[1:])):
++            raise ValueError("draft_num_tokens_by_batch limits must be strictly increasing")
++        return rules
++
++    @model_validator(mode="after")
++    def validate_batch_draft_mode(self):
++        if self.draft_num_tokens_by_batch is not None:
++            # A configured policy must be usable; never silently ignore it on a disabled drafter
++            mode = self.draft_mode or "model"
++            if mode == "disabled" or (mode == "model" and not self.draft_model_name):
++                raise ValueError("draft_num_tokens_by_batch requires an enabled draft mode")
++            if self.draft_num_tokens is not None and self.draft_num_tokens <= 0:
++                raise ValueError("draft_num_tokens must be positive with a batch policy")
++        return self
++
+diff --git a/common/gen_logging.py b/common/gen_logging.py
+index dbc459f237d3c292e68c62f87a3f235d7fae72d6..396ddf11f052ba9467fe78b9984e773dd85c6421 100644
+--- a/common/gen_logging.py
++++ b/common/gen_logging.py
+@@ -7,0 +8 @@ from common.logger import xlogger
++from common.metrics import record_completion
+@@ -177,0 +179,10 @@ def log_metrics(
++    # R828 one machine-readable line per finished request; no rounded step estimates.
++    # .get: a finish without the counters (not built by handle_finish_chunk) must not
++    # raise here, in the generation's finally block, and skip the metrics hook below
++    import json
++    from exllamav3.generator.prompt_lookup import COUNTERS
++    print("R828_COUNTER " + json.dumps({
++        "label": label, "gen_tokens": gen_tokens, "gen_time": metrics.get("r828_generate_time_s"),
++        **{key: metrics.get(key) for key in COUNTERS},
++    }, sort_keys=True), flush=True)
++
+@@ -203,0 +215,4 @@ def log_metrics(
++
++    # Feed the Prometheus registry. This is the per-completion metrics hook;
++    # record_completion swallows its own failures.
++    record_completion(label, metrics, context_len, max_seq_len)
+diff --git a/common/metrics.py b/common/metrics.py
+index d7857e0cd8b1f391cc0cae3709f0233b901dea0b..d8b246040517ccf18c9129b3191157a78159e2eb 100644
+--- a/common/metrics.py
++++ b/common/metrics.py
+@@ -1 +1,36 @@
+-"""Inference metrics for the optional Prometheus-compatible /metrics endpoint.
++"""
++Prometheus metrics for TabbyAPI.
++
++A small in-process registry plus a text exposition writer (Prometheus format
++0.0.4), so the monitoring stack can scrape GET /metrics without adding
++prometheus_client to the image; the container build has no package-install
++step for it.
++
++Wiring:
++  - common.gen_logging.log_metrics calls record_completion() once per
++    completed generation job (the existing per-request completion hook).
++  - endpoints.core.router serves GET /metrics from render_metrics(),
++    unauthenticated like /health.
++
++Conventions enforced here:
++  - Every recorded series carries a `model` label with the served model id
++    (the container's model_dir.name, the same id /v1/model reports). Nothing
++    request-shaped (prompts, request ids, context lengths) is ever a label
++    value; distributions go into histogram buckets.
++  - Rates are exported as pairs of counters (tokens and seconds) so a PromQL
++    rate() ratio stays time-weighted. No precomputed average-rate gauges.
++  - record_completion() runs on the request completion path and never raises;
++    a failure is logged once and swallowed.
++
++This module imports only stdlib at module level. It is pulled in by
++common.gen_logging, which is itself imported while the common.model ->
++backends.exllamav3.model import chain may still be running, so the container
++is reached through sys.modules and the logger through a deferred import.
++"""
++
++import bisect
++import logging
++import math
++import sys
++import threading
++from typing import Optional
+@@ -3,4 +38 @@
+-Names, help text and scrape behaviour follow llama.cpp's exporter under a
+-tabbyapi: prefix, so its dashboards work after a prefix swap. What llama.cpp
+-doesn't report uses vLLM's names (the latency histograms) or its own older ones
+-(KV cache usage).
++from common.upstream_metrics import MetricsManager, MetricsManagerClass
+@@ -8,4 +40 @@ doesn't report uses vLLM's names (the latency histograms) or its own older ones
+-Nothing here runs per token. Token counts, job states and cache statistics are
+-read from the status display's snapshot at scrape time, which also keeps the
+-generation counters moving during a request, and the rest is recorded once when
+-a request finishes.
++# Histogram bucket bounds, as le= values.
+@@ -13,3 +42,22 @@ a request finishes.
+-Everything here runs on the single asyncio event loop, so the plain attributes
+-need no locking.
+-"""
++# Generation length: resolves the 2.7k-4k region where slow tails were seen.
++GENERATED_TOKEN_BUCKETS = (16, 64, 256, 512, 1024, 2048, 3072, 4096, 8192, 16384, 32768)
++# Context depth.
++PROMPT_TOKEN_BUCKETS = (1024, 4096, 8192, 16384, 32768, 65536, 131072, 262144)
++# Per-request decode rate, tokens per second.
++DECODE_RATE_BUCKETS = (10, 20, 40, 60, 80, 120, 160, 200, 250, 300, 400)
++# Queue wait and time to first token.
++SECONDS_BUCKETS = (0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60)
++
++
++class _Counter:
++    """Cumulative monotonic counter, keyed by model label (None = unlabeled)."""
++
++    type = "counter"
++
++    def __init__(self, name, doc):
++        self.name = name
++        self.doc = doc
++        self.values = {}
++
++    def add(self, label, amount):
++        self.values[label] = self.values.get(label, 0.0) + amount
+@@ -17,2 +64,0 @@ need no locking.
+-import time
+-from typing import Optional
+@@ -20,24 +66,36 @@ from typing import Optional
+-# The boundaries vLLM's dashboards expect, except that the backend's phase times
+-# are rounded to 10 ms, so nothing finer is worth a bucket
+-LATENCY_BUCKETS = (
+-    0.3,
+-    0.5,
+-    0.8,
+-    1.0,
+-    1.5,
+-    2.0,
+-    2.5,
+-    5.0,
+-    10.0,
+-    15.0,
+-    20.0,
+-    30.0,
+-    40.0,
+-    50.0,
+-    60.0,
+-    120.0,
+-    240.0,
+-    480.0,
+-    960.0,
+-    1920.0,
+-    7680.0,
++class _Histogram:
++    """Fixed-bucket histogram, keyed by model label (None = unlabeled)."""
++
++    type = "histogram"
++
++    def __init__(self, name, doc, buckets):
++        self.name = name
++        self.doc = doc
++        self.buckets = tuple(buckets)
++        self.values = {}
++
++    def observe(self, label, value):
++        entry = self.values.get(label)
++        if entry is None:
++            entry = self.values[label] = {
++                "buckets": [0] * (len(self.buckets) + 1),
++                "sum": 0.0,
++                "count": 0,
++            }
++        entry["buckets"][bisect.bisect_left(self.buckets, value)] += 1
++        entry["sum"] += value
++        entry["count"] += 1
++
++
++# Metric families. Declaration order is the order in the exposition.
++
++_REQUESTS = _Counter(
++    "tabby_requests_total",
++    "Completed generation jobs. The completion hook only sees jobs that "
++    "reached an EOS result; cancelled and errored requests never reach it.",
++)
++_PROMPT_TOKENS = _Counter("tabby_prompt_tokens_total", "Prompt tokens processed.")
++_GENERATED_TOKENS = _Counter("tabby_generated_tokens_total", "Tokens generated.")
++_CACHED_TOKENS = _Counter(
++    "tabby_cached_tokens_total",
++    "Prompt tokens served from the prefix cache instead of being processed.",
+@@ -45,21 +103,6 @@ LATENCY_BUCKETS = (
+-FIRST_TOKEN_BUCKETS = (
+-    0.01,
+-    0.02,
+-    0.04,
+-    0.06,
+-    0.08,
+-    0.1,
+-    0.25,
+-    0.5,
+-    0.75,
+-    1.0,
+-    2.5,
+-    5.0,
+-    7.5,
+-    10.0,
+-    20.0,
+-    40.0,
+-    80.0,
+-    160.0,
+-    640.0,
+-    2560.0,
++_PROMPT_SECONDS = _Counter("tabby_prompt_seconds_total", "Seconds spent in prefill.")
++_GENERATE_SECONDS = _Counter("tabby_generate_seconds_total", "Seconds spent generating.")
++_QUEUE_SECONDS = _Counter("tabby_queue_seconds_total", "Seconds jobs spent queued.")
++_RECORD_ERRORS = _Counter(
++    "tabby_metrics_record_errors_total",
++    "Completion recordings that failed inside the metrics code and were swallowed.",
+@@ -67,0 +111,28 @@ FIRST_TOKEN_BUCKETS = (
++_COUNTERS = [
++    _REQUESTS,
++    _PROMPT_TOKENS,
++    _GENERATED_TOKENS,
++    _CACHED_TOKENS,
++    _PROMPT_SECONDS,
++    _GENERATE_SECONDS,
++    _QUEUE_SECONDS,
++    _RECORD_ERRORS,
++]
++
++_GEN_LEN = _Histogram(
++    "tabby_generated_tokens", "Generated tokens per request.", GENERATED_TOKEN_BUCKETS
++)
++_PROMPT_LEN = _Histogram(
++    "tabby_prompt_tokens", "Prompt tokens per request.", PROMPT_TOKEN_BUCKETS
++)
++_DECODE_RATE = _Histogram(
++    "tabby_decode_tokens_per_second",
++    "Per-request decode rate in tokens per second.",
++    DECODE_RATE_BUCKETS,
++)
++_TTFT = _Histogram(
++    "tabby_time_to_first_token_seconds",
++    "Queue plus prefill time per request, as the client experiences it.",
++    SECONDS_BUCKETS,
++)
++_QUEUE_HIST = _Histogram("tabby_queue_seconds", "Queue wait per request.", SECONDS_BUCKETS)
+@@ -69,284 +140,255 @@ FIRST_TOKEN_BUCKETS = (
+-class _Histogram:
+-    """A cumulative-bucket histogram for the Prometheus text format."""
+-
+-    def __init__(self, buckets: tuple):
+-        self.buckets = buckets
+-        self.counts = [0] * len(buckets)
+-        self.sum = 0.0
+-        self.count = 0
+-
+-    def observe(self, value: float):
+-        self.sum += value
+-        self.count += 1
+-        for i, upper in enumerate(self.buckets):
+-            if value <= upper:
+-                self.counts[i] += 1
+-                return
+-
+-    def render(self, full_name: str) -> list[str]:
+-        lines = []
+-        cumulative = 0
+-        for upper, count in zip(self.buckets, self.counts, strict=True):
+-            cumulative += count
+-            lines.append(f'{full_name}_bucket{{le="{upper}"}} {cumulative}')
+-        lines.append(f'{full_name}_bucket{{le="+Inf"}} {self.count}')
+-        lines.append(f"{full_name}_sum {self.sum}")
+-        lines.append(f"{full_name}_count {self.count}")
+-        return lines
+-
+-
+-class MetricsManagerClass:
+-    """Process-lifetime inference counters, rendered as Prometheus text."""
+-
+-    def __init__(self):
+-        self.process_start_time = time.time()
+-
+-        self.prompt_tokens_cached_total = 0
+-        self.prompt_seconds_total = 0.0
+-        self.n_tokens_max = 0
+-
+-        self.draft_tokens_total = 0
+-        self.draft_tokens_accepted_total = 0
+-        self.drafts_total = 0
+-
+-        self.queue_time = _Histogram(LATENCY_BUCKETS)
+-        self.first_token_time = _Histogram(FIRST_TOKEN_BUCKETS)
+-        self.e2e_latency = _Histogram(LATENCY_BUCKETS)
+-
+-        # The prompt tokens prompt_seconds_total belongs to. The live counter
+-        # also holds the prefill still in progress, whose time isn't known yet
+-        self._finished_prompt_tokens = 0
+-
+-        # (tokens, seconds) at the last scrape, by gauge
+-        self._last_scrape = {}
+-
+-    def record_finish(self, finish: dict):
+-        """Record a finished request from the backend's finish chunk."""
+-
+-        prompt_tokens = finish.get("prompt_tokens") or 0
+-        cached_tokens = int(finish.get("cached_tokens") or 0)
+-        gen_tokens = finish.get("gen_tokens") or 0
+-        queue_time = finish.get("queue_time") or 0.0
+-        prompt_time = finish.get("prompt_time") or 0.0
+-        gen_time = finish.get("gen_time") or 0.0
+-
+-        self.prompt_tokens_cached_total += cached_tokens
+-        self.prompt_seconds_total += prompt_time
+-        self._finished_prompt_tokens += prompt_tokens - cached_tokens
+-        self.n_tokens_max = max(self.n_tokens_max, prompt_tokens + gen_tokens)
+-
+-        self.queue_time.observe(queue_time)
+-        self.first_token_time.observe(queue_time + prompt_time)
+-        self.e2e_latency.observe(queue_time + prompt_time + gen_time)
+-
+-        # Absent when the request ran without a drafter
+-        accepted = finish.get("draft_accept")
+-        if accepted is not None:
+-            self.draft_tokens_total += accepted + (finish.get("draft_reject") or 0)
+-            self.draft_tokens_accepted_total += accepted
+-            # Every decode step emits one token of the target model's own, with
+-            # the accepted drafts riding along on top of it
+-            self.drafts_total += max(gen_tokens - accepted, 0)
+-
+-    def _since_last_scrape(self, gauge: str, tokens: float, seconds: float) -> float:
+-        """Tokens per second since the last scrape, the window llama.cpp's gauges cover."""
+-
+-        last_tokens, last_seconds = self._last_scrape.get(gauge, (0, 0.0))
+-        self._last_scrape[gauge] = (tokens, seconds)
+-        elapsed = seconds - last_seconds
+-        return (tokens - last_tokens) / elapsed if elapsed > 0 else 0.0
+-
+-    def render_prometheus(self, status: dict, model_name: Optional[str] = None) -> str:
+-        """
+-        Render all metrics in the Prometheus text exposition format.
+-
+-        Args:
+-            status: The status display's snapshot.
+-            model_name: The loaded model, if any.
+-        """
+-
+-        cache = status["cache"] or {}
+-        max_tokens = cache.get("max_tokens", 0)
+-        used_tokens = cache.get("used_tokens", 0)
+-        deferred = sum(job["stage"] in ("queued", "waiting") for job in status["jobs"])
+-
+-        # (type, name, help, value)
+-        metrics = [
+-            (
+-                "counter",
+-                "prompt_tokens_total",
+-                "Number of prompt tokens processed, excluding cached tokens",
+-                status["prefilled_tokens"],
+-            ),
+-            (
+-                "counter",
+-                "prompt_tokens_cached_total",
+-                "Number of prompt tokens reused from the cache",
+-                self.prompt_tokens_cached_total,
+-            ),
+-            (
+-                "counter",
+-                "prompt_seconds_total",
+-                "Total time spent processing prompts",
+-                self.prompt_seconds_total,
+-            ),
+-            (
+-                "counter",
+-                "tokens_predicted_total",
+-                "Number of generation tokens processed",
+-                status["generated_tokens"],
+-            ),
+-            (
+-                "counter",
+-                "tokens_predicted_seconds_total",
+-                "Total time spent generating tokens",
+-                status["generated_seconds"],
+-            ),
+-            (
+-                "counter",
+-                "n_tokens_max",
+-                "Largest observed sequence length (prompt + generation)",
+-                self.n_tokens_max,
+-            ),
+-            (
+-                "counter",
+-                "requests_total",
+-                "Number of finished generation requests, cancelled ones included",
+-                status["completed"],
+-            ),
+-            (
+-                "counter",
+-                "spec_decode_num_draft_tokens_total",
+-                "Speculative: Total draft tokens generated",
+-                self.draft_tokens_total,
+-            ),
+-            (
+-                "counter",
+-                "spec_decode_num_accepted_tokens_total",
+-                "Speculative: Total draft tokens accepted by the target model",
+-                self.draft_tokens_accepted_total,
+-            ),
+-            (
+-                "counter",
+-                "spec_decode_num_drafts_total",
+-                "Speculative: Total speculative decoding verification steps",
+-                self.drafts_total,
+-            ),
+-            (
+-                "gauge",
+-                "prompt_tokens_seconds",
+-                "Average prompt throughput in tokens/s",
+-                self._since_last_scrape(
+-                    "prompt", self._finished_prompt_tokens, self.prompt_seconds_total
+-                ),
+-            ),
+-            (
+-                "gauge",
+-                "predicted_tokens_seconds",
+-                "Average generation throughput in tokens/s",
+-                self._since_last_scrape(
+-                    "predicted", status["generated_tokens"], status["generated_seconds"]
+-                ),
+-            ),
+-            (
+-                "gauge",
+-                "requests_processing",
+-                "Number of requests processing",
+-                len(status["jobs"]) - deferred,
+-            ),
+-            ("gauge", "requests_deferred", "Number of requests deferred", deferred),
+-            (
+-                "gauge",
+-                "process_start_time_seconds",
+-                "Start time of the process since the Unix epoch, in seconds",
+-                self.process_start_time,
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_usage_ratio",
+-                "KV cache usage by running requests. 1 means 100 percent usage",
+-                used_tokens / max_tokens if max_tokens else 0.0,
+-            ),
+-            ("gauge", "kv_cache_tokens", "KV cache tokens in use", used_tokens),
+-            ("gauge", "kv_cache_max_tokens", "Total KV cache capacity in tokens", max_tokens),
+-            (
+-                "gauge",
+-                "kv_cache_reusable_tokens",
+-                "Tokens a later request could reuse from the KV cache",
+-                cache.get("cached_tokens", 0),
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_sysmem_tokens",
+-                "Reusable tokens held only in the system memory tier",
+-                cache.get("tier_cached_tokens", 0),
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_disk_tokens",
+-                "Reusable tokens held only in the disk tier",
+-                cache.get("disk_cached_tokens", 0),
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_hit_rate",
+-                "Share of prompt pages served from the cache since the model was loaded",
+-                cache.get("hit_rate") or 0.0,
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_sysmem_hit_rate",
+-                "Share of prompt pages served from the system memory tier",
+-                cache.get("tier_hit_rate") or 0.0,
+-            ),
+-            (
+-                "gauge",
+-                "kv_cache_disk_hit_rate",
+-                "Share of prompt pages served from the disk tier",
+-                cache.get("disk_hit_rate") or 0.0,
+-            ),
+-        ]
+-
+-        # (name, help, histogram)
+-        histograms = [
+-            (
+-                "request_queue_time_seconds",
+-                "Histogram of time spent in the queue before prefill, in seconds",
+-                self.queue_time,
+-            ),
+-            (
+-                "time_to_first_token_seconds",
+-                "Histogram of time to first token, in seconds",
+-                self.first_token_time,
+-            ),
+-            (
+-                "e2e_request_latency_seconds",
+-                "Histogram of end to end request latency, in seconds",
+-                self.e2e_latency,
+-            ),
+-        ]
+-
+-        lines = []
+-        for metric_type, name, help_text, value in metrics:
+-            full_name = f"tabbyapi:{name}"
+-            lines.append(f"# HELP {full_name} {help_text}")
+-            lines.append(f"# TYPE {full_name} {metric_type}")
+-            lines.append(f"{full_name} {value}")
+-
+-        for name, help_text, histogram in histograms:
+-            full_name = f"tabbyapi:{name}"
+-            lines.append(f"# HELP {full_name} {help_text}")
+-            lines.append(f"# TYPE {full_name} histogram")
+-            lines += histogram.render(full_name)
+-
+-        lines.append("# HELP tabbyapi:model_info The loaded model, in its model_name label")
+-        lines.append("# TYPE tabbyapi:model_info gauge")
+-        if model_name:
+-            label = model_name.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+-            lines.append(f'tabbyapi:model_info{{model_name="{label}"}} 1')
+-
+-        return "\n".join(lines) + "\n"
+-
+-
+-# Create an instance of the global metrics manager
+-MetricsManager = MetricsManagerClass()
++_HISTOGRAMS = [_GEN_LEN, _PROMPT_LEN, _DECODE_RATE, _TTFT, _QUEUE_HIST]
++
++# Gauges are not stored state; their values are read live at render time.
++# (name, doc, container attribute)
++_REQUESTS_ACTIVE = (
++    "tabby_requests_active",
++    "Requests inside stream_generate: queued or generating.",
++)
++_CONTAINER_GAUGES = [
++    ("tabby_cache_size_tokens", "Configured KV/prefix cache size in tokens.", "cache_size"),
++    ("tabby_max_batch_size", "Configured maximum batch size.", "max_batch_size"),
++    ("tabby_max_seq_len", "Configured maximum sequence length in tokens.", "max_seq_len"),
++]
++
++_LOCK = threading.Lock()
++
++# Last model label seen, so a request that outlives a model unload still lands
++# on the series it was counted under.
++_last_model_label = "unknown"
++_warned = False
++
++
++def _num(value) -> Optional[float]:
++    """Coerce a payload value to a finite float; None when it isn't a number."""
++
++    if isinstance(value, bool):
++        return None
++    if isinstance(value, (int, float)):
++        result = float(value)
++    elif isinstance(value, str):
++        try:
++            result = float(value)
++        except ValueError:
++            return None
++    else:
++        return None
++    return result if math.isfinite(result) else None
++
++
++def _nonneg(value) -> float:
++    """Finite float clamped at zero; counters must stay monotonic."""
++
++    result = _num(value)
++    if result is None or result < 0:
++        return 0.0
++    return result
++
++
++def _container():
++    """The live model container, or None. Never triggers an import."""
++
++    model_mod = sys.modules.get("common.model")
++    return getattr(model_mod, "container", None)
++
++
++def _model_label() -> str:
++    global _last_model_label
++
++    container = _container()
++    name = getattr(getattr(container, "model_dir", None), "name", None)
++    if name:
++        _last_model_label = str(name)
++    return _last_model_label
++
++
++def record_completion(label, metrics, context_len=None, max_seq_len=None):
++    """
++    Record one completed generation. Called from common.gen_logging.log_metrics
++    on the request completion path; swallows every failure.
++    """
++
++    try:
++        _record(metrics if isinstance(metrics, dict) else {}, context_len)
++    except Exception as exc:
++        _note_record_error(label, exc)
++
++
++def _record(metrics, context_len):
++    model_label = _model_label()
++
++    prompt_tokens = _nonneg(_num(metrics.get("prompt_tokens")) or _num(context_len))
++    cached_tokens = _nonneg(metrics.get("cached_tokens"))
++    gen_tokens = _nonneg(metrics.get("gen_tokens"))
++    queue_time = _nonneg(metrics.get("queue_time"))
++    prompt_time = _nonneg(metrics.get("prompt_time"))
++    gen_time = _nonneg(metrics.get("gen_time"))
++
++    with _LOCK:
++        _REQUESTS.add(model_label, 1)
++        _PROMPT_TOKENS.add(model_label, prompt_tokens)
++        _GENERATED_TOKENS.add(model_label, gen_tokens)
++        _CACHED_TOKENS.add(model_label, cached_tokens)
++        _PROMPT_SECONDS.add(model_label, prompt_time)
++        _GENERATE_SECONDS.add(model_label, gen_time)
++        _QUEUE_SECONDS.add(model_label, queue_time)
++
++        _GEN_LEN.observe(model_label, gen_tokens)
++        _PROMPT_LEN.observe(model_label, prompt_tokens)
++        _QUEUE_HIST.observe(model_label, queue_time)
++        _TTFT.observe(model_label, queue_time + prompt_time)
++        # A request that produced no tokens or measured no decode time has no
++        # meaningful rate; the token and seconds counters still capture it.
++        if gen_time > 0:
++            _DECODE_RATE.observe(model_label, gen_tokens / gen_time)
++
++
++def _note_record_error(label, exc):
++    global _warned
++
++    try:
++        with _LOCK:
++            _RECORD_ERRORS.add(None, 1)
++    except Exception:
++        pass
++
++    if _warned:
++        return
++    _warned = True
++    message = (
++        f"metrics: recording a completion failed ({label}); further failures will be silent"
++    )
++    try:
++        from common.logger import xlogger
++
++        xlogger.warning(message, {"exception": repr(exc)})
++    except Exception:
++        logging.getLogger(__name__).warning("%s: %r", message, exc)
++
++
++def _live_gauges():
++    """Current gauge values, as {metric name: {model label: value}}."""
++
++    container = _container()
++    if container is None:
++        return {}
++
++    label = _model_label()
++    values = {}
++    jobs = getattr(container, "active_job_ids", None)
++    if jobs is not None:
++        try:
++            values[_REQUESTS_ACTIVE[0]] = len(jobs)
++        except Exception:
++            pass
++    for name, _doc, attr in _CONTAINER_GAUGES:
++        value = _num(getattr(container, attr, None))
++        if value is not None:
++            values[name] = value
++
++    return {name: {label: value} for name, value in values.items()}
++
++
++def _esc(value: str) -> str:
++    return value.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
++
++
++def _fmt_num(value) -> str:
++    value = float(value)
++    if math.isnan(value):
++        return "Nan"
++    if math.isinf(value):
++        return "+Inf" if value > 0 else "-Inf"
++    if value == int(value) and abs(value) < 1e15:
++        return str(int(value))
++    return repr(value)
++
++
++def _fmt_bound(bound) -> str:
++    return "+Inf" if bound == math.inf else _fmt_num(bound)
++
++
++def _line(name, labels, value) -> str:
++    if labels:
++        inner = ",".join(f'{key}="{_esc(str(val))}"' for key, val in labels.items())
++        return f"{name}{{{inner}}} {_fmt_num(value)}"
++    return f"{name} {_fmt_num(value)}"
++
++
++def _series_labels(label):
++    return {"model": label} if label else {}
++
++
++def render_metrics() -> str:
++    """
++    Serialize the registry to Prometheus text exposition format 0.0.4.
++
++    Copies all accumulated state under the lock, then formats outside it, so a
++    scrape never blocks the completion path beyond a dict copy.
++    """
++
++    with _LOCK:
++        counter_data = {fam.name: dict(fam.values) for fam in _COUNTERS}
++        histogram_data = {
++            fam.name: {
++                label: {
++                    "buckets": list(entry["buckets"]),
++                    "sum": entry["sum"],
++                    "count": entry["count"],
++                }
++                for label, entry in fam.values.items()
++            }
++            for fam in _HISTOGRAMS
++        }
++
++    gauge_data = _live_gauges()
++
++    lines = []
++    for fam in _COUNTERS:
++        lines.append(f"# HELP {fam.name} {fam.doc}")
++        lines.append(f"# TYPE {fam.name} {fam.type}")
++        for label, value in counter_data[fam.name].items():
++            lines.append(_line(fam.name, _series_labels(label), value))
++
++    for fam in _HISTOGRAMS:
++        lines.append(f"# HELP {fam.name} {fam.doc}")
++        lines.append(f"# TYPE {fam.name} {fam.type}")
++        for label, entry in histogram_data[fam.name].items():
++            labels = _series_labels(label)
++            cumulative = 0
++            for bound, count in zip(fam.buckets + (math.inf,), entry["buckets"]):
++                cumulative += count
++                lines.append(
++                    _line(
++                        fam.name + "_bucket",
++                        {**labels, "le": _fmt_bound(bound)},
++                        cumulative,
++                    )
++                )
++            lines.append(_line(fam.name + "_sum", labels, entry["sum"]))
++            lines.append(_line(fam.name + "_count", labels, entry["count"]))
++
++    gauge_docs = {name: doc for name, doc, _attr in _CONTAINER_GAUGES}
++    gauge_docs[_REQUESTS_ACTIVE[0]] = _REQUESTS_ACTIVE[1]
++    gauge_order = [_REQUESTS_ACTIVE[0]] + [name for name, _doc, _a in _CONTAINER_GAUGES]
++    for name in gauge_order:
++        lines.append(f"# HELP {name} {gauge_docs[name]}")
++        lines.append(f"# TYPE {name} gauge")
++        for label, value in gauge_data.get(name, {}).items():
++            lines.append(_line(name, _series_labels(label), value))
++
++    return "\n".join(lines) + "\n"
++
++
++def reset():
++    """Drop all accumulated state. Exists for tests; the server never calls it."""
++
++    global _warned, _last_model_label
++
++    with _LOCK:
++        for fam in _COUNTERS:
++            fam.values.clear()
++        for fam in _HISTOGRAMS:
++            fam.values.clear()
++    _warned = False
++    _last_model_label = "unknown"
+diff --git a/common/sampling.py b/common/sampling.py
+index 426ef3f06b82820ca4bdf9309cc1455e865b1f52..5bc22c06c1b028dc730c07c5389f3352d5626c2b 100644
+--- a/common/sampling.py
++++ b/common/sampling.py
+@@ -79,0 +80,4 @@ class BaseSamplerRequest(BaseModel):
++    # Engine loop detector override, set by the chat collector when it watches the
++    # reasoning phase itself (loop-think, flan R782/R783): (window, min_reps)
++    _loop_backstop: Optional[tuple] = PrivateAttr(default=None)
++
+@@ -361,0 +366,6 @@ class BaseSamplerRequest(BaseModel):
++    loop_detect_window: Optional[int] = Field(
++        default_factory=lambda: get_default_sampler_value("loop_detect_window", 800),
++        ge=0,
++        description="Exact repetition window in tokens. Set 0 or null to disable.",
++    )
++
+@@ -363,2 +373 @@ class BaseSamplerRequest(BaseModel):
+-        default_factory=lambda: get_default_sampler_value("loop_detect", True),
+-        validation_alias=AliasChoices("loop_detect", "loop_detect_window"),
++        default_factory=lambda: get_default_sampler_value("loop_detect", None),
+@@ -367,2 +376 @@ class BaseSamplerRequest(BaseModel):
+-            "the same text. The older name loop_detect_window is accepted, where any "
+-            "window size means on and 0 means off."
++            "the same text. Unset uses the exact repetition window."
+@@ -445,0 +454,12 @@ class BaseSamplerRequest(BaseModel):
++    def get_stop_on_loop(self) -> bool | tuple[int, int] | None:
++        """Get ExLlamaV3 loop detection parameters."""
++
++        if self.loop_detect is not None:
++            return self.loop_detect
++        if self.loop_detect_window and self.loop_detect_window > 1:
++            if self._loop_backstop is not None:
++                return self._loop_backstop
++            return self.loop_detect_window, 2
++
++        return None
++
+@@ -471,6 +490,0 @@ class BaseSamplerRequest(BaseModel):
+-    @field_validator("loop_detect", mode="before")
+-    def check_loop_detect(cls, v):
+-        """loop_detect_window, now an alias of this field, took a size in tokens."""
+-
+-        return bool(v) if isinstance(v, int) else v
+-
+diff --git a/common/tokenize_offloop.py b/common/tokenize_offloop.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..2f65631eba92516c937713558a682f1bd67ac6da
+--- /dev/null
++++ b/common/tokenize_offloop.py
+@@ -0,0 +1,124 @@
++"""flan tokenize-offloop r2: encode the prompt once per request; move only LONG encodes off the asyncio event loop.
++
++exllamav3's AsyncGenerator runs Generator.iterate() (the decode step of every running stream) as a task on the same
++event loop that runs the request handlers. The served streamed path encoded each prompt twice on that loop: once in
++the pre-stream context-length check (router -> common.model.check_context_length -> validate_context_length) and
++again in generate_gen. For a 30k-token prompt that is two ~25 ms sections in which no stream decodes (flan R805,
++REVIEW-R804-R805 sec. 1). r1 removed both (R806: class (i) stall 53.5 -> 3.5 ms), but every executor hop costs the
++arriving request ~30-40 ms of TTFT while other streams decode: the loop picks the worker's result up only between two
++synchronous iterate() calls, and the worker needs the GIL that iterate() mostly holds (REVIEW-R806 sec. 5: class (iii)
++~85-token prompts +41.6 ms TTFT). r2 hops only when the inline encode would cost more than the hop saves the others.
++
++Knobs, all read per call:
++  TABBY_ENCODE_ONCE=0      (e1 off) generate_gen encodes the prompt again after the check. ON (default): the encode
++                           is reused. rebase165: TabbyAPI dfd3848's own encode cache (ExllamaV3Container.encode_prompt,
++                           an LRU of ENCODE_CACHE_ENTRIES text-only prompts keyed by (text, add_bos, special)) replaced
++                           the served ids-on-the-request store; this knob now bypasses that cache (=0: every call
++                           encodes, nothing is cached). generate_gen checks the cache inline before any hop, so a hit
++                           never pays the executor hop.
++  EXL3_TOKENIZE_OFFLOOP=0  (e2 off) run_tokenize always calls fn inline on the loop (the served path). ON (default): fn
++                           runs on a dedicated one-thread executor when the text is long (below), inline otherwise;
++                           exllamav3's Tokenizer (same overlay) encodes through encode_batch, which releases the GIL,
++                           so the loop keeps iterating while the worker encodes.
++  EXL3_TOKENIZE_OFFLOOP_MIN_CHARS (default 12000) the hop threshold: fn goes to the worker when the prompt text has MORE
++                           than this many characters. 12,000 chars ~ 4,200 tokens on this model's rendered prompts (2.87
++                           chars/token measured, R806 TOKCHECK: 60,301 chars = 20,992 tokens) ~ 3.8 ms of inline encode
++                           at the ~0.9 us/token measured in the served container: below it the inline encode stalls the
++                           other streams less than one decode step (~17 ms), while a hop would cost the request 1-2 steps.
++                           0 = hop at every length (r1's behaviour). Anything but plain ASCII digits (a sign, '_',
++                           whitespace, a decimal point) = the default. The threshold counts characters, not tokens:
++                           CJK runs ~1 char/token (12,000 chars ~ 12k tokens ~ 11 ms inline) and byte-fallback-heavy
++                           text can run several tokens per char; both are rare on this traffic.
++  Busy worker: a short text also goes to the worker while an earlier hop is still queued or running there. Inline it
++  would wait on the exllamav3 encode lock that the worker holds, i.e. block the loop for the rest of the long encode;
++  queued behind it on the worker it costs only its own request's TTFT.
++
++One worker thread: calls run one at a time, in submission order, off the default executor that other blocking helpers
++share. The context is copied as asyncio.to_thread does. Results and exceptions are those of fn; a cancelled await
++leaves the running call to finish in the worker and drops its result.
++"""
++
++import asyncio
++import contextvars
++import functools
++import os
++import threading
++from concurrent.futures import ThreadPoolExecutor
++
++REVISION = "tokenize-offloop-r2"
++DEFAULT_MIN_CHARS = 12000
++
++_executor = None
++_pending_lock = threading.Lock()
++_pending = 0           # hops submitted to the worker and not finished there (run, raised or cancelled before running)
++hops = 0               # executor submissions since import (tests and diagnostics; loop thread only)
++
++
++def offloop_enabled() -> bool:
++    return os.environ.get("EXL3_TOKENIZE_OFFLOOP", "1") != "0"
++
++
++def offload_min_chars() -> int:
++    # plain ASCII digits only: '', '-5', '1.5', 'abc', '1_000', ' 12000 ' all mean the default
++    v = os.environ.get("EXL3_TOKENIZE_OFFLOOP_MIN_CHARS", "")
++    if not (v.isascii() and v.isdigit()):
++        return DEFAULT_MIN_CHARS
++    return int(v)
++
++
++def prompt_chars(prompts) -> int:
++    """Characters of a prompt (str) or of every prompt of a list prompt (/v1/completions)."""
++    if isinstance(prompts, str):
++        return len(prompts)
++    try:
++        return sum(len(p) for p in prompts if isinstance(p, str))
++    except TypeError:
++        return 0
++
++
++def should_offload(nchars: int) -> bool:
++    if not offloop_enabled():
++        return False
++    return nchars > offload_min_chars() or _pending > 0
++
++
++def _done(_f):
++    # runs in the worker when the call ends, or in the cancelling thread when a queued call is cancelled
++    global _pending
++    with _pending_lock:
++        _pending -= 1
++
++
++def _get_executor() -> ThreadPoolExecutor:
++    # Created on first use from the loop thread (no race: one event loop thread calls this)
++    global _executor
++    if _executor is None:
++        _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="tokenize")
++    return _executor
++
++
++async def run_tokenize(nchars, fn, /, *args, **kwargs):
++    """fn(*args, **kwargs) for a prompt of nchars characters: on the tokenize worker when should_offload(nchars), else
++    inline on the loop thread (no hop: the result is ready without waiting for an iterate() to end)."""
++    global _pending, hops
++    if not should_offload(nchars):
++        return fn(*args, **kwargs)
++    ctx = contextvars.copy_context()
++    with _pending_lock:
++        _pending += 1
++    hops += 1
++    # what loop.run_in_executor does (submit + wrap_future: a cancelled await cancels a still-queued call), plus the
++    # completion callback that keeps _pending exact
++    try:
++        cf = _get_executor().submit(functools.partial(ctx.run, fn, *args, **kwargs))
++    except BaseException:
++        _done(None)
++        raise
++    cf.add_done_callback(_done)
++    return await asyncio.wrap_future(cf)
++
++
++def encode_once_enabled() -> bool:
++    # TABBY_ENCODE_ONCE=0: the container's encode cache is bypassed, so generate_gen encodes the
++    # prompt again after the context-length check; read per call
++    return os.environ.get("TABBY_ENCODE_ONCE", "1") != "0"
+diff --git a/common/upstream_metrics.py b/common/upstream_metrics.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7857e0cd8b1f391cc0cae3709f0233b901dea0b
+--- /dev/null
++++ b/common/upstream_metrics.py
+@@ -0,0 +1,352 @@
++"""Inference metrics for the optional Prometheus-compatible /metrics endpoint.
++
++Names, help text and scrape behaviour follow llama.cpp's exporter under a
++tabbyapi: prefix, so its dashboards work after a prefix swap. What llama.cpp
++doesn't report uses vLLM's names (the latency histograms) or its own older ones
++(KV cache usage).
++
++Nothing here runs per token. Token counts, job states and cache statistics are
++read from the status display's snapshot at scrape time, which also keeps the
++generation counters moving during a request, and the rest is recorded once when
++a request finishes.
++
++Everything here runs on the single asyncio event loop, so the plain attributes
++need no locking.
++"""
++
++import time
++from typing import Optional
++
++# The boundaries vLLM's dashboards expect, except that the backend's phase times
++# are rounded to 10 ms, so nothing finer is worth a bucket
++LATENCY_BUCKETS = (
++    0.3,
++    0.5,
++    0.8,
++    1.0,
++    1.5,
++    2.0,
++    2.5,
++    5.0,
++    10.0,
++    15.0,
++    20.0,
++    30.0,
++    40.0,
++    50.0,
++    60.0,
++    120.0,
++    240.0,
++    480.0,
++    960.0,
++    1920.0,
++    7680.0,
++)
++FIRST_TOKEN_BUCKETS = (
++    0.01,
++    0.02,
++    0.04,
++    0.06,
++    0.08,
++    0.1,
++    0.25,
++    0.5,
++    0.75,
++    1.0,
++    2.5,
++    5.0,
++    7.5,
++    10.0,
++    20.0,
++    40.0,
++    80.0,
++    160.0,
++    640.0,
++    2560.0,
++)
++
++
++class _Histogram:
++    """A cumulative-bucket histogram for the Prometheus text format."""
++
++    def __init__(self, buckets: tuple):
++        self.buckets = buckets
++        self.counts = [0] * len(buckets)
++        self.sum = 0.0
++        self.count = 0
++
++    def observe(self, value: float):
++        self.sum += value
++        self.count += 1
++        for i, upper in enumerate(self.buckets):
++            if value <= upper:
++                self.counts[i] += 1
++                return
++
++    def render(self, full_name: str) -> list[str]:
++        lines = []
++        cumulative = 0
++        for upper, count in zip(self.buckets, self.counts, strict=True):
++            cumulative += count
++            lines.append(f'{full_name}_bucket{{le="{upper}"}} {cumulative}')
++        lines.append(f'{full_name}_bucket{{le="+Inf"}} {self.count}')
++        lines.append(f"{full_name}_sum {self.sum}")
++        lines.append(f"{full_name}_count {self.count}")
++        return lines
++
++
++class MetricsManagerClass:
++    """Process-lifetime inference counters, rendered as Prometheus text."""
++
++    def __init__(self):
++        self.process_start_time = time.time()
++
++        self.prompt_tokens_cached_total = 0
++        self.prompt_seconds_total = 0.0
++        self.n_tokens_max = 0
++
++        self.draft_tokens_total = 0
++        self.draft_tokens_accepted_total = 0
++        self.drafts_total = 0
++
++        self.queue_time = _Histogram(LATENCY_BUCKETS)
++        self.first_token_time = _Histogram(FIRST_TOKEN_BUCKETS)
++        self.e2e_latency = _Histogram(LATENCY_BUCKETS)
++
++        # The prompt tokens prompt_seconds_total belongs to. The live counter
++        # also holds the prefill still in progress, whose time isn't known yet
++        self._finished_prompt_tokens = 0
++
++        # (tokens, seconds) at the last scrape, by gauge
++        self._last_scrape = {}
++
++    def record_finish(self, finish: dict):
++        """Record a finished request from the backend's finish chunk."""
++
++        prompt_tokens = finish.get("prompt_tokens") or 0
++        cached_tokens = int(finish.get("cached_tokens") or 0)
++        gen_tokens = finish.get("gen_tokens") or 0
++        queue_time = finish.get("queue_time") or 0.0
++        prompt_time = finish.get("prompt_time") or 0.0
++        gen_time = finish.get("gen_time") or 0.0
++
++        self.prompt_tokens_cached_total += cached_tokens
++        self.prompt_seconds_total += prompt_time
++        self._finished_prompt_tokens += prompt_tokens - cached_tokens
++        self.n_tokens_max = max(self.n_tokens_max, prompt_tokens + gen_tokens)
++
++        self.queue_time.observe(queue_time)
++        self.first_token_time.observe(queue_time + prompt_time)
++        self.e2e_latency.observe(queue_time + prompt_time + gen_time)
++
++        # Absent when the request ran without a drafter
++        accepted = finish.get("draft_accept")
++        if accepted is not None:
++            self.draft_tokens_total += accepted + (finish.get("draft_reject") or 0)
++            self.draft_tokens_accepted_total += accepted
++            # Every decode step emits one token of the target model's own, with
++            # the accepted drafts riding along on top of it
++            self.drafts_total += max(gen_tokens - accepted, 0)
++
++    def _since_last_scrape(self, gauge: str, tokens: float, seconds: float) -> float:
++        """Tokens per second since the last scrape, the window llama.cpp's gauges cover."""
++
++        last_tokens, last_seconds = self._last_scrape.get(gauge, (0, 0.0))
++        self._last_scrape[gauge] = (tokens, seconds)
++        elapsed = seconds - last_seconds
++        return (tokens - last_tokens) / elapsed if elapsed > 0 else 0.0
++
++    def render_prometheus(self, status: dict, model_name: Optional[str] = None) -> str:
++        """
++        Render all metrics in the Prometheus text exposition format.
++
++        Args:
++            status: The status display's snapshot.
++            model_name: The loaded model, if any.
++        """
++
++        cache = status["cache"] or {}
++        max_tokens = cache.get("max_tokens", 0)
++        used_tokens = cache.get("used_tokens", 0)
++        deferred = sum(job["stage"] in ("queued", "waiting") for job in status["jobs"])
++
++        # (type, name, help, value)
++        metrics = [
++            (
++                "counter",
++                "prompt_tokens_total",
++                "Number of prompt tokens processed, excluding cached tokens",
++                status["prefilled_tokens"],
++            ),
++            (
++                "counter",
++                "prompt_tokens_cached_total",
++                "Number of prompt tokens reused from the cache",
++                self.prompt_tokens_cached_total,
++            ),
++            (
++                "counter",
++                "prompt_seconds_total",
++                "Total time spent processing prompts",
++                self.prompt_seconds_total,
++            ),
++            (
++                "counter",
++                "tokens_predicted_total",
++                "Number of generation tokens processed",
++                status["generated_tokens"],
++            ),
++            (
++                "counter",
++                "tokens_predicted_seconds_total",
++                "Total time spent generating tokens",
++                status["generated_seconds"],
++            ),
++            (
++                "counter",
++                "n_tokens_max",
++                "Largest observed sequence length (prompt + generation)",
++                self.n_tokens_max,
++            ),
++            (
++                "counter",
++                "requests_total",
++                "Number of finished generation requests, cancelled ones included",
++                status["completed"],
++            ),
++            (
++                "counter",
++                "spec_decode_num_draft_tokens_total",
++                "Speculative: Total draft tokens generated",
++                self.draft_tokens_total,
++            ),
++            (
++                "counter",
++                "spec_decode_num_accepted_tokens_total",
++                "Speculative: Total draft tokens accepted by the target model",
++                self.draft_tokens_accepted_total,
++            ),
++            (
++                "counter",
++                "spec_decode_num_drafts_total",
++                "Speculative: Total speculative decoding verification steps",
++                self.drafts_total,
++            ),
++            (
++                "gauge",
++                "prompt_tokens_seconds",
++                "Average prompt throughput in tokens/s",
++                self._since_last_scrape(
++                    "prompt", self._finished_prompt_tokens, self.prompt_seconds_total
++                ),
++            ),
++            (
++                "gauge",
++                "predicted_tokens_seconds",
++                "Average generation throughput in tokens/s",
++                self._since_last_scrape(
++                    "predicted", status["generated_tokens"], status["generated_seconds"]
++                ),
++            ),
++            (
++                "gauge",
++                "requests_processing",
++                "Number of requests processing",
++                len(status["jobs"]) - deferred,
++            ),
++            ("gauge", "requests_deferred", "Number of requests deferred", deferred),
++            (
++                "gauge",
++                "process_start_time_seconds",
++                "Start time of the process since the Unix epoch, in seconds",
++                self.process_start_time,
++            ),
++            (
++                "gauge",
++                "kv_cache_usage_ratio",
++                "KV cache usage by running requests. 1 means 100 percent usage",
++                used_tokens / max_tokens if max_tokens else 0.0,
++            ),
++            ("gauge", "kv_cache_tokens", "KV cache tokens in use", used_tokens),
++            ("gauge", "kv_cache_max_tokens", "Total KV cache capacity in tokens", max_tokens),
++            (
++                "gauge",
++                "kv_cache_reusable_tokens",
++                "Tokens a later request could reuse from the KV cache",
++                cache.get("cached_tokens", 0),
++            ),
++            (
++                "gauge",
++                "kv_cache_sysmem_tokens",
++                "Reusable tokens held only in the system memory tier",
++                cache.get("tier_cached_tokens", 0),
++            ),
++            (
++                "gauge",
++                "kv_cache_disk_tokens",
++                "Reusable tokens held only in the disk tier",
++                cache.get("disk_cached_tokens", 0),
++            ),
++            (
++                "gauge",
++                "kv_cache_hit_rate",
++                "Share of prompt pages served from the cache since the model was loaded",
++                cache.get("hit_rate") or 0.0,
++            ),
++            (
++                "gauge",
++                "kv_cache_sysmem_hit_rate",
++                "Share of prompt pages served from the system memory tier",
++                cache.get("tier_hit_rate") or 0.0,
++            ),
++            (
++                "gauge",
++                "kv_cache_disk_hit_rate",
++                "Share of prompt pages served from the disk tier",
++                cache.get("disk_hit_rate") or 0.0,
++            ),
++        ]
++
++        # (name, help, histogram)
++        histograms = [
++            (
++                "request_queue_time_seconds",
++                "Histogram of time spent in the queue before prefill, in seconds",
++                self.queue_time,
++            ),
++            (
++                "time_to_first_token_seconds",
++                "Histogram of time to first token, in seconds",
++                self.first_token_time,
++            ),
++            (
++                "e2e_request_latency_seconds",
++                "Histogram of end to end request latency, in seconds",
++                self.e2e_latency,
++            ),
++        ]
++
++        lines = []
++        for metric_type, name, help_text, value in metrics:
++            full_name = f"tabbyapi:{name}"
++            lines.append(f"# HELP {full_name} {help_text}")
++            lines.append(f"# TYPE {full_name} {metric_type}")
++            lines.append(f"{full_name} {value}")
++
++        for name, help_text, histogram in histograms:
++            full_name = f"tabbyapi:{name}"
++            lines.append(f"# HELP {full_name} {help_text}")
++            lines.append(f"# TYPE {full_name} histogram")
++            lines += histogram.render(full_name)
++
++        lines.append("# HELP tabbyapi:model_info The loaded model, in its model_name label")
++        lines.append("# TYPE tabbyapi:model_info gauge")
++        if model_name:
++            label = model_name.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
++            lines.append(f'tabbyapi:model_info{{model_name="{label}"}} 1')
++
++        return "\n".join(lines) + "\n"
++
++
++# Create an instance of the global metrics manager
++MetricsManager = MetricsManagerClass()
+diff --git a/config_sample.yml b/config_sample.yml
+index 17f1148b0eb06c51f9c1104fc8e0c05acc1f8286..966d4c961fddd1ee0ca210c7ebbf959f389b9a6a 100644
+--- a/config_sample.yml
++++ b/config_sample.yml
+@@ -56 +56,2 @@ network:
+-  enable_metrics: false
++  # Leave unset to keep the served metrics exporter.
++  # enable_metrics: true
+@@ -62 +63 @@ network:
+-  web_ui: true
++  web_ui: false
+@@ -418,0 +420,12 @@ draft_model:
++  # Optional ascending [max_batch_size, depth] pairs; null preserves the fixed-depth behavior.
++  # Count only jobs ready to decode. The first inclusive limit wins; above all limits,
++  # fall back to draft_num_tokens (or the drafter default). Both entries must be positive integers.
++  # Choose depths by measurement. The largest depth, including fallback, reserves cache history.
++  # Requires enabled drafting and single-sequence jobs. Reload to change the policy itself.
++  draft_num_tokens_by_batch:
++
++  # Columns of exllamav3's dynamic sparse LM head for MTP/DFlash drafters (default: 0, off).
++  # Verification always uses the full head. Alternative to the EXL3_MTP_HEAD_N pruned head
++  # (mutually exclusive in the engine); measure before enabling.
++  sparse_draft_head:
++
+@@ -420 +433 @@ draft_model:
+-  # Ceiling is given by num_draft_tokens.
++  # Confidence can shorten, but never exceed, draft_num_tokens or the selected batch policy depth.
+diff --git a/endpoints/OAI/router.py b/endpoints/OAI/router.py
+index 36ddc2d5bd8a97b5875749c887c65377b2f678a4..ce82fe8a8dae9c96fe05b9c90a74233f090583c1 100644
+--- a/endpoints/OAI/router.py
++++ b/endpoints/OAI/router.py
+@@ -22,0 +23 @@ from common.tabby_config import config
++from common.tokenize_offloop import prompt_chars, run_tokenize
+@@ -88,0 +90,2 @@ async def completion_request(request: Request, data: CompletionRequest) -> Compl
++    from exllamav3 import cache_trace as r823_trace
++    r823_trace.request_context(request, data)
+@@ -112 +115 @@ async def completion_request(request: Request, data: CompletionRequest) -> Compl
+-        model.check_context_length(prompt, data)
++        await run_tokenize(prompt_chars(prompt), model.check_context_length, prompt, data)
+@@ -167,0 +171,2 @@ async def chat_completion_request(
++    from exllamav3 import cache_trace as r823_trace
++    r823_trace.request_context(request, data)
+@@ -200 +205,2 @@ async def chat_completion_request(
+-            model.check_context_length(prompt, data, mm_embeddings)
++            # flan tokenize-offloop r2: the check encodes the prompt; a long one off the event loop
++            await run_tokenize(prompt_chars(prompt), model.check_context_length, prompt, data, mm_embeddings)
+diff --git a/endpoints/OAI/utils/chat_completion.py b/endpoints/OAI/utils/chat_completion.py
+index 99a317ccd5604955e8d15f632f950cd16c206071..d3ac9cca8a1b2a1ac9a70c979d4fa3dccc47e0e0 100644
+--- a/endpoints/OAI/utils/chat_completion.py
++++ b/endpoints/OAI/utils/chat_completion.py
+@@ -5,0 +6 @@ import pathlib
++from exllamav3.generator.name_policy import response_name
+@@ -57,0 +59,23 @@ from endpoints.OAI.utils.common_ import aggregate_usage_stats, get_timings, get_
++from endpoints.OAI.utils.tool_choice import (
++    check_forced_tool_calls,
++    forced_tool_generation,
++    forces_tool_call,
++    prepare_tool_choice_forcing,
++    resolve_reasoning_cap,
++    validate_tool_choice,
++)
++
++try:
++    from exllamav3.generator.window_loop_detect import WindowLoopDetector as LoopDetector
++except ImportError:
++    LoopDetector = None
++
++# Forced into the stream, ahead of the end-of-reasoning tag, when the reasoning
++# phase loops (loop-think r4, flan R784)
++LOOP_THINK_MESSAGE = (
++    "\n\nI am repeating myself, so I will stop thinking here and act on what I have.\n"
++)
++
++# Long-period rungs of the reasoning loop watch, as multiples k of L = 1.25W:
++# each is a collector-only LoopDetector(3kL, kL) (loop-think r5, flan R791)
++LOOP_THINK_LADDER = (1, 2, 4)
+@@ -620,0 +645,3 @@ async def apply_chat_template(data: ChatCompletionRequest):
++    # Reject required/named tool_choice without a matching tool (400)
++    validate_tool_choice(data)
++
+@@ -724,0 +752,22 @@ def _parse_tool_calls(
++def _finish_with_tool_calls(generation: dict, calls: list, label: str):
++    """
++    finish_reason once tool-call text was generated. The base always reported
++    "tool_calls", so a max_tokens stop inside a tool call reached the client
++    as "tool_calls" with no call (flan R791): that case keeps "length". Every
++    other end keeps the base's "tool_calls", with or without a parsed call (a
++    reasoning-only "stop" is what Hermes shows as the reply, R781).
++    """
++
++    if not calls:
++        cap_hit = generation.get("eos_reason") == "max_new_tokens"
++        xlogger.warning(
++            f"{label}: tool call text did not parse into a tool call; "
++            f"finish_reason {'length' if cap_hit else 'tool_calls'}",
++            {"eos_reason": generation.get("eos_reason")},
++        )
++        if cap_hit:
++            generation["finish_reason"] = "length"
++            return
++    generation["finish_reason"] = "tool_calls"
++
++
+@@ -875,0 +925,66 @@ async def _chat_stream_collector(
++    # tool_choice "required" or a named function: the tool call is enforced
++    # with a grammar (see endpoints/OAI/utils/tool_choice.py). "auto", "none"
++    # and an absent tool_choice skip this block entirely.
++    forcing = None
++    if forces_tool_call(params):
++        tokenizer = getattr(mc, "tokenizer", None)
++        forcing = prepare_tool_choice_forcing(
++            params,
++            tool_format,
++            tokenizer.single_id if tokenizer is not None else (lambda _: None),
++            label,
++            armed_by_reasoning_end=bool(use_think and start_in_reasoning_mode),
++        )
++    if forcing is not None:
++        # The grammar filter is armed by the reasoning end token, so the
++        # reasoning budget cannot be enforced by output injection (injection
++        # permanently disables a job's filters); forced_tool_generation
++        # enforces it as its reasoning cap instead.
++        budget_injection = None
++        reasoning_cap = resolve_reasoning_cap(budget)
++        params.grammar_string = forcing.grammar
++
++    # Reasoning loop: the backend's loop detector ends the job, which in the
++    # reasoning phase leaves a response with finish_reason "stop" and no
++    # content (clients such as Hermes then show the reasoning as the answer).
++    # Detect the loop here on reasoning tokens with the request's window W and
++    # force the end of the reasoning phase instead, like the budget does. The
++    # backend detector moves to a 2W window as a backstop so this one fires
++    # first, with 4 repetitions so it still only matches periods up to W/2 (a
++    # (2W, 2) detector would newly end 401-800-token loops as reasoning-only
++    # stops). It still ends content-phase loops, after 2W instead of W. Not
++    # armed when 2W exceeds the output chunk: the engine rebuilds its detector
++    # at every requeue, so a 2W window would never fill (R782 review). A second,
++    # collector-only detector catches periods up to 1.25W once 3 copies fill
++    # its window (R783: a ~710-token block repeated 6x escaped every detector);
++    # 3 copies, so one restated block (a draft rewritten verbatim) never fires.
++    # Two more collector-only rungs, (6L, 2L) and (12L, 4L), extend that to
++    # periods up to 4L (R791: exact loops with 1,199- and 3,713-token periods
++    # ran to max_tokens). A single larger L would not do: the whole window must
++    # be periodic, so each rung keeps the 3-copy floor at its own top period.
++    loop_detectors = []
++    loop_injection = None
++    stop_on_loop = params.get_stop_on_loop()
++    if (
++        isinstance(stop_on_loop, tuple)
++        and LoopDetector is not None
++        and forcing is None
++        and use_think
++        and start_in_reasoning_mode
++        and not (params.json_schema or params.regex_pattern or params.grammar_string)
++    ):
++        loop_injection = _reasoning_budget_injection(mc, LOOP_THINK_MESSAGE)
++        window, min_reps = stop_on_loop
++        max_rq = getattr(mc, "max_rq_tokens", None)
++        if loop_injection is not None and (max_rq is None or window * 2 <= max_rq):
++            long_period = window + window // 4
++            loop_detectors = [LoopDetector(window, window // min_reps)] + [
++                LoopDetector(3 * rung * long_period, rung * long_period)
++                for rung in LOOP_THINK_LADDER
++            ]
++            params._loop_backstop = (window * 2, min_reps * 2)
++            xlogger.debug(
++                f"{label}: reasoning loop watch at window {window}, "
++                f"engine backstop {params._loop_backstop}"
++            )
++
+@@ -880,10 +995,30 @@ async def _chat_stream_collector(
+-        new_generation = mc.stream_generate(
+-            request_id,
+-            prompt,
+-            params,
+-            disconnect_handler,
+-            mm_embeddings,
+-            reasoning_phase=phase_applied,
+-            channel_parser=channel_parser,
+-            label=label,
+-        )
++        if forcing is not None:
++            # Served tool_choice forcing; reasoning_phase replaces the old
++            # filter_trigger (the grammar is armed by the end-of-reasoning tag)
++            new_generation = forced_tool_generation(
++                mc,
++                request_id,
++                prompt,
++                params,
++                disconnect_handler,
++                mm_embeddings,
++                reasoning_end=(
++                    mc.reasoning_end_token if use_think and start_in_reasoning_mode else None
++                ),
++                tool_start=get_toolcall_tags(tool_format)[0],
++                reasoning_cap=reasoning_cap,
++                reasoning_message=budget_message if budget is not None else "",
++                call_grammar=forcing.call_grammar,
++                label=label,
++            )
++        else:
++            new_generation = mc.stream_generate(
++                request_id,
++                prompt,
++                params,
++                disconnect_handler,
++                mm_embeddings,
++                reasoning_phase=phase_applied,
++                **({"channel_parser": channel_parser} if channel_parser is not None else {}),
++                label=label,
++            )
+@@ -922 +1057 @@ async def _chat_stream_collector(
+-                    if tool_streamer is not None:
++                    if tool_streamer is not None and forcing is None:
+@@ -944,0 +1080,23 @@ async def _chat_stream_collector(
++                    loop_detectors = []
++
++            if (
++                loop_detectors
++                and not finish_reason
++                and parser.in_reasoning
++                and not parser.in_tool
++            ):
++                ids = generation.get("token_ids") or []
++                if any([d.feed_many(ids) for d in loop_detectors]):
++                    injected = mc.constrain_generation_output(request_id, loop_injection)
++                    xlogger.warning(
++                        f"{label}: reasoning loop detected after "
++                        f"{loop_detectors[0]._total} reasoning tokens observed; "
++                        + (
++                            "forcing the end of the reasoning phase"
++                            if injected
++                            else "could not force the end of the reasoning phase"
++                        ),
++                        {"request_id": request_id, "injection": loop_injection},
++                    )
++                    loop_detectors = []
++                    budget_injection = None
+@@ -975,14 +1133,13 @@ async def _chat_stream_collector(
+-                if finish_reason and full_tool:
+-                    if tool_streamer is not None and tool_streamer.emitted:
+-                        # Fragments were streamed; the client assembles the
+-                        # calls itself, so only cross-check against the
+-                        # authoritative parse and close the finish reason.
+-                        tool_streamer.verify(full_tool, label)
+-                        names = tool_streamer.names
+-                        xlogger.info(
+-                            f"{label}: streamed {len(names)} tool call"
+-                            f"{'' if len(names) == 1 else 's'} ({tool_format}): " + ", ".join(names)
+-                        )
+-                    else:
+-                        generation["delta_tool_calls"] = _parse_tool_calls(
+-                            full_tool, tool_format, label, param_types
++                if finish_reason:
++                    if full_tool:
++                        if tool_streamer is not None and tool_streamer.emitted:
++                            tool_streamer.verify(full_tool, label)
++                            generation["finish_reason"] = "tool_calls"
++                        else:
++                            generation["delta_tool_calls"] = _parse_tool_calls(
++                                full_tool, tool_format, label, param_types
++                            )
++                            _finish_with_tool_calls(generation, generation["delta_tool_calls"], label)
++                    if forcing is not None:
++                        check_forced_tool_calls(
++                            forcing, generation, generation["delta_tool_calls"], label
+@@ -990 +1146,0 @@ async def _chat_stream_collector(
+-                    generation["finish_reason"] = "tool_calls"
+@@ -1006 +1162,3 @@ async def _chat_stream_collector(
+-                generation["finish_reason"] = "tool_calls"
++                _finish_with_tool_calls(generation, generation["tool_calls"], label)
++            if forcing is not None:
++                check_forced_tool_calls(forcing, generation, generation["tool_calls"], label)
+@@ -1091 +1249 @@ async def stream_generate_chat_completion(
+-                model_path.name,
++                response_name(data.model, model_path.name),
+@@ -1112 +1270 @@ async def stream_generate_chat_completion(
+-                            model_path.name,
++                            response_name(data.model, model_path.name),
+@@ -1201 +1359 @@ async def generate_chat_completion(
+-        response = _compose_response(request.state.id, generations, model_path.name, return_usage)
++        response = _compose_response(request.state.id, generations, response_name(data.model, model_path.name), return_usage)
+diff --git a/endpoints/OAI/utils/common_.py b/endpoints/OAI/utils/common_.py
+index 81ca7cad26c5b6390f1603c3eb833abba10aeab5..f62962d41595db25b91f795ac193b9bb5ce5acf6 100644
+--- a/endpoints/OAI/utils/common_.py
++++ b/endpoints/OAI/utils/common_.py
+@@ -1,0 +2 @@ import pathlib
++from exllamav3.generator.name_policy import NATIVE, resolve
+@@ -159,0 +161,9 @@ async def load_inline_model(model_name: str, request: Request):
++    loaded = model.container.model_dir.name if model.container and model.container.loaded else None
++    try:
++        policy = resolve(model_name, loaded)
++    except ValueError as exc:
++        raise HTTPException(400, str(exc)) from exc
++    if policy is not NATIVE:
++        return
++
++
+diff --git a/endpoints/OAI/utils/completion.py b/endpoints/OAI/utils/completion.py
+index 8a52530b6a7b5c5c2d08568325a0294784434aa0..1c2d254202256be4d084c6745ddb2e6f4f042280 100644
+--- a/endpoints/OAI/utils/completion.py
++++ b/endpoints/OAI/utils/completion.py
+@@ -9,0 +10 @@ import pathlib
++from exllamav3.generator.name_policy import response_name
+@@ -360 +361 @@ async def stream_generate_completion(
+-                model_path.name,
++                response_name(data.model, model_path.name),
+@@ -378 +379 @@ async def stream_generate_completion(
+-                            model_path.name,
++                            response_name(data.model, model_path.name),
+@@ -508 +509 @@ async def generate_completion(
+-        response = _compose_response(request.state.id, generations, model_path.name, return_usage)
++        response = _compose_response(request.state.id, generations, response_name(data.model, model_path.name), return_usage)
+diff --git a/endpoints/OAI/utils/tool_choice.py b/endpoints/OAI/utils/tool_choice.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1aae0140da6fad675948b510e5fc5fe834b6473f
+--- /dev/null
++++ b/endpoints/OAI/utils/tool_choice.py
+@@ -0,0 +1,589 @@
++"""
++Enforcement of tool_choice "required" and named tool choice for chat completions.
++
++"auto", "none" and an absent tool_choice never reach this module's forcing
++path: the chat completion collector only calls in here when
++resolve_tool_choice_forcing() returns a forcing spec, so those requests take
++exactly the code path they took before tool_choice enforcement existed.
++
++Mechanism: the tool call is enforced by a Lark grammar (llguidance filter)
++passed to the backend through the request's grammar_string. When generation
++starts inside a reasoning block, the job is started with reasoning_phase=True
++(TabbyAPI fc25e6a's phase plumbing, which replaced filter_trigger): the backend
++arms the filter with the reasoning end token as its trigger, so reasoning is
++unconstrained; after the reasoning end the model either calls at once, or
++writes assistant content (bounded; OpenAI allows content alongside
++tool_calls) and then calls or ends the content. Nothing but further calls may
++follow a call. A turn that ends in content is continued by a call-only job
++(the end of the content is the transition to the call, instead of a masked
++EOS that would make the model loop in its content). The constraint is applied in the engine at
++sampling time, so it holds for every verified token, including speculative
++(MTP) draft verification.
++
++A model that never ends its reasoning is bounded by a phase-2 continuation:
++once the reasoning phase exceeds a cap (the request's reasoning budget, else
++TABBY_TOOL_CHOICE_REASONING_CAP tokens), or the model stops inside its
++reasoning, the first job is cancelled and a second job continues from
++prompt + reasoning + reasoning end, with the grammar active from its first
++token.
++"""
++
++import json
++import os
++import re
++from dataclasses import dataclass
++from typing import AsyncIterator, Callable, List, Optional
++
++from fastapi import HTTPException
++
++from common.logger import xlogger
++from common.networking import handle_request_error
++from endpoints.OAI.types.tools import NamedToolChoice, ToolSpec
++from endpoints.OAI.utils.toolcall_formats import qwen3_coder
++from endpoints.OAI.utils.tools import ALL_TOOLCALL_FORMATS, get_toolcall_tags
++
++# Default cap on reasoning tokens before a required/named tool call is forced
++# by a phase-2 continuation, when the request resolves no reasoning budget.
++# 0 disables the cap (the reasoning phase is then bounded by max_tokens only).
++REASONING_CAP_ENV = "TABBY_TOOL_CHOICE_REASONING_CAP"
++DEFAULT_REASONING_CAP = 16384
++
++# Assistant content allowed before the forced call, in tokens. A turn may
++# carry content and tool_calls together (clients that force a call on every
++# turn need the answer to go somewhere); the bound keeps a model that would
++# rather answer than call from writing until max_tokens. 0 disallows content.
++CONTENT_MAX_TOKENS_ENV = "TABBY_TOOL_CHOICE_CONTENT_MAX_TOKENS"
++DEFAULT_CONTENT_MAX_TOKENS = 1024
++
++# Longest whitespace run the grammar accepts at any position. Bounded so a
++# model that resists the tool call cannot stall in whitespace until max_tokens.
++_MAX_WS = 8
++
++# Names the qwen3_coder parser can read back: `<function=([^>\s]+)...>`
++_PARSEABLE_NAME = re.compile(r"[^>\s]+")
++
++
++@dataclass
++class ToolChoiceForcing:
++    """What a required/named tool_choice request forces."""
++
++    mode: str  # "required" or "named"
++    name: Optional[str]  # function name for named choice
++    single_call: bool  # exactly one call (named, or parallel_tool_calls false)
++    grammar: Optional[str] = None
++    # Call-only grammar for the continuation after a turn that ended in
++    # content (None when the main grammar does not admit content)
++    call_grammar: Optional[str] = None
++
++
++def _request_error(message: str) -> HTTPException:
++    error_message = handle_request_error(message, exc_info=False).error.message
++    return HTTPException(400, error_message)
++
++
++def _tool_names(tools: Optional[List[ToolSpec]]) -> List[str]:
++    return [tool.function.name for tool in tools or []]
++
++
++def validate_tool_choice(data) -> None:
++    """
++    Reject tool_choice combinations OpenAI rejects, and ones this server cannot
++    honour. Only "required" and named choices are checked; "auto", "none" and
++    an absent tool_choice pass through untouched.
++    """
++
++    choice = data.tool_choice
++    if choice != "required" and not isinstance(choice, NamedToolChoice):
++        return
++
++    label = "required" if choice == "required" else "a named function"
++    if not data.tools:
++        raise _request_error(f"tool_choice is {label}, but no tools were provided.")
++
++    if isinstance(choice, NamedToolChoice):
++        name = choice.function.name
++        if name not in _tool_names(data.tools):
++            raise _request_error(
++                f"tool_choice names function '{name}', which is not in the provided tools."
++            )
++
++    # The tool call is enforced with a grammar; a second, client-supplied
++    # constraint would be intersected with it and could leave no valid token
++    response_format = getattr(data, "response_format", None)
++    constrained = (
++        data.json_schema
++        or data.regex_pattern
++        or data.grammar_string
++        or (response_format is not None and response_format.type in ("json", "json_schema"))
++    )
++    if constrained:
++        raise _request_error(
++            f"tool_choice is {label}; it cannot be combined with json_schema, "
++            "regex_pattern, grammar_string or a JSON response_format."
++        )
++
++
++def forces_tool_call(data) -> bool:
++    """True for tool_choice "required" or a named function."""
++
++    return data.tool_choice == "required" or isinstance(data.tool_choice, NamedToolChoice)
++
++
++def resolve_tool_choice_forcing(data) -> Optional[ToolChoiceForcing]:
++    """Forcing spec for a request, or None for auto/none/absent tool_choice."""
++
++    choice = data.tool_choice
++    if isinstance(choice, NamedToolChoice):
++        return ToolChoiceForcing(mode="named", name=choice.function.name, single_call=True)
++    if choice == "required":
++        return ToolChoiceForcing(
++            mode="required",
++            name=None,
++            single_call=data.parallel_tool_calls is False,
++        )
++    return None
++
++
++def supports_forcing(tool_format: Optional[str]) -> bool:
++    """Tool formats with a grammar builder."""
++
++    return bool(tool_format) and ALL_TOOLCALL_FORMATS.get(tool_format) is qwen3_coder
++
++
++def _lark_string(text: str) -> str:
++    return json.dumps(text, ensure_ascii=False)
++
++
++def _tag_literal(tag: str, single_id: Callable[[str], Optional[int]]) -> str:
++    """
++    Grammar literal for a tool tag. llguidance treats added tokens as special
++    (their text form does not match the token), so a tag that is a single
++    token must be referenced by ID, or the grammar would force the model to
++    spell the tag out of ordinary text tokens.
++    """
++
++    token_id = single_id(tag)
++    if token_id is not None:
++        return f"<[{int(token_id)}]>"
++    return _lark_string(tag)
++
++
++def _param_names(tool: ToolSpec) -> Optional[List[str]]:
++    """Declared parameter names, or None when the schema does not list any."""
++
++    properties = (tool.function.parameters or {}).get("properties")
++    if not isinstance(properties, dict) or not properties:
++        return None
++    names = list(properties.keys())
++    if not all(isinstance(n, str) and _PARSEABLE_NAME.fullmatch(n) for n in names):
++        return None
++    return names
++
++
++def build_qwen3_coder_grammar(
++    forcing: ToolChoiceForcing,
++    tools: List[ToolSpec],
++    tool_start: str,
++    tool_end: str,
++    single_id: Callable[[str], Optional[int]],
++    outer_ws: bool = True,
++    content_max_tokens: int = 0,
++) -> Optional[str]:
++    """
++    Lark grammar (llguidance dialect) for one or more qwen3_coder tool calls:
++    optional whitespace (only with outer_ws), optional assistant content (up to
++    content_max_tokens tokens, starting with a non-whitespace character; only
++    when TOOL_START is a single token, since the content lexeme ends at a
++    special token), then TOOL_START, `<function=NAME>`, zero or more
++    `<parameter=P>VALUE</parameter>`, `</function>`, TOOL_END. NAME is one of
++    the provided tools (only the named one for a named choice), P one of that
++    tool's declared parameters (any name if the schema lists none), VALUE free
++    text. The grammar admits EOS after a complete call, or (with content) at
++    the end of the content: the caller continues such a turn with a call-only
++    grammar. Masking EOS after content made the model loop in its content
++    (R523 round 2: repeated sign-offs until the loop detector stopped it).
++
++    outer_ws (whitespace before the first and after the last call) is for a
++    grammar armed by the reasoning end, where the chat template puts whitespace
++    between the reasoning block and the call and the stream parser holds
++    whitespace after the reasoning end back. A grammar active from the first
++    token follows a prompt that already ends the reasoning block and its
++    whitespace; outer whitespace there would only stream as a whitespace-only
++    content delta.
++    """
++
++    tools_by_name = {}
++    for tool in tools:
++        tools_by_name.setdefault(tool.function.name, tool)
++
++    names = [forcing.name] if forcing.mode == "named" else list(tools_by_name)
++    names = [n for n in names if n in tools_by_name and _PARSEABLE_NAME.fullmatch(n)]
++    if not names:
++        return None
++
++    lead, trail = (" WS? ", " WS?") if outer_ws else (" ", "")
++    tool_start_lit = _tag_literal(tool_start, single_id)
++    allow_content = content_max_tokens > 0 and tool_start_lit.startswith("<[")
++    calls = "call" if forcing.single_call else "call (WS? call)*"
++    lines = []
++    if allow_content:
++        # Content lexeme absorbs the whitespace between content and call
++        lines.append(f"start:{lead}content? {calls}{trail} |{lead}content")
++    else:
++        lines.append(f"start:{lead}{calls}{trail}")
++
++    fn_rules = [f"fn_{i}" for i in range(len(names))]
++    lines.append(
++        f"call: {tool_start_lit} WS? ({' | '.join(fn_rules)}) "
++        f"WS? {_tag_literal(tool_end, single_id)}"
++    )
++    if allow_content:
++        # Free text; `.` never matches a special token, so the lexeme ends at
++        # TOOL_START (or any other special token, which the grammar rejects)
++        lines.append(
++            f"content[max_tokens={int(content_max_tokens)}]: " + r"/(?s:[^ \t\r\n].*)/"
++        )
++
++    for i, name in enumerate(names):
++        param_names = _param_names(tools_by_name[name])
++        if param_names is None:
++            pname = "PNAME_ANY"
++        else:
++            pname = f"pname_{i}"
++            lines.append(f"{pname}: " + " | ".join(_lark_string(p) for p in param_names))
++        lines.append(
++            f'fn_{i}: "<function=" {_lark_string(name)} ">" WS? '
++            f'(param_{i} WS?)* "</function>"'
++        )
++        lines.append(f'param_{i}: "<parameter=" {pname} ">" pvalue')
++
++    # A lazy lexeme ends at the first closing tag, so values are free text
++    # that cannot contain the closing parameter tag (the parser splits there)
++    lines.append(r"pvalue[lazy]: /(?s:.*)<\/parameter>/")
++    lines.append(r"PNAME_ANY: /[^>\s]+/")
++    lines.append(r"WS: /[ \t\r\n]{1," + str(_MAX_WS) + r"}/")
++
++    grammar = "\n".join(lines) + "\n"
++
++    # The backend picks GBNF over Lark when it sees the GBNF rule operator
++    if "::=" in grammar:
++        return None
++    return grammar
++
++
++def prepare_tool_choice_forcing(
++    data,
++    tool_format: Optional[str],
++    single_id: Callable[[str], Optional[int]],
++    label: str,
++    armed_by_reasoning_end: bool = True,
++) -> Optional[ToolChoiceForcing]:
++    """
++    Forcing spec with its grammar for a required/named request, or None when
++    the request does not force a tool call or the model's tool format has no
++    grammar builder (the request then behaves as tool_choice "auto").
++    """
++
++    forcing = resolve_tool_choice_forcing(data)
++    if forcing is None:
++        return None
++
++    tool_start, tool_end = get_toolcall_tags(tool_format)
++    if not supports_forcing(tool_format) or not tool_start or not tool_end:
++        xlogger.warning(
++            f"{label}: tool_choice {forcing.mode} is not enforced for tool format "
++            f"'{tool_format}'; the request is served as tool_choice auto."
++        )
++        return None
++
++    content_max_tokens = resolve_content_max_tokens()
++    forcing.grammar = build_qwen3_coder_grammar(
++        forcing,
++        data.tools or [],
++        tool_start,
++        tool_end,
++        single_id,
++        outer_ws=armed_by_reasoning_end,
++        content_max_tokens=content_max_tokens,
++    )
++    if forcing.grammar is not None and "content" in forcing.grammar.split("\n", 1)[0]:
++        # The continuation prompt ends with the content and the template's
++        # separator, so the call starts at once
++        forcing.call_grammar = build_qwen3_coder_grammar(
++            forcing, data.tools or [], tool_start, tool_end, single_id, outer_ws=False
++        )
++    if forcing.grammar is None:
++        xlogger.warning(
++            f"{label}: no tool call grammar could be built for tool_choice "
++            f"{forcing.mode} (tool names the parser cannot read back); the request "
++            "is served as tool_choice auto."
++        )
++        return None
++
++    return forcing
++
++
++def resolve_content_max_tokens() -> int:
++    """Content tokens allowed before the forced call (0 = none)."""
++
++    try:
++        value = int(os.environ.get(CONTENT_MAX_TOKENS_ENV, DEFAULT_CONTENT_MAX_TOKENS))
++    except ValueError:
++        value = DEFAULT_CONTENT_MAX_TOKENS
++    return max(value, 0)
++
++
++def resolve_reasoning_cap(budget: Optional[int]) -> Optional[int]:
++    """Reasoning tokens allowed before a forced call: the budget, else the default cap."""
++
++    if budget is not None:
++        return budget
++    try:
++        cap = int(os.environ.get(REASONING_CAP_ENV, DEFAULT_REASONING_CAP))
++    except ValueError:
++        cap = DEFAULT_REASONING_CAP
++    return cap if cap > 0 else None
++
++
++class ToolChoiceNotHonoured(RuntimeError):
++    """A required/named request finished on its own without the forced call."""
++
++
++def check_forced_tool_calls(forcing: ToolChoiceForcing, finish: dict, calls: list, label: str):
++    """
++    Fail the request (503 through the existing error path) when a forced
++    request stopped on its own without the call it was forced to make, e.g.
++    because the backend could not compile the grammar and dropped the filter.
++    Limits the client set (max_tokens, stop strings) end the request as usual;
++    every other end (stop token, filter end, the loop detector, ...) without
++    the call is a failure. R523 round 2: a content loop ended by the loop
++    detector (eos_reason loop_detected) slipped past a check that only looked
++    at stop_token/end_filter.
++    """
++
++    if finish.get("eos_reason") in ("max_new_tokens", "stop_string"):
++        return
++    names = [c["function"]["name"] for c in calls or []]
++    if names and (forcing.mode != "named" or all(n == forcing.name for n in names)):
++        return
++    message = (
++        f"{label}: tool_choice {forcing.mode} was not honoured: "
++        f"generation ended with tool calls {names}"
++        + (f", expected '{forcing.name}'" if forcing.mode == "named" else "")
++        + ". Check the log for a grammar that failed to compile."
++    )
++    xlogger.error(message)
++    raise ToolChoiceNotHonoured(message)
++
++
++class _TagWatch:
++    """Detects tags in a stream of text chunks, including tags split across chunks."""
++
++    def __init__(self, *tags: str):
++        self.tags = [t for t in tags if t]
++        self.keep = max((len(t) - 1 for t in self.tags), default=0)
++        self.tail = ""
++        self.seen = set()
++
++    def feed(self, text: str):
++        window = self.tail + text
++        self.seen.update(t for t in self.tags if t in window)
++        self.tail = window[-self.keep :] if self.keep else ""
++
++
++async def forced_tool_generation(
++    mc,
++    request_id: str,
++    prompt: str,
++    params,
++    disconnect_handler,
++    mm_embeddings,
++    reasoning_end: Optional[str],
++    tool_start: str,
++    reasoning_cap: Optional[int],
++    reasoning_message: str,
++    call_grammar: Optional[str],
++    label: str,
++) -> AsyncIterator[dict]:
++    """
++    Generation stream for a required/named request. params carries the tool
++    call grammar; reasoning_end is the end-of-reasoning tag when generation
++    starts inside a reasoning block (the first job then runs with
++    reasoning_phase=True, so the backend arms the grammar on that tag), else
++    None (grammar active from the first token).
++
++    The first job's chunks pass through unchanged, so a turn that calls within
++    the reasoning cap is a single job, identical in shape to any other
++    constrained request. Two ends start a continuation job instead of ending
++    the request:
++
++    - The reasoning phase reaches reasoning_cap tokens (the job is cancelled
++      and whatever it still had queued is discarded, never forwarded), or the
++      job stops on a stop token without ever ending its reasoning: continue
++      from prompt + forwarded text + reasoning_message + reasoning end with the
++      same grammar, active from its first token. The injected text is yielded
++      as a regular chunk, as the reasoning budget injection is, so downstream
++      parsing sees an ordinary end of reasoning.
++    - The job ends after its reasoning without a tool call start (the grammar
++      admits ending the content): continue from prompt + forwarded text with
++      the content's trailing whitespace replaced by the template's separator,
++      under call_grammar, which starts with the call.
++
++    Only the final job's finish chunk is yielded, with usage covering every job.
++    """
++
++    # Pristine copy for continuations (the backend extends params.stop in place)
++    base_params = params.model_copy(deep=True)
++    job_prompt = prompt
++    job_params = params
++    job_trigger = reasoning_end
++    job_id = request_id
++    job_label = label
++    phase = 1
++
++    forwarded_text = ""
++    forwarded_tokens = 0
++    reasoning_tokens = 0
++    prompt_tokens = None
++    # Reasoning is open until its end tag, or a tool call start (a call made
++    # inside the reasoning, or a filter that could not be armed by the
++    # reasoning end and constrains from the first token), shows up
++    reasoning_watch = _TagWatch(reasoning_end, tool_start) if reasoning_end else None
++    tool_watch = _TagWatch(tool_start)
++    reasoning_ended_by_injection = False
++    continued_to_call = False
++    last_step = None
++
++    def reasoning_open():
++        return reasoning_watch is not None and not reasoning_watch.seen and not reasoning_ended_by_injection
++
++    while True:
++        next_params = base_params.model_copy(deep=True)
++        generation = mc.stream_generate(
++            job_id,
++            job_prompt,
++            job_params,
++            disconnect_handler,
++            mm_embeddings,
++            # filter_trigger=<end tag> before fc25e6a; reasoning_phase=True now
++            # arms the grammar on the end-of-reasoning token (engine trigger),
++            # None keeps the grammar active from the first token
++            reasoning_phase=True if job_trigger else None,
++            label=job_label,
++        )
++
++        step = None
++        # Completion tokens of the earlier jobs (the finish chunk of this one
++        # counts its own)
++        earlier_tokens = forwarded_tokens
++        async for chunk in generation:
++            if prompt_tokens is None:
++                prompt_tokens = chunk.get("prompt_tokens")
++            if "finish_reason" in chunk:
++                eos_reason = chunk.get("eos_reason")
++                if reasoning_open() and eos_reason == "stop_token":
++                    step = ("end_reasoning", "the model stopped inside its reasoning")
++                elif (
++                    not reasoning_open()
++                    and not tool_watch.seen
++                    and call_grammar is not None
++                    and not continued_to_call
++                    and eos_reason in ("stop_token", "end_filter")
++                ):
++                    step = ("call", "the turn ended in content without a tool call")
++                else:
++                    if phase > 1:
++                        _report_continued_usage(chunk, prompt_tokens, earlier_tokens, last_step)
++                    yield chunk
++                    return
++                break
++
++            text = chunk.get("text", "")
++            token_ids = chunk.get("token_ids") or []
++            forwarded_text += text
++            forwarded_tokens += len(token_ids)
++            tool_watch.feed(text)
++            if reasoning_open():
++                reasoning_watch.feed(text)
++                if reasoning_open():
++                    reasoning_tokens += len(token_ids)
++            yield chunk
++
++            if reasoning_open() and reasoning_cap is not None and reasoning_tokens >= reasoning_cap:
++                step = ("end_reasoning", f"reasoning reached {reasoning_tokens} tokens (cap {reasoning_cap})")
++                job = mc.active_job_ids.get(job_id)
++                if job is not None:
++                    await job.cancel()
++                # Drain the cancelled job; nothing it still had queued is forwarded
++                async for _ in generation:
++                    pass
++                break
++
++        if step is None or getattr(disconnect_handler, "disconnected", False):
++            # The job ended without a finish chunk (cancelled from elsewhere),
++            # or the client is gone
++            return
++
++        if next_params.max_tokens and next_params.max_tokens > 0:
++            remaining = next_params.max_tokens - forwarded_tokens
++            if remaining <= 0:
++                yield {
++                    "finish_reason": "length",
++                    "eos_reason": "max_new_tokens",
++                    "prompt_tokens": prompt_tokens or 0,
++                    "gen_tokens": forwarded_tokens,
++                }
++                return
++            next_params.max_tokens = remaining
++
++        kind, reason = step
++        phase += 1
++        last_step = {"trigger": reason, "phase": phase}
++        if kind == "end_reasoning":
++            injection = reasoning_message + reasoning_end
++            xlogger.info(
++                f"{label}: tool_choice forcing a tool call: {reason}; "
++                "continuing after the reasoning end with the tool call grammar active.",
++                {"request_id": request_id, "reasoning_tokens": reasoning_tokens},
++            )
++            yield {"text": injection, "token_ids": [], "prompt_tokens": prompt_tokens}
++            forwarded_text += injection
++            reasoning_ended_by_injection = True
++            job_prompt = prompt + forwarded_text
++        else:
++            xlogger.info(
++                f"{label}: tool_choice forcing a tool call: {reason}; "
++                "continuing after the content with a call-only grammar.",
++                {"request_id": request_id},
++            )
++            next_params.grammar_string = call_grammar
++            continued_to_call = True
++            # The template renders a content + call turn as content, a blank
++            # line, then the call; the whitespace already streamed as content
++            # is not repeated
++            job_prompt = prompt + forwarded_text.rstrip() + "\n\n"
++        job_params = next_params
++        job_trigger = None
++        job_id = f"{request_id}-tc{phase}"
++        job_label = f"{label} (tool_choice phase {phase})"
++
++
++def _report_continued_usage(chunk: dict, prompt_tokens, earlier_tokens: int, step_info: dict):
++    """
++    Usage of a continued request against the client's prompt: a continuation's
++    prompt includes earlier output, which is completion tokens. The last job's
++    own numbers stay in the chunk under tool_choice_continuation (and in the
++    server log).
++    """
++
++    job_prompt_tokens = chunk.get("prompt_tokens") or 0
++    client_prompt_tokens = prompt_tokens if prompt_tokens is not None else job_prompt_tokens
++    chunk["tool_choice_continuation"] = {
++        **step_info,
++        "prompt_tokens": job_prompt_tokens,
++        "cached_tokens": chunk.get("cached_tokens"),
++        "gen_tokens": chunk.get("gen_tokens"),
++    }
++    chunk["prompt_tokens"] = client_prompt_tokens
++    chunk["cached_tokens"] = min(chunk.get("cached_tokens") or 0, client_prompt_tokens)
++    chunk["gen_tokens"] = earlier_tokens + (chunk.get("gen_tokens") or 0)
+diff --git a/endpoints/core/router.py b/endpoints/core/router.py
+index ee322bbae44db80cc651a0d286c81c795bb51d1e..8e6d0f85f33a510a2b545808ef093f14acac0c02 100644
+--- a/endpoints/core/router.py
++++ b/endpoints/core/router.py
+@@ -3,0 +4 @@ import pathlib
++from exllamav3.generator.name_policy import advertised
+@@ -14,0 +16 @@ from common.downloader import hf_repo_download
++from common.metrics import render_metrics
+@@ -93,2 +95,2 @@ async def healthcheck(response: Response) -> HealthCheckResponse:
+-@router.get("/metrics", dependencies=[Depends(check_api_key)])
+-async def metrics():
++@router.get("/metrics")
++async def metrics(request: Request):
+@@ -97,6 +99,2 @@ async def metrics():
+-    if not config.network.enable_metrics:
+-        raise HTTPException(
+-            404,
+-            "The metrics endpoint is disabled. Set network.enable_metrics to true in config.yml "
+-            "to enable it.",
+-        )
++    if config.network.enable_metrics is None:
++        return Response(content=render_metrics(), media_type="text/plain; version=0.0.4")
+@@ -103,0 +102,3 @@ async def metrics():
++    await check_api_key(request.headers.get("x-api-key"), request.headers.get("authorization"))
++    if not config.network.enable_metrics:
++        raise HTTPException(404, "Set network.enable_metrics to true to enable the metrics endpoint.")
+@@ -160,0 +162,6 @@ async def list_models(request: Request) -> ModelList:
++    if model.container and model.container.loaded:
++        current = get_current_model()
++        existing = {card.id for card in models.data}
++        for alias in advertised(current.id):
++            if alias not in existing:
++                models.data.append(current.model_copy(update={"id": alias}, deep=True))
+diff --git a/endpoints/ui/static/samplers.json b/endpoints/ui/static/samplers.json
+index b1efd8f884d41dfb101d4e20dc304d7e34cb4173..d17dbf460dd6ee9d1525a09569c9941e2c7111b5 100644
+--- a/endpoints/ui/static/samplers.json
++++ b/endpoints/ui/static/samplers.json
+@@ -10,0 +11 @@
++        { "key": "loop_detect_window", "label": "Exact repetition window", "type": "int", "min": 0, "max": 32768, "step": 1, "default": 800 },
+diff --git a/rebase167_runtime_audit.py b/rebase167_runtime_audit.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..8312b15c68b18d7a878d95677d361b11b635d5a0
+--- /dev/null
++++ b/rebase167_runtime_audit.py
+@@ -0,0 +1,65 @@
++"""Start Tabby normally and record the loaded Flash-Next configuration."""
++
++import functools
++import json
++import weakref
++
++
++def emit(kind, evidence):
++    print(f"REBASE167_{kind} {json.dumps(evidence, sort_keys=True)}", flush=True)
++
++
++def install():
++    from common import model
++    from exllamav3.ext import exllamav3_ext as ext
++    from exllamav3.generator.job import Job
++
++    load = model.load_model
++    init_job = Job.__init__
++    receive = Job.receive_sample
++
++    @functools.wraps(load)
++    async def load_and_record(*args, **kwargs):
++        result = await load(*args, **kwargs)
++        container = model.container
++        selector = getattr(ext, "rope_fast_sincos_enabled", None)
++        emit("RUNTIME", {
++            "placement": {m.key: str(m.device) for m in container.model.modules},
++            "rope": "fast_sincos" if selector is None or selector() else "range_reduced",
++            "rope_source": "served native implementation" if selector is None else "native selector",
++            "reasoning": [container.reasoning_start_token, container.reasoning_end_token],
++        })
++        return result
++
++    @functools.wraps(init_job)
++    def init_and_record(job, *args, **kwargs):
++        init_job(job, *args, **kwargs)
++        if job.name_policy.fast:
++            ref = weakref.ref(job)
++
++            @functools.wraps(receive)
++            def receive_and_record(*args, **kwargs):
++                current = ref()
++                result = receive(current, *args, **kwargs)
++                if result[0]:
++                    emit("FAST", dict(current.fast_metrics))
++                return result
++
++            job.receive_sample = receive_and_record
++
++    model.load_model = load_and_record
++    Job.__init__ = init_and_record
++
++
++if __name__ == "__main__":
++    import main
++
++    start = main.entrypoint_async
++
++    async def start_audited():
++        # This runs after main has configured its allocator and dependencies.
++        install()
++        await start()
++
++    main.entrypoint_async = start_audited
++    main.entrypoint()
+diff --git a/tests/test_metrics_exposition.py b/tests/test_metrics_exposition.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5060e0b9c0fad4c54916dd95db1839ce41c66e5a
+--- /dev/null
++++ b/tests/test_metrics_exposition.py
+@@ -0,0 +1,182 @@
++"""
++Unit tests for the Prometheus exposition writer in common.metrics.
++
++common.metrics is stdlib-only at import time, so these tests run anywhere with
++the tree on sys.path; no app dependencies needed. The model container is
++faked through sys.modules, the same lazy lookup the module uses in production.
++"""
++
++import pathlib
++import sys
++import unittest
++from types import SimpleNamespace
++
++from common import metrics
++
++
++def parse_exposition(text):
++    """Parse sample lines -> {(name, sorted-labels-tuple): float}."""
++
++    series = {}
++    for line in text.splitlines():
++        if not line or line.startswith("#"):
++            continue
++        left, _, value = line.partition(" ")
++        if "{" in left:
++            name, _, rest = left.partition("{")
++            labels = tuple(
++                sorted(
++                    (kv.split("=", 1)[0], kv.split("=", 1)[1].strip('"'))
++                    for kv in rest.rstrip("}").split(",")
++                )
++            )
++        else:
++            name, labels = left, ()
++        series[(name, labels)] = float(value)
++    return series
++
++
++def parse_header(text, field):
++    """Parse '# <field> <name> <rest>' lines -> {name: rest}."""
++
++    prefix = f"# {field} "
++    out = {}
++    for line in text.splitlines():
++        if line.startswith(prefix):
++            name, _, value = line[len(prefix) :].partition(" ")
++            out[name] = value
++    return out
++
++
++def sample(series, name, model="test-model", **extra):
++    labels = tuple(sorted(({"model": model} | extra).items()))
++    return series[(name, labels)]
++
++
++class FakeContainer:
++    def __init__(self, model_name="test-model"):
++        self.model_dir = pathlib.Path("/models") / model_name
++        self.active_job_ids = {}
++        self.cache_size = 262144
++        self.max_batch_size = 4
++        self.max_seq_len = 131072
++
++
++class MetricsTestBase(unittest.TestCase):
++    def setUp(self):
++        metrics.reset()
++        self._prev_model = sys.modules.get("common.model")
++        sys.modules["common.model"] = SimpleNamespace(container=FakeContainer())
++
++    def tearDown(self):
++        if self._prev_model is None:
++            sys.modules.pop("common.model", None)
++        else:
++            sys.modules["common.model"] = self._prev_model
++        metrics.reset()
++
++
++class FamilyDeclarationTests(MetricsTestBase):
++    def test_every_family_has_help_and_type(self):
++        text = metrics.render_metrics()
++        helps = parse_header(text, "HELP")
++        types = parse_header(text, "TYPE")
++        names = (
++            [c.name for c in metrics._COUNTERS]
++            + [h.name for h in metrics._HISTOGRAMS]
++            + [metrics._REQUESTS_ACTIVE[0]]
++            + [name for name, _doc, _attr in metrics._CONTAINER_GAUGES]
++        )
++        for name in names:
++            self.assertIn(name, helps)
++            self.assertIn(name, types)
++        for fam in metrics._COUNTERS:
++            self.assertEqual(types[fam.name], "counter")
++        for fam in metrics._HISTOGRAMS:
++            self.assertEqual(types[fam.name], "histogram")
++        self.assertEqual(types["tabby_requests_active"], "gauge")
++        self.assertEqual(types["tabby_max_seq_len"], "gauge")
++
++    def test_empty_registry_emits_headers_only(self):
++        metrics.reset()
++        sys.modules["common.model"] = SimpleNamespace(container=None)
++        text = metrics.render_metrics()
++        series = parse_exposition(text)
++        self.assertEqual(series, {})
++
++
++class CounterAndGaugeTests(MetricsTestBase):
++    def test_counter_series_carries_model_label(self):
++        metrics.record_completion("t", {"gen_tokens": 5, "gen_time": 1.0})
++        series = parse_exposition(metrics.render_metrics())
++        self.assertEqual(sample(series, "tabby_requests_total"), 1)
++        self.assertEqual(sample(series, "tabby_generated_tokens_total"), 5)
++
++    def test_live_gauges_from_container(self):
++        sys.modules["common.model"].container.active_job_ids = {"a": None, "b": None}
++        series = parse_exposition(metrics.render_metrics())
++        self.assertEqual(sample(series, "tabby_requests_active"), 2)
++        self.assertEqual(sample(series, "tabby_cache_size_tokens"), 262144)
++        self.assertEqual(sample(series, "tabby_max_batch_size"), 4)
++        self.assertEqual(sample(series, "tabby_max_seq_len"), 131072)
++
++    def test_gauges_absent_without_container(self):
++        sys.modules["common.model"] = SimpleNamespace(container=None)
++        metrics.record_completion("t", {"gen_tokens": 5})
++        series = parse_exposition(metrics.render_metrics())
++        # Recorded data falls back to the last-known/unknown label
++        self.assertEqual(
++            series[("tabby_requests_total", (("model", "unknown"),))], 1
++        )
++        for name in ("tabby_requests_active", "tabby_max_seq_len"):
++            self.assertFalse(any(k[0] == name for k in series))
++
++    def test_label_value_is_escaped(self):
++        sys.modules["common.model"].container.model_dir = pathlib.Path('/m/evil"\\\nname')
++        metrics.record_completion("t", {"gen_tokens": 1})
++        text = metrics.render_metrics()
++        self.assertIn('model="evil\\"\\\\\\nname"', text)
++
++    def test_numbers_render_plainly(self):
++        metrics.record_completion("t", {"gen_tokens": 3, "queue_time": 0.5})
++        text = metrics.render_metrics()
++        self.assertIn('tabby_requests_total{model="test-model"} 1\n', text)
++        self.assertIn('tabby_queue_seconds_total{model="test-model"} 0.5\n', text)
++
++
++class HistogramShapeTests(MetricsTestBase):
++    def test_bucket_sum_count_consistent(self):
++        for tokens in (50, 2700, 3900):
++            metrics.record_completion("t", {"gen_tokens": tokens})
++        series = parse_exposition(metrics.render_metrics())
++
++        bounds = metrics.GENERATED_TOKEN_BUCKETS
++        le_counts = [
++            sample(series, "tabby_generated_tokens_bucket", le=str(int(b)))
++            for b in bounds
++        ]
++        # Cumulative and non-decreasing, +Inf catches everything
++        self.assertEqual(le_counts, sorted(le_counts))
++        self.assertEqual(
++            sample(series, "tabby_generated_tokens_bucket", le="+Inf"), 3
++        )
++        self.assertEqual(sample(series, "tabby_generated_tokens_count"), 3)
++        self.assertEqual(sample(series, "tabby_generated_tokens_sum"), 6650)
++        # 50 -> le=64, 2700 -> le=3072, 3900 -> le=4096
++        self.assertEqual(le_counts[1], 1)  # le=64
++        self.assertEqual(le_counts[6], 2)  # le=3072
++        self.assertEqual(le_counts[7], 3)  # le=4096
++
++    def test_bucket_boundary_is_inclusive(self):
++        metrics.record_completion("t", {"gen_tokens": 3072})
++        series = parse_exposition(metrics.render_metrics())
++        self.assertEqual(
++            sample(series, "tabby_generated_tokens_bucket", le="3072"), 1
++        )
++        self.assertEqual(
++            sample(series, "tabby_generated_tokens_bucket", le="2048"), 0
++        )
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/tests/test_metrics_record.py b/tests/test_metrics_record.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..32d91670611fbb16a6e1f02224b2c33486f98fc8
+--- /dev/null
++++ b/tests/test_metrics_record.py
+@@ -0,0 +1,276 @@
++"""
++Tests for the record path: synthetic log_metrics payloads in, counters and
++histogram buckets out. Mirrors how common.gen_logging.log_metrics calls
++record_completion once per completed generation job.
++
++Payloads copy the shape of the finish chunk built by
++backends/exllamav3/model.py handle_finish_chunk. common.metrics is stdlib-only
++at import time; the model container and the app logger are faked through
++sys.modules, the same lazy lookups the module uses in production.
++"""
++
++import pathlib
++import sys
++import unittest
++from types import SimpleNamespace
++from unittest.mock import patch
++
++from common import metrics
++
++try:
++    from common import gen_logging
++except Exception:  # app deps (pydantic, loguru, ...) absent outside the image
++    gen_logging = None
++
++
++def parse_exposition(text):
++    """Parse sample lines -> {(name, sorted-labels-tuple): float}."""
++
++    series = {}
++    for line in text.splitlines():
++        if not line or line.startswith("#"):
++            continue
++        left, _, value = line.partition(" ")
++        if "{" in left:
++            name, _, rest = left.partition("{")
++            labels = tuple(
++                sorted(
++                    (kv.split("=", 1)[0], kv.split("=", 1)[1].strip('"'))
++                    for kv in rest.rstrip("}").split(",")
++                )
++            )
++        else:
++            name, labels = left, ()
++        series[(name, labels)] = float(value)
++    return series
++
++
++def sample(series, name, model="test-model", **extra):
++    labels = tuple(sorted(({"model": model} | extra).items()))
++    return series[(name, labels)]
++
++
++class FakeContainer:
++    def __init__(self, model_name="test-model"):
++        self.model_dir = pathlib.Path("/models") / model_name
++        self.active_job_ids = {}
++        self.cache_size = 262144
++        self.max_batch_size = 4
++        self.max_seq_len = 131072
++
++
++# A realistic sequence: one quick reply, then the slow long-generation tail.
++PAYLOADS = [
++    {
++        "request_id": "r1",
++        "prompt_tokens": 1200,
++        "prompt_time": 0.05,
++        "prompt_tokens_per_sec": 8000,
++        "gen_tokens": 50,
++        "gen_time": 0.62,
++        "gen_tokens_per_sec": 80.65,
++        "total_time": 0.69,
++        "queue_time": 0.02,
++        "cached_tokens": 800,
++        "finish_reason": "stop",
++        "eos_reason": "stop_token",
++        "stop_str": None,
++        "full_text": "ok",
++    },
++    {
++        "request_id": "r2",
++        "prompt_tokens": 30000,
++        "prompt_time": 0.4,
++        "prompt_tokens_per_sec": 5000,
++        "gen_tokens": 2700,
++        "gen_time": 150.0,
++        "gen_tokens_per_sec": 18.0,
++        "total_time": 150.4,
++        "queue_time": 0.0,
++        "cached_tokens": 28000,
++        "finish_reason": "stop",
++        "eos_reason": "stop_token",
++        "stop_str": None,
++        "full_text": "...",
++    },
++    {
++        "request_id": "r3",
++        "prompt_tokens": 31000,
++        "prompt_time": 0.5,
++        "prompt_tokens_per_sec": 4000,
++        "gen_tokens": 3900,
++        "gen_time": 221.0,
++        "gen_tokens_per_sec": 17.65,
++        "total_time": 222.5,
++        "queue_time": 1.0,
++        "cached_tokens": 29000,
++        "finish_reason": "length",
++        "eos_reason": "max_new_tokens",
++        "stop_str": None,
++        "full_text": "...",
++    },
++]
++
++
++class RecordTestBase(unittest.TestCase):
++    def setUp(self):
++        metrics.reset()
++        self._saved = {k: sys.modules.get(k) for k in ("common.model", "common.logger")}
++        sys.modules["common.model"] = SimpleNamespace(container=FakeContainer())
++        self.warnings = []
++        sys.modules["common.logger"] = SimpleNamespace(
++            xlogger=SimpleNamespace(
++                warning=lambda *a, **k: self.warnings.append((a, k))
++            )
++        )
++
++    def tearDown(self):
++        for key, prev in self._saved.items():
++            if prev is None:
++                sys.modules.pop(key, None)
++            else:
++                sys.modules[key] = prev
++        metrics.reset()
++
++    def series(self):
++        return parse_exposition(metrics.render_metrics())
++
++
++class PayloadSequenceTests(RecordTestBase):
++    """Known inputs in; exact counter totals and bucket counts out."""
++
++    def setUp(self):
++        super().setUp()
++        for payload in PAYLOADS:
++            metrics.record_completion("t", payload)
++
++    def test_counter_totals(self):
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_requests_total"), 3)
++        self.assertEqual(sample(s, "tabby_prompt_tokens_total"), 62200)
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 6650)
++        self.assertEqual(sample(s, "tabby_cached_tokens_total"), 57800)
++        self.assertAlmostEqual(sample(s, "tabby_prompt_seconds_total"), 0.95)
++        self.assertAlmostEqual(sample(s, "tabby_generate_seconds_total"), 371.62)
++        self.assertAlmostEqual(sample(s, "tabby_queue_seconds_total"), 1.02)
++
++    def test_generated_tokens_buckets(self):
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_generated_tokens_count"), 3)
++        # 50 -> le=64; 2700 -> le=3072; 3900 -> le=4096 (cumulative)
++        self.assertEqual(sample(s, "tabby_generated_tokens_bucket", le="64"), 1)
++        self.assertEqual(sample(s, "tabby_generated_tokens_bucket", le="2048"), 1)
++        self.assertEqual(sample(s, "tabby_generated_tokens_bucket", le="3072"), 2)
++        self.assertEqual(sample(s, "tabby_generated_tokens_bucket", le="4096"), 3)
++
++    def test_decode_rate_buckets(self):
++        s = self.series()
++        # 80.6 -> le=120; 18.0 and 17.65 -> le=20
++        self.assertEqual(sample(s, "tabby_decode_tokens_per_second_count"), 3)
++        self.assertEqual(sample(s, "tabby_decode_tokens_per_second_bucket", le="20"), 2)
++        self.assertEqual(sample(s, "tabby_decode_tokens_per_second_bucket", le="120"), 3)
++
++    def test_ttft_and_queue_buckets(self):
++        s = self.series()
++        # ttft = queue + prompt: 0.07 -> le=0.1; 0.4 -> le=0.5; 1.5 -> le=2.5
++        self.assertEqual(
++            sample(s, "tabby_time_to_first_token_seconds_bucket", le="0.1"), 1
++        )
++        self.assertEqual(
++            sample(s, "tabby_time_to_first_token_seconds_bucket", le="0.5"), 2
++        )
++        self.assertEqual(
++            sample(s, "tabby_time_to_first_token_seconds_bucket", le="2.5"), 3
++        )
++        # queue: 0.02 -> le=0.05; 0.0 -> le=0.01; 1.0 -> le=1
++        self.assertEqual(sample(s, "tabby_queue_seconds_bucket", le="0.05"), 2)
++        self.assertEqual(sample(s, "tabby_queue_seconds_bucket", le="1"), 3)
++
++
++class MissingAndBadKeysTests(RecordTestBase):
++    """Payloads with absent or unusable keys record what they can; nothing raises."""
++
++    def test_empty_payload_records_a_request_with_zeros(self):
++        metrics.record_completion("t", {})
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_requests_total"), 1)
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 0)
++
++    def test_none_and_indeterminate_values(self):
++        metrics.record_completion(
++            "t",
++            {
++                "prompt_tokens": None,
++                "prompt_time": "Indeterminate",
++                "prompt_tokens_per_sec": "Indeterminate",
++                "gen_tokens": 10,
++                "gen_time": None,
++                "gen_tokens_per_sec": "Indeterminate",
++                "queue_time": None,
++                "cached_tokens": None,
++            },
++            context_len=2048,
++        )
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_requests_total"), 1)
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 10)
++        # prompt_tokens falls back to the context_len argument
++        self.assertEqual(sample(s, "tabby_prompt_tokens_total"), 2048)
++        self.assertEqual(sample(s, "tabby_prompt_seconds_total"), 0)
++        # no gen_time -> no decode-rate observation at all
++        self.assertFalse(
++            any(k[0] == "tabby_decode_tokens_per_second_count" for k in s)
++        )
++
++    def test_zero_decode_time_skips_rate_histogram(self):
++        metrics.record_completion("t", {"gen_tokens": 5, "gen_time": 0})
++        s = self.series()
++        self.assertFalse(
++            any(k[0] == "tabby_decode_tokens_per_second_bucket" for k in s)
++        )
++        # the zero-time request still lands in the tokens and seconds counters
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 5)
++
++    def test_negative_and_bool_values_clamped(self):
++        metrics.record_completion(
++            "t", {"gen_tokens": -5, "queue_time": -0.5, "cached_tokens": True}
++        )
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 0)
++        self.assertEqual(sample(s, "tabby_queue_seconds_total"), 0)
++        self.assertEqual(sample(s, "tabby_cached_tokens_total"), 0)
++
++    def test_non_dict_payload(self):
++        metrics.record_completion("t", None)
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_requests_total"), 1)
++
++
++class FailureTests(RecordTestBase):
++    """A failure inside the metrics code is swallowed and logged once."""
++
++    def test_record_failure_swallowed_warned_once_counted(self):
++        with patch.object(metrics, "_model_label", side_effect=RuntimeError("boom")):
++            metrics.record_completion("t", {"gen_tokens": 5})
++            metrics.record_completion("t", {"gen_tokens": 5})
++        s = self.series()
++        self.assertEqual(s[("tabby_metrics_record_errors_total", ())], 2)
++        self.assertEqual(len(self.warnings), 1)
++        # the failed records added nothing
++        self.assertFalse(any(k[0] == "tabby_requests_total" for k in s))
++
++
++class LogMetricsHookTests(RecordTestBase):
++    """The real log_metrics function feeds the registry (needs app deps)."""
++
++    @unittest.skipIf(gen_logging is None, "common.gen_logging needs the app deps")
++    def test_log_metrics_records(self):
++        gen_logging.log_metrics("#1 chat/completions", dict(PAYLOADS[0]), 1200, 131072)
++        s = self.series()
++        self.assertEqual(sample(s, "tabby_requests_total"), 1)
++        self.assertEqual(sample(s, "tabby_generated_tokens_total"), 50)
++        self.assertAlmostEqual(sample(s, "tabby_generate_seconds_total"), 0.62)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/tests/test_tool_choice.py b/tests/test_tool_choice.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c71bf25131ba8ee57e035eea059d5600287a771
+--- /dev/null
++++ b/tests/test_tool_choice.py
+@@ -0,0 +1,536 @@
++"""
++Unit tests for tool_choice "required"/named enforcement: request validation,
++mode selection and the tool call grammar.
++
++The grammar tests run the grammar through llguidance (the matcher behind
++exllamav3's LLGuidanceFilter) with a small synthetic byte-level tokenizer, so
++they need llguidance and tokenizers but no model files. Set
++TABBY_TOOLCHOICE_TOKENIZER to a model's tokenizer.json to repeat them with a
++real vocabulary.
++
++Tag strings are built from escapes or taken from the served tool format, never
++written out literally.
++"""
++
++import os
++import unittest
++from unittest.mock import patch
++
++from fastapi import HTTPException
++
++from endpoints.OAI.types.chat_completion import ChatCompletionRequest
++from endpoints.OAI.utils.tool_choice import (
++    CONTENT_MAX_TOKENS_ENV,
++    DEFAULT_REASONING_CAP,
++    REASONING_CAP_ENV,
++    build_qwen3_coder_grammar,
++    forces_tool_call,
++    prepare_tool_choice_forcing,
++    resolve_reasoning_cap,
++    resolve_tool_choice_forcing,
++    supports_forcing,
++    validate_tool_choice,
++)
++from endpoints.OAI.utils.tools import get_toolcall_tags
++
++try:
++    from llguidance import LLMatcher, LLTokenizer, grammar_from
++    from tokenizers import AddedToken, Tokenizer, decoders, models, pre_tokenizers, trainers
++    import numpy as np
++
++    HAVE_LLG = True
++except ImportError:  # pragma: no cover - depends on the environment
++    HAVE_LLG = False
++
++TOOL_START, TOOL_END = get_toolcall_tags("qwen3_coder")
++THINK_START = "\u003c" + "think" + "\u003e"
++THINK_END = "\u003c/" + "think" + "\u003e"
++EOS_TEXT = "\u003c|" + "im_end" + "|\u003e"
++
++
++def tool(name, properties=None):
++    parameters = {"type": "object"}
++    if properties is not None:
++        parameters["properties"] = {p: {"type": "string"} for p in properties}
++    return {
++        "type": "function",
++        "function": {"name": name, "description": f"{name} tool", "parameters": parameters},
++    }
++
++
++TOOLS = [
++    tool("calculator", ["expression"]),
++    tool("get_weather", ["city", "unit"]),
++    tool("free_form"),  # no declared properties
++]
++
++
++def request(**kwargs):
++    kwargs.setdefault("messages", [{"role": "user", "content": "What is 7 times 8?"}])
++    return ChatCompletionRequest(**kwargs)
++
++
++def call_text(name, params=None):
++    body = "".join(
++        f"<parameter={k}>\n{v}\n</parameter>\n" for k, v in (params or {}).items()
++    )
++    return f"{TOOL_START}\n<function={name}>\n{body}</function>\n{TOOL_END}"
++
++
++class ValidationTests(unittest.TestCase):
++    def assert_400(self, **kwargs):
++        with self.assertRaises(HTTPException) as ctx:
++            validate_tool_choice(request(**kwargs))
++        self.assertEqual(ctx.exception.status_code, 400)
++        return ctx.exception
++
++    def test_required_without_tools(self):
++        self.assert_400(tool_choice="required")
++
++    def test_required_with_empty_tools(self):
++        self.assert_400(tool_choice="required", tools=[])
++
++    def test_named_without_tools(self):
++        self.assert_400(tool_choice={"type": "function", "function": {"name": "calculator"}})
++
++    def test_named_unknown_function(self):
++        exc = self.assert_400(
++            tools=TOOLS, tool_choice={"type": "function", "function": {"name": "nope"}}
++        )
++        self.assertIn("nope", exc.detail)
++
++    def test_required_with_client_constraint(self):
++        self.assert_400(tools=TOOLS, tool_choice="required", json_schema={"type": "object"})
++        self.assert_400(tools=TOOLS, tool_choice="required", regex_pattern="a+")
++        self.assert_400(tools=TOOLS, tool_choice="required", grammar_string='start: "a"')
++        self.assert_400(
++            tools=TOOLS,
++            tool_choice="required",
++            response_format={"type": "json_schema", "json_schema": {"type": "object"}},
++        )
++
++    def test_valid_requests_pass(self):
++        validate_tool_choice(request(tools=TOOLS, tool_choice="required"))
++        validate_tool_choice(
++            request(tools=TOOLS, tool_choice={"type": "function", "function": {"name": "calculator"}})
++        )
++
++    def test_auto_none_absent_never_rejected(self):
++        # Including combinations that would be rejected for required
++        for choice in (None, "auto", "none"):
++            validate_tool_choice(request(tool_choice=choice))
++            validate_tool_choice(request(tool_choice=choice, tools=[]))
++            validate_tool_choice(
++                request(tool_choice=choice, tools=TOOLS, json_schema={"type": "object"})
++            )
++
++
++class ModeSelectionTests(unittest.TestCase):
++    def test_auto_none_absent_select_nothing(self):
++        for choice in (None, "auto", "none"):
++            data = request(tools=TOOLS, tool_choice=choice)
++            self.assertFalse(forces_tool_call(data))
++            self.assertIsNone(resolve_tool_choice_forcing(data))
++
++    def test_required(self):
++        forcing = resolve_tool_choice_forcing(request(tools=TOOLS, tool_choice="required"))
++        self.assertEqual((forcing.mode, forcing.name, forcing.single_call), ("required", None, False))
++
++    def test_required_without_parallel_calls_is_single(self):
++        forcing = resolve_tool_choice_forcing(
++            request(tools=TOOLS, tool_choice="required", parallel_tool_calls=False)
++        )
++        self.assertTrue(forcing.single_call)
++
++    def test_named(self):
++        data = request(tools=TOOLS, tool_choice={"type": "function", "function": {"name": "get_weather"}})
++        self.assertTrue(forces_tool_call(data))
++        forcing = resolve_tool_choice_forcing(data)
++        self.assertEqual((forcing.mode, forcing.name, forcing.single_call), ("named", "get_weather", True))
++
++    def test_supported_formats(self):
++        for fmt in ("qwen3_coder", "qwen3_5", "step3_5", "step3_7"):
++            self.assertTrue(supports_forcing(fmt), fmt)
++        for fmt in (None, "", "harmony", "glm4_5", "mistral", "unknown"):
++            self.assertFalse(supports_forcing(fmt), fmt)
++
++    def test_unsupported_format_serves_as_auto(self):
++        data = request(tools=TOOLS, tool_choice="required")
++        self.assertIsNone(prepare_tool_choice_forcing(data, "glm4_5", lambda _: None, "t"))
++        self.assertIsNone(prepare_tool_choice_forcing(data, None, lambda _: None, "t"))
++
++    def test_reasoning_cap(self):
++        self.assertEqual(resolve_reasoning_cap(100), 100)
++        self.assertEqual(resolve_reasoning_cap(0), 0)
++        old = os.environ.pop(REASONING_CAP_ENV, None)
++        try:
++            self.assertEqual(resolve_reasoning_cap(None), DEFAULT_REASONING_CAP)
++            os.environ[REASONING_CAP_ENV] = "512"
++            self.assertEqual(resolve_reasoning_cap(None), 512)
++            os.environ[REASONING_CAP_ENV] = "0"
++            self.assertIsNone(resolve_reasoning_cap(None))
++        finally:
++            os.environ.pop(REASONING_CAP_ENV, None)
++            if old is not None:
++                os.environ[REASONING_CAP_ENV] = old
++
++
++class GrammarTextTests(unittest.TestCase):
++    def build(self, choice="required", ids=None, tools=TOOLS, **kwargs):
++        data = request(tools=tools, tool_choice=choice, **kwargs)
++        forcing = resolve_tool_choice_forcing(data)
++        ids = ids or {}
++        return build_qwen3_coder_grammar(
++            forcing, data.tools, TOOL_START, TOOL_END, lambda t: ids.get(t)
++        )
++
++    def test_single_token_tags_referenced_by_id(self):
++        g = self.build(ids={TOOL_START: 1001, TOOL_END: 1002})
++        self.assertIn("<[1001]>", g)
++        self.assertIn("<[1002]>", g)
++        self.assertNotIn(TOOL_START, g)
++
++    def test_multi_token_tags_fall_back_to_text(self):
++        g = self.build()
++        self.assertIn('"' + TOOL_START + '"', g)
++
++    def test_content_before_call_only_with_single_token_tool_start(self):
++        data = request(tools=TOOLS, tool_choice="required")
++        forcing = resolve_tool_choice_forcing(data)
++        ids = {TOOL_START: 1001, TOOL_END: 1002}.get
++        g = build_qwen3_coder_grammar(forcing, data.tools, TOOL_START, TOOL_END, ids, content_max_tokens=64)
++        self.assertIn("start: WS? content? call (WS? call)* WS? | WS? content\n", g)
++        self.assertIn("content[max_tokens=64]", g)
++        # Off by default in the builder, and off when TOOL_START is text (the
++        # content lexeme could swallow a spelled-out tag)
++        self.assertNotIn("content", build_qwen3_coder_grammar(forcing, data.tools, TOOL_START, TOOL_END, ids))
++        text_tags = build_qwen3_coder_grammar(
++            forcing, data.tools, TOOL_START, TOOL_END, lambda _: None, content_max_tokens=64
++        )
++        self.assertNotIn("content", text_tags)
++
++    def test_content_env(self):
++        data = request(tools=TOOLS, tool_choice="required")
++        ids = {TOOL_START: 1001, TOOL_END: 1002}.get
++        with patch.dict(os.environ, {CONTENT_MAX_TOKENS_ENV: "0"}):
++            forcing = prepare_tool_choice_forcing(data, "qwen3_coder", ids, "t")
++            self.assertNotIn("content", forcing.grammar)
++            self.assertIsNone(forcing.call_grammar)
++        with patch.dict(os.environ, {CONTENT_MAX_TOKENS_ENV: "7"}):
++            forcing = prepare_tool_choice_forcing(data, "qwen3_coder", ids, "t")
++            self.assertIn("content[max_tokens=7]", forcing.grammar)
++            self.assertIn("start: call (WS? call)*\n", forcing.call_grammar)
++            self.assertNotIn("content", forcing.call_grammar)
++        with patch.dict(os.environ, {}, clear=False):
++            os.environ.pop(CONTENT_MAX_TOKENS_ENV, None)
++            self.assertIn("content[max_tokens=1024]", prepare_tool_choice_forcing(data, "qwen3_coder", ids, "t").grammar)
++
++    def test_named_grammar_lists_only_that_function(self):
++        g = self.build(choice={"type": "function", "function": {"name": "get_weather"}})
++        self.assertIn('"get_weather"', g)
++        self.assertNotIn('"calculator"', g)
++        self.assertIn("start: WS? call WS?", g)
++
++    def test_leading_whitespace_only_when_armed_by_reasoning_end(self):
++        data = request(tools=TOOLS, tool_choice="required")
++        armed = prepare_tool_choice_forcing(data, "qwen3_coder", lambda _: None, "t")
++        unarmed = prepare_tool_choice_forcing(
++            data, "qwen3_coder", lambda _: None, "t", armed_by_reasoning_end=False
++        )
++        self.assertIn("start: WS? call (WS? call)* WS?\n", armed.grammar)
++        self.assertIn("start: call (WS? call)*\n", unarmed.grammar)
++
++    def test_required_lists_all_functions(self):
++        g = self.build()
++        for name in ("calculator", "get_weather", "free_form"):
++            self.assertIn(f'"{name}"', g)
++        self.assertIn("(WS? call)*", g)
++
++    def test_is_lark_not_gbnf(self):
++        # The backend switches to GBNF when it sees the GBNF rule operator
++        self.assertNotIn("::=", self.build())
++        self.assertIsNone(self.build(tools=[tool("a::=b", ["x"])]))
++
++    def test_unparseable_names_dropped(self):
++        self.assertIsNone(self.build(tools=[tool("has space")]))
++        g = self.build(tools=[tool("has space"), tool("ok")])
++        self.assertIn('"ok"', g)
++        self.assertNotIn("has space", g)
++
++
++def _synthetic_tokenizer():
++    corpus = [
++        "What is 7 times 8? The answer is 56.",
++        "<function=calculator>\n<parameter=expression>\n7 * 8\n</parameter>\n</function>\n",
++        "<function=get_weather>\n<parameter=city>\nParis\n</parameter>\n</function>\n",
++        "Let me think about which tool to call. a < b and c > d",
++    ] * 4
++    tok = Tokenizer(models.BPE())
++    tok.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
++    tok.decoder = decoders.ByteLevel()
++    trainer = trainers.BpeTrainer(
++        vocab_size=600, initial_alphabet=pre_tokenizers.ByteLevel.alphabet(), show_progress=False
++    )
++    tok.train_from_iterator(corpus, trainer)
++    tok.add_tokens(
++        [AddedToken(t, special=False, normalized=False) for t in (TOOL_START, TOOL_END, THINK_START, THINK_END)]
++    )
++    tok.add_special_tokens([AddedToken(EOS_TEXT, special=True, normalized=False)])
++    return tok
++
++
++class _GrammarHarness:
++    """Runs a tool call grammar through llguidance over a given HF tokenizer."""
++
++    def __init__(self, hf_tokenizer, eos_ids):
++        self.tok = hf_tokenizer
++        self.eos = eos_ids[0]
++        self.ll = LLTokenizer(hf_tokenizer.to_str(), eos_token=eos_ids)
++
++    def grammar(self, choice="required", tools=TOOLS, armed=True, content_max=1024, **kwargs):
++        data = request(tools=tools, tool_choice=choice, **kwargs)
++        with patch.dict(os.environ, {CONTENT_MAX_TOKENS_ENV: str(content_max)}):
++            forcing = prepare_tool_choice_forcing(
++                data, "qwen3_coder", self.tok.token_to_id, "test", armed_by_reasoning_end=armed
++            )
++        grammar = grammar_from("lark", forcing.grammar)
++        err = LLMatcher.validate_grammar(grammar, self.ll)
++        assert not err, err
++        return grammar
++
++    def ids(self, text):
++        return self.tok.encode(text, add_special_tokens=False).ids
++
++    def allowed(self, matcher, token_id):
++        bm = np.zeros(((self.ll.vocab_size + 31) // 32,), dtype=np.int32)
++        matcher.unsafe_compute_mask_ptr(bm.ctypes.data, bm.size * bm.itemsize)
++        return bool((int(bm.view(np.uint32)[token_id >> 5]) >> (token_id & 31)) & 1)
++
++    def feed(self, grammar, text):
++        """Consume text; returns (matcher, number of tokens accepted before a rejection)."""
++        m = LLMatcher(self.ll, grammar, log_level=0)
++        ids = self.ids(text)
++        for i, t in enumerate(ids):
++            if not self.allowed(m, t) or not m.consume_token(t):
++                return m, i
++        return m, len(ids)
++
++    def accepts(self, grammar, text):
++        m, n = self.feed(grammar, text)
++        return n == len(self.ids(text)) and not m.is_error()
++
++    def accepts_then_eos(self, grammar, text):
++        m, n = self.feed(grammar, text)
++        return n == len(self.ids(text)) and self.allowed(m, self.eos)
++
++
++class _GrammarBehaviour:
++    """Shared grammar checks; subclasses provide self.h (a _GrammarHarness)."""
++
++    def test_tags_are_single_tokens(self):
++        # TOOL_START/TOOL_END are referenced by id in the grammar; THINK_END is
++        # the filter trigger, which the backend drops (grammar active from the
++        # first token, no reasoning) if it is not a single token
++        for tag in (TOOL_START, TOOL_END, THINK_END):
++            self.assertEqual(len(self.h.ids(tag)), 1, tag)
++            self.assertIsNotNone(self.h.tok.token_to_id(tag), tag)
++
++    def test_complete_call_accepted_then_eos(self):
++        g = self.h.grammar()
++        text = "\n\n" + call_text("calculator", {"expression": "7 * 8"})
++        self.assertTrue(self.h.accepts_then_eos(g, text))
++
++    def test_eos_not_allowed_before_a_call(self):
++        g = self.h.grammar()
++        m = LLMatcher(self.h.ll, g, log_level=0)
++        self.assertFalse(self.h.allowed(m, self.h.eos))
++        self.assertTrue(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++        m, _ = self.h.feed(g, TOOL_START + "\n<function=calculator>\n")
++        self.assertFalse(self.h.allowed(m, self.h.eos))
++
++    def test_content_may_end_the_turn(self):
++        # Ending the content is allowed (the server continues the turn with a
++        # call-only job); masking it made the model loop in its content
++        g = self.h.grammar()
++        m, n = self.h.feed(g, "\n\n7 x 8 = 56.")
++        self.assertEqual(n, len(self.h.ids("\n\n7 x 8 = 56.")))
++        self.assertTrue(self.h.allowed(m, self.h.eos))
++        self.assertTrue(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++
++    def test_eos_at_once_after_reasoning_is_masked(self):
++        g = self.h.grammar()
++        m, _ = self.h.feed(g, "\n\n")
++        self.assertFalse(self.h.allowed(m, self.h.eos))
++
++    def test_call_grammar_starts_with_the_call(self):
++        data = request(tools=TOOLS, tool_choice="required")
++        forcing = prepare_tool_choice_forcing(data, "qwen3_coder", self.h.tok.token_to_id, "t")
++        g = grammar_from("lark", forcing.call_grammar)
++        self.assertFalse(LLMatcher.validate_grammar(g, self.h.ll))
++        m = LLMatcher(self.h.ll, g, log_level=0)
++        self.assertFalse(self.h.allowed(m, self.h.eos))
++        self.assertTrue(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++        _, n = self.h.feed(g, "Sure. " + call_text("calculator"))
++        self.assertEqual(n, 0)
++        self.assertTrue(self.h.accepts_then_eos(g, call_text("calculator", {"expression": "7 * 8"})))
++
++    def test_content_then_call_accepted(self):
++        g = self.h.grammar()
++        text = "\n\n7 x 8 = **56**. Checking with the tool.\n\n" + call_text("calculator", {"expression": "7 * 8"})
++        self.assertTrue(self.h.accepts_then_eos(g, text))
++
++    def test_content_after_call_rejected(self):
++        g = self.h.grammar()
++        self.assertFalse(self.h.accepts(g, call_text("calculator", {"expression": "1"}) + "\nThe answer is 56."))
++
++    def test_content_is_bounded(self):
++        g = self.h.grammar(content_max=3)
++        m, _ = self.h.feed(g, "\n\n" + "word " * 3)
++        self.assertTrue(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++        self.assertTrue(self.h.allowed(m, self.h.eos))
++        self.assertFalse(self.h.accepts(g, "\n\n" + "word " * 12))
++
++    def test_content_disabled(self):
++        g = self.h.grammar(content_max=0)
++        _, n = self.h.feed(g, "7 x 8 = 56")
++        self.assertEqual(n, 0)
++
++    def test_second_reasoning_block_rejected(self):
++        g = self.h.grammar()
++        _, n = self.h.feed(g, THINK_START + "more")
++        self.assertEqual(n, 0)
++
++    def test_unknown_function_rejected(self):
++        g = self.h.grammar()
++        self.assertFalse(self.h.accepts(g, call_text("rm_rf")))
++
++    def test_undeclared_parameter_rejected(self):
++        g = self.h.grammar()
++        self.assertFalse(self.h.accepts(g, call_text("calculator", {"nope": "1"})))
++
++    def test_free_parameter_names_when_schema_lists_none(self):
++        g = self.h.grammar()
++        self.assertTrue(self.h.accepts_then_eos(g, call_text("free_form", {"anything": "x"})))
++
++    def test_values_are_free_text(self):
++        g = self.h.grammar()
++        value = 'a < b && c > d, "quoted", {"json": [1, 2]}\nsecond line'
++        self.assertTrue(self.h.accepts_then_eos(g, call_text("get_weather", {"city": value})))
++
++    def test_zero_parameters(self):
++        g = self.h.grammar()
++        self.assertTrue(self.h.accepts_then_eos(g, call_text("calculator")))
++
++    def test_parallel_calls(self):
++        g = self.h.grammar()
++        two = call_text("calculator", {"expression": "1"}) + "\n" + call_text("get_weather", {"city": "x"})
++        self.assertTrue(self.h.accepts_then_eos(g, two))
++
++    def test_single_call_when_parallel_disabled(self):
++        g = self.h.grammar(parallel_tool_calls=False)
++        one = call_text("calculator", {"expression": "1"})
++        self.assertTrue(self.h.accepts_then_eos(g, one))
++        m, _ = self.h.feed(g, one + "\n")
++        self.assertFalse(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++
++    def test_named_function_only(self):
++        g = self.h.grammar(choice={"type": "function", "function": {"name": "get_weather"}})
++        self.assertTrue(self.h.accepts_then_eos(g, call_text("get_weather", {"city": "Paris"})))
++        self.assertFalse(self.h.accepts(g, call_text("calculator", {"expression": "1"})))
++        m, _ = self.h.feed(g, call_text("get_weather", {"city": "Paris"}) + "\n")
++        self.assertFalse(self.h.allowed(m, self.h.tok.token_to_id(TOOL_START)))
++
++    def test_unarmed_grammar_has_no_outer_whitespace(self):
++        g = self.h.grammar(armed=False)
++        one = call_text("calculator", {"expression": "1"})
++        self.assertTrue(self.h.accepts_then_eos(g, one))
++        _, n = self.h.feed(g, "\n\n" + call_text("calculator"))
++        self.assertEqual(n, 0)
++        self.assertFalse(self.h.accepts_then_eos(g, one + "\n"))
++
++    def test_whitespace_is_bounded(self):
++        g = self.h.grammar()
++        self.assertTrue(self.h.accepts(g, " " * 8))
++        self.assertFalse(self.h.accepts(g, " " * 9))
++
++    def test_parser_reads_back_the_forced_call(self):
++        from endpoints.OAI.utils.tools import parse_toolcalls
++
++        text = call_text("get_weather", {"city": "Paris", "unit": "C"})
++        self.assertTrue(self.h.accepts_then_eos(self.h.grammar(), text))
++        calls = parse_toolcalls(text, "qwen3_coder")
++        self.assertEqual([c.function.name for c in calls], ["get_weather"])
++        self.assertEqual(calls[0].function.arguments, '{"city": "Paris", "unit": "C"}')
++
++
++class LLGuidanceAvailableTest(unittest.TestCase):
++    """The image build sets TABBY_TOOLCHOICE_REQUIRE_LLG: without llguidance the
++    backend silently drops the grammar filter and required degrades to auto."""
++
++    @unittest.skipUnless(os.environ.get("TABBY_TOOLCHOICE_REQUIRE_LLG"), "not required here")
++    def test_llguidance_available(self):
++        self.assertTrue(HAVE_LLG, "llguidance, tokenizers and numpy must be importable")
++
++
++@unittest.skipUnless(HAVE_LLG, "llguidance/tokenizers not installed")
++class SyntheticTokenizerGrammarTests(_GrammarBehaviour, unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        tok = _synthetic_tokenizer()
++        cls.h = _GrammarHarness(tok, [tok.token_to_id(EOS_TEXT)])
++
++
++@unittest.skipUnless(
++    HAVE_LLG and os.environ.get("TABBY_TOOLCHOICE_TOKENIZER"),
++    "set TABBY_TOOLCHOICE_TOKENIZER to a tokenizer.json to run against a real vocabulary",
++)
++class RealTokenizerGrammarTests(_GrammarBehaviour, unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        tok = Tokenizer.from_file(os.environ["TABBY_TOOLCHOICE_TOKENIZER"])
++        eos = [tok.token_to_id(EOS_TEXT)]
++        cls.h = _GrammarHarness(tok, eos)
++
++
++@unittest.skipUnless(
++    os.environ.get("TABBY_TOOLCHOICE_CHAT_TEMPLATE"),
++    "set TABBY_TOOLCHOICE_CHAT_TEMPLATE to the model's chat template to check the round trip",
++)
++class ChatTemplateRoundTripTests(unittest.IsolatedAsyncioTestCase):
++    """A turn carrying content and a tool call renders back as content, then the call."""
++
++    async def test_content_and_call_render_back(self):
++        from common.templating import PromptTemplate
++
++        with open(os.environ["TABBY_TOOLCHOICE_CHAT_TEMPLATE"]) as f:
++            template = PromptTemplate("model", f.read())
++        # Same shapes format_messages_with_template produces (arguments as a dict)
++        messages = [
++            {"role": "user", "content": "What is 7 times 8?"},
++            {
++                "role": "assistant",
++                "content": "\n\n7 x 8 = **56**. Let me confirm.\n\n",
++                "reasoning_content": "Easy, but a call is required.",
++                "tool_calls": [
++                    {"id": "call_1", "type": "function",
++                     "function": {"name": "calculator", "arguments": {"expression": "7 * 8"}}}
++                ],
++            },
++            {"role": "tool", "tool_call_id": "call_1", "content": "56"},
++        ]
++        prompt = await template.render(
++            {"messages": messages, "tools": TOOLS, "add_generation_prompt": True}
++        )
++        turn = prompt[prompt.index("Let me confirm.") - 40:]
++        content_at = turn.index("7 x 8 = **56**. Let me confirm.")
++        call_at = turn.index(TOOL_START)
++        self.assertLess(content_at, call_at)
++        self.assertIn("<function=calculator>", turn[call_at:])
++        self.assertIn("7 * 8", turn[call_at:])
++        # The rendered turn is what the grammar admits: content, whitespace, call
++        between = turn[content_at + len("7 x 8 = **56**. Let me confirm."):call_at]
++        self.assertEqual(between.strip(), "")
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/tests/test_tool_choice_collector.py b/tests/test_tool_choice_collector.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f56c29284e0265da217d99e45d9ceb6212a5a271
+--- /dev/null
++++ b/tests/test_tool_choice_collector.py
+@@ -0,0 +1,610 @@
++"""
++Chat completion collector tests for tool_choice "required"/named, driven by a
++fake model container whose "model" honours the grammar the way the engine's
++filter does: with a tool call grammar active after its reasoning ends it emits
++a tool call, otherwise it answers in content.
++
++Covers the request -> generation -> parsing path in both streaming and
++non-streaming mode, the phase-2 continuation for a model that never ends its
++reasoning (bounded by the reasoning cap, or by max_tokens), and that "auto" and
++"none" reach the backend exactly as before (no grammar, same trigger).
++
++Tag strings are built from escapes or taken from the served tool format, never
++written out literally.
++"""
++
++import asyncio
++import os
++import re
++import unittest
++from types import SimpleNamespace
++from unittest.mock import patch
++
++import common.model  # noqa: F401 - resolve import cycle ordering
++from common import model
++from endpoints.OAI.types.chat_completion import ChatCompletionRequest
++from endpoints.OAI.utils.chat_completion import (
++    _chat_stream_collector,
++    _resolve_start_in_reasoning,
++)
++from endpoints.OAI.utils.tool_choice import REASONING_CAP_ENV, ToolChoiceNotHonoured
++from endpoints.OAI.utils.tools import get_toolcall_tags
++
++TOOL_START, TOOL_END = get_toolcall_tags("qwen3_coder")
++THINK_START = "\u003c" + "think" + "\u003e"
++THINK_END = "\u003c/" + "think" + "\u003e"
++TOKEN_IDS = {TOOL_START: 9001, TOOL_END: 9002, THINK_START: 9003, THINK_END: 9004}
++
++PROMPT_THINKING = "user: What is 7 times 8?\nassistant:\n" + THINK_START + "\n"
++PROMPT_NO_THINKING = PROMPT_THINKING + "\n" + THINK_END + "\n\n"
++PROMPT_TOKENS = 100
++
++REASONING = ["I ", "could ", "use ", "the ", "calculator, ", "but ", "7x8 ", "is ", "easy."]
++CONTENT = ["7 ", "x ", "8 ", "= ", "**56**"]
++# The parser holds the whitespace after the reasoning end and emits it with the content
++ANSWER = "\n\n" + "".join(CONTENT)
++
++
++def tool(name, properties):
++    return {
++        "type": "function",
++        "function": {
++            "name": name,
++            "description": name,
++            "parameters": {"type": "object", "properties": {p: {"type": "string"} for p in properties}},
++        },
++    }
++
++
++TOOLS = [tool("calculator", ["expression"]), tool("get_weather", ["city"])]
++
++
++def forced_names(grammar):
++    return re.findall(r'"<function=" "([^"]+)"', grammar or "")
++
++
++class FakeJob:
++    def __init__(self):
++        self.cancelled = False
++
++    async def cancel(self):
++        self.cancelled = True
++
++
++class FakeModel:
++    """
++    Scripted model. behaviour:
++      "answer"   - reasons, ends reasoning, then answers in content unless a
++                   tool call grammar is active (then calls a tool it is allowed to)
++      "endless"  - reasons forever
++      "eos"      - reasons, then stops (EOS) without ending the reasoning
++      "call_in_reasoning" - reasons, calls a tool without ending the
++                   reasoning, then stops
++      "answer_then_stop" - with a content grammar active, writes its answer
++                   as content and stops (EOS), as a model that would rather
++                   answer does
++      "content_loop" - with a grammar active, writes content until the loop
++                   detector ends the job
++      "answer_then_call" - like "answer", but with a grammar active it writes
++                   its answer as content first and then calls the tool (the
++                   grammar admits content before the call)
++    """
++
++    def __init__(self, behaviour="answer", preferred="calculator", ignores_grammar=False):
++        self.behaviour = behaviour
++        self.preferred = preferred
++        # Stands in for a backend that dropped the filter (grammar failed to compile)
++        self.ignores_grammar = ignores_grammar
++
++    def pieces(self, call):
++        grammar = call["grammar"]
++        continuing = call["prompt"].endswith(THINK_END)
++
++        def tool_call():
++            names = forced_names(grammar)
++            name = self.preferred if self.preferred in names or self.ignores_grammar else names[0]
++            param = "expression" if name == "calculator" else "city"
++            if "start: WS?" in grammar:  # leading whitespace allowed
++                yield "\n\n"
++            yield TOOL_START
++            yield f"\n<function={name}>\n<parameter={param}>\n"
++            yield "7 * 8" if name == "calculator" else "Paris"
++            yield "\n</parameter>\n</function>\n"
++            yield TOOL_END
++
++        if continuing:
++            # Phase 2: grammar active from the first token
++            yield from tool_call()
++            yield ("stop", "stop_token")
++            return
++
++        if call["prompt"].endswith(THINK_START + "\n"):
++            if self.behaviour == "endless":
++                while True:
++                    yield "hmm "
++            yield from REASONING
++            if self.behaviour == "call_in_reasoning":
++                yield from tool_call()
++                yield ("stop", "stop_token")
++                return
++            if self.behaviour == "eos":
++                yield ("stop", "stop_token")
++                return
++            yield "\n" + THINK_END
++
++        # The grammar is active here if it was armed by the reasoning end or
++        # has no trigger at all
++        grammar_active = grammar is not None and call["filter_trigger"] in (THINK_END, None)
++        if grammar_active and "content?" in grammar and self.behaviour == "answer_then_stop":
++            yield "\n\n"
++            yield from CONTENT
++            yield "\n\n"
++            yield ("stop", "stop_token")
++            return
++        if grammar_active and self.behaviour == "content_loop":
++            yield "\n\n"
++            yield from CONTENT
++            yield ("stop", "loop_detected")
++            return
++        if grammar_active and self.behaviour == "answer_then_call":
++            assert "content?" in grammar
++            yield "\n\n"
++            yield from CONTENT
++            yield from tool_call()  # opens with the whitespace before TOOL_START
++        elif grammar_active and not (self.ignores_grammar and self.behaviour == "answer"):
++            yield from tool_call()
++        else:
++            yield "\n\n"
++            yield from CONTENT
++        yield ("stop", "stop_token")
++
++
++class FakeContainer:
++    harmony = False
++    muse_glimmer = False
++    tool_format = "qwen3_coder"
++    reasoning = True
++    reasoning_start_token = THINK_START
++    reasoning_end_token = THINK_END
++    tool_calls_in_reasoning = True
++    start_in_reasoning = "auto"
++    reasoning_budget_tokens = None
++    reasoning_budget_message = None
++
++    def __init__(self, fake_model):
++        self.fake_model = fake_model
++        self.calls = []
++        self.jobs = []
++        self.active_job_ids = {}
++        self.injections = []
++        self.phase_switches = []
++        self.tokenizer = SimpleNamespace(single_id=TOKEN_IDS.get)
++
++    def constrain_generation_output(self, request_id, text):
++        self.injections.append(text)
++        return True
++
++    def set_generation_phase(self, request_id, reasoning):
++        # TabbyAPI fc25e6a: the collector reports reasoning/content transitions
++        self.phase_switches.append((request_id, reasoning))
++        return True
++
++    async def stream_generate(
++        self,
++        request_id,
++        prompt,
++        params,
++        disconnect_handler=None,
++        mm_embeddings=None,
++        reasoning_phase=None,
++        label=None,
++    ):
++        # rebase165: fc25e6a replaced filter_trigger with reasoning_phase. The
++        # backend arms the grammar on the end-of-reasoning tag exactly when
++        # reasoning_phase is True, so "filter_trigger" records the equivalent
++        # served trigger and the assertions below keep their served meaning
++        call = {
++            "request_id": request_id,
++            "prompt": prompt,
++            "grammar": params.grammar_string,
++            "reasoning_phase": reasoning_phase,
++            "filter_trigger": THINK_END if reasoning_phase else None,
++            "max_tokens": params.max_tokens,
++        }
++        self.calls.append(call)
++        job = FakeJob()
++        self.jobs.append(job)
++        self.active_job_ids[request_id] = job
++        generated = 0
++        prompt_tokens = PROMPT_TOKENS + (len(prompt) - len(PROMPT_THINKING))
++
++        def finish(finish_reason, eos_reason):
++            return {
++                "request_id": request_id,
++                "prompt_tokens": prompt_tokens,
++                "gen_tokens": generated,
++                "cached_tokens": prompt_tokens - 1,
++                "finish_reason": finish_reason,
++                "eos_reason": eos_reason,
++            }
++
++        try:
++            for piece in self.fake_model.pieces(call):
++                await asyncio.sleep(0)
++                if job.cancelled:
++                    return
++                if isinstance(piece, tuple):
++                    yield finish(*piece)
++                    return
++                generated += 1
++                yield {
++                    "request_id": request_id,
++                    "text": piece,
++                    "token_ids": [generated],
++                    "prompt_tokens": prompt_tokens,
++                    "generated_tokens": generated,
++                }
++                if params.max_tokens and generated >= params.max_tokens:
++                    yield finish("length", "max_new_tokens")
++                    return
++        finally:
++            del self.active_job_ids[request_id]
++
++
++def request(**kwargs):
++    kwargs.setdefault("messages", [{"role": "user", "content": "What is 7 times 8?"}])
++    kwargs.setdefault("tools", TOOLS)
++    return ChatCompletionRequest(**kwargs)
++
++
++class CollectorTestBase(unittest.IsolatedAsyncioTestCase):
++    def setUp(self):
++        self._env = os.environ.pop(REASONING_CAP_ENV, None)
++
++    def tearDown(self):
++        os.environ.pop(REASONING_CAP_ENV, None)
++        if self._env is not None:
++            os.environ[REASONING_CAP_ENV] = self._env
++
++    async def run_collector(self, data, fake, prompt=PROMPT_THINKING, streaming=False):
++        with patch.object(model, "container", fake):
++            start = _resolve_start_in_reasoning(prompt, data)
++            params = data.model_copy(deep=True)
++            if not streaming:
++                result = await asyncio.wait_for(
++                    _chat_stream_collector(0, None, "req", prompt, params, start, streaming_mode=False),
++                    timeout=10,
++                )
++                if isinstance(result, Exception):
++                    raise result
++                return result
++            queue = asyncio.Queue()
++            await asyncio.wait_for(
++                _chat_stream_collector(0, queue, "req", prompt, params, start, streaming_mode=True),
++                timeout=10,
++            )
++            items = []
++            while not queue.empty():
++                item = queue.get_nowait()
++                if isinstance(item, Exception):
++                    raise item
++                items.append(item)
++            return items
++
++    def assert_stream_shape(self, items):
++        """Reasoning deltas only before the end, no content, one finish chunk carrying the calls."""
++        finishes = [i for i in items if i.get("finish_reason")]
++        self.assertEqual(len(finishes), 1)
++        self.assertIs(items[-1], finishes[0])
++        self.assertFalse(any(i.get("delta_content") for i in items))
++        self.assertTrue(items[0].get("delta_reasoning_content"))
++        return finishes[0]
++
++
++class AutoNoneTests(CollectorTestBase):
++    async def test_auto_is_unconstrained(self):
++        for choice in (None, "auto"):
++            fake = FakeContainer(FakeModel())
++            result = await self.run_collector(request(tool_choice=choice), fake)
++            self.assertEqual(len(fake.calls), 1)
++            self.assertIsNone(fake.calls[0]["grammar"])
++            self.assertEqual(fake.calls[0]["filter_trigger"], THINK_END)
++            self.assertEqual(result["content"], ANSWER)
++            self.assertEqual(result["tool_calls"], [])
++            self.assertEqual(result["finish_reason"], "stop")
++
++    async def test_none_is_unconstrained(self):
++        fake = FakeContainer(FakeModel())
++        result = await self.run_collector(request(tool_choice="none"), fake)
++        self.assertIsNone(fake.calls[0]["grammar"])
++        self.assertEqual(result["content"], ANSWER)
++
++    async def test_auto_keeps_budget_injection(self):
++        fake = FakeContainer(FakeModel("endless"))
++        data = request(tool_choice="auto", reasoning_budget_tokens=5, max_tokens=30)
++        result = await self.run_collector(data, fake)
++        self.assertEqual(fake.injections, [THINK_END])
++        self.assertEqual(len(fake.calls), 1)
++        self.assertEqual(result["finish_reason"], "length")
++
++
++class RequiredTests(CollectorTestBase):
++    async def test_required_non_streaming(self):
++        fake = FakeContainer(FakeModel())
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertEqual(len(fake.calls), 1)
++        call = fake.calls[0]
++        self.assertEqual(call["filter_trigger"], THINK_END)
++        self.assertIn("<[9001]>", call["grammar"])
++        self.assertEqual(forced_names(call["grammar"]), ["calculator", "get_weather"])
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertIsNone(result["content"])
++        self.assertEqual(result["reasoning_content"], "".join(REASONING) + "\n")
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["calculator"])
++        self.assertEqual(result["tool_calls"][0]["function"]["arguments"], '{"expression": "7 * 8"}')
++
++    async def test_required_streaming_order(self):
++        fake = FakeContainer(FakeModel())
++        items = await self.run_collector(request(tool_choice="required"), fake, streaming=True)
++        final = self.assert_stream_shape(items)
++        self.assertEqual(final["finish_reason"], "tool_calls")
++        self.assertEqual([c["function"]["name"] for c in final["delta_tool_calls"]], ["calculator"])
++        reasoning = "".join(i.get("delta_reasoning_content") or "" for i in items)
++        self.assertEqual(reasoning, "".join(REASONING) + "\n")
++
++    async def test_named_calls_the_named_function(self):
++        fake = FakeContainer(FakeModel(preferred="calculator"))
++        data = request(tool_choice={"type": "function", "function": {"name": "get_weather"}})
++        result = await self.run_collector(data, fake)
++        self.assertEqual(forced_names(fake.calls[0]["grammar"]), ["get_weather"])
++        self.assertIn("start: WS? content? call WS?", fake.calls[0]["grammar"])
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["get_weather"])
++
++    async def test_required_without_thinking_constrains_from_first_token(self):
++        fake = FakeContainer(FakeModel())
++        result = await self.run_collector(
++            request(tool_choice="required"), fake, prompt=PROMPT_NO_THINKING
++        )
++        self.assertEqual(len(fake.calls), 1)
++        self.assertIsNone(fake.calls[0]["filter_trigger"])
++        self.assertIn("start: content? call", fake.calls[0]["grammar"])
++        self.assertEqual(result["finish_reason"], "tool_calls")
++
++    async def test_required_without_thinking_streams_no_content(self):
++        fake = FakeContainer(FakeModel())
++        items = await self.run_collector(
++            request(tool_choice="required"), fake, prompt=PROMPT_NO_THINKING, streaming=True
++        )
++        finishes = [i for i in items if i.get("finish_reason")]
++        self.assertEqual(len(finishes), 1)
++        self.assertFalse(any(i.get("delta_content") for i in items))
++        self.assertEqual(len(finishes[0]["delta_tool_calls"]), 1)
++
++    async def test_unsupported_format_served_as_auto(self):
++        fake = FakeContainer(FakeModel())
++        fake.tool_format = "glm4_5"
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertIsNone(fake.calls[0]["grammar"])
++        self.assertEqual(result["content"], ANSWER)
++
++
++class NotHonouredTests(CollectorTestBase):
++    """A forced request that ends on its own without the forced call fails (503)."""
++
++    async def test_content_answer_fails_non_streaming(self):
++        fake = FakeContainer(FakeModel(ignores_grammar=True))
++        with self.assertRaises(ToolChoiceNotHonoured):
++            await self.run_collector(request(tool_choice="required"), fake)
++
++    async def test_content_answer_fails_streaming(self):
++        fake = FakeContainer(FakeModel(ignores_grammar=True))
++        with self.assertRaises(ToolChoiceNotHonoured):
++            await self.run_collector(request(tool_choice="required"), fake, streaming=True)
++
++    async def test_wrong_function_fails_named(self):
++        fake = FakeContainer(FakeModel("tool_anyway", preferred="calculator", ignores_grammar=True))
++        data = request(tool_choice={"type": "function", "function": {"name": "get_weather"}})
++        with self.assertRaises(ToolChoiceNotHonoured):
++            await self.run_collector(data, fake)
++
++    async def test_auto_content_answer_is_fine(self):
++        fake = FakeContainer(FakeModel(ignores_grammar=True))
++        result = await self.run_collector(request(tool_choice="auto"), fake)
++        self.assertEqual(result["content"], ANSWER)
++
++
++class ContentWithCallTests(CollectorTestBase):
++    """A forced turn may carry the answer as content before the call."""
++
++    async def test_non_streaming_returns_content_and_call(self):
++        fake = FakeContainer(FakeModel("answer_then_call"))
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertIn("content? call", fake.calls[0]["grammar"])
++        self.assertEqual(result["content"], ANSWER + "\n\n")
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["calculator"])
++        self.assertEqual(result["reasoning_content"], "".join(REASONING) + "\n")
++
++    async def test_streaming_order_reasoning_content_call(self):
++        fake = FakeContainer(FakeModel("answer_then_call"))
++        items = await self.run_collector(request(tool_choice="required"), fake, streaming=True)
++        finishes = [i for i in items if i.get("finish_reason")]
++        self.assertEqual(len(finishes), 1)
++        self.assertIs(items[-1], finishes[0])
++        kinds = []
++        for i in items:
++            if i.get("delta_reasoning_content"):
++                kinds.append("r")
++            if i.get("delta_content"):
++                kinds.append("c")
++            if i.get("delta_tool_calls"):
++                kinds.append("t")
++        shape = [k for n, k in enumerate(kinds) if n == 0 or kinds[n - 1] != k]
++        self.assertEqual(shape, ["r", "c", "t"])
++        self.assertEqual("".join(i.get("delta_content") or "" for i in items), ANSWER + "\n\n")
++        self.assertEqual(finishes[0]["finish_reason"], "tool_calls")
++
++    async def test_named_with_content(self):
++        fake = FakeContainer(FakeModel("answer_then_call"))
++        data = request(tool_choice={"type": "function", "function": {"name": "get_weather"}})
++        result = await self.run_collector(data, fake)
++        self.assertEqual(result["content"], ANSWER + "\n\n")
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["get_weather"])
++
++
++class ContentThenCallContinuationTests(CollectorTestBase):
++    """A forced turn that ends in content is continued by a call-only job."""
++
++    async def test_non_streaming(self):
++        fake = FakeContainer(FakeModel("answer_then_stop"))
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertEqual(len(fake.calls), 2)
++        first, cont = fake.calls
++        self.assertEqual(cont["request_id"], "req-tc2")
++        self.assertIsNone(cont["filter_trigger"])
++        self.assertNotIn("content", cont["grammar"])
++        self.assertTrue(cont["grammar"].startswith("start: call"))
++        self.assertEqual(
++            cont["prompt"],
++            PROMPT_THINKING + "".join(REASONING) + "\n" + THINK_END + ANSWER + "\n\n",
++        )
++        self.assertEqual(result["content"], ANSWER + "\n\n")
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["calculator"])
++        # Usage: client prompt; completion tokens of both jobs
++        self.assertEqual(result["prompt_tokens"], PROMPT_TOKENS)
++        self.assertEqual(result["gen_tokens"], len(REASONING) + 1 + 1 + len(CONTENT) + 1 + 5)
++
++    async def test_streaming_single_finish(self):
++        fake = FakeContainer(FakeModel("answer_then_stop"))
++        items = await self.run_collector(request(tool_choice="required"), fake, streaming=True)
++        finishes = [i for i in items if i.get("finish_reason")]
++        self.assertEqual(len(finishes), 1)
++        self.assertIs(items[-1], finishes[0])
++        kinds = []
++        for i in items:
++            for key, k in (("delta_reasoning_content", "r"), ("delta_content", "c"), ("delta_tool_calls", "t")):
++                if i.get(key):
++                    kinds.append(k)
++        self.assertEqual([k for n, k in enumerate(kinds) if n == 0 or kinds[n - 1] != k], ["r", "c", "t"])
++
++    async def test_without_thinking(self):
++        fake = FakeContainer(FakeModel("answer_then_stop"))
++        result = await self.run_collector(request(tool_choice="required"), fake, prompt=PROMPT_NO_THINKING)
++        self.assertEqual(len(fake.calls), 2)
++        self.assertIsNone(fake.calls[0]["filter_trigger"])
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertTrue(result["content"].strip())
++
++    async def test_named(self):
++        fake = FakeContainer(FakeModel("answer_then_stop"))
++        data = request(tool_choice={"type": "function", "function": {"name": "get_weather"}})
++        result = await self.run_collector(data, fake)
++        self.assertEqual(forced_names(fake.calls[1]["grammar"]), ["get_weather"])
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["get_weather"])
++
++    async def test_content_loop_fails_loud(self):
++        # R523 round 2: a content loop ended by the loop detector returned 200
++        # with no call; any end other than a client limit must fail loud
++        fake = FakeContainer(FakeModel("content_loop"))
++        with self.assertRaises(ToolChoiceNotHonoured):
++            await self.run_collector(request(tool_choice="required"), fake)
++
++    async def test_content_disabled_keeps_single_job(self):
++        from endpoints.OAI.utils.tool_choice import CONTENT_MAX_TOKENS_ENV
++
++        os.environ[CONTENT_MAX_TOKENS_ENV] = "0"
++        try:
++            fake = FakeContainer(FakeModel())
++            result = await self.run_collector(request(tool_choice="required"), fake)
++        finally:
++            os.environ.pop(CONTENT_MAX_TOKENS_ENV, None)
++        self.assertEqual(len(fake.calls), 1)
++        self.assertNotIn("content", fake.calls[0]["grammar"])
++        self.assertEqual(result["finish_reason"], "tool_calls")
++
++
++class EndlessReasoningTests(CollectorTestBase):
++    async def test_cap_forces_phase_two(self):
++        os.environ[REASONING_CAP_ENV] = "20"
++        fake = FakeContainer(FakeModel("endless"))
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertEqual(len(fake.calls), 2)
++        p1, p2 = fake.calls
++        self.assertTrue(fake.jobs[0].cancelled)
++        self.assertEqual(p1["filter_trigger"], THINK_END)
++        self.assertIsNone(p2["filter_trigger"])
++        self.assertEqual(p2["grammar"], p1["grammar"])
++        self.assertEqual(p2["request_id"], "req-tc2")
++        self.assertEqual(p2["prompt"], PROMPT_THINKING + "hmm " * 20 + THINK_END)
++        self.assertEqual(fake.injections, [])
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertEqual([c["function"]["name"] for c in result["tool_calls"]], ["calculator"])
++        self.assertEqual(result["reasoning_content"], "hmm " * 20)
++        self.assertIsNone(result["content"])
++        # Usage: the client's prompt, all generated tokens of both phases
++        self.assertEqual(result["prompt_tokens"], PROMPT_TOKENS)
++        self.assertEqual(result["gen_tokens"], 20 + 6)
++        self.assertLessEqual(result["cached_tokens"], PROMPT_TOKENS)
++
++    async def test_cap_streaming_single_finish(self):
++        os.environ[REASONING_CAP_ENV] = "12"
++        fake = FakeContainer(FakeModel("endless"))
++        items = await self.run_collector(request(tool_choice="required"), fake, streaming=True)
++        final = self.assert_stream_shape(items)
++        self.assertEqual(final["finish_reason"], "tool_calls")
++        self.assertEqual(len(final["delta_tool_calls"]), 1)
++        reasoning = "".join(i.get("delta_reasoning_content") or "" for i in items)
++        self.assertEqual(reasoning, "hmm " * 12)
++
++    async def test_budget_is_the_cap(self):
++        fake = FakeContainer(FakeModel("endless"))
++        data = request(
++            tool_choice="required", reasoning_budget_tokens=7, reasoning_budget_message=" Time is up."
++        )
++        result = await self.run_collector(data, fake)
++        self.assertEqual(len(fake.calls), 2)
++        self.assertTrue(fake.calls[1]["prompt"].endswith("hmm " * 7 + " Time is up." + THINK_END))
++        self.assertEqual(fake.injections, [])  # no output injection: it would disable the filter
++        self.assertEqual(result["reasoning_content"], "hmm " * 7 + " Time is up.")
++        self.assertEqual(result["finish_reason"], "tool_calls")
++
++    async def test_max_tokens_bounds_reasoning_without_cap(self):
++        os.environ[REASONING_CAP_ENV] = "0"
++        fake = FakeContainer(FakeModel("endless"))
++        result = await self.run_collector(request(tool_choice="required", max_tokens=15), fake)
++        self.assertEqual(len(fake.calls), 1)
++        self.assertEqual(result["finish_reason"], "length")
++        self.assertEqual(result["tool_calls"], [])
++
++    async def test_phase_two_gets_the_remaining_max_tokens(self):
++        os.environ[REASONING_CAP_ENV] = "10"
++        fake = FakeContainer(FakeModel("endless"))
++        await self.run_collector(request(tool_choice="required", max_tokens=100), fake)
++        self.assertEqual(fake.calls[1]["max_tokens"], 90)
++
++    async def test_eos_inside_reasoning_forces_phase_two(self):
++        fake = FakeContainer(FakeModel("eos"))
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertEqual(len(fake.calls), 2)
++        self.assertEqual(fake.calls[1]["prompt"], PROMPT_THINKING + "".join(REASONING) + THINK_END)
++        self.assertEqual(result["finish_reason"], "tool_calls")
++
++    async def test_call_without_reasoning_end_is_not_repeated(self):
++        # A call already emitted (inside the reasoning, or by a filter that
++        # constrained from the first token) must not trigger phase 2
++        fake = FakeContainer(FakeModel("call_in_reasoning"))
++        result = await self.run_collector(request(tool_choice="required"), fake)
++        self.assertEqual(len(fake.calls), 1)
++        self.assertEqual(result["finish_reason"], "tool_calls")
++        self.assertEqual(len(result["tool_calls"]), 1)
++
++    async def test_eos_inside_reasoning_auto_unchanged(self):
++        fake = FakeContainer(FakeModel("eos"))
++        result = await self.run_collector(request(tool_choice="auto"), fake)
++        self.assertEqual(len(fake.calls), 1)
++        self.assertEqual(result["finish_reason"], "stop")
++
++
++if __name__ == "__main__":
++    unittest.main()

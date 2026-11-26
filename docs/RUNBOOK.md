@@ -9,7 +9,7 @@ is the command that produced a results directory named beside it.
 | --- | --- |
 | the box | `ssh flan` (BatchMode works; `sudo docker` over that ssh) |
 | checkpoint | `/srv/qwen5090/models/qwen3.8-flash-next-exl3-2.68bpw-selfcal`, turboderp revision `2.68bpw_h6_ng8` |
-| images | `tabbyapi:tune268-r2-pf2lock-r3`, built by `bash docker/build-chain.sh`; the served launcher pins measured image `da386167`, so a reconstruction requires a reviewed pin update |
+| image | `tabbyapi:rebase167-r2`; the launcher and restore wrapper pin `96ab0d09`. [Source pins and predecessor build](../docker/README.md#exllamav3-v167-r2) |
 | probes | flashed from `bench/*.py` to `/srv/qwen5090/probes/` |
 | runners | flashed from `bench/*.sh` to `/srv/qwen5090/` |
 | GPU lock | `/srv/qwen5090/lib/gpu-queue.sh` + `/srv/qwen5090/gpu-exclusive.lock`; every runner takes it |
@@ -18,6 +18,8 @@ is the command that produced a results directory named beside it.
 Flashing a probe: `scp bench/probe.py flan:/srv/qwen5090/probes/fn_bench.py`. The runners expect that name.
 
 ## 1. Serve
+
+Install the runtime audit at the mount path listed in the [README boot procedure](../README.md#reproducing-a-boot). Apply the model template patches described in [CONFIG.md](CONFIG.md#reasoning-and-tools).
 
 ```sh
 ssh flan 'bash -s' < scripts/launch-flashnext.sh                 # the served baseline
@@ -69,7 +71,7 @@ bash docker/build-chain.sh
 DRY_RUN=1 bash docker/build-chain.sh
 ```
 
-The final tag is `tabbyapi:tune268-r2-pf2lock-r3`. Rebuilding changes the image ID; review the installed sources and update the launcher's `R825C_IMAGE_ID` before serving the reconstruction.
+The chain builds the predecessor through `tabbyapi:flashnext-names-fast-r1`. The [r2 rebuild inputs](../docker/README.md#exllamav3-v167-r2) include two integrated Git trees. Rebuilding changes the image ID. Qualify the rebuilt image and update the launcher and restore pins together.
 
 ## 4. Hand the box back
 
@@ -86,6 +88,6 @@ The validated `tabbyapi:r828-prompt-lookup-r3` configuration was restored on :80
 
 `scripts/serve-flashnext-daily.sh` runs on the serving host after installing `scripts/launch-flashnext.sh` as `/srv/qwen5090/launch-flashnext.sh`. It pins that published launcher's SHA256, checks the GPU lock and pending queue, boots with a clean environment, and writes `flashnext` to `/srv/qwen5090/default-daily` after a healthy model check. The infrastructure restoration helpers dispatch this selector to the installed wrapper; they no longer select another engine after an experiment. The existing launcher retains its power and memory-clock policy.
 
-## Served daily, 2026-10-23
+## Historical daily, 2026-10-23
 
-The current daily is `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on `tabbyapi:tune268-r2-pf2lock-r3`, pool 819,200, 50 selectors and the served warm-up. The [publication write-up](../bench/results/publish268-served-268.md) records the three measurement runs on `tune268-r2` and their conditions; the [pf2lock r3 write-up](../bench/results/pf2lock-r3-race-fix.md) records the 2026-10-28 image change. Install the public launcher and matching `scripts/serve-flashnext-daily.sh` together; the wrapper pins the scrubbed public launcher's SHA256.
+The October daily was `qwen3.8-flash-next-exl3-2.68bpw-selfcal` on `tabbyapi:tune268-r2-pf2lock-r3`, pool 819,200, 50 selectors and the served warm-up. The [publication write-up](../bench/results/publish268-served-268.md) records the three measurement runs on `tune268-r2` and their conditions; the [pf2lock r3 write-up](../bench/results/pf2lock-r3-race-fix.md) records the 2026-10-28 image change. Install the public launcher and matching `scripts/serve-flashnext-daily.sh` together; the wrapper pins the scrubbed public launcher's SHA256.

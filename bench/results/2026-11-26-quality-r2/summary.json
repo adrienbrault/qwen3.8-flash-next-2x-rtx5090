@@ -1,0 +1,34 @@
+{
+  "gsm": {
+    "n_documents": 500,
+    "scores": {
+      "strict-match": 0.978,
+      "flexible-extract": 0.98
+    },
+    "api": {
+      "n_ok": 500,
+      "finishes": {
+        "stop": 498,
+        "length": 2
+      }
+    }
+  },
+  "needles": {
+    "131072": {
+      "n_ok": 5,
+      "hits": 5,
+      "actual_prompt_tokens": [
+        105680
+      ],
+      "length_finishes": 5
+    },
+    "240000": {
+      "n_ok": 5,
+      "hits": 5,
+      "actual_prompt_tokens": [
+        193464
+      ],
+      "length_finishes": 5
+    }
+  }
+}

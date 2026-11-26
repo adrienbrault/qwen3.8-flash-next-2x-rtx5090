@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the image scripts/launch-flashnext.sh serves (DAILY_IMG), from a clean clone, in one command:
+# Builds the predecessor image chain through flashnext-names-fast-r1.
 #   bash docker/build-chain.sh
 # 51 layers in the order of docker/README.md, each tagged the way the launcher and the next layer's BASE expect:
 #   qsa-cid                                   Dockerfile.tabbyapi-qsa-cid     TabbyAPI 53da7919 + ExLlamaV3 v1.5.0 on the CUDA devel base,
@@ -74,8 +74,7 @@ log(){ echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"; }
 die(){ log "FAILED: $*"; exit 1; }
 sha(){ if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -c1-64; else shasum -a 256 "$1" | cut -c1-64; fi; }
 
-EXPECT=$(sed -nE 's/^DAILY_IMG=([^ ]+).*/\1/p' "$LAUNCHER" | head -1)
-[ -n "$EXPECT" ] || die "no DAILY_IMG= line in $LAUNCHER"
+EXPECT=tabbyapi:flashnext-names-fast-r1
 
 # Every source a Dockerfile COPYs must exist in its build context and must not be excluded by the context's .dockerignore
 # (checked in DRY_RUN too). ${PATCH} and ${SRC} resolve from the --build-arg values of the call.
@@ -264,7 +263,7 @@ build "$FINAL" $O/flashnext-names-fast-r1/Dockerfile $O/flashnext-names-fast-r1 
   --build-arg OVERLAY_SHA="$(sha $O/flashnext-names-fast-r1/overlay/manifest.json)"
 
 [ "${FINAL#*:}" = "${EXPECT#*:}" ] || die "built $FINAL but $LAUNCHER serves $EXPECT"
-if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches DAILY_IMG=$EXPECT in $LAUNCHER ==="; exit 0; fi
+if [ "$DRY_RUN" = 1 ]; then log "=== DRY_RUN: $N layers; final tag $FINAL matches predecessor $EXPECT ==="; exit 0; fi
 "${DOCKER_CMD[@]}" image inspect "$FINAL" >/dev/null 2>&1 || die "$FINAL not present after the build"
 "${DOCKER_CMD[@]}" image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}' | grep -F "$R:" | tee "$LOG_DIR/images.txt" | sed 's/^/[image] /' || true
-log "=== DONE: $N layers, $FINAL = DAILY_IMG of $LAUNCHER (tag ${EXPECT#*:}) ==="
+log "=== DONE: $N layers, $FINAL is the r2 predecessor (tag ${EXPECT#*:}) ==="

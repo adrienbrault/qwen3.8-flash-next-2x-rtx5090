@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["matplotlib>=3.9"]
 # ///
-"""Draw the current README figures from headline-r1 and cold-prefill public records.
+"""Draw the current README figures from headline-r2 and cold-prefill public records.
 
 uv run bench/plot.py
 Missing files, missing cells and numeric inconsistencies are fatal. Historical
@@ -21,7 +21,7 @@ COLORS = {1: '#0969da', 4: '#8250df', 8: '#cf222e'}
 plt.rcParams.update({
     'font.size': 10, 'axes.spines.top': False, 'axes.spines.right': False,
     'axes.labelcolor': '#57606a', 'axes.edgecolor': '#d8dee4',
-    'svg.fonttype': 'none', 'svg.hashsalt': 'headline-r1-20261116',
+    'svg.fonttype': 'none', 'svg.hashsalt': 'headline-r2-20261126',
 })
 
 
@@ -58,8 +58,8 @@ def figure_std_bench(real):
         style(ax, label)
         ax.margins(y=.16)
         ax.legend(fontsize=8, loc='best')
-    save(fig, 'std-bench.svg', 'Real work · Spec-Bench · 2026-11-16',
-         '2.68 bpw + HermiHg MTP · names-fast r1, default name · T=0 · 256 forced tokens · template-default thinking')
+    save(fig, 'std-bench.svg', 'Real work · Spec-Bench · 2026-11-26',
+         '2.68 bpw + HermiHg MTP · rebase167-r2, default name · T=0 · 256 forced tokens · template-default thinking')
 
 
 def figure_decode_scaling(code):
@@ -75,7 +75,7 @@ def figure_decode_scaling(code):
         style(ax, label)
         ax.margins(y=.2)
         ax.legend(fontsize=8, loc='best')
-    save(fig, 'decode-scaling.svg', 'Peak realistic code · cached 1K prefix · 2026-11-16',
+    save(fig, 'decode-scaling.svg', 'Peak realistic code · cached 1K prefix · 2026-11-26',
          'Primary peak = 2K append · 400 forced tokens · thinking off · T=0 · shared context · canonical token counts')
 
 
@@ -97,7 +97,7 @@ def figure_cached_code(code):
         ax.set_ylim(bottom=0)
         ax.grid(axis='y', alpha=.2)
         ax.legend(fontsize=8, loc='center', bbox_to_anchor=(.5, .66), ncols=2) if ax is axes[0] else ax.legend(fontsize=8, loc='lower left', ncols=2)
-    save(fig, 'cached-code.svg', 'Cached append and code at depth · 2026-11-16',
+    save(fig, 'cached-code.svg', 'Cached append and code at depth · 2026-11-26',
          '2K solid / 8K dashed append · c1/c4/c8 · shared context · T=0 · 400 forced tokens · thinking off · p99 in numeric matrix')
 
 
@@ -116,8 +116,8 @@ def figure_prefill(cells):
         ax.set_ylabel(label)
         ax.set_ylim(0, max(ys) * 1.18)
         ax.grid(axis='y', alpha=.2)
-    save(fig, 'prefill.svg', 'Cold prefill · 2026-11-16',
-         'names-fast r1, default name · prose · c1 · 3 salted prompts per target · 64 forced tokens · T=0 · template-default thinking')
+    save(fig, 'prefill.svg', 'Cold prefill · 2026-11-26',
+         'rebase167-r2, default name · prose · c1 · 3 salted prompts per target · 64 forced tokens · T=0 · template-default thinking')
 
 
 if __name__ == '__main__':

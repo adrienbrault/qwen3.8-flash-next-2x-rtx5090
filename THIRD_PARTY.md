@@ -17,6 +17,9 @@ This repository ships no weights.
 
 ## The engine and the server (the image base)
 
+The served r2 image uses [ExLlamaV3](https://github.com/turboderp-org/exllamav3) v1.6.7 (MIT, upstream `8c593e4e`) with the recipe's FP16 MoE router and 16-row attention tile defaults, and [TabbyAPI](https://github.com/theroyallab/tabbyAPI) (AGPL-3.0) with the integrated model-name and reasoning paths. [Served source pins](docker/README.md#exllamav3-v167-r2)
+
+
 | item | origin | licence | how it is used |
 |---|---|---|---|
 | ExLlamaV3 `dev` `5783a93` (v1.5.2) since 2026-09-27; v1.5.0 before | **turboderp** — https://github.com/turboderp-org/exllamav3 | MIT | the inference engine; every kernel patch below modifies its source and is a derivative work under MIT. The served image since R785 installs upstream `dev` at `5783a9360b749a1d5bde6862dc35e7766e542ca1` with this repository's changes ported onto it (`docker/overlays/rebase-dev-r3/`); upstream code it serves that v1.5.0 did not have includes the tiled deterministic hyper-connection prefill mix (`825db5b`, `EXL3_GR_MIX_TILED`), the deterministic router GEMM (`a093e9c`), the GDN fp16 prefill projections (`421f590`), the sm_75 support of PR #325 and its rework `f4db698`, v1.5.2 (`988fa66`) and the loader's shared file streams (`5783a93`) |
@@ -114,6 +117,7 @@ Each overlay's `manifest.json` pins the SHA-256 of the file it replaces and of t
 |---|---|---|---|
 | lm-evaluation-harness (`lm_eval`, GSM8K 5-shot, n=200) | EleutherAI — https://github.com/EleutherAI/lm-evaluation-harness | MIT | quality gate |
 | tool-eval-bench v2.1.0 and v3.0.0 | **SeraphimSerapis** — https://github.com/SeraphimSerapis/tool-eval-bench | MIT | agentic tool-call gate (69 cases × 4) |
+| `scripts/tooleval_echo.py` | Wrapper in this recipe around SeraphimSerapis's tool-eval-bench 2.1.0 | MIT | replays `reasoning_content` for the same-version controls |
 | mini-SWE-agent + SWE-bench Verified | SWE-agent / princeton-nlp — https://github.com/SWE-agent/mini-swe-agent | MIT (harness) / SWE-bench data licence | the SWE-bench measurements in `bench/results/r359-swebench.md` |
 | `vllm bench serve` (vLLM v0.30.0, image `vllm/vllm-openai:v0.30.0`) | vLLM project — https://github.com/vllm-project/vllm | Apache-2.0 | the standard serving benchmark in `bench/results/r731b-std-bench.md`; run unmodified except for the functions `bench/vllm_bench_tabby.py` replaces at import |
 | `bench/vllm_bench_tabby.py` | this repository; its `tabby_chat` is a modified copy of vLLM v0.30.0's `async_request_openai_chat_completions` (`vllm/benchmarks/lib/endpoint_request_func.py`), and its Spec-Bench reader re-implements `SpecBench.load_data` without pandas | Apache-2.0 for the parts derived from vLLM, MIT otherwise | makes `vllm bench serve` measure TabbyAPI correctly: usage read from any frame, CRLF-separated events, `min_tokens` for length forcing, Spec-Bench prompts templated once, a per-cell sample manifest |

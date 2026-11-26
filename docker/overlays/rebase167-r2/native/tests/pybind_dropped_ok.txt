@@ -1,0 +1,4 @@
+# Served extension names intentionally not carried by rebase165 (see out/native/AUDIT.md)
+# upstream 3a8e2fb8 replaced the per-token history planes + StateRewindJob copy with the two-row pool + replay rewind
+StateRewindJob
+batched_state_rewind

@@ -1,85 +1,84 @@
 #!/usr/bin/env bash
-# 2026-11-16: tabbyapi:flashnext-names-fast-r1 = pf2lock r3 + the opt-in -fast name overlay.
-# EXL3_FLASHNEXT_FAST=1 makes the alias available; the default name retains native acceptance.
-# Source launcher SHA256 1c617f6deffe7f74efd8ea497b81aa27bd109e89255bc10ac3bfb707ea720c1b.
-# The served checkpoint contains the HermiHg 2.6-bpw MTP graft; pool 819,200, 51 selectors.
-# Evidence: bench/results/headline-r1.md; rollback: scripts/launchers/launch-flashnext-pf2lock-r3.sh.
-# 2026-10-28: served image tabbyapi:tune268-r2-pf2lock-r3 = tune268-r2 + docker/overlays/pf2lock-r3 (lock and set
-# ownership for the EXL3_NGRAM_PREFETCH2 staging sets; Python only, numerics unchanged). Source launcher SHA256
-# 466def5f397cdd36231c4b50c6c3f596624b1d78a1672412712f1e6d50c2c0f8; HOME lookup scrubbed as in the previous public
-# launcher. Same 50 launcher selectors, pool 819,200 and checkpoint. Gates: bench/results/pf2lock-r3-race-fix.md.
-# Rollback: scripts/launchers/launch-flashnext-tune268r2.sh (image tabbyapi:tune268-r2, 2239954c).
-# 2026-10-23 (predecessor): turboderp self-calibrated 2.68 bpw, image tabbyapi:tune268-r2.
-# Source launcher SHA256 7e36acd2019ffc21082d8a0d50d8c43ea5403c9b0cba5fe39968810e569288c7;
-# HOME lookup scrubbed as in the previous public launcher. 50 launcher selectors, pool 819,200.
-# tune268 r1: EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1.
-# tune268 r2: EXL3_MOE_PREFILL_E3_HALF=1; HIST, STATIC and UNCAP remain image-default 0.
-# Recipe: docker/overlays/tune268{,-r2}/; results: bench/results/publish268-served-268.md.
-# The following dated promotion comments describe predecessor configurations.
-# R828c (2026-10-02 19:10 UTC): adaptive prompt lookup beside MTP; 47 launcher selectors.
-# Source launcher md5 fb4e9d66; image dfaed2cb; trace on, NVMe off, FASTWARM retained.
-# Records: bench/results/r827-r828-prompt-lookup.md.
-# Rollback: scripts/launchers/launch-flashnext-r825p-wholeprompt.sh.
-# R825p predecessor (2026-10-01 15:37 UTC): resumable whole-prompt LS prefill; 46 launcher selectors.
-# Source launcher md5 262e9c31; image tabbyapi:r825c-hostprepare; trace on, NVMe default off.
-# Records and limits: bench/results/r825-whole-prompt-window.md.
-# Rollback: scripts/launchers/launch-flashnext-r823p-tailckpt.sh.
-R825C_IMAGE_ID=sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22a7b125   # names-fast r1 2026-11-16; predecessor pf2lock r3: tabbyapi:tune268-r2-pf2lock-r3 (was 2239954c = tune268-r2, before that 48f4ad3a)
-# R823p (2026-10-01): tail recurrent checkpoints captured inside the LS prefill pipeline.
-# Image tabbyapi:r823c-cachetail-inforward; 44 launcher keys, image EXL3_CACHE_TRACE=1;
-# EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096, TAIL_PP=12288 and INFORWARD=1; NVMe default off.
-# R823c A1/C1/D1/D2/C2/A2, results 2026-10-01-r823c-cache-reuse-DUO8ur: raw T32 edited TTFT
-# 5.681/5.683 -> 2.078/2.087 s; two-stream C2 11.242/11.227 -> 4.335/4.339 s; greedy 64 forced tokens.
-# Single-stream outputs identical across arms; concurrent fidelity unresolved. R823p production gates passed.
-# Source launcher md5 8b644c17; rollback scripts/launchers/launch-flashnext-r818-warmfast.sh.
-# Records and limits: bench/results/r823-tail-checkpoints.md. NVMe restore needs separate validation.
-# R818 (2026-09-30): fast-state boot warm-up over the R809 launcher (scripts/launchers/launch-flashnext-r809-merge.sh);
-# one block between the "Warmup." request and the UP line, nothing else changed: image, 41 keys, pool 901,120 and split as
-# R809. Three raw completions of 20, 29 and 11 prompt tokens put the process in the faster decode state it otherwise
-# reaches only at its first 4-stream episode (R815-R820, bench/results/r815-r820-fast-state.md). R818 gate (12 boots ABBA,
-# results 2026-09-30-r818-warmfast-gate, with 2026-09-30b/c-r818-warmfast-gate for ShareGPT at 8 streams): fn_bench c1
-# code ms/step x0.968; ShareGPT output tok/s +2.6 % at 1 stream and +4.8 % at 2, 0.991x at 8 pooled over 5 boots per arm;
-# greedy output identical to R809's reference; ShareGPT 1-stream outputs 400/400 identical with and without the warm-up.
-# The UP line's free VRAM is read after the warm-up: 1,099 / 1,667 MiB against 1,181 / 1,759 without it, within 8 MiB
-# after traffic. Promoted 2026-09-30 11:52 to 11:55 UTC (R818p, results 2026-09-30-r818p-promote-warmfast-1152): fn c1
-# 9.797 ms per step, greedy identical to R809. The serving host's launcher md5 is f3975d68. ROLLBACK: FASTWARM=0, or the
-# R809 launcher.
-# R809 (2026-09-29): prefill-merge r1 + async stash (docker/overlays/prefill-merge-r1): image tabbyapi:merge-tok-r1 =
-# tokenize-offloop-r2 + fix.patch (exllamav3, Python only: cache/prefill_merge.py new; generator/job.py,
-# generator/disk_cache.py, modules/gated_delta_net.py, modules/ple.py). EXL3_PREFILL_MERGE=1 runs the sub-page leftover of a
-# prefill in the same forward as its bulk rows and captures the last-page recurrent stash inside that forward (numerics
-# change, gated against a partition null); EXL3_STASH_ASYNC=1 copies recurrent stashes through pinned staging slabs, CUDA
-# events and a worker thread (bitwise against the synchronous copy). Both keys are unset in the image. R803 (8-slot agent
-# replay): agent-turn prefill -13 % (-17 % with ASYNC), client TTFT -10 %, per-stream decode about +3 % acceptance-stripped.
-# R809 gates (results 2026-09-29-r809-merge-quality-gate-1703, 2026-09-29-r809t-tier-recheck-1759): fidelity CAND 34/80 vs
-# NULL 29/80 prompts diverging (all near-ties), 0 confident flips, first-token KL median 0.0031 vs NULL 0.0037; tool-eval
-# 85.0; GSM8K c8 0.978; NVMe tier restore == warm on 64 tokens. Only DAILY_IMG and the two EXTRA_ENV keys differ from R808's
-# launcher (41 keys). The served image was built on the serving host as ac16920f72cf; docker/build-chain.sh installs the
-# same files in another layer order. Greedy fingerprints roll over (chat `tool` and `long`). Promoted 2026-09-29 22:02 CEST
-# (R809p). ROLLBACK: DAILY_IMG=tabbyapi:tokenize-offloop-r2 and EXTRA_ENV without the two keys (R808's launcher).
-# R808 (2026-09-29): tokenize-offloop r2 (docker/overlays/tokenize-offloop-r2): image tabbyapi:tokenize-offloop-r2 =
-# rebase-dev-r3-loopthink5 + app.patch (TabbyAPI: the prompt is encoded once per request -- check_context_length's ids are
+# v1.6.7 r2 promotion (tabbyapi:rebase167-r2).
+# Source launcher SHA256: e7ffd0a6e7406152fe8c97bb1a1ea0b2edf40e08a580e2d58b629592746b5adc
+# Rollback: restore /srv/qwen5090/launch-flashnext.sh.pre-rebase167-r2 (the current launcher)
+# with tabbyapi:flashnext-names-fast-r1,
+# image sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22a7b125.
+# pf2lock r3 (2026-10-28, user: "Promote the race fix to the daily? yes"): image tabbyapi:tune268-r2-pf2lock-r3
+# (da386167 = tune268-r2 + flashnext-v164/pf2lock/pf2lock.patch r3: lock + commit/abort ownership for the EXL3_NGRAM_PREFETCH2
+# staging sets; wrong n-gram rows under concurrency fixed), same 50 keys. Two screens PROMOTE-ELIGIBLE (greedy 24/24 x2,
+# c1 -0.19 %, c4 -0.12 %, replay -0.79 %), codex review r3 GO. Evidence flan/flashnext-v164/pf2lock/.
+# Rollback: /srv/qwen5090/launch-flashnext.sh.pre-pf2lock (7e36acd2, tune268-r2) + serve-flashnext-daily.sh.pre-pf2lock.
+# tune268r2 (2026-10-23, autonomous promotion under OPERATING-STATE's "keep tuning" authorization): image tabbyapi:tune268-r2
+# (2239954c) + EXL3_MOE_PREFILL_E3_HALF=1 (50 keys). ABBA 234824: six-agent replay -12.4 %, cold 30k TTFT -17.3 %, decode +-0.4 %,
+# fork probe 24/24 identical, pool 819,200 + 120k prompt PASS; gates 232926 (r1 6466/6466, r2 380/380 bitwise, E3_HALF numerics
+# 792/792). Evidence flan/flashnext-v164/tune268r2/. Rollback: /srv/qwen5090/launch-flashnext.sh.pre-tune268r2 (cf9b068f).
+# tune268 (2026-10-23, user: "Serve the 2.6 now. Keep tuning and optimizing"): daily = turboderp self-cal 2.68 bpw on
+# tabbyapi:tune268-r1 (48f4ad3a) with EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1, pool 819,200, TUNEDIR .exl3cache-tune268.
+# Evidence flan/flashnext-v164/tune268/FINDINGS.md (ABBA 210133: +10/+11 % c1, +6.6/+5.8 % c4 vs untuned 2.68, greedy bitwise).
+# Rollback: /srv/qwen5090/launch-flashnext.sh.pre-tune268 (sha 0d703bca, 2.50 r0b0tlab on dfaed2cb, pool 901,120).
+# R825p (2026-10-01): gated R825c frontend-safe resumable whole-prompt prefill on the R823c daily.
+# See r825p-promote-wholeprompt.sh; 46 selectors, trace ON, NVMe OFF.
+# R825c image pin (operator-recorded build ID of tabbyapi:r825c-hostprepare).
+R825C_IMAGE_ID=sha256:96ab0d099fff79996bea9bf5e5021c567be0f5133db6af25c3b822f3bb69cbfe
+# R823p (2026-10-01): R823c arm D; trace ON from the pinned image (EXL3_CACHE_TRACE=1).
+# Base: f3975d68e7c4042ad50e89d9109640d8, including R818 FASTWARM. Only image,
+# the three measured D selectors, and an explicit NVMe-off default change.
+# NVMe is OFF as in every R823c D boot; disk restore is not covered by that experiment.
+# Rollback: /srv/qwen5090/launch-flashnext.sh.pre-r823 (= f3975d68).
+# See r823p-promote-tailckpt.sh for gates. FIDELITY-UNRESOLVED remains the round verdict.
+# R818 (2026-09-30): FAST-STATE WARM-UP over the R809 daily (one block between the "Warmup." request and the UP line;
+# nothing else changed). WHY: R815-R817 (FINDINGS; REVIEW-R817 §3/§5; results 2026-09-30-r817-fast-state-rule-0531):
+# the served process runs its decode verify ~0.25 ms/step slower until the decode-class (<= 32-row) HC-mix path has run
+# at two row classes the boot has not created yet (classes {1} {2-3} {4-6} {7-12} {13-25} {26-32}; the boot creates
+# {2-3} and {4-6}; offset does not matter, a repeated class does nothing). The merge daily never runs such a forward on
+# its own (the merge folds every tail; no chat prompt is <= 33 tokens). R817 boot M: raw prompts of 20 + 29 server
+# tokens (19 and 28 rows @0) put this launcher's daily in a PERSISTENT faster state: fn_bench c1 10.150 -> 9.840
+# ms/step (x0.9695), still x0.9665 after 2,048-token prompts. This block sends those two prompts plus N_p 11 (the 7-12
+# class, REVIEW-R817 §5's robustness margin) at every boot and checks the server lines; the UP line's VRAM free is now
+# read after it. Gate: flan/r818-warmfast-gate.sh (greedy vs R809 + slow-vs-fast chat, fn_bench curve, persistence
+# after merged prefills / a 30k stash / idle / a c8 burst, R811 ShareGPT, VRAM headroom; ABBA vs 6429dfa2).
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r818 (= the R809 launcher, md5 6429dfa2): cp it over
+# /srv/qwen5090/launch-flashnext.sh and run it; or FASTWARM=0 on this launcher (skips the block). Numerics unchanged.
+# R809 (2026-09-29; r809-merge-quality-gate.sh printed R809 PROMOTABLE, results 2026-09-29-r809-merge-quality-gate-1703;
+# fidelity CAND 34/80 vs NULL 29/80 diverging (all near-ties), 0 confident flips, first-token KL median 0.0031 vs NULL 0.0037;
+# tool-eval 85.0; GSM8K c8 0.978; tier write + restore from disk confirmed, restored-state output equality re-checked by R809t): prefill-merge r1 ON over the R808 daily. Image tabbyapi:merge-tok-r1
+# (r809b-merge-tok-build.sh; built on flan as ac16920f72cf) = the R808 image tabbyapi:tokenize-offloop-r2 contents
+# (rebase-dev-r3-loopthink5 + tokenize-offloop r2, pin b961eb83) + patches/exllamav3/prefill-merge-r1 fix.patch a5102079
+# (Python only). EXL3_PREFILL_MERGE=1 runs the sub-page leftover of a prefill in the same forward as its bulk rows and
+# snapshots the last-page stash inside it (numerics change, bounded: R803 + the R809 partition-null fidelity gate);
+# EXL3_STASH_ASYNC=1 copies recurrent stashes through pinned staging slabs on a worker thread (bitwise vs MERGE). R803:
+# agent-turn prefill -13 % / -17 % with ASYNC, client TTFT -10 %, decode ~+3 % acceptance-stripped, peak VRAM 70-110 MiB
+# lower. Derived from launch-flashnext-r808-tokoffloop.sh (md5 04e347cc): only DAILY_IMG and the two EXTRA_ENV keys
+# differ (41 keys). IMG == DAILY_IMG keeps the daily NVMe tier default on. The R809 run's gated image id (printed in its
+# promotion steps) goes here before installing: GATED IMAGE ID = sha256:ac16920f72cf41864ed7f4151bd18bc4ce593015dc0bc263284a8fde8c111454.
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r809 (= the R808 launcher, image tabbyapi:tokenize-offloop-r2,
+# md5 04e347cc): cp it over /srv/qwen5090/launch-flashnext.sh and run it. Greedy fingerprints roll over (numerics change).
+# R808 (2026-09-29): tokenize-offloop r2 (patches/tabbyapi/tokenize-offloop-r2): image tabbyapi:tokenize-offloop-r2 =
+# rebase-dev-r3-loopthink5 + app.patch (TabbyAPI: the prompt is encoded ONCE per request -- check_context_length's ids are
 # reused by generate_gen, keyed by (prompt, add_bos, weakref(tokenizer)) -- and prompts > 12,000 chars are encoded on a
 # one-thread worker off the asyncio loop) + exl3.patch (exllamav3 encode_part_base: encode_batch([t])[0].ids, which releases
 # the GIL, under a per-Tokenizer lock that also covers the encode_special_tokens flag). Knobs TABBY_ENCODE_ONCE,
 # EXL3_TOKENIZE_OFFLOOP (default ON), EXL3_TOKENIZE_OFFLOOP_MIN_CHARS (12000); none set here, so the 39 keys are unchanged.
-# R808 gates (5 ABBA boot pairs, knobs on vs off, results 2026-09-29-r808-tokenize-offloop-r2-1411): peer stall per 30k-token
-# arrival 53.1 -> 2.8 ms; steady-state ms/step +0.01 % [-0.25, +0.27] (no cost; mean gap incl. stalls -0.54 % at R808's
-# synthetic arrival rate); short-prompt TTFT -2.9 ms; greedy byte-identical (on == off 135/135, == R792 12/12). Engine,
-# pool 901,120, split [30, 30], TUNEDIR unchanged. ROLLBACK: DAILY_IMG=tabbyapi:rebase-dev-r3-loopthink5 (R792's launcher).
-# R792 (2026-09-28): TabbyAPI loop-think r5 (docker/overlays/loop-think-r5): image tabbyapi:rebase-dev-r3-loopthink5 =
+# R808 gates (flan/r808-tokenize-offloop-r2.sh, 5 ABBA boot pairs, results 2026-09-29-r808-tokenize-offloop-r2-*): peer
+# stall per 30k-token arrival 53.1 -> 2.8 ms; steady-state ms/step +0.01 % [-0.25, +0.27] (no cost; mean gap incl. stalls
+# -0.54 % at R808's synthetic arrival rate); short-prompt TTFT -2.9 ms; greedy
+# byte-identical (BOTH == knobs-off 12/12 + 14/14 streamed, == R792). Engine, pool 901,120, split [30, 30], TUNEDIR unchanged.
+# ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r808 (= R792's launcher, image tabbyapi:rebase-dev-r3-loopthink5, md5 44f55af3).
+# R792 (2026-09-28): TabbyAPI loop-think r5 (patches/tabbyapi/loop-think-r5): image tabbyapi:rebase-dev-r3-loopthink5 =
 # rebase-dev-r3 + r4-to-r5.patch (TabbyAPI /app only: long-period reasoning-loop rungs (6000, 2000) + (12000, 4000) beside
 # r4's (3000, 1000), and finish_reason "length" instead of "tool_calls" when max_tokens cuts an unparsed tool call).
-# Engine, the 39 keys, pool 901,120, split [30, 30] and TUNEDIR unchanged; greedy byte-identical to R785c's reference was a
-# promotion gate (scripts/r792-promote-loopthink5.sh). ROLLBACK: DAILY_IMG=tabbyapi:rebase-dev-r3 (R789's launcher).
-# R789 (2026-09-28): EXTRA_ENV 42 -> 39 keys (EXL3_HOST_GAP_REWIND, EXL3_GR_STATE_REGRID, EXL3_HC_MIX_V3_PDL removed; see the
+# Engine, the 39 keys, pool 901,120, split [30, 30] and TUNEDIR unchanged; greedy byte-identical to R785c's reference is a
+# promotion gate (flan/r792-promote-loopthink5.sh). ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r792 (= R789's launcher,
+# image tabbyapi:rebase-dev-r3, md5 e5028372).
+# R789 (2026-09-27): EXTRA_ENV 42 -> 39 keys (EXL3_HOST_GAP_REWIND, EXL3_GR_STATE_REGRID, EXL3_HC_MIX_V3_PDL removed; see the
 # comment above EXTRA_ENV). Same image tabbyapi:rebase-dev-r3, pool 901,120, split [30, 30], TUNEDIR; greedy byte-identical to
-# R785c's reference was the promotion gate. ROLLBACK: add the three keys back to EXTRA_ENV.
+# R785c's reference is the promotion gate. ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r789 (= R785's launcher + temperature 1.0, md5 fddd4152).
 # R517 (2026-09-19): R514 (decode r4 group I) + E3 grouped MoE prefill round 2 (R513: cold prefill +16 / +21 / +19 % at 30k / 60k / 120k, decode
 # flat, GSM8K 0.985 = OFF, needles 5/5) on the stacked image tabbyapi:stack-r4-e3r2 (patches/exllamav3/stack/r4-e3r2: decode r4
 # + E3 r2, bindings.cpp merged with fuzz 0), EXL3_MOE_PREFILL_E3=1. Greedy c1 fingerprint unchanged (ae890c45d1000582); the 30k
 # fingerprint becomes 4a255910dee2d9c5 (E3's prefill accumulation order). ROLLBACK: launch-flashnext-r514.sh.
-# launch-flashnext.sh -- serve Qwen3.8-Flash-Next (EXL3 2.68bpw, turboderp self-cal) on 2x RTX 5090 via TabbyAPI + ExLlamaV3.
+# launch-flashnext.sh -- serve Qwen3.8-Flash-Next (EXL3 2.50bpw, r0b0tlab) on 2x RTX 5090 via TabbyAPI + ExLlamaV3.
 #
 # R514 (2026-09-19): R511 + codex decode round 4 group I on image tabbyapi:decode-kernels-r4 (= decode-kernels-r2 + r4 overlay,
 # every r4 flag default-off = r2 bytes): EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536. R499: greedy
@@ -94,7 +93,7 @@ R825C_IMAGE_ID=sha256:679274ac51b5ad603347b2364816a118780fc81cda020e20e5291c8a22
 # reasoning, R503). Everything else is launcher-r491/r498 unchanged. ROLLBACK: launch-flashnext-r491.sh (3.05bpw, 360,448).
 #
 # This is the "daily" for the Flash-Next track. Every setting below is either a measured choice or the
-# engine's default; the reasons are in docs/CONFIG.md and the measurements in bench/RESULTS.md.
+# engine's default; the reasons are in docs/CONFIG.md and the raw numbers in docs/MEASUREMENTS.md.
 #
 #   VARIANTS
 #     ./launch-flashnext.sh                 # serve on 0.0.0.0:8022
@@ -201,14 +200,14 @@ DRAFT=${DRAFT:-3}
 # (4 rows); multi-prompt paired ON/OFF code c1 +6.3 %, code c4 +5.5 %, prose c1 +2.7 %, prose c4 +6.9 %.
 # ROLLBACK: IMG=tabbyapi:qsa-cid-pr337-bszn16-coopwide-hcmix2-hostgap-ppipe-nosync-mtpfix2-moecoopv2 and drop the flag
 # (= flan/launch-flashnext-r481-s4.sh).
-# R587 2026-09-20: Prometheus /metrics (docker/overlays/metrics-r1), two added lines in gen_logging and an
+# R587 2026-09-20: Prometheus /metrics (patches/tabbyapi/metrics/r1), two added lines in gen_logging and an
 # unauthenticated route beside /health. No math changed: c1 and 30k greedy fingerprints canonical on the
 # candidate. ROLLBACK: IMG=tabbyapi:mtpwin-r2 (= launch-flashnext.sh.pre-r587).
 # DAILY_IMG is the promoted image, and the NVMe tier condition below tests against it rather than against a
 # literal. R587 moved IMG here and left that condition naming the previous image, which silently served the
 # daily with no prefix tier: nothing in the promotion gates looks at the tier, so it passed clean. Promotions
 # edit this one line now and the tier follows.
-# PROMOTED 2026-09-22 (R646): + the verifybatch overlay (patches/exllamav3/verifybatch,
+# PROMOTED 2026-09-22 (R646): + the verifybatch overlay (flan/patches/exllamav3/verifybatch,
 #   image = mtpwin-r2-metrics1 + a 3-file Python patch). R645 py-spy found the EXL3_BATCH_VERIFY
 #   round-4 verifier had never run under TabbyAPI: reqs_past_ids was OR-ed over pre-alt() input
 #   steps, so the unconditionally-appended neutral SS_RepP/SS_PresFreqP poisoned it, and the
@@ -224,25 +223,25 @@ DRAFT=${DRAFT:-3}
 #   one call per group, ~140 fewer launches/step at c8). Greedy byte-identical on all 6 prompts vs
 #   bverify-r1; canonical gate: c1 +1.2%, c4/4k +3.8%, c8 +4.4%, c4/26k -0.1%; acceptance parity.
 #   ROLLBACK: IMG=tabbyapi:bverify-r1 and drop EXL3_GR_STATE_IN_UP from EXTRA_ENV below.
-# R701 (2026-09-24, first stack promotion under the stack-track rule, docs/PROMOTION.md): image tabbyapi:stack-r2 = slotfix-r1 + hcfast r1
-#   (docker/overlays/hcfast-r1, EXL3_HC_MIX_V3=1 DOTS_B=2 UP_B=8: HC boundary mixer, each int8 weight converted once, batched
-#   loads, 35-SHFL reduce-scatter) + moefast r1 (docker/overlays/moefast-r1, EXL3_MOE_COOP_V3=2: cp.async weight ring, nc
+# R701 (2026-09-24, first stack promotion under OPERATIONS §16): image tabbyapi:stack-r2 = slotfix-r1 + hcfast r1
+#   (patches/exllamav3/hcfast-r1, EXL3_HC_MIX_V3=1 DOTS_B=2 UP_B=8: HC boundary mixer, each int8 weight converted once, batched
+#   loads, 35-SHFL reduce-scatter) + moefast r1 (patches/exllamav3/moefast-r1, EXL3_MOE_COOP_V3=2: cp.async weight ring, nc
 #   activation prefetch, acq_rel counter handoff, merged narrow B). Both bitwise identical (hashes + greedy). Served canonical
 #   gate, 3 ABAB pairs: leg A c1 1.093, c4 1.057, c8 1.051, leg B 1.064; 0 OOM; cuda:0 free after the gate 193-199 MiB (was
-#   121-131). ROLLBACK: IMG=tabbyapi:slotfix-r1 and drop the four EXL3_HC_MIX_V3* / EXL3_MOE_COOP_V3 keys from EXTRA_ENV below.
+#   121-131). Rollback: /srv/qwen5090/launch-flashnext.sh.pre-r701 (slotfix-r1, the 23 keys without the 4 stack flags).
 # R694 (2026-09-24): the MTP draft component loads on cuda:1 (DRAFT_GPU_SPLIT "0, 32" -> draft_gpu_split: [0, 32]). Card 1 idles
 # 74-75 % of the decode step (R680); the draft chain no longer queues behind the target's front on cuda:0. Canonical gate, 3
 # alternating pairs, same session: leg A c1 +2.9 %, c4 +2.2 %, c8 +2.0 % (mean ON/OFF; 8 of 9 cells > 1), leg B (26k c4) +2.2 %
 # (3/3 > 1); greedy 6/6 identical in every boot; 0 OOM; cuda:0 free after the gate 125-139 MiB vs the old placement's 19-33.
-# ROLLBACK: DRAFT_GPU_SPLIT= (empty).
+# ROLLBACK: DRAFT_GPU_SPLIT= (empty), or launch-flashnext.sh.pre-r694.
 # R676 (2026-09-23): slotfix-r1 = stack-r1 + the recurrent-state slot fix (exllamav3/cache/cache.py: every alloc
 #   path took a slot off free_list before constructing the state, so a throwing constructor leaked the slot;
 #   8 leaks = "no available slots" 503s with a live server, R586c). The slot now returns to the pool on
 #   failure, and a double release is refused. Greedy byte-identical on all 6 prompts; 6 injected constructor
 #   faults -> 6 slots returned; 18 min churn with ~25 % mid-stream cancels, 1,497 requests, 0 errors; c8 8/8
 #   after. ROLLBACK: IMG=tabbyapi:stack-r1
-# R716b/R716c (2026-09-24, second stack promotion under the stack-track rule, docs/PROMOTION.md): image tabbyapi:stack-r3 = stack-r2 + one
-#   series (docker/overlays/stack-r3, INCLUDE "mf3 dg2"): hcfast r2, latchain-r1b, moefast r3, densegemm r2, dense-lcguard.
+# R716b/R716c (2026-09-24, stack-r3 batch promotion under OPERATIONS §16): image tabbyapi:stack-r3 = stack-r2 + one
+#   series (patches/exllamav3/stack-r3, INCLUDE "mf3 dg2"): hcfast r2, latchain-r1b, moefast r3, densegemm r2, dense-lcguard.
 #   Flags: HC2 (EXL3_HC_MIX_V3=2 + R702 P0 tables, replacing HC1's DOTS_B=2 UP_B=8), RR (EXL3_LC_GDN_RR=1), QT (QSA split
 #   2 / combine 1 / div16), QF (EXL3_LC_QSA_FORK=1), DG (EXL3_DENSE_V2=1, every r2 twin), MF3 (EXL3_MOE_COOP_V3=3,
 #   MAP 2-4:2, EXL3_SHARED_EXPERT_EARLY=1). Bitwise identical: kernel parity, P1 hashes (7 rounds, every leave-one-out),
@@ -250,53 +249,51 @@ DRAFT=${DRAFT:-3}
 #   b3d3 b4d3 b5d2 b6d1 b7d1 b8d1, R716c). R716b's own "DECISION UNION: REJECT" came only from greedy_streams' max-of-3
 #   rule at c4/c8, where the daily diverges from itself on 60-76 % of streams (review: 64 % false alarms; the rule is
 #   replaced). Served canonical gate, 3 ABAB pairs: leg A c1 1.149, c4 1.088, c8 1.087, leg B c4 1.104, aggregate 1.107;
-#   UP-line free -8/-10 MiB vs A. ROLLBACK: IMG=tabbyapi:stack-r2 and EXTRA_ENV = R701's 27 keys (the 23 below plus
-#   EXL3_HC_MIX_V3=1 EXL3_HC_MIX_V3_DOTS_B=2 EXL3_HC_MIX_V3_UP_B=8 EXL3_MOE_COOP_V3=2).
+#   UP-line free -8/-10 MiB vs A. ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-stack-r3 (IMG=tabbyapi:stack-r2, the
+#   27 stack-r2 keys).
 # R717/R717b/R717c (2026-09-25, rows32-r4 on stack-r3; pool trade approved by the user): image tabbyapi:stack-r3-rows32
-#   = stack-r3 + docker/overlays/rows32-r4 (host-only, SASS unchanged); flags EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1
+#   = stack-r3 + patches/exllamav3/rows32-r4 (host-only, SASS unchanged); flags EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1
 #   EXL3_SHARED_EXPERT_ROWS32=1, MAP 2-4:2,17-32:2; policy [[4, 3], [8, 2]] (MTP depth 2 at c6-c8: 18/21/24 verify rows);
 #   pool 983,040 (-16,384 tokens, -1.6 %). Bitwise at every shape (c6/c7/c8 depth 2 deterministic, flags inert at <= 16
 #   rows); greedy_conc c8-vs-c1 rate 89.1 % vs the daily's own 92.2 %. Per-stream decode vs stack-r3, 3 ABAB pairs, unique
 #   prompts (R717c): c6 4k +16.0 / +20.8 % (code / prose), 16k +0.5 / +6.0 %, 32k +5.4 / +2.5 %; c8 4k +1.7 / +5.1 %, 16k
 #   +2.3 / +5.6 %, 32k +4.0 / +0.4 %; c1-c5 unchanged (R717). Free at boot 1125 / 2513 MiB (stack-r3 at 999,424: 1033 / 2421).
-#   ROLLBACK: IMG=tabbyapi:stack-r3 CACHE=999424 DRAFT_POLICY='[[4, 3], [5, 2], [8, 1]]' and EXTRA_ENV = stack-r3's 39 keys
-#   (MAP 2-4:2, without the three ROWS32 keys).
-# R728 (2026-09-25): the MTP draft-KV window is OFF (EXL3_MTP_KV_WINDOW=16384 dropped from EXTRA_ENV below); image,
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-rows32 (stack-r3, 999,424, [[4, 3], [5, 2], [8, 1]]).
+# R728 (2026-09-25, user OK): the MTP draft-KV window is OFF (EXL3_MTP_KV_WINDOW=16384 dropped from EXTRA_ENV below); image,
 #   the other keys, policy and pool 983,040 unchanged. The draft K/V returns to the page-indexed draft cache, which revives
 #   with the prefix. R721: under the window a prompt revived from the prompt cache in a later request group drafts 0.655
 #   accepted/proposed vs 0.868 without it (fresh 0.911 in both); c8 4k code per-stream +12.5 %. R722 (agent-shaped replay,
 #   2 pairs): +2.0 % per-stream decode. R723 (fit at 983,040): cuda:0 identical (1,125 MiB free at boot, 229 after the heavy
 #   sequence), layout byte-identical, fn_greedy 6/6 identical, 0 errors; ramp c7/c8 per-stream +16-19 %. Cost: cuda:1
 #   -940 MiB (the draft cache grows from 133,120 to 983,040 tokens, ~1.13 KiB/token; free 1,573 at boot, 763 after).
-#   Promotion gates: scripts/r728-promote-window-off.sh.
-#   ROLLBACK: add EXL3_MTP_KV_WINDOW=16384 back to EXTRA_ENV (rows32 with the window, 983,040).
-# R747 (2026-09-26): image stack-r3-rows32-tokcount = stack-r3-rows32 + the requeue token-count fix (R737: one line
+#   Promotion gates: flan/r728-promote-window-off.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r728 (rows32 with the window, 983,040).
+# R747 (2026-09-26): image stack-r3-rows32-tokcount = stack-r3-rows32 + the requeue token-count fix (R737 PASS: one line
 #   of reporting in exllamav3 generator/job.py; server counts exact at 9,000/13,000/20,000 where the old image logged
 #   2,969/2,888/3,714; fn_greedy 6/6 identical). Engine behaviour unchanged; only per-request token counts and T/s in the
-#   log and in usage change. Gates: bench/results/r747-tokcount.md.
-#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32.
+#   log and in usage change. Promotion gates: flan/r747-promote-tokcount.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r747 (stack-r3-rows32).
 # R783 (2026-09-27): image stack-r3-rows32-tokcount-loopthink3 = stack-r3-rows32-tokcount + loop-think r3
-#   (docker/overlays/loop-think-r3, TabbyAPI only). A loop inside the thinking used to end the request as
-#   finish_reason "stop" with no content, which Hermes shows as the reply (this configuration 2026-09-26, a finetune
-#   2026-09-27); now it forces </think> after W=800 looping tokens and the model answers. R782 on the finetune: the real
-#   loop recovers 4/4 into a tool call. Greedy output identical on the gates' short prompts. Gates: bench/results/r783-loopthink.md.
-#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount.
-# R785 (2026-09-27): image tabbyapi:rebase-dev-r3 = the served ExLlamaV3 stack (the 41 keys below) ported onto upstream
-#   exllamav3 dev 5783a93 (v1.5.2) + tokcount-r1 (docker/overlays/rebase-dev-r3), on tabbyapi:stack-r3-rows32-tokcount-loopthink4
-#   (the served TabbyAPI + loop-think r4, docker/overlays/loop-think-r4: a collector-only LoopDetector(3L, L), L = 1.25W =
-#   1,000, catches reasoning loops with periods up to 1,000 tokens).
+#   (patches/tabbyapi/loop-think-r3, TabbyAPI only). A loop inside the thinking used to end the request as
+#   finish_reason "stop" with no content, which Hermes shows as the reply (daily 2026-09-26, Tinfield 2026-09-27); now
+#   it forces </think> after W=800 looping tokens and the model answers. R782 on Tinfield: the #107 loop recovers 4/4
+#   into a tool call. Non-looping greedy output unchanged. Promotion gates: flan/r783-promote-loopthink.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r783 (stack-r3-rows32-tokcount).
+# R785 (2026-09-27, plan flan/rebase-dev-r3-PLAN.md; user: "goal is to promote", "it's ok to loose 100kv pool"): image
+#   tabbyapi:rebase-dev-r3 = the served ExLlamaV3 stack (the 41 keys below) ported onto upstream exllamav3 dev 5783a93
+#   (v1.5.2) + tokcount-r1, on tabbyapi:stack-r3-rows32-tokcount-loopthink4 (the served TabbyAPI + loop-think r4: a
+#   collector-only LoopDetector(3L, L), L = 1.25W = 1,000, catches reasoning loops with periods up to 1,000 tokens).
 #   EXL3_GR_MIX_TILED=1 (42nd key, upstream's tiled HC prefill, explicit so the env-keys line records it). Pool 901120
 #   [30, 30] = the largest that fits with per-card boot free >= S1 - 32 MiB (R784; was 983,040; floor 884,736). Own
 #   kernel cache TUNEDIR=/srv/qwen5090/.exl3cache-rebase-dev-r3 (the port's autotune keys differ from the served ones).
 #   Numerics change by design (GDN fp16 prefill projections, deterministic router GEMM, tiled HC prefill, PLE in-place
 #   add): greedy fingerprints roll over to R785's greedy.jsonl / chat-greedy.jsonl. Rendered from the repo template
-#   scripts/launchers/launch-flashnext-r785-rebase-r3.sh by scripts/r785-promote-rebase-r3.sh under the GPU lock (901120 / 30, 30 from
-#   R784's promote.env). Gates: bench/results/r784-rebase-dev-r3.md, bench/results/r785-promote-rebase-r3.md.
-#   ROLLBACK: DAILY_IMG=tabbyapi:stack-r3-rows32-tokcount-loopthink3 CACHE=983040 TUNEDIR=/srv/qwen5090/.exl3cache and
-#   EXTRA_ENV without EXL3_GR_MIX_TILED=1 (the R783 launcher: 983,040, 41 keys).
-DAILY_IMG=tabbyapi:flashnext-names-fast-r1   # names-fast r1 2026-11-16; predecessor pf2lock r3: tune268-r2 + pf2lock.patch r3 (da386167); rollback scripts/launchers/launch-flashnext-tune268r2.sh. Before: tune268r2 2026-10-23: r1 + K2.5 experts in the E3 prefill path (EXL3_MOE_PREFILL_E3_HALF) and 3 default-off levers (2239954c); rollback launcher .pre-tune268r2. r1 note: tune268 (2026-10-23): dfaed2cb + K2.5 MoE half-K on V2/V3/r2 + K6 dense V2 twins (sha256:48f4ad3a); rollback IMG=tabbyapi:r828-prompt-lookup-r3 with the .pre-tune268 launcher
+#   flan/launch-flashnext-r785-rebase-r3.sh by flan/r785-promote-rebase-r3.sh under the GPU lock (901120 / 30, 30 from
+#   R784's promote.env). Promotion gates: flan/r785-promote-rebase-r3.sh.
+#   ROLLBACK: /srv/qwen5090/launch-flashnext.sh.pre-r785 (stack-r3-rows32-tokcount-loopthink3, 983,040, 41 keys).
+DAILY_IMG=sha256:96ab0d099fff79996bea9bf5e5021c567be0f5133db6af25c3b822f3bb69cbfe
 IMG=${IMG:-$DAILY_IMG}
-# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 (WITHOUT the R338 requeue token-count fix: this Dockerfile installs afresh; restored by tokcount-r1, R747), PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
+# IMG=${IMG:-tabbyapi:qsa-cid-pr337}     # SERVED SINCE 2026-09-16 (user: enable all relevant improvements). TabbyAPI 53da7919 + exllamav3 v1.5.0 + the R338 requeue token-count fix, PLUS the two measured engine improvements below, PLUS upstream PR #337 (layer-split device context), which earned its place by passing a byte-identity gate: greedy output identical (sha256 fingerprint 750e1459e177c47e, 1989 bytes), flat at c1/c4/c8, and the only column that moved was the one its mechanism predicts (c4 on 152k-token prompts, 181.7 -> 207.5, single run). Variants WITHOUT #337: tabbyapi:qsa-cid. Fallback to the improvement-free baseline: IMG=tabbyapi:53da7919-rqcount. Variants: tabbyapi:53da7919-rqcount-cid (draft depth only), tabbyapi:qsa-devel (QSA only) + its APPLY_QSA=0 control.
 # CONCURRENCY-INDEXED DRAFT DEPTH (R340), ON BY DEFAULT since 2026-09-16. The patched engine reads a list of
 # [decoding-job ceiling, draft depth] pairs at load time; unset means the unpatched behaviour exactly, which is
 # the parity control. Example that keeps c1 at depth 3 and drops to 1 once more than two jobs are decoding:
@@ -409,12 +406,12 @@ HOTVOCAB_MAP=${HOTVOCAB_MAP:-}
 # R428: the mixer V2 is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all three keys.
 # R442: the prefill pipeline is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all four keys.
 # R460: the MoE coop V2 kernel is opt-in inside the image too; experiments that override EXTRA_ENV must re-add all five keys.
-# R789 (2026-09-28): three keys removed (42 -> 39), bitwise and same pool: EXL3_HOST_GAP_REWIND=1 (R788a: the flag-off
-# path builds the same rewind descriptors; it relies on the port's bf16 state word count (`_state_words`), not upstream's raw
-# stride, which must survive every rebase), EXL3_GR_STATE_REGRID=1 (unreachable with HC_MIX_V2_INT8=1 + MIX_V3 + STATE_IN_UP)
-# and EXL3_HC_MIX_V3_PDL=0 (the literal default). The image bakes none of the three. The R425 note above about re-adding
+# R789 (2026-09-27): three keys removed (42 -> 39), bitwise and same pool: EXL3_HOST_GAP_REWIND=1 (R788a R0 DROP: the flag-off
+# path builds the same rewind descriptors; it serves our _state_words bf16 word count, NOT upstream's raw stride: keep that hunk
+# at every rebase, REVIEW-R788a §2), EXL3_GR_STATE_REGRID=1 (unreachable with HC_MIX_V2_INT8=1 + MIX_V3 + STATE_IN_UP) and
+# EXL3_HC_MIX_V3_PDL=0 (the literal default). The image bakes none of the three. The R425 note above about re-adding
 # EXL3_HOST_GAP_REWIND=1 is historical since R789.
-EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1 EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1 EXL3_MOE_PREFILL_E3_HALF=1 EXL3_FLASHNEXT_FAST=1}
+EXTRA_ENV=${EXTRA_ENV:-EXL3_HC_MIX_V2=1 EXL3_HC_MIX_V2_MIN_R=1 EXL3_LS_PREFILL_PIPELINE=1 EXL3_MOE_COOP_V2=1 EXL3_SHARED_EXPERT_OVERLAP=1 EXL3_DRAFT_PINNED_STAGING=1 EXL3_BATCH_VERIFY=1 EXL3_MTP_HEAD_N=65536 EXL3_MOE_PREFILL_E3=1 EXL3_HC_MIX_V2_INT8=1 EXL3_MTP_DEVICE_DRAFT=1 EXL3_EMBED_GPU=1 EXL3_EMBED_GPU_PRUNED=1 EXL3_MOE_PREFILL_E3_DET=1 EXL3_GDN_BA_WARP1=1 EXL3_HC_APPLY_WARP1=1 EXL3_GR_STATE_IN_UP=1 EXL3_QSA_RAWK_RING=1 EXL3_GDN_STATE_BF16=1 EXL3_NGRAM_PREFETCH2=1 EXL3_HC_MIX_V3=2 EXL3_HC_MIX_V3_DOTS_B=1:1,4:2,32:4 EXL3_HC_MIX_V3_UP_B=1:1,8:4,32:8 EXL3_MOE_COOP_V3=3 EXL3_HC_MIX_V3_DOTS_J=1:4,32:8 EXL3_HC_MIX_V3_DOTS_PF=1:1,32:0 EXL3_HC_MIX_V3_UP_Q=1:4,8:2,32:4 EXL3_DENSE_V2=1 EXL3_LC_GDN_RR=1 EXL3_LC_QSA_COMBINE_STAGES=1 EXL3_LC_QSA_DIV16=1 EXL3_LC_QSA_FORK=1 EXL3_LC_QSA_SPLIT_STAGES=2 EXL3_MOE_COOP_V3_MAP=2-4:2,17-32:2 EXL3_SHARED_EXPERT_EARLY=1 EXL3_DENSE_ROWS32=1 EXL3_MOE_COOP_ROWS32=1 EXL3_SHARED_EXPERT_ROWS32=1 EXL3_GR_MIX_TILED=1 EXL3_PREFILL_MERGE=1 EXL3_STASH_ASYNC=1 EXL3_RECURRENT_CHECKPOINT_INTERVAL_PP=4096 EXL3_RECURRENT_CHECKPOINT_TAIL_PP=12288 EXL3_RECURRENT_CHECKPOINT_INFORWARD=1 EXL3_PREFILL_WHOLE_PROMPT=1 EXL3_PREFILL_RESUMABLE=1 EXL3_PROMPT_LOOKUP=1 EXL3_DENSE_V2_K6=1 EXL3_MOE_COOP_HALF=1 EXL3_MOE_PREFILL_E3_HALF=1 EXL3_FLASHNEXT_FAST=1 EXL3_LS_SPLIT_BEFORE=model.language_model.layers.25 EXL3_ROPE_FAST_SINCOS=1}
 EV=()
 # EXTRA_ENV_ADD APPENDS to the default above instead of replacing it. The warning three lines up has
 # been in this file since R425 and did not stop R614 from running every arm with EXTRA_ENV=EXL3_TP=1,
@@ -428,7 +425,7 @@ EV=()
 # The directory survives `docker rm -f`: a restart serves the same prefixes from disk. Unset = no tier, no mount.
 # Daily default (R534): the tier below when IMG is the served tier image and NVME_TIER is unset. Any other image, or an
 # explicit NVME_TIER= (empty), gets no tier, so experiment boots reusing this launcher never open the daily's directory.
-# R823p: keep disk off as in the measured D boots; explicit NVME_TIER still opts in.
+# R823p: keep the measured D policy; do not implicitly enable the daily disk tier.
 NVME_TIER=${NVME_TIER-}
 if [ -z "${NVME_TIER+x}" ]; then
   if [ "$IMG" = "$DAILY_IMG" ]; then NVME_TIER=/srv/qwen5090/fast/exl3-nvme-daily; NVME_TIER_GB=${NVME_TIER_GB:-64}; else NVME_TIER=; fi
@@ -446,11 +443,11 @@ done
 # so agreed with a wrong boot; the count here is what the container actually gets.
 log "env keys ($(echo $EXTRA_ENV | wc -w)): $EXTRA_ENV"
 # R498 (2026-09-18): CKPT_NAME selects another checkpoint directory under /srv/qwen5090/models (the served model id follows it),
-# e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 2.68bpw self-calibrated pack.
+# e.g. CKPT_NAME=qwen3.8-flash-next-exl3-3.05bpw-mtp4 (the 3.05 pack with r0b0tlab's 4-bit MTP head). Default = the served 3.05bpw.
 CKPT_NAME=${CKPT_NAME:-qwen3.8-flash-next-exl3-2.68bpw-selfcal}   # tune268 2026-10-23: turboderp self-cal 2.68 (rev d660113325); was qwen3.8-flash-next-exl3-2.50bpw-r0b0tlab (R511), before that 3.05bpw
 CKPT=/srv/qwen5090/models/$CKPT_NAME
 MODEL=$CKPT_NAME
-TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-tune268}   # tune268 2026-10-23: the cache warmed by the tune268 units (was /srv/qwen5090/.exl3cache-rebase-dev-r3). Older notes: kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
+TUNEDIR=${TUNEDIR:-/srv/qwen5090/.exl3cache-rebase167-r2}   # tune268 2026-10-23: the cache warmed by the tune268 units (was /srv/qwen5090/.exl3cache-rebase-dev-r3). Older notes: kernel caches (Triton + coop autotune); survives container replacement. R785: the port's own (warm from R784); was /srv/qwen5090/.exl3cache.
 # R741: overridable so an experiment image with other kernels (e.g. upstream's half_k autotune keys) warms its own
 # directory and never writes into the daily's; default = the daily's.
 CFG=${R828_PREFLIGHT_DIR:-/srv/qwen5090}/flashnext-config.yml
@@ -555,11 +552,10 @@ model:
   # delimited by tags, and \`reasoning_content\` is null -- verified 2026-09-16, a reply came back as
   # 'We need to respond to user: ... \n\nMAC REACHES FLAN'. Harnesses render the two fields separately, so
   # leaving this off leaks the reasoning into the visible answer.
-  # The default start/end tokens are \` thinking\` and \` response\` (common/config_models.py), and this
-  # checkpoint's chat_template.jinja emits exactly those, so they are deliberately not overridden here. Pin them
-  # only if a template change makes the parser stop splitting -- the config as served does not pin them, and the
-  # 2026-09-16 verification that reasoning_content arrives separately is what checks the assumption.
+  # Pin the reasoning delimiters resolved by the rebased engine in the screen.
   reasoning: true
+  reasoning_start_token: "<think>"
+  reasoning_end_token: "</think>"
   # thinking_token_budget is a REQUEST-BODY alias for reasoning_budget_tokens (AliasChoices in
   # endpoints/OAI/types/chat_completion.py) -- it is NOT a config-file alias. ModelConfig has no validation_alias and
   # TabbyConfigModel.model_validate SILENTLY IGNORES unknown keys, so an editor who follows an earlier version of
@@ -595,6 +591,8 @@ sampling:
   # Fallbacks for clients that send no sampler at all -- see the header. Without this line TabbyAPI warns at
   # boot and serves every such request at temperature 1.0 with no truncation (R338).
   override_preset: $SAMP_PRESET
+network:
+  web_ui: false
 YML
 
 # R828 no-boot preflight: original image-present and pin guards have run.
@@ -655,8 +653,8 @@ if [ "${busy:-1}" != 0 ]; then
     || { log "ABORT: GPUs still busy after 120s (${used} MiB used) — refusing to boot over another unit. ALLOW_BUSY=1 overrides."; exit 3; }
 fi
 # R726 (2026-09-25): the +4500 memory offset that gpu-tune.service applies once at host boot had silently reset to 0
-# (between 2026-09-03 and 09-19, no reboot, cause not determined), so every Flash-Next number from then to R726 ran at
-# stock memory clock. Re-apply it on every daily boot and log the readback. MEMOC= skips it.
+# (between 2026-09-03 and 09-19, no reboot; suspect R208b's -lgc/-rgc on 09-07), so every Flash-Next number from then
+# to R726 ran at stock memory clock. Re-apply it on every daily boot and log the readback. MEMOC= skips it.
 MEMOC=${MEMOC-4500}
 if [ -n "$MEMOC" ]; then
   moc=$(sudo -n python3 -c "import pynvml as N; N.nvmlInit(); hs=[N.nvmlDeviceGetHandleByIndex(i) for i in range(N.nvmlDeviceGetCount())]; [N.nvmlDeviceSetMemClkVfOffset(h, $MEMOC) for h in hs]; print(*[N.nvmlDeviceGetMemClkVfOffset(h) for h in hs])" 2>&1 | tail -1)
@@ -665,9 +663,7 @@ fi
 # 2026-09-25: the power limit and core offset are per card and shared with the 27B daily, whose launcher caps both cards
 # at 400 W (daily-power.sh cap). After a 27B -> Flash-Next switch nothing restored stock, so R731 and part of R732 ran at
 # 400 W. Flash-Next serves and publishes at stock (600 / 575 W) with core offset 0 (R730: core OC dropped, user):
-# set both on every boot. POWER=cap keeps the 27B policy, POWER= skips. daily-power.sh is a script of the serving host, not
-# in this repository: `stock` sets each card to its power.default_limit with nvidia-smi -pl, `cap` to 400 W; without it the
-# NVML line below still sets core offset 0 and logs both cards' limits, so the readback shows what the boot ran at.
+# set both on every boot. POWER=cap keeps the 27B policy, POWER= skips.
 POWER=${POWER-stock}
 if [ -n "$POWER" ]; then
   bash /srv/qwen5090/daily-power.sh "$POWER" > /dev/null 2>&1
@@ -693,7 +689,8 @@ sudo docker run -d --name "$NAME" --gpus all --ipc=host --shm-size=16g --restart
   -p 0.0.0.0:$PORT:$PORT \
   -v /srv/qwen5090/models:/models:ro -v "$CFG":/app/config.yml:ro \
   -v "$SAMP_DIR/$SAMP_PRESET.yml":/app/sampler_overrides/$SAMP_PRESET.yml:ro \
-  --entrypoint python3 "$IMG" main.py --host 0.0.0.0 --port $PORT --disable-auth true >"$LOG.docker" 2>&1 \
+  -v /srv/qwen5090/flashnext-v167/kit/screen/runtime_audit.py:/app/rebase167_runtime_audit.py:ro \
+  --entrypoint python3 "$IMG" rebase167_runtime_audit.py --host 0.0.0.0 --port $PORT --disable-auth true >"$LOG.docker" 2>&1 \
   || { log "docker run FAILED — docker said:"; tail -5 "$LOG.docker" | tee -a "$LOG"; exit 1; }
 
 up=0
@@ -722,8 +719,9 @@ if [ "$DRAFT_MODE" != disabled ]; then
   # progress) are emitted during model load, which can land within a second of /health answering --
   # and stdout under docker may be block-buffered, so poll rather than grep once.
   # Never `docker logs | grep -q` here: under `set -o pipefail`, grep -q exits on the first match, docker logs
-  # takes SIGPIPE on the rest of a long log and the pipeline returns 141, so a boot whose draft did load reads as
-  # NO BOOT on every poll (2026-09-26: 16.5 KB of autosplit report after the draft line). Grep a file instead.
+  # takes SIGPIPE on the rest of a long log and the pipeline returns 141, so a boot whose draft DID load reads as
+  # NO BOOT on every poll (R742 run 1, 2026-09-26: EXL3_AUTOSPLIT_REPORT=1 puts 16.5 KB after the draft line; the
+  # R643 2026-09-22 false NO BOOT, then blamed on buffering, was most likely the same bug). Grep a file instead.
   ok=0
   for i in $(seq 30); do
     sudo docker logs "$NAME" > "$LOG.docker" 2>&1; grep -aqiE "draft" "$LOG.docker" && { ok=1; break; }
@@ -738,22 +736,19 @@ W=$(curl -s -m 300 "http://127.0.0.1:$PORT/v1/completions" -H "Content-Type: app
   -d "{\"model\":\"$MODEL\",\"prompt\":\"Warmup.\",\"max_tokens\":16,\"temperature\":0}" \
   -o /dev/null -w "%{time_total}" 2>/dev/null || echo "?")
 # ---- R818 FAST-STATE WARM-UP (begin) ----
-# Three raw /v1/completions requests (no chat template, so a template change cannot move the prompt counts; add_bos_token
-# false, a no-op for this tokenizer; temperature 0, max_tokens 8), sent in this order. Each is one prefill forward at offset
-# 0 of N_p - 1 rows: N_p 20 (19 rows), 29 (28 rows) and 11 (10 rows). The texts are synthetic word lists calibrated against
-# the served tokenizer; all three are shorter than one 256-token page, so neither the GPU prefix cache nor the NVMe tier can
-# serve them. Why (bench/results/r815-r820-fast-state.md): until the routed-MoE decode-class path (run_bszN, <= 32 rows)
-# has run at two row counts the process has not seen before, whose shared-expert kernels then launch eagerly on the
-# per-layer side stream, the process decodes about 3 % slower per step at 1 and 2 streams; after that it stays at the
-# faster step for the life of the process, output byte-identical. The persistent state is below the CUDA API (R820); the
-# prefill merge folds away the short forwards that used to produce it, and real traffic produces it at its first
-# 4-stream episode. FASTWARM_PIN = sha256[:16] of "20<TAB><text>\n29<TAB><text>\n11<TAB><text>\n": change a text only
-# with its count and the pin.
-# The check reads the server's prompt counts from the container log (a file, never `docker logs | grep -q`: pipefail):
-# the three non-streamed completions lines with serials above the pre-warm-up maximum, in send order, must each say
-# "none cached" with a count inside its window (N_p 14-26 / 27-33 / 8-13, the recalibration tolerance). It logs
-# `FASTWARM ok (...)` or `FASTWARM FAILED (<why>)`. A failure never blocks serving: the daily then serves in the slower
-# state. FASTWARM=0 skips the block; FASTWARM_WAIT = seconds to wait for the lines (docker's stdout is block-buffered).
+# Three raw /v1/completions requests (no chat template, so a template change cannot move the counts; add_bos_token
+# false, a no-op for this tokenizer; temperature 0, max_tokens 8), sent in this order, each ONE prefill forward at offset
+# 0 of N_p - 1 rows: N_p 20 (19 rows, class 13-25) and N_p 29 (28 rows, class 26-32) = R817 boot M's validated M-S1 /
+# M-S2, then N_p 11 (10 rows, class 7-12). Texts calibrated against the served tokenizer: 20 and 29 are R817's strings,
+# verified on the server by R817's own lines ("prompt 20 tokens, none cached", "prompt 29 tokens, none cached",
+# container-M.log #11 / #12); all three are < 1 page (256 tokens), so neither the GPU prefix cache nor the NVMe tier can
+# ever serve them. FASTWARM_PIN = sha256[:16] of "20<TAB><text>\n29<TAB><text>\n11<TAB><text>\n": change a text only
+# with its count and the pin; r818-warmfast-gate.sh recounts the texts with the served tokenizer before its lock.
+# The check reads the SERVER's prompt counts from the container log (a file, never `docker logs | grep -q`: pipefail,
+# R742): the three non-stream completions lines with serials above the pre-warm-up maximum, in send order, must each
+# say "none cached" with a count inside its class window (N_p 14-26 / 27-33 / 8-13).
+# A successful run records the immutable container ID for the r2 recovery helper.
+# FASTWARM_WAIT is the wait for block-buffered container logs.
 FASTWARM=${FASTWARM-1}
 FASTWARM_WAIT=${FASTWARM_WAIT:-30}
 FASTWARM_TEXT_20='Note 04560: train fire door sand square fire snow ocean wind house cloud.'
@@ -802,8 +797,19 @@ PY
     sleep 1
   done
   [ "$fw_ok" = 1 ] || fw_why="$fw_why server lines: $fw_chk;"
-  if [ -z "$fw_why" ]; then log "FASTWARM ok ($fw_chk; pin $FASTWARM_PIN)"
-  else log "FASTWARM FAILED (${fw_why# }) -- serving continues, possibly WITHOUT the fast decode state (R817: c1 decode ~3 % slower)"; fi
+  if [ -z "$fw_why" ]; then
+    log "FASTWARM ok ($fw_chk; pin $FASTWARM_PIN)"
+    cid=$(sudo docker inspect -f '{{.Id}}' "$NAME") || exit 3
+    [[ "$cid" =~ ^[0-9a-f]{64}$ ]] || exit 3
+    receipt=$(mktemp /srv/qwen5090/.flashnext-r2-fastwarm.XXXXXX) || exit 3
+    if ! { printf '%s\n' "$cid" > "$receipt" && mv -f "$receipt" /srv/qwen5090/flashnext-r2-fastwarm-id.txt; }; then
+      rm -f "$receipt"
+      exit 3
+    fi
+  else
+    log "FASTWARM FAILED (${fw_why# })"
+    exit 3
+  fi
 fi
 # ---- R818 FAST-STATE WARM-UP (end) ----
 log "UP on $PORT | warmup ${W}s | VRAM free MiB $(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | tr '\n' '/')"

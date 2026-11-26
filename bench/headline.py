@@ -1,10 +1,10 @@
-"""Read and independently check the published headline-r1 numeric observations."""
+"""Read and independently check the published headline-r2 numeric observations."""
 import json
 import math
 from pathlib import Path
 import statistics as st
 
-DATA = Path(__file__).resolve().parent / 'results/2026-11-16-headline-r1'
+DATA = Path(__file__).resolve().parent / 'results/2026-11-26-headline-r2'
 
 
 def read(path):

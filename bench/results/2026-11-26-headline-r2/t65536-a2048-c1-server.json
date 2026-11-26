@@ -1,0 +1,23 @@
+{
+  "requests": [
+    {
+      "serial": 1987,
+      "gen": 400,
+      "tps": 331.3,
+      "prompt": 67650,
+      "cached": 65536,
+      "new": 2114,
+      "acc": 295,
+      "prop": 315
+    }
+  ],
+  "finished": 1,
+  "generated_tokens": 400,
+  "accepted": 295,
+  "proposed": 315,
+  "acceptance": 0.9365079365079365,
+  "tau": 3.8095238095238093,
+  "tau_definition": "generated/(generated-accepted); same as opera, includes prefill token",
+  "cached_tokens": 65536,
+  "new_tokens": 2114
+}

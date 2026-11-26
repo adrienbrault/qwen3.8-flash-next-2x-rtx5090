@@ -1,0 +1,53 @@
+{
+  "requests": [
+    {
+      "serial": 2030,
+      "gen": 400,
+      "tps": 176.4,
+      "prompt": 73794,
+      "cached": 65536,
+      "new": 8258,
+      "acc": 293,
+      "prop": 321
+    },
+    {
+      "serial": 2033,
+      "gen": 400,
+      "tps": 190.9,
+      "prompt": 73793,
+      "cached": 65536,
+      "new": 8257,
+      "acc": 293,
+      "prop": 321
+    },
+    {
+      "serial": 2031,
+      "gen": 400,
+      "tps": 185.6,
+      "prompt": 73794,
+      "cached": 65536,
+      "new": 8258,
+      "acc": 290,
+      "prop": 330
+    },
+    {
+      "serial": 2032,
+      "gen": 400,
+      "tps": 176.6,
+      "prompt": 73794,
+      "cached": 65536,
+      "new": 8258,
+      "acc": 281,
+      "prop": 357
+    }
+  ],
+  "finished": 4,
+  "generated_tokens": 1600,
+  "accepted": 1157,
+  "proposed": 1329,
+  "acceptance": 0.8705793829947329,
+  "tau": 3.6117381489841986,
+  "tau_definition": "generated/(generated-accepted); same as opera, includes prefill token",
+  "cached_tokens": 262144,
+  "new_tokens": 33031
+}

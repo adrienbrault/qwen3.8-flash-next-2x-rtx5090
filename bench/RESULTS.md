@@ -2,6 +2,13 @@
 
 One file per experiment, newest first. Each file names its results directory on the serving host, links its driver in [`scripts/`](../scripts/), and links its raw records where they are stored in this repository. The served configuration is in [`docs/CONFIG.md`](../docs/CONFIG.md); how it got there is in [`docs/HISTORY.md`](../docs/HISTORY.md).
 
+## 2026-11-26
+
+- [Spec-Bench and cached code](results/headline-r2.md) · rebase167-r2, six Spec-Bench cells and 18 cached-code cells.
+- [Cold prefill](results/prefill-r2.md) · rebase167-r2, c1 prose, seven targets, peak 13,146 tok/s at 60,079 prompt tokens.
+- [GSM8K and substring retrieval](results/quality-r2.md) · rebase167-r2, 0.980 flexible / 0.978 strict and 5/5 retrieval at both prompt depths.
+- [tool-eval-bench 3.0.0 and reasoning-echo controls](results/tooleval-r2.md) · rebase167-r2, 93.5 ± 2.1 on 3.0.0. Every tool-eval row before 2026-11-16 is a 2.1.0 score with no reasoning sent back. Same-boot A/B/D on 2026-11-26 gave 89.0 ± 2.3 without echo, 87.8 ± 1.5 with tool-turn echo (434/434) and 88.8 ± 1.0 with all-turn echo (432/432 tool turns and 328/328 other turns).
+
 ## 2026-11-16
 
 - [Cold prefill: seven-target curve on the served image](results/prefill-r1.md) — prose, c1, three salted prompts per target, 64 forced tokens, T=0; 12,537 tok/s at 120,133 prompt tokens, mean TTFT 9.582 s.

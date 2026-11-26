@@ -1,0 +1,13 @@
+{
+  "unit_status": "VALIDATED",
+  "exit_code": 0,
+  "restored_model": "qwen3.8-flash-next-exl3-2.68bpw-selfcal",
+  "packet_check": {
+    "files": 29,
+    "verified": true,
+    "source_copies": "PASS",
+    "current_defaults": "PASS",
+    "one_unit": "b"
+  },
+  "cold_cache_evidence": "Packet analysis requires zero cached tokens for all 22 requests. Verified on host from the server log."
+}
