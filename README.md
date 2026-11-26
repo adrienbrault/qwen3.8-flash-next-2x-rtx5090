@@ -1,6 +1,6 @@
 # Qwen3.8-Flash-Next on 2× RTX 5090 (ExLlamaV3 + TabbyAPI)
 
-![Recipe card showing parallel agents at depth and measured peaks, 2026-11-26](docs/img/recipe-card-7cf9f1a5.png)
+![Recipe card showing parallel agents at depth and measured peaks, 2026-11-26](docs/img/recipe-card-f7000ce5.png)
 
 An OpenAI-compatible serving recipe for [Qwen3.8-Flash-Next][qwen-hf] on two RTX 5090 cards.
 
@@ -56,7 +56,7 @@ Also passing: [tool-loop reasoning history on the serving frontend][tool-r2].
 
 ### Conditions
 
-Each speed workload used one boot with one scored batch per headline cell, except cold prefill, which used three requests per target after one calibration request. The GPU limits were 600/575 W, with stock core clocks and +4500 MHz memory offset. The NVMe KV tier was off. [Headline validation][headline] · [Prefill validation][prefill]
+Each speed workload used one boot with one scored batch per headline cell, except cold prefill, which used three requests per target after one calibration request. The GPU limits were 575/600 W (GPU 0/GPU 1), with stock core clocks and +4500 MHz memory offset. The NVMe KV tier was off. [Headline validation][headline] · [Prefill validation][prefill]
 
 ## Quick start
 
